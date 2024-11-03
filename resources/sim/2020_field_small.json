@@ -1,0 +1,10 @@
+{
+    "game": "2020",
+    "field-image": "2020_field_base_small.png",
+    "field-corners": {
+      "top-left": [20, 20],
+      "bottom-right": [620, 314]
+    },
+    "field-size": [60, 30],
+    "field-unit": "feet"
+  }
