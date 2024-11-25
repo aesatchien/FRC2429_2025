@@ -1,1 +1,52 @@
-other_robots/crank_rewritten/.venv
+# CJH FRC gitignore
+
+/robot/guis
+/robot/sim/data/*.pkl
+/robot/imgui.ini
+/robot/simg*
+
+.vscode*
+.vscode/*
+
+
+# too many ini files for the gui
+*.ini
+
+# all the gui and deploy stuff
+*eploy_cfg
+*nstaller_config
+simg*
+
+
+#pycharm directory
+.idea/
+#jupyter stuff
+.ipynb_checkpoints
+
+#pycache stuff
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+robot/input_log.txt
+robot/input_log.json
+other_robots/swerve_base/autonomous/swerve_trajectory_planner.py
+other_robots/swerve_base/autonomous/ramsete_controller_trajectory_planner.py
+other_robots/swerve_base/autonomous/Autonomous-Pathing-Notes.md
+*.venv/
