@@ -21,8 +21,8 @@ class LowerCrank(Subsystem):
         self.encoder = self.sparkmax.getEncoder()
 
         # radians
-        self.encoder.setPositionConversionFactor(math.tau / (constants.k_lower_crank_dict["k_gear_ratio"] * self.encoder.getCountsPerRevolution()))
-        self.encoder.setVelocityConversionFactor(math.tau / (constants.k_lower_crank_dict["k_gear_ratio"] * self.encoder.getCountsPerRevolution()))
+        self.encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
+        self.encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
 
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
         self.abs_encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
@@ -55,9 +55,6 @@ class LowerCrank(Subsystem):
 
     def get_angle(self) -> float:
         return self.abs_encoder.getPosition()
-
-    def get_commanded_voltage(self):
-        return self.sparkmax.getAppliedOutput() * 12
 
     def set_encoder_position(self, rotations: float):
         self.encoder.setPosition(rotations)

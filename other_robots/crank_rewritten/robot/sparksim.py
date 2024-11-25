@@ -1,14 +1,15 @@
 import wpilib
 from rev import (
         REVLibError, 
-        SparkAbsoluteEncoder,
+        SparkMaxAbsoluteEncoder as RealSparkMaxAbsoluteEncoder,
         SparkMaxRelativeEncoder as RealSparkMaxRelativeEncoder,
         CANSparkMax as RealCANSparkMax
 )
 from wpimath.controller import PIDController
 
-class SparkMaxRelativeEncoder(RealSparkMaxRelativeEncoder):
-    def __init__(self) -> None:
+class SparkMaxRelativeEncoder():
+    def __init__(self):
+        # super().__init__()
         self._velocity = 0
         self._position = 0
         self._velocity_conversion_factor = 1
@@ -35,7 +36,42 @@ class SparkMaxRelativeEncoder(RealSparkMaxRelativeEncoder):
         self._velocity_conversion_factor = factor
         return REVLibError.kOk
 
-SparkMaxAbsoluteEncoder = SparkMaxRelativeEncoder 
+class SparkMaxAbsoluteEncoder():
+    def __init__(self):
+        # super().__init__()
+        self._zero_offset = 0
+        self._velocity = 0
+        self._position = 0
+        self._velocity_conversion_factor = 1
+        self._position_conversion_factor = 1
+
+    def getVelocity(self):
+        return self._velocity * self._velocity_conversion_factor
+
+    def getPosition(self):
+        return (self._position * self._position_conversion_factor) + self._zero_offset
+
+    def getZeroOffset(self):
+        return self._zero_offset
+
+    def setPosition(self, position) -> REVLibError:
+        self._position = position
+        return REVLibError.kOk
+
+    def setVelocity(self, velocity):
+        self._velocity = velocity
+
+    def setPositionConversionFactor(self, factor):
+        self._position_conversion_factor = factor
+        return REVLibError.kOk
+
+    def setVelocityConversionFactor(self, factor):
+        self._velocity_conversion_factor = factor
+        return REVLibError.kOk
+
+    def setZeroOffset(self, offset: float):
+        self._zero_offset = offset
+
 
 class SparkMaxPIDController:
     def __init__(self, motor: "CANSparkMax") -> None:
@@ -61,7 +97,7 @@ class SparkMaxPIDController:
         """
         pass
 
-    def setIMaxAccum(self):
+    def setIMaxAccum(self, iMaxAccum, slotID):
         """
         not implemented, may result in unexpected behaviors
         """
@@ -77,7 +113,17 @@ class SparkMaxPIDController:
         self._min_output = min_output
         self._max_output = max_output
 
-    def setReference(self, value: float, ctrl: int, pidSlot: int):
+    def setReference(self, value: float, ctrl: RealCANSparkMax.ControlType, pidSlot: int):
+        if not self._forwards_limit == None:
+            if value > self._forwards_limit:
+                print("Setting simulated spark reference to forward limit since request exceeded limits")
+                value = self._forwards_limit
+
+        if not self._backwards_limit == None:
+            if value < self._backwards_limit:
+                print("Setting simulated spark reference to reverse limit since request exceeded limits")
+                value = self._backwards_limit
+
         v = self._controllers[pidSlot].calculate(self._motor._encoder._position, value)
         if v > self._max_output:
             v = self._max_output
@@ -85,7 +131,7 @@ class SparkMaxPIDController:
             v = self._min_output
         self._motor.set(v)
 
-    def _setPIDSoftLimit(self, direction, limit):
+    def _setPIDSoftLimit(self, direction, limit: float):
         if direction == RealCANSparkMax.SoftLimitDirection.kForward:
             self._forwards_limit = limit
         else:
@@ -109,7 +155,7 @@ class CANSparkMax(wpilib.Spark):
     def __init__(self, channel: int, type: RealCANSparkMax.MotorType) -> None:
         super().__init__(channel)
         self._encoder = SparkMaxRelativeEncoder()
-        self._abs_encoder = SparkAbsoluteEncoder()
+        self._abs_encoder = SparkMaxAbsoluteEncoder()
         self._pidController = SparkMaxPIDController(self)
 
     def follow(self, motor, invert):

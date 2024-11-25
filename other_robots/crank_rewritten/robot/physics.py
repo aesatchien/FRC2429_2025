@@ -4,7 +4,7 @@ from pyfrc.physics.core import PhysicsInterface
 import wpilib.simulation
 from wpimath.system.plant import DCMotor
 from robot import MyRobot
-from rev import CANSparkMax
+from sparksim import CANSparkMax as SimCANSparkMax
 import constants
 
 class PhysicsEngine:
@@ -38,13 +38,13 @@ class PhysicsEngine:
         print("putting mech2d to smartdashboard!")
         wpilib.SmartDashboard.putData("arm mech 2d", self.arm_mech2d)
 
-        self.arm_motor: CANSparkMax = self.robot.container.lower_crank.sparkmax
+        self.arm_motor: SimCANSparkMax = self.robot.container.lower_crank.sparkmax
         self.arm_motor_sim = wpilib.simulation.PWMSim(self.arm_motor)
 
 
     def update_sim(self, now, tm_diff):
 
-        self.arm_sim.setInputVoltage(self.robot.container.lower_crank.get_commanded_voltage())
+        self.arm_sim.setInputVoltage(self.arm_motor_sim.getSpeed())
 
         self.arm_sim.update(tm_diff)
 
