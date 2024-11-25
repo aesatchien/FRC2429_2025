@@ -16,12 +16,13 @@ class SparkMaxRelativeEncoder():
         self._position_conversion_factor = 1
 
     def getVelocity(self):
-        return self._velocity * self._velocity_conversion_factor
+        return self._velocity
 
     def getPosition(self):
-        return self._position * self._position_conversion_factor
+        return self._position
 
     def setPosition(self, position) -> REVLibError:
+        print(f"spark max relative encoder is being set to {position}")
         self._position = position
         return REVLibError.kOk
 
@@ -124,7 +125,8 @@ class SparkMaxPIDController:
                 print("Setting simulated spark reference to reverse limit since request exceeded limits")
                 value = self._backwards_limit
 
-        v = self._controllers[pidSlot].calculate(self._motor._encoder._position, value)
+        v = self._controllers[pidSlot].calculate(self._motor._encoder.getPosition(), value)
+        print(f"PID controller requests output {v} based on position {self._motor._encoder.getPosition()} and setpoint {value}")
         if v > self._max_output:
             v = self._max_output
         elif v < self._min_output:

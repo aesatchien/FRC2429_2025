@@ -14,7 +14,7 @@ class PhysicsEngine:
         self.physics_controller = physics_controller
         self.robot = robot
         
-        self.crank_arm_plant = DCMotor.NEO(2)
+        self.crank_arm_plant = DCMotor.NEO(1)
 
         self.arm_sim = wpilib.simulation.SingleJointedArmSim(
                 self.crank_arm_plant,
@@ -24,7 +24,7 @@ class PhysicsEngine:
                 armLength=constants.k_lower_crank_dict["k_length_meters"],
                 minAngle=math.radians(40),
                 maxAngle=math.radians(116),
-                simulateGravity=True,
+                simulateGravity=False,
                 startingAngle=math.radians(60)
         )
 
@@ -43,16 +43,20 @@ class PhysicsEngine:
 
 
     def update_sim(self, now, tm_diff):
-
-        self.arm_sim.setInputVoltage(self.arm_motor_sim.getSpeed())
-
-        self.arm_sim.update(tm_diff)
-
-        self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle() / math.tau)
-
         wpilib.simulation.RoboRioSim.setVInVoltage(
                 wpilib.simulation.BatterySim.calculate([self.arm_sim.getCurrentDraw()])
         )
+        voltage = wpilib.simulation.RoboRioSim.getVInVoltage()
+
+
+        print(f"input voltage: {voltage * self.arm_motor_sim.getSpeed()}")
+        self.arm_sim.setInputVoltage(voltage * self.arm_motor_sim.getSpeed())
+
+        self.arm_sim.update(tm_diff)
+
+        print(f"calculated arm angle: {self.arm_sim.getAngle()}")
+
+        self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
 
         self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
 

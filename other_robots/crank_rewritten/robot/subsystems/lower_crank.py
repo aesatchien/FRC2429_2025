@@ -48,6 +48,7 @@ class LowerCrank(Subsystem):
 
     def set_position(self, position: float) -> None:
         self.pid_controller.setReference(value=position, ctrl=CANSparkMax.ControlType.kPosition, pidSlot=0)
+
         # cory's method: if this is a sim, just set the encoder to the setpoint
         # todo: in the sim, set up the whole singlejointedarmsim, then use that to calculate the value which we set the encoder to.
         if False: # wpilib.RobotBase.isSimulation():
@@ -56,8 +57,9 @@ class LowerCrank(Subsystem):
     def get_angle(self) -> float:
         return self.abs_encoder.getPosition()
 
-    def set_encoder_position(self, rotations: float):
-        self.encoder.setPosition(rotations)
+    def set_encoder_position(self, radians: float):
+        print(f"crank is settings its encoder to {radians} rad")
+        self.encoder.setPosition(radians)
 
     def periodic(self) -> None:
 
