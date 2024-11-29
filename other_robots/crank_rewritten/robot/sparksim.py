@@ -1,11 +1,14 @@
+'''
 import wpilib
 from rev import (
         REVLibError, 
-        SparkMaxAbsoluteEncoder as RealSparkMaxAbsoluteEncoder,
-        SparkMaxRelativeEncoder as RealSparkMaxRelativeEncoder,
-        CANSparkMax as RealCANSparkMax
+        SparkMax as RealCANSparkMax,
 )
+import rev
+from rev import SparkMaxSim
 from wpimath.controller import PIDController
+
+mycansparkmax = RealCANSparkMax(1, rev.MotorType.kBrushless)
 
 class SparkMaxRelativeEncoder():
     def __init__(self):
@@ -22,7 +25,6 @@ class SparkMaxRelativeEncoder():
         return self._position
 
     def setPosition(self, position) -> REVLibError:
-        print(f"spark max relative encoder is being set to {position}")
         self._position = position
         return REVLibError.kOk
 
@@ -47,10 +49,10 @@ class SparkMaxAbsoluteEncoder():
         self._position_conversion_factor = 1
 
     def getVelocity(self):
-        return self._velocity * self._velocity_conversion_factor
+        return self._velocity 
 
     def getPosition(self):
-        return (self._position * self._position_conversion_factor) + self._zero_offset
+        return self._position + self._zero_offset
 
     def getZeroOffset(self):
         return self._zero_offset
@@ -117,21 +119,19 @@ class SparkMaxPIDController:
     def setReference(self, value: float, ctrl: RealCANSparkMax.ControlType, pidSlot: int):
         if not self._forwards_limit == None:
             if value > self._forwards_limit:
-                print("Setting simulated spark reference to forward limit since request exceeded limits")
                 value = self._forwards_limit
 
         if not self._backwards_limit == None:
             if value < self._backwards_limit:
-                print("Setting simulated spark reference to reverse limit since request exceeded limits")
                 value = self._backwards_limit
 
         v = self._controllers[pidSlot].calculate(self._motor._encoder.getPosition(), value)
-        print(f"PID controller requests output {v} based on position {self._motor._encoder.getPosition()} and setpoint {value}")
         if v > self._max_output:
             v = self._max_output
         elif v < self._min_output:
             v = self._min_output
         self._motor.set(v)
+
 
     def _setPIDSoftLimit(self, direction, limit: float):
         if direction == RealCANSparkMax.SoftLimitDirection.kForward:
@@ -173,9 +173,6 @@ class CANSparkMax(wpilib.Spark):
         return self._pidController
 
     def getAppliedOutput(self):
-        """
-        here i'm running into an impasse- I don't know the units of the error
-        """
         pass
 
     def setIdleMode(self, mode):
@@ -190,4 +187,4 @@ class CANSparkMax(wpilib.Spark):
     def setSoftLimit(self, direction: RealCANSparkMax.SoftLimitDirection, limit):
         self._pidController._setPIDSoftLimit(direction, limit)
 
-
+'''

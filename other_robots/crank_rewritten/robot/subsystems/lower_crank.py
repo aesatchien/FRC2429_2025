@@ -1,74 +1,74 @@
 from commands2.subsystem import Subsystem
 import wpilib
-from sparksim import CANSparkMax as SimCANSparkMax
-from rev import CANSparkMax
-import constants
+from wpimath.system.plant import DCMotor
+from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig, SparkMaxSim 
+from constants import LowerCrankConstants
 import math
+
+import constants
 
 
 class LowerCrank(Subsystem):
 
     def __init__(self, container):
+
         self.container = container
 
-        if wpilib.RobotBase.isReal():
-            self.sparkmax = CANSparkMax(constants.k_lower_crank_CAN_id, CANSparkMax.MotorType.kBrushless)
-        else:
-            self.sparkmax = SimCANSparkMax(constants.k_lower_crank_CAN_id, CANSparkMax.MotorType.kBrushless)
+        self.sparkmax = SparkMax(LowerCrankConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
-        self.sparkmax.restoreFactoryDefaults()
+        self.config = SparkMaxConfig()
+
+        self.config.closedLoop.pid(p=constants.LowerCrankConstants.kP, i=0, d=0, slot=ClosedLoopSlot(0))
+
+        self.config.encoder.positionConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
+        self.config.encoder.velocityConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
+
+        self.config.absoluteEncoder.positionConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
+        self.config.absoluteEncoder.velocityConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
+        self.config.absoluteEncoder.zeroOffset(LowerCrankConstants.k_abs_encoder_offset)
+
+        self.config.closedLoop.pid(p=LowerCrankConstants.kP, i=LowerCrankConstants.kI, d=LowerCrankConstants.kD, slot=ClosedLoopSlot(0))
+        self.config.closedLoop.IZone(iZone=LowerCrankConstants.kIZone, slot=ClosedLoopSlot(0))
+        self.config.closedLoop.IMaxAccum(LowerCrankConstants.kIMaxAccum, slot=ClosedLoopSlot(0))
+        
+        self.config.softLimit.forwardSoftLimit(LowerCrankConstants.k_forward_limit)
+        self.config.softLimit.reverseSoftLimit(LowerCrankConstants.k_reverse_limit)
+
+        self.config.softLimit.forwardSoftLimitEnabled(True)
+        self.config.softLimit.reverseSoftLimitEnabled(True)
+
+        self.sparkmax.configure(config=self.config, 
+                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                persistMode=SparkMax.PersistMode.kPersistParameters)
 
         self.encoder = self.sparkmax.getEncoder()
-
-        # radians
-        self.encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
-        self.encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
-
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
-        self.abs_encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
-        self.abs_encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
-        self.abs_encoder.setZeroOffset(constants.k_lower_crank_dict["k_abs_encoder_offset"])
-
-        # since everything's in radians, the encoders should agree
         self.encoder.setPosition(self.abs_encoder.getPosition())
 
-        self.pid_controller = self.sparkmax.getPIDController()
-        self.pid_controller.setP(gain=constants.k_lower_crank_dict['kP'], slotID=0)
-        self.pid_controller.setI(gain=constants.k_lower_crank_dict['kI'], slotID=0)
-        self.pid_controller.setD(gain=constants.k_lower_crank_dict['kD'], slotID=0)
-        self.pid_controller.setIZone(math.radians(5), slotID=0)
-        self.pid_controller.setIMaxAccum(iMaxAccum=0.1, slotID=0)
+        self.controller = self.sparkmax.getClosedLoopController()
 
-        self.sparkmax.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, constants.k_lower_crank_dict["k_forward_limit"])
-        self.sparkmax.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, constants.k_lower_crank_dict["k_reverse_limit"])
+        if wpilib.RobotBase.isSimulation():
+            self.sparkmax_sim = SparkMaxSim(self.sparkmax, DCMotor.NEO550(1))
 
-        self.sparkmax.burnFlash()
-        
         self.counter = 0
+        self.setpoint = self.get_angle()
 
     def set_position(self, position: float) -> None:
-        self.pid_controller.setReference(value=position, ctrl=CANSparkMax.ControlType.kPosition, pidSlot=0)
-
-        # cory's method: if this is a sim, just set the encoder to the setpoint
-        # todo: in the sim, set up the whole singlejointedarmsim, then use that to calculate the value which we set the encoder to.
-        if False: # wpilib.RobotBase.isSimulation():
-            self.encoder.setPosition(position)
+        self.setpoint = position
+        self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, pidSlot=0)
 
     def get_angle(self) -> float:
         return self.abs_encoder.getPosition()
 
     def set_encoder_position(self, radians: float):
-        print(f"crank is settings its encoder to {radians} rad")
         self.encoder.setPosition(radians)
 
     def periodic(self) -> None:
 
-        self.counter += 1
-        if self.counter % 100 > 50:
-            print("setting position to 90 degrees!")
-            self.set_position(math.radians(90))
-        else:
-            print("setting position to 45 degrees!")
-            self.set_position(math.radians(45))
+        # self.counter += 1
+        if wpilib.RobotBase.isSimulation():
+            # the 
+            # self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, pidSlot=0)
+            pass
 
         return super().periodic()

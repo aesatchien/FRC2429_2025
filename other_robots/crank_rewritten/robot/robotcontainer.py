@@ -2,9 +2,11 @@ import time, enum
 import wpilib
 import commands2
 from commands2.button import Trigger
-from subsystems.lower_crank import LowerCrank
 import constants
 
+from subsystems.lower_crank import LowerCrank
+
+from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
 
 class RobotContainer:
     """
@@ -48,7 +50,7 @@ class RobotContainer:
         and then passing it to a JoystickButton.
         """
         # The driver's controller
-        self.driver_controller = commands2.button.CommandXboxController(constants.k_driver_controller_port)
+        self.driver_controller = commands2.button.CommandXboxController(constants.GeneralConstants.k_driver_controller_port)
         self.triggerA = self.driver_controller.a()
         self.triggerB = self.driver_controller.b()
         self.triggerX = self.driver_controller.x()
@@ -85,7 +87,7 @@ class RobotContainer:
         """
 
     def initialize_dashboard(self):
-
+        wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
         # lots of putdatas for testing on the dash
         pass
 
