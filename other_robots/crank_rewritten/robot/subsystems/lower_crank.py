@@ -25,8 +25,8 @@ class LowerCrank(Subsystem):
         self.encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
 
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
-        self.abs_encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
-        self.abs_encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
+        self.abs_encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio_after_planetaries"])
+        self.abs_encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio_after_planetaries"])
         self.abs_encoder.setZeroOffset(constants.k_lower_crank_dict["k_abs_encoder_offset"])
 
         # since everything's in radians, the encoders should agree
@@ -41,6 +41,8 @@ class LowerCrank(Subsystem):
 
         self.sparkmax.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, constants.k_lower_crank_dict["k_forward_limit"])
         self.sparkmax.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, constants.k_lower_crank_dict["k_reverse_limit"])
+
+        self.sparkmax.setIdleMode(CANSparkMax.IdleMode.kCoast)
 
         self.sparkmax.burnFlash()
         
@@ -64,11 +66,8 @@ class LowerCrank(Subsystem):
     def periodic(self) -> None:
 
         self.counter += 1
-        if self.counter % 100 > 50:
-            print("setting position to 90 degrees!")
-            self.set_position(math.radians(90))
-        else:
-            print("setting position to 45 degrees!")
-            self.set_position(math.radians(45))
+
+        wpilib.SmartDashboard.putNumber("crank arm abs encoder, rad hopefully", self.get_angle())
+        wpilib.SmartDashboard.putNumber("crank arm relative encoder, rad hopefully", self.encoder.getPosition())
 
         return super().periodic()
