@@ -49,6 +49,8 @@ class LowerCrank(Subsystem):
         self.pid_controller.setIMaxAccum(iMaxAccum=0.1, slotID=0)
 
         wpilib.SmartDashboard.putNumber("kP", 0)
+        wpilib.SmartDashboard.putNumber("kI", 0)
+        wpilib.SmartDashboard.putNumber("kD", 0)
 
         self.sparkmax.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, constants.k_lower_crank_dict["k_forward_limit"])
         self.sparkmax.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, constants.k_lower_crank_dict["k_reverse_limit"])
@@ -88,6 +90,12 @@ class LowerCrank(Subsystem):
 
         if not wpilib.SmartDashboard.getNumber("kP", 0) == self.pid_controller.getP(slotID=0):
             self.pid_controller.setP(gain=wpilib.SmartDashboard.getNumber("kP", 0), slotID=0)
+
+        if not wpilib.SmartDashboard.getNumber("kI", 0) == self.pid_controller.getI(slotID=0):
+            self.pid_controller.setI(gain=wpilib.SmartDashboard.getNumber("kI", 0), slotID=0)
+
+        if not wpilib.SmartDashboard.getNumber("kD", 0) == self.pid_controller.getD(slotID=0):
+            self.pid_controller.setD(gain=wpilib.SmartDashboard.getNumber("kD", 0), slotID=0)
 
         if wpilib.RobotBase.isSimulation():
             self.set_position(self.setpoint )
