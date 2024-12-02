@@ -20,22 +20,26 @@ class LowerCrank(Subsystem):
 
         self.sparkmax.restoreFactoryDefaults()
 
+        self.sparkmax.setInverted(True)
+
         self.encoder = self.sparkmax.getEncoder()
 
         # radians
         self.encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
         self.encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio"])
+        # self.encoder.setInverted(True)
 
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
         self.abs_encoder.setPositionConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio_after_planetaries"])
         self.abs_encoder.setVelocityConversionFactor(math.tau / constants.k_lower_crank_dict["k_gear_ratio_after_planetaries"])
+        self.abs_encoder.setInverted(True)
         error_code = self.abs_encoder.setZeroOffset(constants.k_lower_crank_dict["k_abs_encoder_offset"])
         print(f"set abs encoder offset to {constants.k_lower_crank_dict['k_abs_encoder_offset']}")
         print(f"obtained error code {error_code}")
         print(f"abs encoder registering {self.abs_encoder.getPosition()}")
 
         # since everything's in radians, the encoders should agree
-        self.encoder.setPosition(self.abs_encoder.getPosition())
+        self.encoder.setPosition(self.abs_encoder.getPosition() + constants.k_lower_crank_dict["k_number_to_add_to_abs_readout_for_relative"])
 
         self.pid_controller = self.sparkmax.getPIDController()
         self.pid_controller.setP(gain=constants.k_lower_crank_dict['kP'], slotID=0)
@@ -80,6 +84,7 @@ class LowerCrank(Subsystem):
         wpilib.SmartDashboard.putNumber("crank arm abs encoder, rad hopefully", self.get_angle())
         wpilib.SmartDashboard.putNumber("crank arm relative encoder, rad hopefully", self.encoder.getPosition())
         wpilib.SmartDashboard.putNumber("crank arm abs encoder degrees", math.degrees(self.get_angle()))
+        wpilib.SmartDashboard.putNumber("crank arm relative encoder degrees", math.degrees(self.encoder.getPosition()))
 
         if not wpilib.SmartDashboard.getNumber("kP", 0) == self.pid_controller.getP(slotID=0):
             self.pid_controller.setP(gain=wpilib.SmartDashboard.getNumber("kP", 0), slotID=0)
