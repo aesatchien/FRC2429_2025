@@ -1,3 +1,4 @@
+import math
 import time, enum
 import wpilib
 import commands2
@@ -84,12 +85,13 @@ class RobotContainer:
         self.co_buttonRightAxis = AxisButton(self.co_driver_controller, 3)
         """
 
+    def bind_buttons(self):
+        self.triggerUp.onTrue(commands2.InstantCommand(lambda: self.lower_crank.set_position(math.radians(90))))
+        self.triggerDown.onTrue(commands2.InstantCommand(lambda: self.lower_crank.set_position(math.radians(45))))
+
     def initialize_dashboard(self):
 
         # lots of putdatas for testing on the dash
-        pass
-
-    def bind_buttons(self):
         pass
 
     def get_autonomous_command(self):

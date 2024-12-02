@@ -92,6 +92,9 @@ class SparkMaxPIDController:
     def setD(self, gain, slotID):
         self._controllers[slotID].setD(gain)
 
+    def getP(self, slotID=0):
+        return self._controllers[slotID].getP()
+
     def setIZone(self, izone, slotID):
         """
         not implemented, may result in unexpected behaviors
