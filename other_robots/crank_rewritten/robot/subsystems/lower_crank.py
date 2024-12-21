@@ -1,7 +1,7 @@
 from commands2.subsystem import Subsystem
 import wpilib
 from wpimath.system.plant import DCMotor
-from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig, SparkMaxSim 
+from rev import ClosedLoopSlot, SparkClosedLoopController, SparkMax, SparkMaxConfig, SparkMaxSim 
 from constants import LowerCrankConstants
 import math
 
@@ -17,8 +17,6 @@ class LowerCrank(Subsystem):
         self.sparkmax = SparkMax(LowerCrankConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
         self.config = SparkMaxConfig()
-
-        self.config.closedLoop.pid(p=constants.LowerCrankConstants.kP, i=0, d=0, slot=ClosedLoopSlot(0))
 
         self.config.encoder.positionConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
         self.config.encoder.velocityConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
@@ -43,18 +41,21 @@ class LowerCrank(Subsystem):
 
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
-        self.encoder.setPosition(self.abs_encoder.getPosition())
+        if wpilib.RobotBase.isReal():
+            self.encoder.setPosition(self.abs_encoder.getPosition())
+        else:
+            self.encoder.setPosition(LowerCrankConstants.k_lower_crank_sim_starting_angle)
 
         self.controller = self.sparkmax.getClosedLoopController()
-
-        if wpilib.RobotBase.isSimulation():
-            self.sparkmax_sim = SparkMaxSim(self.sparkmax, DCMotor.NEO550(1))
+        self.thectrlmode = SparkMax.ControlType.kPosition
 
         self.counter = 0
         self.setpoint = self.get_angle()
+        self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, pidSlot=0)
 
     def set_position(self, position: float) -> None:
         self.setpoint = position
+        self.thectrlmode = SparkMax.ControlType.kPosition
         self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, pidSlot=0)
 
     def get_angle(self) -> float:
@@ -65,10 +66,15 @@ class LowerCrank(Subsystem):
 
     def periodic(self) -> None:
 
-        # self.counter += 1
+        self.counter += 1
         if wpilib.RobotBase.isSimulation():
-            # the 
-            # self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, pidSlot=0)
+            if self.counter % 100 < 50:
+                # self.set_position(math.radians(90))
+                self.controller.setReference(value=1, ctrl=SparkMax.ControlType.kVelocity, pidSlot=0)
+                # self.controller.setReference(value=math.radians(90), ctrl=SparkMax.ControlType.kPosition, pidSlot=0, arbFeedforward=12, arbFFUnits=SparkClosedLoopController.ArbFFUnits.kVoltage)
+            else:
+                # self.set_position(math.radians(45))
+                self.controller.setReference(value=-1, ctrl=SparkMax.ControlType.kVelocity, pidSlot=0)
             pass
 
         return super().periodic()

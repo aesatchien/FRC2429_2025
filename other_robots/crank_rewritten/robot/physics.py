@@ -1,4 +1,6 @@
 import math
+from rev import SparkMaxSim, SparkSim
+from subsystems.lower_crank import LowerCrank
 import wpilib
 from pyfrc.physics.core import PhysicsInterface
 import wpilib.simulation
@@ -27,6 +29,11 @@ class PhysicsEngine:
                 startingAngle=math.radians(60)
         )
 
+        self.arm_spark_sim = SparkMaxSim(self.robot.container.lower_crank.sparkmax, self.crank_arm_plant)
+        self.arm_spark_sim.setPosition(constants.LowerCrankConstants.k_lower_crank_sim_starting_angle)
+        self.arm_spark_sim.enable()
+        # self.arm_encoder_sim = self.arm_spark_sim.getRelativeEncoderSim()
+
         self.arm_mech2d = wpilib.Mechanism2d(60, 60)
         self.mech2d_root = self.arm_mech2d.getRoot(name="root", x=40, y=10)
         self.base_mech2d = self.mech2d_root.appendLigament("frame", length=-20, angle=0)
@@ -42,17 +49,20 @@ class PhysicsEngine:
 
     def update_sim(self, now, tm_diff):
 
-        wpilib.simulation.RoboRioSim.setVInVoltage(
-                wpilib.simulation.BatterySim.calculate([self.arm_sim.getCurrentDraw()])
-        )
-        voltage = wpilib.simulation.RoboRioSim.getVInVoltage()
-
-        self.arm_sim.setInputVoltage(voltage * self.robot.container.lower_crank.sparkmax_sim.getAppliedOutput())
+        self.arm_sim.setInput(0, self.arm_spark_sim.getAppliedOutput() * wpilib.RobotController.getInputVoltage())
 
         self.arm_sim.update(tm_diff)
 
-        self.robot.container.lower_crank.sparkmax_sim.iterate(math.radians(self.arm_sim.getVelocityDps()), voltage, tm_diff)
-        # self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
+        wpilib.simulation.RoboRioSim.setVInVoltage(
+                wpilib.simulation.BatterySim.calculate([self.arm_sim.getCurrentDraw()])
+        )
+
+        voltage = wpilib.simulation.RoboRioSim.getVInVoltage()
+        
+        # self.arm_encoder_sim.setPosition(self.arm_sim.getAngle())
+        self.arm_spark_sim.setPosition(self.arm_sim.getAngle())
+        self.arm_spark_sim.iterate(math.radians(self.arm_sim.getVelocityDps()), voltage, tm_diff)
+        self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
 
         self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
 

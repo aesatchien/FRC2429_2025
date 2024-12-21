@@ -6,7 +6,7 @@ class GeneralConstants:
 class LowerCrankConstants:
 
     k_CAN_id = 7
-    kP = 1
+    kP = 6
     kI = 0
     kD = 0
     kIZone = 0
@@ -17,5 +17,6 @@ class LowerCrankConstants:
     k_reverse_limit = math.radians(40)
     k_length_meters = 20 * 0.0254
     k_mass_kg = 8
+    k_lower_crank_sim_starting_angle = math.radians(60)
     
 
