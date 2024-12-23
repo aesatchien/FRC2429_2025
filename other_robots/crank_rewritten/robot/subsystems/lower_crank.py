@@ -59,7 +59,8 @@ class LowerCrank(Subsystem):
         self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, pidSlot=0)
 
     def get_angle(self) -> float:
-        return self.abs_encoder.getPosition()
+        return self.encoder.getPosition()
+        # return self.abs_encoder.getPosition()
 
     def set_encoder_position(self, radians: float):
         self.encoder.setPosition(radians)
@@ -69,12 +70,12 @@ class LowerCrank(Subsystem):
         self.counter += 1
         if wpilib.RobotBase.isSimulation():
             if self.counter % 100 < 50:
-                # self.set_position(math.radians(90))
-                self.controller.setReference(value=1, ctrl=SparkMax.ControlType.kVelocity, pidSlot=0)
+                self.set_position(math.radians(90))
+                # self.controller.setReference(value=1, ctrl=SparkMax.ControlType.kVelocity, pidSlot=0)
                 # self.controller.setReference(value=math.radians(90), ctrl=SparkMax.ControlType.kPosition, pidSlot=0, arbFeedforward=12, arbFFUnits=SparkClosedLoopController.ArbFFUnits.kVoltage)
             else:
-                # self.set_position(math.radians(45))
-                self.controller.setReference(value=-1, ctrl=SparkMax.ControlType.kVelocity, pidSlot=0)
+                self.set_position(math.radians(45))
+                # self.controller.setReference(value=-1, ctrl=SparkMax.ControlType.kVelocity, pidSlot=0)
             pass
 
         return super().periodic()

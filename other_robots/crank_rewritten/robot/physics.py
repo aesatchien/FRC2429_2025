@@ -16,6 +16,7 @@ class PhysicsEngine:
         self.robot = robot
         
         self.crank_arm_plant = DCMotor.NEO(1)
+        self.crank_arm_plant.withReduction(  )
 
         self.arm_sim = wpilib.simulation.SingleJointedArmSim(
                 self.crank_arm_plant,
@@ -26,7 +27,7 @@ class PhysicsEngine:
                 minAngle=math.radians(40),
                 maxAngle=math.radians(116),
                 simulateGravity=True,
-                startingAngle=math.radians(60)
+                startingAngle=constants.LowerCrankConstants.k_lower_crank_sim_starting_angle
         )
 
         self.arm_spark_sim = SparkMaxSim(self.robot.container.lower_crank.sparkmax, self.crank_arm_plant)
@@ -49,7 +50,12 @@ class PhysicsEngine:
 
     def update_sim(self, now, tm_diff):
 
-        self.arm_sim.setInput(0, self.arm_spark_sim.getAppliedOutput() * wpilib.RobotController.getInputVoltage())
+        print(f"voltage: {wpilib.RobotController.getInputVoltage()}")
+        print(f"now: {now}")
+        if now > 10:
+            self.arm_sim.setInput(0, self.arm_spark_sim.getAppliedOutput() * wpilib.RobotController.getInputVoltage())
+        else:
+            self.arm_sim.setInput(0, 0.5)
 
         self.arm_sim.update(tm_diff)
 
@@ -58,9 +64,10 @@ class PhysicsEngine:
         )
 
         voltage = wpilib.simulation.RoboRioSim.getVInVoltage()
+        print(f"rio sim voltage: {wpilib.simulation.RoboRioSim.getVInVoltage()}")
         
         # self.arm_encoder_sim.setPosition(self.arm_sim.getAngle())
-        self.arm_spark_sim.setPosition(self.arm_sim.getAngle())
+        # self.arm_spark_sim.setPosition(self.arm_sim.getAngle())
         self.arm_spark_sim.iterate(math.radians(self.arm_sim.getVelocityDps()), voltage, tm_diff)
         self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
 
