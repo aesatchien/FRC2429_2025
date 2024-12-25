@@ -3,7 +3,7 @@ from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfileRadians
-from rev import SparkMax, SparkFlex
+from rev import SparkMax, SparkFlex, SparkFlexConfig, SparkMaxConfig
 from pathplannerlib.config import DCMotor, PIDConstants
 
 class DriveConstants:
@@ -20,6 +20,8 @@ class DriveConstants:
     k_inner_deadband = 0.08  # use deadbands for joystick transformations and keepangle calculations
     k_outer_deadband = 0.95  # above this you just set it to 1 - makes going diagonal easier
     # k_minimum_rotation = kMaxAngularSpeed * k_inner_deadband
+
+    k_swerve_state_messages = True # these currently send the pose data to the sim - keep them on
 
     # Chassis configuration - not sure it even matters if we're square because wpilib accounts for it
     # MK4i modules have the centers of the wheels 2.5" from the edge, so this is robot length (or width) minus 5
@@ -105,18 +107,41 @@ class ModuleConstants:
     kTurningEncoderPositionFactor = math.tau / k_turning_motor_gear_ratio # radian
     kTurningEncoderVelocityFactor = kTurningEncoderPositionFactor / 60.0  # radians per second
 
-    kTurningEncoderPositionPIDMinInput = 0  # radian
-    kTurningEncoderPositionPIDMaxInput = math.tau  # kTurningEncoderPositionFactor  # radian
-
     kDrivingP = 0
     kDrivingI = 0
     kDrivingD = 0
     kDrivingFF = 1 / kDriveWheelFreeSpeedRps  # CJH tested 3/19/2023, works ok  - 0.2235
-    print(f'kdrivingFF: {kDrivingFF}')
-    kDrivingMinOutput = -0.96
+    # print(f'kdrivingFF: {kDrivingFF}')
+    kDrivingMinOutput = -0.96 # why is this here?
     kDrivingMaxOutput = 0.96
     k_smartmotion_max_velocity = 3  # m/s
     k_smartmotion_max_accel = 2  # m/s/s
+
+    # todo: put common constants across controllers into constants.py
+
+    k_driving_config = SparkFlexConfig()
+    k_driving_config.closedLoop.pidf(p=0, i=0, d=0, ff=1/kDriveWheelFreeSpeedRps)
+    k_driving_config.closedLoop.minOutput(-0.96)
+    k_driving_config.closedLoop.maxOutput(0.96)
+    k_driving_config.closedLoop.IZone(0.001)
+    k_driving_config.closedLoop.maxMotion.maxVelocity(3)
+    k_driving_config.closedLoop.maxMotion.maxAcceleration(2)
+    k_driving_config.setIdleMode(idleMode=SparkFlexConfig.IdleMode.kBrake)
+    k_driving_config.smartCurrentLimit(stallLimit=0)
+    k_driving_config.voltageCompensation(12)
+    k_driving_config.encoder.positionConversionFactor((kWheelDiameterMeters * math.pi) / kDrivingMotorReduction) # meters
+    k_driving_config.encoder.velocityConversionFactor((kWheelDiameterMeters * math.pi) / ( kDrivingMotorReduction * 60)) # meters per second
+
+    # note: we don't use any spark pid or ff for turning
+    k_turning_config = SparkMaxConfig()
+    k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+    k_turning_config.smartCurrentLimit(stallLimit=0)
+    k_turning_config.voltageCompensation(12)
+
+    # nor do we use this encoder-- we configure it "just to watch it if we need to for velocities, etc."
+
+    k_turning_config.encoder.positionConversionFactor(math.tau/k_turning_motor_gear_ratio) # radian
+    k_turning_config.encoder.velocityConversionFactor(math.tau/(k_turning_motor_gear_ratio * 60)) # radians per second
 
     kTurningP = 0.3 #  CJH tested this 3/19/2023  and 0.25 was good
     kTurningI = 0.0

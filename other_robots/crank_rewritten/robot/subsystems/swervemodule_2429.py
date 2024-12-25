@@ -1,10 +1,9 @@
 import wpilib
-from rev import CANSparkMax, CANSparkFlex
+from rev import SparkFlexConfig, SparkMax, SparkFlex
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
-from wpilib import AnalogEncoder, AnalogPotentiometer
+from wpilib import AnalogEncoder, AnalogPotentiometer, Spark
 from wpimath.controller import PIDController
-from misc.configure_controllers import configure_sparkmax
 import math
 
 import constants
@@ -21,52 +20,46 @@ class SwerveModule:
         self.turning_output = 0
 
         # get our two motor controllers and a simulation dummy  TODO: set motor types in swerve_constants?
-        self.drivingSparkMax = CANSparkFlex(drivingCANId, CANSparkFlex.MotorType.kBrushless)
-        self.turningSparkMax = CANSparkMax(turningCANId, CANSparkMax.MotorType.kBrushless)
+        self.drivingSparkMax = SparkFlex(drivingCANId, SparkFlex.MotorType.kBrushless)
+        self.turningSparkMax = SparkMax(turningCANId, SparkMax.MotorType.kBrushless)
         if wpilib.RobotBase.isSimulation():  # check in sim to see if we are reacting to inputs
             pass
             # self.dummy_motor_driving = wpilib.PWMSparkMax(drivingCANId-16)
             # self.dummy_motor_turning = wpilib.PWMSparkMax(turningCANId-16)
 
         #  ---------------- DRIVING  SPARKMAX  ------------------
+
         # Factory reset, so we get the SPARKS MAX to a known state before configuring them
-        if constants.k_reset_sparks_to_default:
-            self.drivingSparkMax.restoreFactoryDefaults()
-        self.drivingSparkMax.setIdleMode(ModuleConstants.kDrivingMotorIdleMode)
-        self.drivingSparkMax.setSmartCurrentLimit(ModuleConstants.kDrivingMotorCurrentLimit)
+        if constants.GeneralConstants.k_reset_sparks_to_default:
+            self.drivingSparkMax.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+        else:
+            self.drivingSparkMax.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+
         self.drivingSparkMax.setInverted(driving_inverted)
-        self.drivingSparkMax.enableVoltageCompensation(constants.k_volt_compensation)
 
         # Get driving encoder from the sparkmax
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
-        self.drivingEncoder.setPositionConversionFactor(ModuleConstants.kDrivingEncoderPositionFactor)
-        self.drivingEncoder.setVelocityConversionFactor(ModuleConstants.kDrivingEncoderVelocityFactor)
-        # Configure driving PID gains for the driving motor
-        self.drivingPIDController = self.drivingSparkMax.getPIDController()
-        self.drivingPIDController.setFeedbackDevice(self.drivingEncoder)
-        # Set/Save the configurations. If a SPARK MAX browns out during operation, it will maintain the above config
-        # Saves p,i,d, ff, min/max, smart motion etc - do we need more than one slot used?  might as well always be
-        configure_sparkmax(sparkmax=self.drivingSparkMax, pid_controller=self.drivingPIDController, can_id=drivingCANId, slot=0,
-                               burn_flash=constants.k_burn_flash, pid_dict=ModuleConstants.k_PID_dict_vel, pid_only=False)
-        # configure_sparkmax(sparkmax=self.drivingSparkMax, pid_controller=self.drivingPIDController, can_id=drivingCANId, slot=1,
-        #                        burn_flash=constants.k_burn_flash, pid_dict=ModuleConstants.k_PID_dict_vel, pid_only=False)
+        self.drivingClosedLoopController = self.drivingSparkMax.getClosedLoopController()
 
         #  ---------------- TURNING SPARKMAX  ------------------
-        self.turningSparkMax.restoreFactoryDefaults()
-        self.turningSparkMax.setIdleMode(ModuleConstants.kTurningMotorIdleMode)
-        self.turningSparkMax.setSmartCurrentLimit(ModuleConstants.kTurningMotorCurrentLimit)
+
+        if constants.GeneralConstants.k_reset_sparks_to_default:
+            # self.drivingSparkMax.restoreFactoryDefaults()
+            self.turningSparkMax.configure(config=ModuleConstants.k_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+
+        else:
+            self.turningSparkMax.configure(config=ModuleConstants.k_turning_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+
         self.turningSparkMax.setInverted(turning_inverted)
-        self.turningSparkMax.enableVoltageCompensation(constants.k_volt_compensation)
+
 
         # Setup encoders for the turning SPARKMAX - just to watch it if we need to for velocities, etc.
         # WE DO NOT USE THIS FOR ANYTHING - THE ABSOLUTE ENCODER IS USED FOR TURNING AND GOES INTO THE RIO ANALOG PORT
         self.turningEncoder = self.turningSparkMax.getEncoder()
-        self.turningEncoder.setPositionConversionFactor(ModuleConstants.kTurningEncoderPositionFactor)
-        self.turningEncoder.setVelocityConversionFactor(ModuleConstants.kTurningEncoderVelocityFactor)
 
-        if constants.k_burn_flash:  # until we make the turning motor settings a dictinary
+        # if constants.k_burn_flash:  # until we make the turning motor settings a dictinary
             # self.drivingSparkMax.burnFlash()  # already done in the configure step above
-            self.turningSparkMax.burnFlash()
+            # self.turningSparkMax.burnFlash()
 
         #  ---------------- ABSOLUTE ENCODER AND PID FOR TURNING  ------------------
         # create the AnalogPotentiometer with the offset.  TODO: this probably has to be 5V hardware but need to check
@@ -118,29 +111,28 @@ class SwerveModule:
         correctedDesiredState.speed = desiredState.speed
         correctedDesiredState.angle = desiredState.angle
 
-        # Optimize the reference state to avoid spinning further than 90 degrees.
-        optimizedDesiredState = SwerveModuleState.optimize(correctedDesiredState, Rotation2d(self.get_turn_encoder()))
+        correctedDesiredState.optimize(Rotation2d(self.get_turn_encoder()))
 
         # don't let wheels servo back if we aren't asking the module to move
         if math.fabs(desiredState.speed) < 0.002:  # need to see what is this minimum m/s that makes sense
-            optimizedDesiredState.speed = 0
-            optimizedDesiredState.angle = self.getState().angle
+            correctedDesiredState.speed = 0
+            correctedDesiredState.angle = self.getState().angle
 
         # Command driving and turning SPARKS MAX towards their respective setpoints.
-        self.drivingPIDController.setReference(optimizedDesiredState.speed, dc.k_drive_controller_type.ControlType.kVelocity)
+        self.drivingClosedLoopController.setReference(correctedDesiredState.speed, dc.k_drive_controller_type.ControlType.kVelocity)
 
-        # calculate the PID value for the turning motor  - use the roborio instead of the sparkmax
+        # calculate the PID value for the turning motor  - use the roborio instead of the sparkmax. todo: explain why
         # self.turningPIDController.setReference(optimizedDesiredState.angle.radians(), CANSparkMax.ControlType.kPosition)
-        self.turning_output = self.turning_PID_controller.calculate(self.get_turn_encoder(), optimizedDesiredState.angle.radians())
+        self.turning_output = self.turning_PID_controller.calculate(self.get_turn_encoder(), correctedDesiredState.angle.radians())
         # clean up the turning Spark LEDs by cleaning out the noise - 20240226 CJH
         self.turning_output = 0 if math.fabs(self.turning_output) < 0.01 else self.turning_output
         self.turningSparkMax.set(self.turning_output)
 
         # CJH added for debugging and tuning
         if wpilib.RobotBase.isSimulation():
-            if constants.k_swerve_state_messages:  # only do this when debugging - it's pretty intensive
+            if dc.k_swerve_state_messages:  # only do this when debugging - it's pretty intensive
                 wpilib.SmartDashboard.putNumberArray(f'{self.label}_target_vel_angle',
-                                    [optimizedDesiredState.speed, optimizedDesiredState.angle.radians()])
+                                    [correctedDesiredState.speed, correctedDesiredState.angle.radians()])
                 wpilib.SmartDashboard.putNumberArray(f'{self.label}_actual_vel_angle',
                                     [self.drivingEncoder.getVelocity(), self.turningEncoder.getPosition()])
                 wpilib.SmartDashboard.putNumberArray(f'{self.label}_volts',

@@ -2,9 +2,14 @@ import math
 from subsystems.swerve_constants import DriveConstants
 
 class GeneralConstants:
+
+    k_start_x = 0
+    k_start_y = 0
     k_driver_controller_port = 0
     k_robot_mass_kg = 56
     k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
+    k_reset_sparks_to_default = False
+    k_swerve_debugging_messages = False
 
 class LowerCrankConstants:
 

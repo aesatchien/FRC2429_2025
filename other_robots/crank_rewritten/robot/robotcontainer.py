@@ -7,6 +7,7 @@ import constants
 from subsystems.lower_crank import LowerCrank
 
 from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
+from subsystems.swerve import Swerve
 
 class RobotContainer:
     """
@@ -22,6 +23,7 @@ class RobotContainer:
 
         # The robot's subsystems
         self.lower_crank = LowerCrank(container=self)
+        self.swerve = Swerve()
 
         self.configure_joysticks()
         self.bind_buttons()

@@ -2,18 +2,17 @@ import math
 import typing
 
 import commands2
-from pathplannerlib.controller import PPHolonomicDriveController, PathFollowingController
+from pathplannerlib.controller import PPHolonomicDriveController
 import wpilib
 
 from commands2 import Subsystem
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation3d, Pose3d, Rotation3d
-from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics, SwerveDrive4Odometry,)
+from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics)
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.controller import PIDController
 import navx
 import rev
-import pathplannerlib
 from pathplannerlib.path import PathPlannerTrajectory
 import ntcore
 import robotpy_apriltag as ra
@@ -21,14 +20,12 @@ import wpimath.geometry as geo
 
 
 import constants
-from swervemodule_2429 import SwerveModule
-from swerve_constants import DriveConstants as dc
-from swerve_constants import AutoConstants as ac
-from swerve_constants import ModuleConstants as mc
+from .swervemodule_2429 import SwerveModule
+from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
 
-from pathplannerlib.config import DCMotor, ModuleConfig, PIDConstants, RobotConfig
+from pathplannerlib.config import ModuleConfig, RobotConfig
 
 class Swerve (Subsystem):
     def __init__(self) -> None:
@@ -100,7 +97,7 @@ class Swerve (Subsystem):
         self.pose_estimator = SwerveDrive4PoseEstimator(dc.kDriveKinematics,
                                                         Rotation2d.fromDegrees(self.get_angle()),
                                                         self.get_module_positions(),
-            initialPose=Pose2d(constants.k_start_x, constants.k_start_y, Rotation2d.fromDegrees(self.get_angle())))
+            initialPose=Pose2d(constants.GeneralConstants.k_start_x, constants.GeneralConstants.k_start_y, Rotation2d.fromDegrees(self.get_angle())))
 
         # get poses from NT
         self.inst = ntcore.NetworkTableInstance.getDefault()
@@ -115,7 +112,6 @@ class Swerve (Subsystem):
         module_config = ModuleConfig(
                     wheelRadiusMeters=mc.kWheelDiameterMeters/2,
                     maxDriveVelocityMPS=mc.kDriveWheelFreeSpeedRps * mc.kWheelCircumferenceMeters * 0.85, # the robot advances one wheel circumference per rotation. 
-                                                                                                          # multiply by 85 according to pathplanner docs, but we should physically test.
                     wheelCOF=mc.k_wheel_cof,
                     driveMotor=mc.k_drive_motor,
                     driveCurrentLimit=mc.k_max_current_amps,
@@ -196,7 +192,7 @@ class Swerve (Subsystem):
         rotDelivered = rotation_commanded * dc.kMaxAngularSpeed
 
         # probably can stop doing this now
-        if constants.k_swerve_state_messages:
+        if dc.k_swerve_state_messages:
             wpilib.SmartDashboard.putNumberArray('_xyr', [xSpeedDelivered, ySpeedDelivered, rotDelivered])
 
         # create the swerve state array depending on if we are field relative or not
@@ -249,6 +245,7 @@ class Swerve (Subsystem):
     #     cmd = commands2.SequentialCommandGroup(reset_cmd, swerve_controller_cmd)
 
     #     return cmd
+
     # -------------- END PATHPLANNER STUFF
 
     def reset_keep_angle(self):
@@ -286,7 +283,7 @@ class Swerve (Subsystem):
                                    pidSlot=1, arbFeedForward=0):
         # Make sure you've turned the swerve into a tank drive before calling this
         for module in self.swerve_modules:
-            module.drivingPIDController.setReference(setpoint, control_type, pidSlot=pidSlot)
+            module.drivingClosedLoopController.setReference(setpoint, control_type, pidSlot=pidSlot)
 
     def set_x_mode(self, mode='brake'):
         if mode == 'brake':
@@ -481,7 +478,6 @@ class Swerve (Subsystem):
                 wpilib.SmartDashboard.putNumber('drive_y', pose.Y())
                 wpilib.SmartDashboard.putNumber('drive_theta', pose.rotation().degrees())
 
-            wpilib.SmartDashboard.putNumber('distance to amp', (pose - Pose2d(constants.k_blue_amp[0], constants.k_blue_amp[1], 0)).translation().norm())
             wpilib.SmartDashboard.putNumber('_navx', self.get_angle())
             wpilib.SmartDashboard.putNumber('_navx_yaw', self.get_yaw())
             wpilib.SmartDashboard.putNumber('_navx_angle', self.get_angle())
@@ -508,7 +504,7 @@ class Swerve (Subsystem):
 
 
 
-            if constants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
+            if constants.GeneralConstants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
                 angles = [m.turningEncoder.getPosition() for m in self.swerve_modules]
                 absolutes = [m.get_turn_encoder() for m in self.swerve_modules]
                 wpilib.SmartDashboard.putNumberArray(f'_angles', angles)

@@ -41,6 +41,7 @@ class LowerCrank(Subsystem):
 
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
+        self.abs_encoder
         if wpilib.RobotBase.isReal():
             self.encoder.setPosition(self.abs_encoder.getPosition())
         else:

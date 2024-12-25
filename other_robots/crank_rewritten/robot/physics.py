@@ -16,7 +16,6 @@ class PhysicsEngine:
         self.robot = robot
         
         self.crank_arm_plant = DCMotor.NEO(1)
-        self.crank_arm_plant.withReduction(  )
 
         self.arm_sim = wpilib.simulation.SingleJointedArmSim(
                 self.crank_arm_plant,
@@ -50,8 +49,8 @@ class PhysicsEngine:
 
     def update_sim(self, now, tm_diff):
 
-        print(f"voltage: {wpilib.RobotController.getInputVoltage()}")
-        print(f"now: {now}")
+        # print(f"voltage: {wpilib.RobotController.getInputVoltage()}")
+        # print(f"now: {now}")
         if now > 10:
             self.arm_sim.setInput(0, self.arm_spark_sim.getAppliedOutput() * wpilib.RobotController.getInputVoltage())
         else:
@@ -64,7 +63,7 @@ class PhysicsEngine:
         )
 
         voltage = wpilib.simulation.RoboRioSim.getVInVoltage()
-        print(f"rio sim voltage: {wpilib.simulation.RoboRioSim.getVInVoltage()}")
+        # print(f"rio sim voltage: {wpilib.simulation.RoboRioSim.getVInVoltage()}")
         
         # self.arm_encoder_sim.setPosition(self.arm_sim.getAngle())
         # self.arm_spark_sim.setPosition(self.arm_sim.getAngle())
