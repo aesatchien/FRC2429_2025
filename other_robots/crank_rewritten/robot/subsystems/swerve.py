@@ -95,9 +95,9 @@ class Swerve (Subsystem):
 
         # 2024 - orphan the old odometry, now use the vision enabled version of odometry instead
         self.pose_estimator = SwerveDrive4PoseEstimator(dc.kDriveKinematics,
-                                                        Rotation2d.fromDegrees(self.get_angle()),
+                                                        Rotation2d.fromDegrees(self.get_gyro_angle()),
                                                         self.get_module_positions(),
-            initialPose=Pose2d(constants.GeneralConstants.k_start_x, constants.GeneralConstants.k_start_y, Rotation2d.fromDegrees(self.get_angle())))
+            initialPose=Pose2d(constants.k_start_x, constants.k_start_y, Rotation2d.fromDegrees(self.get_gyro_angle())))
 
         # get poses from NT
         self.inst = ntcore.NetworkTableInstance.getDefault()
@@ -105,7 +105,6 @@ class Swerve (Subsystem):
         self.apriltag_rear_count_subscriber = self.inst.getDoubleTopic("/Cameras/Tagcam/tags/targets").subscribe(0)
         self.apriltag_front_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/TagcamFront/poses/tag1").subscribe([0]*8)
         self.apriltag_front_count_subscriber = self.inst.getDoubleTopic("/Cameras/TagcamFront/tags/targets").subscribe(0)
-        self.use_apriltags = True
 
         # I'm fairly confident we don't need to use the DriveFeedForwards 12/22/24 LHACK
 
@@ -119,8 +118,8 @@ class Swerve (Subsystem):
         )
 
         robot_config = RobotConfig(
-                massKG=constants.GeneralConstants.k_robot_mass_kg,
-                MOI=constants.GeneralConstants.k_robot_moi,
+                massKG=constants.k_robot_mass_kg,
+                MOI=constants.k_robot_moi,
                 moduleConfig=module_config,
                 moduleOffsets=dc.kModulePositions,
                 trackwidthMeters=dc.kTrackWidth
@@ -251,6 +250,7 @@ class Swerve (Subsystem):
     def reset_keep_angle(self):
         self.last_rotation_time = self.keep_angle_timer.get()  # reset the rotation time
         self.last_drive_time = self.keep_angle_timer.get()  # reset the drive time
+
         new_angle = self.get_angle()
         print(f'  resetting keep angle from {self.keep_angle:.1f} to {new_angle:.1f}', flush=True)
         self.keep_angle = new_angle
@@ -285,17 +285,6 @@ class Swerve (Subsystem):
         for module in self.swerve_modules:
             module.drivingClosedLoopController.setReference(setpoint, control_type, pidSlot=pidSlot)
 
-    def set_x_mode(self, mode='brake'):
-        if mode == 'brake':
-            self.setX()
-
-    def set_brake_mode(self, mode='brake', report=False):
-        idle_mode = rev.CANSparkBase.IdleMode.kBrake if mode == 'brake' else rev.CANSparkBase.IdleMode.kCoast
-        for module in self.swerve_modules:
-            module.drivingSparkMax.setIdleMode(idle_mode)
-        if report:
-            print(f'  setting swerve brake mode to {mode}')
-
     def setX(self) -> None:
         """Sets the wheels into an X formation to prevent movement."""
         angles = [45, -45, -45, 45]
@@ -312,12 +301,6 @@ class Swerve (Subsystem):
         for idx, m in enumerate(self.swerve_modules):
             m.setDesiredState(desiredStates[idx])
 
-    def set_use_apriltags(self, use_apriltags):
-        self.use_apriltags = use_apriltags
-
-    def set_automated_path(self, path:PathPlannerPath):
-        self.automated_path = path
-
     def resetEncoders(self) -> None:
         """Resets the drive encoders to currently read a position of 0."""
         [m.resetEncoders() for m in self.swerve_modules]
@@ -325,12 +308,6 @@ class Swerve (Subsystem):
     def zeroHeading(self) -> None:
         """Zeroes the heading of the robot."""
         self.gyro.reset()
-
-    def getHeading(self) -> float:
-        """Returns the heading of the robot.
-        :returns: the robot's heading in degrees, from -180 to 180
-        """
-        return Rotation2d.fromDegrees(self.get_angle()).getDegrees()
 
     def getTurnRate(self) -> float:
         """Returns the turn rate of the robot.
@@ -351,9 +328,13 @@ class Swerve (Subsystem):
     def get_raw_angle(self):  # never reversed value for using PIDs on the heading
         return self.gyro.getAngle()
 
-    def get_angle(self):  # if necessary reverse the heading for swerve math
+    def get_gyro_angle(self):  # if necessary reverse the heading for swerve math
         # note this does add in the current offset
         return -self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()
+
+    def get_angle(self):  # if necessary reverse the heading for swerve math
+        # used to be get_gyro_angle but LHACK changed it 12/24/24 so we don't have to manually reset gyro anymore
+        return self.get_pose().rotation().degrees()
 
     def get_yaw(self):  # helpful for determining nearest heading parallel to the wall
         # but you should probably never use this - just use get_angle to be consistent
@@ -379,12 +360,6 @@ class Swerve (Subsystem):
             self.gyro.setAngleAdjustment(0)
         self.reset_keep_angle()
     
-    def get_use_apriltags(self):
-        return self.use_apriltags
-
-    def get_automated_path(self):
-        return self.automated_path
-
 
     # figure out the nearest stage - or any tag, I suppose if we pass in a list
     def get_nearest_tag(self, destination='stage'):
@@ -439,7 +414,7 @@ class Swerve (Subsystem):
         # send the current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
         # update pose based on apriltags
-        if self.use_apriltags:
+        if constants.k_use_apriltag_odometry:
 
             if self.apriltag_front_count_subscriber.get() > 0:  # use front camera
                 # update pose from apriltags
@@ -504,7 +479,7 @@ class Swerve (Subsystem):
 
 
 
-            if constants.GeneralConstants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
+            if constants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
                 angles = [m.turningEncoder.getPosition() for m in self.swerve_modules]
                 absolutes = [m.get_turn_encoder() for m in self.swerve_modules]
                 wpilib.SmartDashboard.putNumberArray(f'_angles', angles)

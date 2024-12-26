@@ -1,7 +1,9 @@
+from dataclasses import field
 import time, enum
 import wpilib
 import commands2
 from commands2.button import Trigger
+from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 import constants
 
 from subsystems.lower_crank import LowerCrank
@@ -26,12 +28,22 @@ class RobotContainer:
         self.swerve = Swerve()
 
         self.configure_joysticks()
-        self.bind_buttons()
-        # self.configure_swerve_bindings()
+        self.bind_driver_buttons()
+        self.swerve.setDefaultCommand(DriveByJoystickSwerve(
+            container=self,
+            swerve=self.swerve,
+            controller=self.driver_command_controller,
+            field_oriented=constants.k_field_oriented,
+            rate_limited=constants.k_swerve_rate_limited
+        ))
 
+        if not constants.k_swerve_only:
+            self.bind_operator_buttons()
+            self.bind_keyboard_buttons()
+
+        # self.configure_swerve_bindings()
         
         self.initialize_dashboard()
-        self.bind_buttons
 
         # swerve driving
 
@@ -52,19 +64,19 @@ class RobotContainer:
         and then passing it to a JoystickButton.
         """
         # The driver's controller
-        self.driver_controller = commands2.button.CommandXboxController(constants.GeneralConstants.k_driver_controller_port)
-        self.triggerA = self.driver_controller.a()
-        self.triggerB = self.driver_controller.b()
-        self.triggerX = self.driver_controller.x()
-        self.triggerY = self.driver_controller.y()
-        self.triggerLB = self.driver_controller.leftBumper()
-        self.triggerRB = self.driver_controller.rightBumper()
-        self.triggerBack = self.driver_controller.back()
-        self.triggerStart = self.driver_controller.start()
-        self.triggerUp = self.driver_controller.povUp()
-        self.triggerDown = self.driver_controller.povDown()
-        self.triggerLeft = self.driver_controller.povLeft()
-        self.triggerRight = self.driver_controller.povRight()
+        self.driver_command_controller = commands2.button.CommandXboxController(constants.k_driver_controller_port)
+        self.triggerA = self.driver_command_controller.a()
+        self.triggerB = self.driver_command_controller.b()
+        self.triggerX = self.driver_command_controller.x()
+        self.triggerY = self.driver_command_controller.y()
+        self.triggerLB = self.driver_command_controller.leftBumper()
+        self.triggerRB = self.driver_command_controller.rightBumper()
+        self.triggerBack = self.driver_command_controller.back()
+        self.triggerStart = self.driver_command_controller.start()
+        self.triggerUp = self.driver_command_controller.povUp()
+        self.triggerDown = self.driver_command_controller.povDown()
+        self.triggerLeft = self.driver_command_controller.povLeft()
+        self.triggerRight = self.driver_command_controller.povRight()
 
         self.copilot_controller = commands2.button.CommandXboxController(1)
         self.copilot_controller = commands2.button.CommandXboxController(1) 
@@ -93,7 +105,15 @@ class RobotContainer:
         # lots of putdatas for testing on the dash
         pass
 
-    def bind_buttons(self):
+    def bind_driver_buttons(self):
+        # also bind swerve in here to avoid confusion
+        pass
+
+    def bind_operator_buttons(self):
+        pass
+
+    def bind_keyboard_buttons(self):
+        # for convenience, and just in case a controller goes down
         pass
 
     def get_autonomous_command(self):

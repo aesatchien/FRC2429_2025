@@ -30,7 +30,7 @@ class SwerveModule:
         #  ---------------- DRIVING  SPARKMAX  ------------------
 
         # Factory reset, so we get the SPARKS MAX to a known state before configuring them
-        if constants.GeneralConstants.k_reset_sparks_to_default:
+        if constants.k_reset_sparks_to_default:
             self.drivingSparkMax.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
         else:
             self.drivingSparkMax.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
@@ -43,7 +43,7 @@ class SwerveModule:
 
         #  ---------------- TURNING SPARKMAX  ------------------
 
-        if constants.GeneralConstants.k_reset_sparks_to_default:
+        if constants.k_reset_sparks_to_default:
             # self.drivingSparkMax.restoreFactoryDefaults()
             self.turningSparkMax.configure(config=ModuleConstants.k_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
 

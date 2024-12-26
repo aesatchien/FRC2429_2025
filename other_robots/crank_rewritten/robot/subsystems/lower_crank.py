@@ -16,6 +16,7 @@ class LowerCrank(Subsystem):
 
         self.sparkmax = SparkMax(LowerCrankConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
+        # todo: put this in constants.py?
         self.config = SparkMaxConfig()
 
         self.config.encoder.positionConversionFactor(math.tau / LowerCrankConstants.k_gear_ratio)
@@ -65,6 +66,9 @@ class LowerCrank(Subsystem):
 
     def set_encoder_position(self, radians: float):
         self.encoder.setPosition(radians)
+
+    def unused(self):
+        pass
 
     def periodic(self) -> None:
 
