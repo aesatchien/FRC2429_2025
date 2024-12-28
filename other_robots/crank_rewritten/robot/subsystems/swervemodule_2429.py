@@ -1,5 +1,5 @@
 import wpilib
-from rev import SparkFlexConfig, SparkMax, SparkFlex
+from rev import SparkMaxConfig, SparkMax, SparkFlex
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
 from wpilib import AnalogEncoder, AnalogPotentiometer, Spark
@@ -20,7 +20,7 @@ class SwerveModule:
         self.turning_output = 0
 
         # get our two motor controllers and a simulation dummy  TODO: set motor types in swerve_constants?
-        self.drivingSparkMax = SparkFlex(drivingCANId, SparkFlex.MotorType.kBrushless)
+        self.drivingSparkMax = SparkMax(drivingCANId, SparkFlex.MotorType.kBrushless)
         self.turningSparkMax = SparkMax(turningCANId, SparkMax.MotorType.kBrushless)
         if wpilib.RobotBase.isSimulation():  # check in sim to see if we are reacting to inputs
             pass
@@ -29,13 +29,13 @@ class SwerveModule:
 
         #  ---------------- DRIVING  SPARKMAX  ------------------
 
-        # Factory reset, so we get the SPARKS MAX to a known state before configuring them
-        if constants.k_reset_sparks_to_default:
-            self.drivingSparkMax.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+        this_module_driving_config = SparkMaxConfig()
+        ModuleConstants.k_driving_config.apply(this_module_driving_config)
+        this_module_driving_config.inverted(driving_inverted)
+        if constants.k_reset_sparks_to_default:         # Factory reset, so we get the SPARKS MAX to a known state before configuring them
+            self.drivingSparkMax.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
         else:
-            self.drivingSparkMax.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-
-        self.drivingSparkMax.setInverted(driving_inverted)
+            self.drivingSparkMax.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
 
         # Get driving encoder from the sparkmax
         self.drivingEncoder = self.drivingSparkMax.getEncoder()
@@ -43,14 +43,18 @@ class SwerveModule:
 
         #  ---------------- TURNING SPARKMAX  ------------------
 
+        this_module_turning_config = SparkMaxConfig()
+        ModuleConstants.k_turning_config.apply(this_module_turning_config)
+        this_module_turning_config.inverted(turning_inverted)
+
         if constants.k_reset_sparks_to_default:
             # self.drivingSparkMax.restoreFactoryDefaults()
-            self.turningSparkMax.configure(config=ModuleConstants.k_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+            self.turningSparkMax.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
 
         else:
-            self.turningSparkMax.configure(config=ModuleConstants.k_turning_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+            self.turningSparkMax.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
 
-        self.turningSparkMax.setInverted(turning_inverted)
+        # self.turningSparkMax.setInverted(turning_inverted)
 
 
         # Setup encoders for the turning SPARKMAX - just to watch it if we need to for velocities, etc.

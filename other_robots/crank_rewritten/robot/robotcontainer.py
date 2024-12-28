@@ -24,7 +24,7 @@ class RobotContainer:
         self.start_time = time.time()
 
         # The robot's subsystems
-        self.lower_crank = LowerCrank(container=self)
+        # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
 
         self.configure_joysticks()
@@ -101,7 +101,7 @@ class RobotContainer:
         """
 
     def initialize_dashboard(self):
-        wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
+        # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
         # lots of putdatas for testing on the dash
         pass
 

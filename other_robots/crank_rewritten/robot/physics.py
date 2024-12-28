@@ -68,7 +68,7 @@ class PhysicsEngine:
         # self.arm_encoder_sim.setPosition(self.arm_sim.getAngle())
         # self.arm_spark_sim.setPosition(self.arm_sim.getAngle())
         self.arm_spark_sim.iterate(math.radians(self.arm_sim.getVelocityDps()), voltage, tm_diff)
-        self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
+        # self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
 
         self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
 
