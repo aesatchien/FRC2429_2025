@@ -70,7 +70,7 @@ class SwerveModule:
         # automatically always in radians and the turnover offset is built in, so the PID is easier
         # TODO: double check that the scale factor is the same on the new thrifty potentiometers
         self.absolute_encoder = AnalogPotentiometer(encoder_analog_port,
-                                                    dc.k_analog_encoder_scale_factor * math.tau, -turning_encoder_offset)
+                                                    dc.k_analog_encoder_scale_factor * math.tau)# , -turning_encoder_offset)
         self.turning_PID_controller = PIDController(Kp=ModuleConstants.kTurningP, Ki=ModuleConstants.kTurningI, Kd=ModuleConstants.kTurningD)
         self.turning_PID_controller.enableContinuousInput(minimumInput=-math.pi, maximumInput=math.pi)
 
@@ -84,6 +84,8 @@ class SwerveModule:
     def get_turn_encoder(self):
         # how we invert the absolute encoder if necessary (which it probably isn't in the standard mk4i config)
         analog_reverse_multiplier = -1 if dc.k_reverse_analog_encoders else 1
+        # TODO: THIS IS THE PROBLEM WITH OPTIMIZE, I THINK. IT DOESN'T RETURN ANY KIND OF NORMAL VALUES.
+        wpilib.SmartDashboard.putNumber(f"self.absolute_encoder.get() of {self.label}", self.absolute_encoder.get())
         return analog_reverse_multiplier * self.absolute_encoder.get()
 
     def getState(self) -> SwerveModuleState:
@@ -115,14 +117,18 @@ class SwerveModule:
         correctedDesiredState.speed = desiredState.speed
         correctedDesiredState.angle = desiredState.angle
 
-        correctedDesiredState.optimize(Rotation2d(self.get_turn_encoder()))
+        # ------vvvvv------ this is the problem
+        wpilib.SmartDashboard.putNumber(f"we'd optimize module {self.label} w/ angle of:", math.degrees(self.get_turn_encoder()))
+        # correctedDesiredState.optimize(Rotation2d(self.get_turn_encoder()))
 
+        wpilib.SmartDashboard.putNumberArray(f"corrected desired state of module {self.label} (speed, angle)", (correctedDesiredState.speed, correctedDesiredState.angle.degrees()))
         # don't let wheels servo back if we aren't asking the module to move
         if math.fabs(desiredState.speed) < 0.002:  # need to see what is this minimum m/s that makes sense
             correctedDesiredState.speed = 0
             correctedDesiredState.angle = self.getState().angle
 
         # Command driving and turning SPARKS MAX towards their respective setpoints.
+        wpilib.SmartDashboard.putNumber(f"driving reference of swerve {self.label}", correctedDesiredState.speed)
         self.drivingClosedLoopController.setReference(correctedDesiredState.speed, dc.k_drive_controller_type.ControlType.kVelocity)
 
         # calculate the PID value for the turning motor  - use the roborio instead of the sparkmax. todo: explain why
@@ -130,6 +136,7 @@ class SwerveModule:
         self.turning_output = self.turning_PID_controller.calculate(self.get_turn_encoder(), correctedDesiredState.angle.radians())
         # clean up the turning Spark LEDs by cleaning out the noise - 20240226 CJH
         self.turning_output = 0 if math.fabs(self.turning_output) < 0.01 else self.turning_output
+        wpilib.SmartDashboard.putNumber(f"turning reference of swerve {self.label}", self.turning_output)
         self.turningSparkMax.set(self.turning_output)
 
         # CJH added for debugging and tuning

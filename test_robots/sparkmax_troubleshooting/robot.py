@@ -16,13 +16,14 @@ class MyRobot(wpilib.TimedRobot):
     autonomousCommand: typing.Optional[commands2.Command] = None
 
     def robotInit(self) -> None:
-        self.sparkmax = rev.SparkMax(deviceID=26, type=rev.SparkMax.MotorType.kBrushless)
+        self.sparkmax = rev.SparkMax(deviceID=20, type=rev.SparkMax.MotorType.kBrushless)
 
         sparkmax_config = rev.SparkMaxConfig()
         sparkmax_config.closedLoop.P(1)
 
         self.sparkmax.configure(sparkmax_config, rev.SparkMax.ResetMode.kResetSafeParameters, persistMode=rev.SparkMax.PersistMode.kPersistParameters)
         wpilib.SmartDashboard.putNumber("setpoint", 0)
+        print("** ROBOT INITIALIZING **")
         self.counter = 0
 
     def disabledInit(self) -> None:
@@ -50,7 +51,8 @@ class MyRobot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically during operator control"""
-        self.sparkmax.getClosedLoopController().setReference(value=math.sin(self.counter/50), ctrl=rev.SparkMax.ControlType.kPosition)
+        # self.sparkmax.getClosedLoopController().setReference(value=math.sin(self.counter/50), ctrl=rev.SparkMax.ControlType.kPosition)
+        self.sparkmax.set(math.sin(self.counter/50))
         wpilib.SmartDashboard.putNumber("sparkmax applied output: ", self.sparkmax.getAppliedOutput())
         wpilib.SmartDashboard.putNumber("sparkmax reference: ", math.sin(self.counter/50))
         self.counter += 1

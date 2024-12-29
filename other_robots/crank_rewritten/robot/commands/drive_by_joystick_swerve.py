@@ -80,8 +80,7 @@ class DriveByJoystickSwerve(commands2.Command):
             desired_strafe = -self.input_transform(1.0 * strafe) * max_linear
             desired_rot = -self.input_transform(1.0 * self.controller.getRightX()) * max_angular
 
-        if wpilib.RobotBase.isSimulation():
-            SmartDashboard.putNumberArray('joystick', [desired_fwd, desired_strafe, desired_rot])
+        SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
 
         correct_like_1706 = False  # this is what 1706 does (normalization), but Rev put all that in the swerve module's drive
         if correct_like_1706:
@@ -93,7 +92,7 @@ class DriveByJoystickSwerve(commands2.Command):
                           fieldRelative= self.field_oriented, rate_limited=self.rate_limited)
         else:
             self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
-                              fieldRelative= self.field_oriented, rate_limited=self.rate_limited, keep_angle=True)
+                              fieldRelative= self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
 
     def end(self, interrupted: bool) -> None:
         # probably should leave the wheels where they are?

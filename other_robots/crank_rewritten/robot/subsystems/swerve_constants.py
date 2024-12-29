@@ -45,7 +45,7 @@ class DriveConstants:
 
     # which motors need to be inverted - depends on if on top or bottom
     k_drive_motors_inverted = True  # False for 2023 - motors below
-    k_turn_motors_inverted = False  # True for 2023 - motors below
+    k_turn_motors_inverted = True  # True for 2023 - motors below
     # incorrect gyro inversion will make the pose odometry have the wrong sign on rotation
     kGyroReversed = True  # False for 2023 (was upside down), True for 2024?
     # used in the swerve modules themselves to reverse the direction of the analog encoder
@@ -61,8 +61,8 @@ class DriveConstants:
     # NOW IN RADIANS to feed right to the AnalogPotentiometer on the module
     k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.829)  #  rad
     k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.783)  #  rad   billet gear out on rf
-    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.436)  #  rad
-    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.986)  #  rad  billet gear out on rb
+    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.729)  #  rad
+    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.863)  #  rad  billet gear out on rb
     k_analog_encoder_offsets = {'lf':0.829, 'rf':0.783, 'lb':0.304, 'rb':0.986}  # use in sim
 
     # SPARK MAX CAN IDs
@@ -143,7 +143,7 @@ class ModuleConstants:
     k_turning_config.encoder.positionConversionFactor(math.tau/k_turning_motor_gear_ratio) # radian
     k_turning_config.encoder.velocityConversionFactor(math.tau/(k_turning_motor_gear_ratio * 60)) # radians per second
 
-    kTurningP = 0.3 #  CJH tested this 3/19/2023  and 0.25 was good
+    kTurningP = 0.1 #  CJH tested this 3/19/2023  and 0.25 was good
     kTurningI = 0.0
     kTurningD = 0.0
     kTurningFF = 0
