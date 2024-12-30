@@ -70,7 +70,7 @@ class SwerveModule:
         # automatically always in radians and the turnover offset is built in, so the PID is easier
         # TODO: double check that the scale factor is the same on the new thrifty potentiometers
         self.absolute_encoder = AnalogPotentiometer(encoder_analog_port,
-                                                    dc.k_analog_encoder_scale_factor * math.tau)# , -turning_encoder_offset)
+                                                    dc.k_analog_encoder_scale_factor * math.tau, -turning_encoder_offset)
         self.turning_PID_controller = PIDController(Kp=ModuleConstants.kTurningP, Ki=ModuleConstants.kTurningI, Kd=ModuleConstants.kTurningD)
         self.turning_PID_controller.enableContinuousInput(minimumInput=-math.pi, maximumInput=math.pi)
 
@@ -119,7 +119,7 @@ class SwerveModule:
 
         # ------vvvvv------ this is the problem
         wpilib.SmartDashboard.putNumber(f"we'd optimize module {self.label} w/ angle of:", math.degrees(self.get_turn_encoder()))
-        # correctedDesiredState.optimize(Rotation2d(self.get_turn_encoder()))
+        correctedDesiredState.optimize(Rotation2d(self.get_turn_encoder()))
 
         wpilib.SmartDashboard.putNumberArray(f"corrected desired state of module {self.label} (speed, angle)", (correctedDesiredState.speed, correctedDesiredState.angle.degrees()))
         # don't let wheels servo back if we aren't asking the module to move
