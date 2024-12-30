@@ -69,8 +69,8 @@ class SwerveModule:
         # create the AnalogPotentiometer with the offset.  TODO: this probably has to be 5V hardware but need to check
         # automatically always in radians and the turnover offset is built in, so the PID is easier
         # TODO: double check that the scale factor is the same on the new thrifty potentiometers
-        self.absolute_encoder = AnalogPotentiometer(encoder_analog_port,
-                                                    dc.k_analog_encoder_scale_factor * math.tau, -turning_encoder_offset)
+        self.absolute_encoder = AnalogPotentiometer(encoder_analog_port) #,
+                                                    # dc.k_analog_encoder_scale_factor * math.tau, -turning_encoder_offset)
         self.turning_PID_controller = PIDController(Kp=ModuleConstants.kTurningP, Ki=ModuleConstants.kTurningI, Kd=ModuleConstants.kTurningD)
         self.turning_PID_controller.enableContinuousInput(minimumInput=-math.pi, maximumInput=math.pi)
 
