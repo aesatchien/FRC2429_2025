@@ -6,6 +6,9 @@ from commands2.button import Trigger
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 import constants
 
+from pathplannerlib.auto import PathPlannerAuto
+from pathplannerlib.path import PathPlannerPath
+
 from subsystems.lower_crank import LowerCrank
 
 from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
@@ -106,7 +109,7 @@ class RobotContainer:
         pass
 
     def bind_driver_buttons(self):
-        # also bind swerve in here to avoid confusion
+        self.triggerX.whileTrue(PathPlannerAuto("test"))
         pass
 
     def bind_operator_buttons(self):

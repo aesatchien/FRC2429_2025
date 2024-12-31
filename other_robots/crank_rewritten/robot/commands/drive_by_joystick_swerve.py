@@ -92,7 +92,7 @@ class DriveByJoystickSwerve(commands2.Command):
                           fieldRelative= self.field_oriented, rate_limited=self.rate_limited)
         else:
             self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
-                              fieldRelative= self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
+                              fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
 
     def end(self, interrupted: bool) -> None:
         # probably should leave the wheels where they are?

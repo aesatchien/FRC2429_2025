@@ -437,7 +437,7 @@ class Swerve (Subsystem):
         # Update the odometry in the periodic block -
         if wpilib.RobotBase.isReal():
             # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
-            self.pose_estimator.updateWithTime(wpilib.Timer.getFPGATimestamp(), Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
+            self.pose_estimator.updateWithTime(wpilib.Timer.getFPGATimestamp(), Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
         else:
             # sim is not updating the odometry right yet, not sure why since all the sparks should be set in the sim
             # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)

@@ -11,7 +11,7 @@ import constants
 class PhysicsEngine:
 
     def __init__(self, physics_controller: PhysicsInterface, robot: MyRobot):
-
+        """
         self.physics_controller = physics_controller
         self.robot = robot
         
@@ -45,10 +45,12 @@ class PhysicsEngine:
 
         # self.arm_motor: SimCANSparkMax = self.robot.container.lower_crank.sparkmax
         # self.arm_motor_sim = wpilib.simulation.PWMSim(self.arm_motor)
+        """
 
 
     def update_sim(self, now, tm_diff):
-
+        pass
+        """
         # print(f"voltage: {wpilib.RobotController.getInputVoltage()}")
         # print(f"now: {now}")
         if now > 10:
@@ -73,3 +75,4 @@ class PhysicsEngine:
         self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
 
         # l_encoder = self.drivetrain.wheelSpeeds.left * tm_diff
+        """

@@ -12,7 +12,7 @@ k_reset_sparks_to_default = False
 k_swerve_debugging_messages = True
 k_use_apriltag_odometry = True
 k_swerve_only = True
-k_swerve_rate_limited = False
+k_swerve_rate_limited = True
 k_field_oriented = True
 
 class LowerCrankConstants:
