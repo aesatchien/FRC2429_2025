@@ -122,7 +122,7 @@ class Swerve (Subsystem):
                 MOI=constants.k_robot_moi,
                 moduleConfig=module_config,
                 moduleOffsets=dc.kModulePositions,
-                trackwidthMeters=dc.kTrackWidth
+                # trackwidthMeters=dc.kTrackWidth
         )
 
         holonomic_controller = PPHolonomicDriveController(
