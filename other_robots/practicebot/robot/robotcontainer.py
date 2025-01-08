@@ -4,6 +4,7 @@ import wpilib
 import commands2
 from commands2.button import Trigger
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.reset_field_centric import ResetFieldCentric
 import constants
 
 from pathplannerlib.auto import PathPlannerAuto
@@ -109,7 +110,8 @@ class RobotContainer:
         pass
 
     def bind_driver_buttons(self):
-        self.triggerX.whileTrue(PathPlannerAuto("test"))
+        # self.triggerX.whileTrue(PathPlannerAuto("test"))
+        self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
         pass
 
     def bind_operator_buttons(self):
