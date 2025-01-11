@@ -12,7 +12,9 @@ from pathplannerlib.path import PathPlannerPath
 from subsystems.lower_crank import LowerCrank
 
 from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
+from commands.increment_elevator import IncrementElevator
 from subsystems.swerve import Swerve
+from subsystems.elevator import Elevator
 
 class RobotContainer:
     """
@@ -29,6 +31,7 @@ class RobotContainer:
         # The robot's subsystems
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
+        self.elevator = Elevator()
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -110,6 +113,10 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
         # self.triggerX.whileTrue(PathPlannerAuto("test"))
+
+        self.triggerA.onTrue(IncrementElevator(container=self, elevator=self.elevator, direction="up"))
+        self.triggerB.onTrue(IncrementElevator(container=self, elevator=self.elevator, direction="down"))
+
         pass
 
     def bind_operator_buttons(self):
