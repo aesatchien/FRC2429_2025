@@ -20,17 +20,17 @@ class PhysicsEngine:
 
         self.arm_sim = SingleJointedArmSim(
             gearbox=self.arm_plant,
-            gearing=0.02,
-            moi=SingleJointedArmSim.estimateMOI(length=1, mass=0.005),
-            armLength=1,
-            minAngle=(-30),
-            maxAngle=(100),
+            gearing=5 * 5 * 3 * 4.44,
+            moi=SingleJointedArmSim.estimateMOI(length=20 * 0.0254, mass=8),
+            armLength=20 * 0.0254,
+            minAngle=40,
+            maxAngle=116,
             simulateGravity=True,
-            startingAngle=(45)
+            startingAngle=45
         )
 
         self.spark_sim = SparkMaxSim(self.robot.test_spark, self.arm_plant)
-        self.spark_sim.setPosition(math.radians(45))
+        self.spark_sim.setPosition(math.radians(60))
         self.spark_sim.enable()
 
         self.arm_mech2d = wpilib.Mechanism2d(60, 60)
@@ -45,8 +45,11 @@ class PhysicsEngine:
 
 
     def update_sim(self, now, tm_diff):
+
+        print(f"tm diff: {tm_diff}")
         
-        self.arm_sim.setInput(0, self.spark_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
+        # self.arm_sim.setInput(0, self.spark_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
+        self.arm_sim.setInput(0, 12)
         
         self.arm_sim.update(tm_diff)
 
@@ -55,6 +58,14 @@ class PhysicsEngine:
         RoboRioSim.setVInVoltage(BatterySim.calculate([self.arm_sim.getCurrentDraw()]))
 
         self.crank_mech2d.setAngle(self.arm_sim.getAngle())
+        # print(f"now: {now}")
+        # if (now % 2 > 1):
+        #     self.crank_mech2d.setAngle(80)
+        # else:
+        #     self.crank_mech2d.setAngle(150)
+        print(f"armsim angle: {self.arm_sim.getAngle()}")
+
+        print(f"riosim vinvoltage: {RoboRioSim.getVInVoltage()}")
 
         print(f"is the armsim at its limit? {self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit()}")
 
