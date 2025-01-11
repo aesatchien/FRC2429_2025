@@ -5,7 +5,7 @@ from rev import SparkMaxSim
 from wpilib.simulation import BatterySim, RoboRioSim, SingleJointedArmSim
 import wpilib
 from wpimath.system.plant import DCMotor
-
+from wpilib import SmartDashboard
 from robot import MyRobot
 
 class PhysicsEngine:
@@ -13,9 +13,8 @@ class PhysicsEngine:
     def __init__(self, physics_controller, robot: MyRobot):
 
         self.physics_controller = physics_controller
-
         self.robot = robot
-
+        self.count = 0
         self.arm_plant = DCMotor.NEO(1)
 
         self.arm_sim = SingleJointedArmSim(
@@ -46,7 +45,7 @@ class PhysicsEngine:
 
     def update_sim(self, now, tm_diff):
 
-        print(f"tm diff: {tm_diff}")
+        # print(f"tm diff: {tm_diff}")
         
         # self.arm_sim.setInput(0, self.spark_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
         self.arm_sim.setInput(0, 12)
@@ -63,11 +62,14 @@ class PhysicsEngine:
         #     self.crank_mech2d.setAngle(80)
         # else:
         #     self.crank_mech2d.setAngle(150)
-        print(f"armsim angle: {self.arm_sim.getAngle()}")
-
-        print(f"riosim vinvoltage: {RoboRioSim.getVInVoltage()}")
-
-        print(f"is the armsim at its limit? {self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit()}")
-
+        self.count +=1
+        if self.count % 200 == 0:
+            print(f"armsim angle: {self.arm_sim.getAngle()}")
+            print(f"riosim vinvoltage: {RoboRioSim.getVInVoltage()}")
+            print(f"is the armsim at its limit? {self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit()}")
+        if self.count % 10 == 0:
+            SmartDashboard.putNumber('angle', self.arm_sim.getAngle())
+            SmartDashboard.putNumber('robo_voltage', RoboRioSim.getVInVoltage())
+            SmartDashboard.putNumber('velocity', self.arm_sim.getVelocity())
         # optional: compute encoder
         # l_encoder = self.drivetrain.wheelSpeeds.left * tm_diff
