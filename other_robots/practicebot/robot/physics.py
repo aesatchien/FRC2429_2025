@@ -4,6 +4,8 @@ from wpimath.kinematics._kinematics import SwerveDrive4Kinematics
 
 from subsystems.lower_crank import LowerCrank
 import wpilib
+import wpilib.simulation as simlib  # 2021 name for the simulation library
+import wpimath.geometry as geo
 from pyfrc.physics.core import PhysicsInterface
 import wpilib.simulation
 from wpimath.system.plant import DCMotor
