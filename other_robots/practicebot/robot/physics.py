@@ -1,16 +1,14 @@
 import math
-from rev import SparkMaxSim, SparkSim
-from wpimath.kinematics._kinematics import SwerveDrive4Kinematics
-
-from subsystems.lower_crank import LowerCrank
 import wpilib
+import hal
 import wpilib.simulation as simlib  # 2021 name for the simulation library
 import wpimath.geometry as geo
+from wpimath.kinematics._kinematics import SwerveDrive4Kinematics, SwerveModuleState, SwerveModulePosition
 from pyfrc.physics.core import PhysicsInterface
-import wpilib.simulation
-from wpimath.system.plant import DCMotor
+
 from robot import MyRobot
 import constants
+from subsystems.swerve_constants import DriveConstants as dc
 
 class PhysicsEngine:
 
@@ -65,44 +63,49 @@ class PhysicsEngine:
         initial_pose = geo.Pose2d(0, 0, geo.Rotation2d())
         self.physics_controller.move_robot(geo.Transform2d(self.x, self.y, 0))
 
-        """
-        self.physics_controller = physics_controller
-        self.robot = robot
-        
-        self.crank_arm_plant = DCMotor.NEO(1)
-
-        self.arm_sim = wpilib.simulation.SingleJointedArmSim(
-                self.crank_arm_plant,
-                constants.LowerCrankConstants.k_gear_ratio,
-                wpilib.simulation.SingleJointedArmSim.estimateMOI(length=constants.LowerCrankConstants.k_length_meters,
-                                                                  mass=constants.LowerCrankConstants.k_mass_kg),
-                armLength=constants.LowerCrankConstants.k_length_meters,
-                minAngle=math.radians(40),
-                maxAngle=math.radians(116),
-                simulateGravity=True,
-                startingAngle=constants.LowerCrankConstants.k_lower_crank_sim_starting_angle
-        )
-
-        self.arm_spark_sim = SparkMaxSim(self.robot.container.lower_crank.sparkmax, self.crank_arm_plant)
-        self.arm_spark_sim.setPosition(constants.LowerCrankConstants.k_lower_crank_sim_starting_angle)
-        self.arm_spark_sim.enable()
-        # self.arm_encoder_sim = self.arm_spark_sim.getRelativeEncoderSim()
-
-        self.arm_mech2d = wpilib.Mechanism2d(60, 60)
-        self.mech2d_root = self.arm_mech2d.getRoot(name="root", x=40, y=10)
-        self.base_mech2d = self.mech2d_root.appendLigament("frame", length=-20, angle=0)
-        self.crank_mech2d = self.base_mech2d.appendLigament(name="crank", length=20, angle=self.arm_sim.getAngle())
-
-        self.base_mech2d.setColor(wpilib.Color8Bit(200, 200, 200))
-
-        wpilib.SmartDashboard.putData("arm mech 2d", self.arm_mech2d)
-
-        # self.arm_motor: SimCANSparkMax = self.robot.container.lower_crank.sparkmax
-        # self.arm_motor_sim = wpilib.simulation.PWMSim(self.arm_motor)
-        """
-
+        # if we want to add an armsim see test_robots/sparksim_test/
 
     def update_sim(self, now, tm_diff):
+        simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
+
+
+        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
+        target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
+        for spark_turn, target_angle in zip(self.spark_turns, target_angles):
+            self.spark_dict[spark_turn]['position'].set(target_angle)  # this works to update the simulated spark
+        if constants.k_swerve_debugging_messages:
+            wpilib.SmartDashboard.putNumberArray('target_angles', target_angles)
+
+        # send the speeds and positions from the spark sim devices to the fourmotorswervedrivetrain
+        module_states = []
+        for drive, turn in zip(self.spark_drives, self.spark_turns):
+            module_states.append(SwerveModuleState(
+                self.spark_dict[drive]['velocity'].value, geo.Rotation2d(self.spark_dict[turn]['position'].value))
+            )
+
+        # using our own kinematics to update the chassis speeds
+        speeds = self.kinematics.toChassisSpeeds((module_states))
+
+        # update the sim's robot
+        self.physics_controller.drive(speeds, tm_diff)
+
+        # send our poses to the dashboard so we can use it with our trackers
+        pose = self.physics_controller.get_pose()
+        self.x, self.y, self.theta = pose.X(), pose.Y(), pose.rotation().degrees()
+
+        # attempt to update the real robot's odometry
+        self.distances = [pos + tm_diff * self.spark_dict[drive]['velocity'].value for pos, drive in zip(self.distances, self.spark_drives)]
+        [self.spark_dict[drive]['position'].set(self.spark_dict[drive]['position'].value + tm_diff * self.spark_dict[drive]['velocity'].value ) for drive in self.spark_drives]
+
+        # TODO - why does this not take care of itself if I just update the simmed SPARK's position?
+        swerve_positions = [SwerveModulePosition(distance=dist, angle=m.angle) for m, dist in zip(module_states, self.distances)]
+        self.robot.container.swerve.pose_estimator.update(pose.rotation(), swerve_positions)
+
+        wpilib.SmartDashboard.putNumberArray('sim_pose', [self.x, self.y, self.theta])
+        wpilib.SmartDashboard.putNumberArray('drive_pose', [self.x, self.y, self.theta])  # need this for 2429 python dashboard to update
+
+        self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
+
         pass
         """
         # print(f"voltage: {wpilib.RobotController.getInputVoltage()}")
