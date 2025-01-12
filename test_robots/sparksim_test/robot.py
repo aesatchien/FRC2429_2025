@@ -31,10 +31,12 @@ class MyRobot(commands2.TimedCommandRobot):
         self.test_controller = self.test_spark.getClosedLoopController()
 
         self.test_spark_config = SparkMaxConfig()
-        self.test_spark_config.closedLoop.pid(p=10, i=0, d=0)
+        self.test_spark_config.closedLoop.pid(p=6, i=0, d=0)
 
-        # self.test_spark_config.encoder.positionConversionFactor(math.tau / (5 * 5 * 3 * 4.44))
-        # self.test_spark_config.encoder.velocityConversionFactor(math.tau / 25 * 3 * 4.44)
+        self.test_spark_config.encoder.positionConversionFactor(math.tau / 333) # 333 is the gear ratio
+                                                                                # the sparksim figures out your gear ratio based on the ratio between positionconversionfactor and velocityconversionfactor
+        self.test_spark_config.encoder.velocityConversionFactor(math.tau / (60 * 333)) # (333 * 60))
+
         
         self.test_spark.configure(self.test_spark_config, SparkMax.ResetMode.kResetSafeParameters, persistMode=SparkMax.PersistMode.kPersistParameters)
 
@@ -62,8 +64,8 @@ class MyRobot(commands2.TimedCommandRobot):
         """This function is called periodically during operator control"""
         self.counter += 1
 
-        if self.counter % 4000 > 2000:
-            self.test_controller.setReference(value=math.pi / 4, ctrl=SparkMax.ControlType.kPosition)
+        if self.counter % 400 > 200:
+            self.test_controller.setReference(value=3 * math.pi / 4, ctrl=SparkMax.ControlType.kPosition)
             # self.test_spark.setVoltage(12)
         else:
             self.test_controller.setReference(value=math.pi / 2, ctrl=SparkMax.ControlType.kPosition)

@@ -1,7 +1,7 @@
 import math
 import hal.simulation
 from pyfrc.physics import drivetrains
-from rev import SparkMaxSim
+from rev import SparkBaseConfig, SparkMaxSim
 from wpilib.simulation import BatterySim, RoboRioSim, SingleJointedArmSim
 import wpilib
 from wpimath.system.plant import DCMotor
@@ -23,14 +23,14 @@ class PhysicsEngine:
             gearing=5 * 5 * 3 * 4.44,
             moi=SingleJointedArmSim.estimateMOI(length=20 * 0.0254, mass=8),
             armLength=20 * 0.0254,
-            minAngle=40,
-            maxAngle=116,
+            minAngle=math.radians(40),
+            maxAngle=math.radians(180),
             simulateGravity=True,
-            startingAngle=45
+            startingAngle=math.radians(90)
         )
 
         self.spark_sim = SparkMaxSim(self.robot.test_spark, self.arm_plant)
-        self.spark_sim.setPosition(math.radians(60))
+        self.spark_sim.setPosition(math.radians(90))
         self.spark_sim.enable()
 
         self.arm_mech2d = wpilib.Mechanism2d(60, 60)
@@ -46,28 +46,27 @@ class PhysicsEngine:
 
     def update_sim(self, now, tm_diff):
 
-        print(f"tm diff: {tm_diff}")
+        # print(f"tm diff: {tm_diff}")
         
-        # self.arm_sim.setInput(0, self.spark_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
-        self.arm_sim.setInput(0, 12)
+        self.arm_sim.setInput(0, self.spark_sim.getAppliedOutput() * RoboRioSim.getVInVoltage())
+        # self.arm_sim.setInput(0, 12)
         
         self.arm_sim.update(tm_diff)
+
+        # not sure why but if we don't do this, the angle is off by a little
+        # self.spark_sim.setPosition(self.arm_sim.getAngle())
 
         self.spark_sim.iterate(velocity=self.arm_sim.getVelocity(), vbus=RoboRioSim.getVInVoltage(), dt=tm_diff)
 
         RoboRioSim.setVInVoltage(BatterySim.calculate([self.arm_sim.getCurrentDraw()]))
 
-        self.crank_mech2d.setAngle(self.arm_sim.getAngle())
-        # print(f"now: {now}")
-        # if (now % 2 > 1):
-        #     self.crank_mech2d.setAngle(80)
-        # else:
-        #     self.crank_mech2d.setAngle(150)
+        self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
+
+        print(f"spark thinks it's at {self.spark_sim.getPosition()}")
+        print(f"arm sim says it's moving at {self.arm_sim.getVelocityDps()} degrees per second")
         print(f"armsim angle: {self.arm_sim.getAngle()}")
 
         print(f"riosim vinvoltage: {RoboRioSim.getVInVoltage()}")
 
         print(f"is the armsim at its limit? {self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit()}")
 
-        # optional: compute encoder
-        # l_encoder = self.drivetrain.wheelSpeeds.left * tm_diff
