@@ -5,7 +5,7 @@ from rev import SparkBaseConfig, SparkMaxSim
 from wpilib.simulation import BatterySim, RoboRioSim, SingleJointedArmSim
 import wpilib
 from wpimath.system.plant import DCMotor
-
+from wpilib import SmartDashboard
 from robot import MyRobot
 
 class PhysicsEngine:
@@ -13,9 +13,8 @@ class PhysicsEngine:
     def __init__(self, physics_controller, robot: MyRobot):
 
         self.physics_controller = physics_controller
-
         self.robot = robot
-
+        self.count = 0
         self.arm_plant = DCMotor.NEO(1)
 
         self.arm_sim = SingleJointedArmSim(
@@ -26,11 +25,11 @@ class PhysicsEngine:
             minAngle=math.radians(40),
             maxAngle=math.radians(180),
             simulateGravity=True,
-            startingAngle=math.radians(90)
+            startingAngle=math.radians(45)
         )
 
         self.spark_sim = SparkMaxSim(self.robot.test_spark, self.arm_plant)
-        self.spark_sim.setPosition(math.radians(90))
+        self.spark_sim.setPosition(math.radians(45))
         self.spark_sim.enable()
 
         self.arm_mech2d = wpilib.Mechanism2d(60, 60)
@@ -62,11 +61,16 @@ class PhysicsEngine:
 
         self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
 
-        print(f"spark thinks it's at {self.spark_sim.getPosition()}")
-        print(f"arm sim says it's moving at {self.arm_sim.getVelocityDps()} degrees per second")
-        print(f"armsim angle: {self.arm_sim.getAngle()}")
+        self.count +=1
+        if self.count % 200 == 0:
+            print(f"armsim angle: {self.arm_sim.getAngle()}")
+            print(f"riosim vinvoltage: {RoboRioSim.getVInVoltage()}")
+            print(f"is the armsim at its limit? {self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit()}")
 
-        print(f"riosim vinvoltage: {RoboRioSim.getVInVoltage()}")
-
-        print(f"is the armsim at its limit? {self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit()}")
-
+        SmartDashboard.putNumber('angle', self.arm_sim.getAngle())
+        SmartDashboard.putNumber('sparksim angle', self.spark_sim.getPosition())
+        SmartDashboard.putNumber('robo_voltage', RoboRioSim.getVInVoltage())
+        SmartDashboard.putNumber('velocity', self.arm_sim.getVelocity())
+        SmartDashboard.putBoolean('has hit limit', self.arm_sim.hasHitLowerLimit() or self.arm_sim.hasHitUpperLimit())
+        # optional: compute encoder
+        # l_encoder = self.drivetrain.wheelSpeeds.left * tm_diff

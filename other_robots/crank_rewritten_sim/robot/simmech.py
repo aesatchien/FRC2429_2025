@@ -64,10 +64,19 @@ height = 60
 side_mech = MechTracker(length=length, width=width, height=height, view='side')
 top_mech = MechTracker(length=length, width=width, height=height, view='top')
 
+
+# side view
+chassis_length = 28
+bar_width = 12
+chassis_bottom = 2
+chassis_offset = (length - chassis_length) / 2
+chassis_base_side = side_mech.getRoot("chassisBase", chassis_offset, chassis_bottom)
+side_mech.appendLigament("chassisBase", "chassis", chassis_length, 0, 12, wpilib.Color.kGray)
+
 # side view of elevator mechanism
-elevator_length = 20
+elevator_length = 16
 elevator_height = 50
-bar_width = 10
+bar_width = 10  # this is a percentage of the mech screen, so scales with the mech dimensions
 
 elevator_offset_x = (length - elevator_length) / 2
 elevator_offset_y = (height - elevator_height) / 2

@@ -65,10 +65,10 @@ class MyRobot(commands2.TimedCommandRobot):
         self.counter += 1
 
         if self.counter % 400 > 200:
-            self.test_controller.setReference(value=3 * math.pi / 4, ctrl=SparkMax.ControlType.kPosition)
+            self.test_controller.setReference(value=math.radians(90), ctrl=SparkMax.ControlType.kPosition)
             # self.test_spark.setVoltage(12)
         else:
-            self.test_controller.setReference(value=math.pi / 2, ctrl=SparkMax.ControlType.kPosition)
+            self.test_controller.setReference(value=math.radians(45), ctrl=SparkMax.ControlType.kPosition)
             # self.test_spark.setVoltage(-12)
 
     def testInit(self) -> None:

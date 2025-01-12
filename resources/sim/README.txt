@@ -24,4 +24,5 @@ height=4.572000
 BUT all of this is moot if you load the JSON file instead of the raw image.
 The JSON file knows the borders are 20 pixels and it sets them for you.
 
-
+Where do we get these json files? Every year I forget.  Usually I steal it from pathweaver or here:
+https://github.com/wpilibsuite/allwpilib/tree/main/fieldImages/src/main/native/resources/edu/wpi/first/fields
