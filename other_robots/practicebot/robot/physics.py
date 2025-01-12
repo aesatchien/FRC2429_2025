@@ -17,6 +17,17 @@ class PhysicsEngine:
         self.physics_controller = physics_controller  # must have for simulation
         self.robot = robot
 
+        # 1. create sparkbasesims for each spark in the swerve
+        # 2. create flywheelsims for each swerve dof
+        # in update sim:
+            # calculate flywheel states given sparkbasesim output
+            # tell sparkbasesim about the states
+                # no abs encoders required for drive motors
+                # yes abs encoder required for turn motor
+            # tell pyfrc.physics.drivetrain.four_motor_swerve_drivetrain about the states
+                # it wants duty cycle, which getAppliedOutput gives
+
+
         self.kinematics: SwerveDrive4Kinematics = dc.kDriveKinematics  # our swerve drive kinematics
 
         # set up LEDs - apparently not necessary - glass gui grabs the default one and you can show it
@@ -84,52 +95,30 @@ class PhysicsEngine:
             )
 
         # using our own kinematics to update the chassis speeds
-        speeds = self.kinematics.toChassisSpeeds((module_states))
+        module_states = self.robot.container.swerve.get_desired_swerve_module_states()
+        speeds = self.kinematics.toChassisSpeeds(tuple(module_states))
 
         # update the sim's robot
         self.physics_controller.drive(speeds, tm_diff)
 
-        # send our poses to the dashboard so we can use it with our trackers
-        pose = self.physics_controller.get_pose()
-        self.x, self.y, self.theta = pose.X(), pose.Y(), pose.rotation().degrees()
+        self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
 
-        # attempt to update the real robot's odometry
-        self.distances = [pos + tm_diff * self.spark_dict[drive]['velocity'].value for pos, drive in zip(self.distances, self.spark_drives)]
-        [self.spark_dict[drive]['position'].set(self.spark_dict[drive]['position'].value + tm_diff * self.spark_dict[drive]['velocity'].value ) for drive in self.spark_drives]
-
-        # TODO - why does this not take care of itself if I just update the simmed SPARK's position?
-        swerve_positions = [SwerveModulePosition(distance=dist, angle=m.angle) for m, dist in zip(module_states, self.distances)]
-        self.robot.container.swerve.pose_estimator.update(pose.rotation(), swerve_positions)
-
-        wpilib.SmartDashboard.putNumberArray('sim_pose', [self.x, self.y, self.theta])
-        wpilib.SmartDashboard.putNumberArray('drive_pose', [self.x, self.y, self.theta])  # need this for 2429 python dashboard to update
+        #
+        # # send our poses to the dashboard so we can use it with our trackers
+        # pose = self.physics_controller.get_pose()
+        # self.x, self.y, self.theta = pose.X(), pose.Y(), pose.rotation().degrees()
+        #
+        # # attempt to update the real robot's odometry
+        # self.distances = [pos + tm_diff * self.spark_dict[drive]['velocity'].value for pos, drive in zip(self.distances, self.spark_drives)]
+        # [self.spark_dict[drive]['position'].set(self.spark_dict[drive]['position'].value + tm_diff * self.spark_dict[drive]['velocity'].value ) for drive in self.spark_drives]
+        #
+        # # TODO - why does this not take care of itself if I just update the simmed SPARK's position?
+        # swerve_positions = [SwerveModulePosition(distance=dist, angle=m.angle) for m, dist in zip(module_states, self.distances)]
+        # self.robot.container.swerve.pose_estimator.update(pose.rotation(), swerve_positions)
+        #
+        # wpilib.SmartDashboard.putNumberArray('sim_pose', [self.x, self.y, self.theta])
+        # wpilib.SmartDashboard.putNumberArray('drive_pose', [self.x, self.y, self.theta])  # need this for 2429 python dashboard to update
+        # now we do this in the periodic
 
         self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
 
-        pass
-        """
-        # print(f"voltage: {wpilib.RobotController.getInputVoltage()}")
-        # print(f"now: {now}")
-        if now > 10:
-            self.arm_sim.setInput(0, self.arm_spark_sim.getAppliedOutput() * wpilib.RobotController.getInputVoltage())
-        else:
-            self.arm_sim.setInput(0, 0.5)
-
-        self.arm_sim.update(tm_diff)
-
-        wpilib.simulation.RoboRioSim.setVInVoltage(
-                wpilib.simulation.BatterySim.calculate([self.arm_sim.getCurrentDraw()])
-        )
-
-        voltage = wpilib.simulation.RoboRioSim.getVInVoltage()
-        # print(f"rio sim voltage: {wpilib.simulation.RoboRioSim.getVInVoltage()}")
-        
-        # self.arm_encoder_sim.setPosition(self.arm_sim.getAngle())
-        # self.arm_spark_sim.setPosition(self.arm_sim.getAngle())
-        self.arm_spark_sim.iterate(math.radians(self.arm_sim.getVelocityDps()), voltage, tm_diff)
-        # self.robot.container.lower_crank.set_encoder_position(self.arm_sim.getAngle())
-
-        self.crank_mech2d.setAngle(math.degrees(self.arm_sim.getAngle()))
-
-        # l_encoder = self.drivetrain.wheelSpeeds.left * tm_diff
-        """

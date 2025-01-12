@@ -79,13 +79,9 @@ class Swerve (Subsystem):
         self.last_drive_time = 0
         self.time_since_drive = 0
 
-        # Slew rate filter variables for controlling lateral acceleration
-        self.currentRotation, self.currentTranslationDir, self.currentTranslationMag  = 0.0, 0.0, 0.0
-
         self.fwd_magLimiter = SlewRateLimiter(0.9 * dc.kMagnitudeSlewRate)
         self.strafe_magLimiter = SlewRateLimiter(dc.kMagnitudeSlewRate)
         self.rotLimiter = SlewRateLimiter(dc.kRotationalSlewRate)
-        self.prevTime = wpilib.Timer.getFPGATimestamp()
 
         # Odometry class for tracking robot pose
         # when we boot should we always be at zero angle?
@@ -107,7 +103,6 @@ class Swerve (Subsystem):
         self.apriltag_front_count_subscriber = self.inst.getDoubleTopic("/Cameras/TagcamFront/tags/targets").subscribe(0)
 
         # I'm fairly confident we don't need to use the DriveFeedForwards 12/22/24 LHACK
-
         module_config = ModuleConfig(
                     wheelRadiusMeters=mc.kWheelDiameterMeters/2,
                     maxDriveVelocityMPS=mc.kDriveWheelFreeSpeedRps * mc.kWheelCircumferenceMeters * 0.85, # the robot advances one wheel circumference per rotation. 
@@ -144,12 +139,8 @@ class Swerve (Subsystem):
 
         self.automated_path = None
 
-    def get_pose(self, report=False) -> Pose2d:
+    def get_pose(self) -> Pose2d:
         # return the pose of the robot  TODO: update the dashboard here?
-        if report:
-            pass
-            # print(f'attempting to get pose: {self.odometry.getPose()}')
-
         return self.pose_estimator.getEstimatedPosition()
 
     # def get_pose_no_tag(self) -> Pose2d:
@@ -204,8 +195,6 @@ class Swerve (Subsystem):
         for state, module in zip(swerveModuleStates, self.swerve_modules):
             module.setDesiredState(state)
 
-        # safety
-        #self.drivebase.feed()
 
     #  -------------  THINGS PATHPLANNER NEEDS  - added for pathplanner 20230218 CJH
     def get_relative_speeds(self):
@@ -248,6 +237,9 @@ class Swerve (Subsystem):
     # -------------- END PATHPLANNER STUFF
 
     def reset_keep_angle(self):
+        """
+        perhaps deprecated because we want to use resetOdometry to reset the gyro
+        """
         self.last_rotation_time = self.keep_angle_timer.get()  # reset the rotation time
         self.last_drive_time = self.keep_angle_timer.get()  # reset the drive time
 
@@ -273,17 +265,9 @@ class Swerve (Subsystem):
             output = self.keep_angle_pid.calculate(self.get_angle(), self.keep_angle)  # 2024 real, can we just use YAW always?
             output = output if math.fabs(output) < 0.2 else 0.2 * math.copysign(1, output)  # clamp at 0.2
 
-        if wpilib.RobotBase.isSimulation() or wpilib.RobotBase.isReal():
-            #wpilib.SmartDashboard.putNumber('keep_angle', self.keep_angle)
-            wpilib.SmartDashboard.putNumber('keep_angle_output', output)
+        wpilib.SmartDashboard.putNumber('keep_angle_output', output)
 
         return output
-
-    def set_drive_motor_references(self, setpoint, control_type = dc.k_drive_controller_type.ControlType.kVoltage,
-                                   pidSlot=1, arbFeedForward=0):
-        # Make sure you've turned the swerve into a tank drive before calling this
-        for module in self.swerve_modules:
-            module.drivingClosedLoopController.setReference(setpoint, control_type, pidSlot=pidSlot)
 
     def setX(self) -> None:
         """Sets the wheels into an X formation to prevent movement."""
@@ -351,6 +335,9 @@ class Swerve (Subsystem):
         return self.gyro.getRoll() - roll_offset
 
     def reset_gyro(self, adjustment=None):  # use this from now on whenever we reset the gyro
+        """
+        perhaps deprecated because we want to use resetOdometry to reset the gyro 1/12/25 LHACK
+        """
         self.gyro.reset()
         if adjustment is not None:
             # ADD adjustment - e.g trying to update the gyro from a pose
@@ -407,6 +394,14 @@ class Swerve (Subsystem):
         print(f'  nearest {destination} is tag {sorted_tags[0]} at {nearest_pose.translation()}')
         return updated_pose
 
+    def get_desired_swerve_module_states(self) -> list[SwerveModuleState]:
+        """
+        what it says on the wrapper; it's for physics.py because I don't like relying on an NT entry
+        to communicate between them (it's less clear what the NT entry is there for, I think) LHACK 1/12/25
+        """
+        return [module.getDesiredState() for module in self.swerve_modules]
+
+
     def periodic(self) -> None:
 
         self.counter += 1
@@ -438,16 +433,21 @@ class Swerve (Subsystem):
         if wpilib.RobotBase.isReal():
             # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
             self.pose_estimator.updateWithTime(wpilib.Timer.getFPGATimestamp(), Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
-        else:
-            # sim is not updating the odometry right yet, not sure why since all the sparks should be set in the sim
-            # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
-            self.pose_estimator.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions())
-            pose = self.get_pose()
-            wpilib.SmartDashboard.putNumberArray('real_robot_pose', [pose.x, pose.y, pose.rotation().degrees()])
+
+        # in sim, we update from physics.py
+        # TODO: if we want to be cool and have spare time, we could use SparkBaseSim with FlywheelSim to do
+        # actual physics simulation on the swerve modules instead of assuming perfect behavior
+
+        # else:
+        #     # sim is not updating the odometry right yet, not sure why since all the sparks should be set in the sim
+        #     # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
+        #     self.pose_estimator.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions())
+        #     pose = self.get_pose()
+        #     wpilib.SmartDashboard.putNumberArray('real_robot_pose', [pose.x, pose.y, pose.rotation().degrees()])
 
         if self.counter % 10 == 0:
             pose = self.get_pose()  # self.odometry.getPose()
-            if wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
+            if True: # wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
                 wpilib.SmartDashboard.putNumberArray('drive_pose', [pose.X(), pose.Y(), pose.rotation().degrees()])
                 wpilib.SmartDashboard.putNumber('drive_x', pose.X())
                 wpilib.SmartDashboard.putNumber('drive_y', pose.Y())
@@ -457,8 +457,7 @@ class Swerve (Subsystem):
             wpilib.SmartDashboard.putNumber('_navx_yaw', self.get_yaw())
             wpilib.SmartDashboard.putNumber('_navx_angle', self.get_angle())
 
-            if wpilib.RobotBase.isSimulation() or wpilib.RobotBase.isReal():
-                wpilib.SmartDashboard.putNumber('keep_angle', self.keep_angle)
+            wpilib.SmartDashboard.putNumber('keep_angle', self.keep_angle)
                 # wpilib.SmartDashboard.putNumber('keep_angle_output', output)
 
             # post yaw, pitch, roll so we can see what is going on with the climb
@@ -466,7 +465,8 @@ class Swerve (Subsystem):
             wpilib.SmartDashboard.putNumberArray('_navx_YPR', ypr)
 
             # monitor power as well
-            if wpilib.RobotBase.isReal():
+            if True: # wpilib.RobotBase.isReal():
+                # there's some kind of voltage simulation but idk if this covers it
                 voltage = self.pdh.getVoltage()
                 total_current = self.pdh.getTotalCurrent()
             else:
