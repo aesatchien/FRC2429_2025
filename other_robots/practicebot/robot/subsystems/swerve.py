@@ -112,13 +112,15 @@ class Swerve (Subsystem):
                     numMotors=1
         )
 
-        robot_config = RobotConfig(
-                massKG=constants.k_robot_mass_kg,
-                MOI=constants.k_robot_moi,
-                moduleConfig=module_config,
-                moduleOffsets=dc.kModulePositions,
-                # trackwidthMeters=dc.kTrackWidth
-        )
+        # robot_config = RobotConfig(
+        #         massKG=constants.k_robot_mass_kg,
+        #         MOI=constants.k_robot_moi,
+        #         moduleConfig=module_config,
+        #         moduleOffsets=dc.kModulePositions,
+        #         # trackwidthMeters=dc.kTrackWidth
+        # )
+
+        robot_config = RobotConfig.fromGUISettings()
 
         holonomic_controller = PPHolonomicDriveController(
                 translation_constants=ac.k_pathplanner_translation_pid_constants,

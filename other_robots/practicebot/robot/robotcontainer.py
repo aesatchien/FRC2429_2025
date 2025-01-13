@@ -6,7 +6,7 @@ from commands2.button import Trigger
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 import constants
 
-from pathplannerlib.auto import PathPlannerAuto
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
 from pathplannerlib.path import PathPlannerPath
 
 from subsystems.lower_crank import LowerCrank
@@ -109,7 +109,9 @@ class RobotContainer:
         pass
 
     def bind_driver_buttons(self):
-        # self.triggerX.whileTrue(PathPlannerAuto("test"))
+        self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
+        self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
+        self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
         pass
 
     def bind_operator_buttons(self):
@@ -120,5 +122,5 @@ class RobotContainer:
         pass
 
     def get_autonomous_command(self):
-        pass 
+        return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()
