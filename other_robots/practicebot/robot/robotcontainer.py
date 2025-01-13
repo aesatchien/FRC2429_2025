@@ -1,8 +1,13 @@
 from dataclasses import field
+import math
 import time, enum
+from pathplannerlib.pathfinders import LocalADStar
+from pathplannerlib.pathfinding import Pathfinding
+from pathplannerlib.path import PathConstraints
 import wpilib
 import commands2
 from commands2.button import Trigger
+from wpimath.geometry import Pose2d
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 import constants
 
@@ -47,6 +52,8 @@ class RobotContainer:
         # self.configure_swerve_bindings()
         
         self.initialize_dashboard()
+
+        Pathfinding.setPathfinder(LocalADStar())
 
         # swerve driving
 
@@ -112,6 +119,21 @@ class RobotContainer:
         self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
         self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
+
+        pathfinding_constraints = PathConstraints(
+                maxVelocityMps=0.5,
+                maxAccelerationMpsSq=3,
+                maxAngularVelocityRps=math.radians(90),
+                maxAngularAccelerationRpsSq=math.degrees(720),
+                nominalVoltage=12
+        )
+
+        self.triggerA.whileTrue(
+                AutoBuilder.pathfindToPoseFlipped(
+                    pose=Pose2d(15, 4, 0),
+                    constraints=pathfinding_constraints
+                )
+        )
         pass
 
     def bind_operator_buttons(self):
