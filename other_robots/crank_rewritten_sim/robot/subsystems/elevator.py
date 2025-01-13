@@ -30,9 +30,9 @@ class Elevator(Subsystem):
             pass
         else:
             if height >= self.max_height:
-                height = self.max_height
+                self.height = self.max_height
             elif height <= self.min_height:
-                height = self.min_height
+                self.height = self.min_height
             else: self.height = height
 
     def next_pos(self, direction):

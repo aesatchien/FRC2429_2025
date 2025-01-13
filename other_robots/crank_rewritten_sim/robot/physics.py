@@ -45,7 +45,6 @@ class PhysicsEngine:
         sm.side_mech.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
         sm.side_mech.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
 
-
         self.count = 0
 
     def update_sim(self, now: float, tm_diff: float) -> None:
