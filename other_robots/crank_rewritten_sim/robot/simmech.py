@@ -105,18 +105,20 @@ top_mech.appendLigament("chassis_right", "Intake", 10, 180, 10, wpilib.Color.kDa
 #side view for coral branch
 small_branch_length = 12
 bar_width = 1.66
+bar_color = wpilib.Color.kPurple
 top_stems = 15.87
 branch_offset_x = length / 2
 branch_offset_y = 0
 branch_base = coral_branch.getRoot("branch_base", branch_offset_x, branch_offset_y)
-coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, wpilib.Color.kPurple)
+coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, bar_color)
 coral_branch.appendLigament("base_stem", "l1_branch", 12.84, 90, bar_width, wpilib.Color.kGray)
-coral_branch.appendLigament("base_stem", "l2_stem", 5.2, 90, bar_width, wpilib.Color.kPurple)
-coral_branch.appendLigament("l2_stem", "l2_branch", small_branch_length, 55, bar_width, wpilib.Color.kPurple)
-coral_branch.appendLigament("l2_stem", "13_stem", 12.84, 305, bar_width, wpilib.Color.kPurple)
-coral_branch.appendLigament("l3_stem", "13_branch", small_branch_length, 55, bar_width, wpilib.Color.kPurple)
-#coral_branch.appendLigament("l0", "base_stem_right", 12.84, 180, bar_width, wpilib.Color.kPurple)
-#coral_branch.appendLigament("l0", "base_stem_right", 12.84, 180, bar_width, wpilib.Color.kPurple)
+coral_branch.appendLigament("base_stem", "l2_stem", 5.2, 90, bar_width, bar_color)
+coral_branch.appendLigament("l2_stem", "l2_branch", small_branch_length, 55, bar_width, bar_color)
+coral_branch.appendLigament("l2_stem", "13_stem", top_stems, 305, bar_width, bar_color)
+coral_branch.appendLigament("l3_stem", "13_branch", small_branch_length, 55, bar_width, bar_color)
+coral_branch.appendLigament("l3_stem", "l4_stem", top_stems, 305, bar_width, bar_color)
+coral_branch.appendLigament("l4_stem", "bent_branch", 16.14, 55, bar_width, bar_color)
+coral_branch.appendLigament("bent_branch", "top_branch", 6.8, 305, bar_width, bar_color)
 
 swerve_offset = 4  # try to put the wheels somewhere that looks good
 swerves = ['swerve_right', 'swerve_front', 'swerve_left', 'swerve_back']
