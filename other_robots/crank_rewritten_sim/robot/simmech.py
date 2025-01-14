@@ -63,7 +63,7 @@ width = length
 height = 60
 side_mech = MechTracker(length=length, width=width, height=height, view='side')
 top_mech = MechTracker(length=length, width=width, height=height, view='top')
-coral_branch = MechTracker(length=length + 40, width= width, height=height, view='side')
+coral_branch = MechTracker(length=length, width= width + 40, height=height, view='side')
 
 
 # side view
@@ -107,7 +107,7 @@ small_branch_length = 12
 bar_width = 1.66
 bar_color = wpilib.Color.kPurple
 top_stems = 15.87
-branch_offset_x = length + 40 / 2
+branch_offset_x = length / 2
 branch_offset_y = 0
 branch_base = coral_branch.getRoot("branch_base", branch_offset_x, branch_offset_y)
 coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, bar_color)
