@@ -63,7 +63,7 @@ width = length
 height = 60
 side_mech = MechTracker(length=length, width=width, height=height, view='side')
 top_mech = MechTracker(length=length, width=width, height=height, view='top')
-coral_branch = MechTracker(length=length, width= width + 40, height=height, view='side')
+coral_branch = MechTracker(length=length, width= width, height= height + 30, view='side')
 
 
 # side view
