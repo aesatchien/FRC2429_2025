@@ -114,7 +114,7 @@ coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, ba
 coral_branch.appendLigament("base_stem", "l1_branch", 12.84, 90, bar_width, wpilib.Color.kGray)
 coral_branch.appendLigament("base_stem", "l2_stem", 5.2, 90, bar_width, bar_color)
 coral_branch.appendLigament("l2_stem", "l2_branch", small_branch_length, 55, bar_width, bar_color)
-coral_branch.appendLigament("l2_stem", "13_stem", top_stems, 305, bar_width, bar_color)
+coral_branch.appendLigament("l2_stem", "l3_stem", top_stems, 305, bar_width, bar_color)
 coral_branch.appendLigament("l3_stem", "13_branch", small_branch_length, 55, bar_width, bar_color)
 coral_branch.appendLigament("l3_stem", "l4_stem", top_stems, 305, bar_width, bar_color)
 coral_branch.appendLigament("l4_stem", "bent_branch", 16.14, 55, bar_width, bar_color)
