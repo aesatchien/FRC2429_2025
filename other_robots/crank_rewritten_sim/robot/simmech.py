@@ -103,6 +103,8 @@ top_mech.appendLigament("chassis_left", "chassis_back", chassis_length, 90, bar_
 top_mech.appendLigament("chassis_right", "Intake", 10, 180, 10, wpilib.Color.kDarkRed)
 
 #side view for coral branch
+length = 80
+width = length
 small_branch_length = 12
 bar_width = 1.66
 bar_color = wpilib.Color.kPurple
@@ -112,11 +114,11 @@ branch_offset_y = 0
 branch_base = coral_branch.getRoot("branch_base", branch_offset_x, branch_offset_y)
 coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, bar_color)
 coral_branch.appendLigament("base_stem", "l1_branch", 12.84, 90, bar_width, wpilib.Color.kGray)
-coral_branch.appendLigament("base_stem", "l2_stem", 5.2, 90, bar_width, bar_color)
+coral_branch.appendLigament("base_stem", "l2_stem", 5.2, 0, bar_width, bar_color)
 coral_branch.appendLigament("l2_stem", "l2_branch", small_branch_length, 55, bar_width, bar_color)
-coral_branch.appendLigament("l2_stem", "l3_stem", top_stems, 305, bar_width, bar_color)
+coral_branch.appendLigament("l2_stem", "l3_stem", top_stems, 0, bar_width, bar_color)
 coral_branch.appendLigament("l3_stem", "13_branch", small_branch_length, 55, bar_width, bar_color)
-coral_branch.appendLigament("l3_stem", "l4_stem", top_stems, 305, bar_width, bar_color)
+coral_branch.appendLigament("l3_stem", "l4_stem", top_stems, 0, bar_width, bar_color)
 coral_branch.appendLigament("l4_stem", "bent_branch", 16.14, 55, bar_width, bar_color)
 coral_branch.appendLigament("bent_branch", "top_branch", 6.8, 305, bar_width, bar_color)
 
