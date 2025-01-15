@@ -8,7 +8,7 @@ from pyfrc.physics.core import PhysicsInterface
 
 from robot import MyRobot
 import constants
-import simmech
+import simmech as sm
 from subsystems.swerve_constants import DriveConstants as dc
 
 class PhysicsEngine:
@@ -76,6 +76,7 @@ class PhysicsEngine:
         self.physics_controller.move_robot(geo.Transform2d(self.x, self.y, 0))
 
         # if we want to add an armsim see test_robots/sparksim_test/
+        self.update_elevator_positions()
 
     def update_sim(self, now, tm_diff):
         simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
@@ -123,3 +124,20 @@ class PhysicsEngine:
 
         self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
 
+        # move the elevator based on controller input
+        self.update_elevator_positions()
+
+    def update_elevator_positions(self):
+        if self.robot is None:
+            raise ValueError("Robot is not defined")
+        
+        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
+        self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
+        self.elbow_pivot = self.robot.container.double_pivot.get_elbow_pivot()
+        
+        sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
+        sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
+        
+        sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
+        sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
+        sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)

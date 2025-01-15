@@ -12,40 +12,44 @@ class Elevator(Subsystem):
         super().__init__()
         self.setName('Elevator')
 
-        self.max_height = 1.5 #unit: meters
-        self.min_height = 0.2 #these are random values; eventually make it a constant.
-        self.positions = {"l1": self.min_height, "l2": 0.6, "l3": 1.2, "l4": self.max_height}
+        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
 
         #initialize motors and any other electrical component here (but skip for the purposes of simulation)
         #...
 
-        self.height = self.min_height #assumes elevator starts at the bottom
+        self.height = constants.ElevatorConstants.k_positions["stow"]["elevator_height"]
+        
+        self.target_pos = "stow"
 
     def get_height(self):
         return self.height
+
+    def get_target_pos(self):
+        return self.target_pos
 
     def set_height(self, height):
         if wpilib.RobotBase.isReal():
             #code to move the elevator in real life
             pass
         else:
-            if height >= self.max_height:
-                self.height = self.max_height
-            elif height <= self.min_height:
-                self.height = self.min_height
+            if height >= constants.ElevatorConstants.k_elevator_max_height:
+                self.height = constants.ElevatorConstants.k_elevator_max_height
+            elif height <= constants.ElevatorConstants.k_elevator_min_height:
+                self.height = constants.ElevatorConstants.k_elevator_min_height
             else: self.height = height
 
-    def next_pos(self, direction):
+    def next_pos(self, direction="down"):
+        keys = list(self.coral_positions.keys())
+        current_index = keys.index(self.target_pos)
+
         if direction == "up":
-            for pos in self.positions.values():
-                if self.height + 0.1 < pos: #in the future, numbers like "0.03" will be a value relative to some tolerance constant
-                    return pos
-            return self.max_height
-            
-        elif direction == "down":
-            temp_list = list(self.positions.values())
-            temp_list.reverse()
-            for pos in temp_list:
-                if self.height - 0.1 > pos:
-                    return pos
-            return self.min_height
+            if current_index + 1 < len(keys):
+                self.target_pos = keys[current_index + 1]
+                return (self.coral_positions[self.target_pos])
+            return (self.coral_positions[self.target_pos])
+        else:
+            if current_index - 1 >= 0:
+                self.target_pos = keys[current_index - 1]
+                return (self.coral_positions[self.target_pos])
+            return (self.coral_positions[self.target_pos])
+    

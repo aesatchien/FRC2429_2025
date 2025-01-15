@@ -23,6 +23,7 @@ class MoveElevator(commands2.Command):
         print("\n" + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
         SmartDashboard.putString("alert", f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():.1f} s **")
         SmartDashboard.putNumber("Elevator Target Position", self.target)
+        SmartDashboard.putString("Elevator Target Position Name", self.elevator.get_target_pos())
 
     def execute(self) -> None:
         self.elevator.set_height(self.elevator.get_height() + (0.1 * self.direction_sign))

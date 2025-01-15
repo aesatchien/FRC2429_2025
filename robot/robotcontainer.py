@@ -14,10 +14,14 @@ import constants
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
 from pathplannerlib.path import PathPlannerPath
 
-from subsystems.lower_crank import LowerCrank
+# from subsystems.lower_crank import LowerCrank
 
-from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
+# from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
+from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
+
 from subsystems.swerve import Swerve
+from subsystems.elevator import Elevator
+from subsystems.double_pivot import DoublePivot
 
 class RobotContainer:
     """
@@ -34,6 +38,8 @@ class RobotContainer:
         # The robot's subsystems
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
+        self.elevator = Elevator()
+        self.double_pivot = DoublePivot()
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -128,12 +134,16 @@ class RobotContainer:
                 nominalVoltage=12
         )
 
-        self.triggerA.whileTrue(
+        self.triggerY.whileTrue(
                 AutoBuilder.pathfindToPoseFlipped(
                     pose=Pose2d(15, 4, 0),
                     constraints=pathfinding_constraints
                 )
         )
+
+        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="up"))
+        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="down"))
+
         pass
 
     def bind_operator_buttons(self):

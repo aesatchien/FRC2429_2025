@@ -30,5 +30,74 @@ class LowerCrankConstants:
     k_length_meters = 20 * 0.0254
     k_mass_kg = 8
     k_lower_crank_sim_starting_angle = math.radians(60)
-    
+
+class ElevatorConstants:
+    k_CAN_id = 4
+
+    k_elevator_max_height = 50 #inches
+    k_elevator_min_height = 22 #inches
+
+    k_shoulder_length = 12 #inches
+    k_elbow_length = 22 #inches
+    k_wrist_length = 14 #inches
+
+    k_tolerance = 1.5
+
+    k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
+        "stow": {
+            "elevator_height": k_elevator_min_height,
+            "shoulder_pivot": 180,
+            "elbow_pivot": 180, 
+            "wrist_pivot": 0
+        },
+        "ground": {
+            "elevator_height": 22,
+            "shoulder_pivot": 135,
+            "elbow_pivot": 120,
+            "wrist_pivot": 0
+        },
+        "l1": {
+            "elevator_height": 22,
+            "shoulder_pivot": 150, #angle between the vertical and the shoulder ligament
+            "elbow_pivot": 145, #angle between shoulder ligament and elbow ligament
+            "wrist_pivot": 90 #angle between the horizontal and the wrist ligament
+        },
+        "l2": {
+            "elevator_height": 22,
+            "shoulder_pivot": 180,
+            "elbow_pivot": 150,
+            "wrist_pivot": 90
+        },
+        "l3": {
+            "elevator_height": 38,
+            "shoulder_pivot": 180,
+            "elbow_pivot": 150, 
+            "wrist_pivot": 90 
+        },
+        "l4": {
+            "elevator_height": 38,
+            "shoulder_pivot": 35, 
+            "elbow_pivot": 270,
+            "wrist_pivot": 90
+        },
+        "processor": 0,
+        "barge": 0,
+        "coral station": 0,
+        "algae 1": 0,
+        "algae 2": 0
+    }
+
+    #sim elevator
+    k_window_height = 80
+    k_window_width = 60
+    k_window_length = 60
+
+    k_elevator_sim_max_height = 50
+    k_elevator_sim_length = 10
+    k_elevator_sim_width = 20
+
+    k_shoulder_length_sim = 12
+    k_elbow_length_sim = 22
+    k_wrist_length_sim = 14
+
 
