@@ -107,7 +107,7 @@ small_branch_length = 12
 bar_width = 1.66
 bar_color = wpilib.Color.kPurple
 top_stems = 15.87
-branch_offset_x = length / 2
+branch_offset_x = length
 branch_offset_y = 0
 branch_base = coral_branch.getRoot("branch_base", branch_offset_x, branch_offset_y)
 coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, bar_color)
