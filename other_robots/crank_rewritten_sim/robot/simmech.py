@@ -4,6 +4,7 @@ import wpilib
 
 
 # Simplified dictionary wrapper for Mechanism2d
+#UNIT: INCHES
 class MechTracker:
     def __init__(self, *, length, width, height, view):
         """
