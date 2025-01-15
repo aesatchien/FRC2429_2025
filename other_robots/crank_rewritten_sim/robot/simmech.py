@@ -1,6 +1,7 @@
 # CJH trying to put fairly complex mechanism definitions outside physics.py
 # 2024 1228
 import wpilib
+import constants
 
 
 # Simplified dictionary wrapper for Mechanism2d
@@ -58,71 +59,62 @@ class MechTracker:
 
 
 # Initialize the mechanism trackers
-length = 40 #joshsugino 1/11/25: eventuallly make these constants. I think the goal is to have a "sim" constants class in constants.py (?)
-width = length
-height = 60
-side_mech = MechTracker(length=length, width=width, height=height, view='side')
-top_mech = MechTracker(length=length, width=width, height=height, view='top')
+length = constants.ElevatorConstants.k_window_length #joshsugino 1/11/25: eventuallly make these constants. I think the goal is to have a "sim" constants class in constants.py (?)
+width = constants.ElevatorConstants.k_window_width
+height = constants.ElevatorConstants.k_window_height
+front_elevator = MechTracker(length=length, width=width, height=height, view='side')
+side_elevator = MechTracker(length=length, width=width, height=height, view='side')
 
-
-# side view
+# front view
 chassis_length = 28
 bar_width = 12
 chassis_bottom = 2
 chassis_offset = (length - chassis_length) / 2
-chassis_base_side = side_mech.getRoot("chassisBase", chassis_offset, chassis_bottom)
-side_mech.appendLigament("chassisBase", "chassis", chassis_length, 0, 12, wpilib.Color.kGray)
+chassis_base_side = front_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
+front_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, bar_width, wpilib.Color.kGray)
 
-# side view of elevator mechanism
-elevator_length = 16
-elevator_height = 50
+#elevator mechanism lengths (sim)
+elevator_length = constants.ElevatorConstants.k_elevator_sim_length
+elevator_width = constants.ElevatorConstants.k_elevator_sim_width
+elevator_height = constants.ElevatorConstants.k_elevator_max_height
 bar_width = 10  # this is a percentage of the mech screen, so scales with the mech dimensions
 
-elevator_offset_x = (length - elevator_length) / 2
-elevator_offset_y = (height - elevator_height) / 2
-elevator_base = side_mech.getRoot("elevator", elevator_offset_x, elevator_offset_y)
+#double pivot lengths (sim)
+double_pivot_shoulder_length = constants.ElevatorConstants.k_shoulder_length_sim
+double_pivot_elbow_length = constants.ElevatorConstants.k_elbow_length_sim
 
-side_mech.appendLigament("elevator", "elevator_bottom", elevator_length, 0, bar_width, wpilib.Color.kRed)
-side_mech.appendLigament("elevator_bottom", "elevator_right", elevator_height, 90, bar_width, wpilib.Color.kRed)
-side_mech.appendLigament("elevator_right", "elevator_top", elevator_length, 90, bar_width, wpilib.Color.kRed)
-side_mech.appendLigament("elevator_top", "elevator_left", elevator_height, 90, bar_width, wpilib.Color.kRed)
+# front view of elevator mechanism
+elevator_offset_x = (width - elevator_width) / 2
+elevator_offset_y = 2 * chassis_bottom
+elevator_base = front_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
+
+front_elevator.appendLigament("elevator", "elevator_bottom", elevator_width, 0, bar_width, wpilib.Color.kRed)
+front_elevator.appendLigament("elevator_bottom", "elevator_right", elevator_height, 90, bar_width, wpilib.Color.kRed)
+front_elevator.appendLigament("elevator_right", "elevator_top", elevator_width, 90, bar_width, wpilib.Color.kRed)
+front_elevator.appendLigament("elevator_top", "elevator_left", elevator_height, 90, bar_width, wpilib.Color.kRed)
+
+# side view of elevator mechanism
+chassis_base_side = side_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
+side_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, 12, wpilib.Color.kGray)
+
+elevator_offset_x = width/2
+elevator_base = side_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
+side_elevator.appendLigament("elevator", "elevator_side", elevator_height, 90, bar_width * 1.5, wpilib.Color.kRed)
+side_elevator.appendLigament("elevator_side", "double_pivot_shoulder", double_pivot_shoulder_length, constants.ElevatorConstants.k_positions["l1"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
+side_elevator.appendLigament("double_pivot_shoulder", "double_pivot_elbow", double_pivot_elbow_length, constants.ElevatorConstants.k_positions["l1"]["elbow_pivot"], bar_width/3, wpilib.Color.kYellow)
 
 # top view - looking down front is on the right,  right is on the bottom.  remember - angles are relativeto parent!
-
-#joshsugino 1/20/25 - note: I didn't include the top view of the elevator, because nothing would actually change in the animation.
-
-chassis_length = 28
-bar_width = 12
-chassis_offset = (length - chassis_length) / 2
-chassis_base_top = top_mech.getRoot("chassis_base_top", chassis_offset, chassis_offset)
-top_mech.appendLigament("chassis_base_top", "chassis_right", chassis_length, 0, bar_width, wpilib.Color.kGray)
-top_mech.appendLigament("chassis_right", "chassis_front", chassis_length, 90, bar_width, wpilib.Color.kDodgerBlue)
-top_mech.appendLigament("chassis_front", "chassis_left", chassis_length, 90, bar_width, wpilib.Color.kOrange)
-top_mech.appendLigament("chassis_left", "chassis_back", chassis_length, 90, bar_width, wpilib.Color.kGreen)
-top_mech.appendLigament("chassis_right", "Intake", 10, 180, 10, wpilib.Color.kDarkRed)
-
-swerve_offset = 4  # try to put the wheels somewhere that looks good
-swerves = ['swerve_right', 'swerve_front', 'swerve_left', 'swerve_back']
-colors = [wpilib.Color.kGreen, wpilib.Color.kOrange, wpilib.Color.kYellow, wpilib.Color.kBlue]
-offsets = [(chassis_offset + swerve_offset, chassis_offset + swerve_offset ),
-           (chassis_offset + chassis_length - swerve_offset, chassis_offset + swerve_offset),
-           (chassis_offset + chassis_length - swerve_offset, chassis_offset + chassis_length - swerve_offset),
-           (chassis_offset + swerve_offset, chassis_offset + chassis_length - swerve_offset)]
-for color, offset, swerve in zip(colors, offsets, swerves):
-    top_mech.getRoot(swerve, offset[0], offset[1])
-    # if you want things to rotate about the center you have to fake it
-    top_mech.appendLigament(swerve, swerve + 'lig_front', 2, 45, 10, color)
-    top_mech.appendLigament(swerve, swerve + 'lig_back', 2, 225, 10, wpilib.Color.kWhite)
+# ...
 
 # Push to SmartDashboard
-wpilib.SmartDashboard.putData("Side Mechanism", side_mech.mechanism)
-wpilib.SmartDashboard.putData("Top Mechanism", top_mech.mechanism)
+wpilib.SmartDashboard.putData("Elevator Front View", front_elevator.mechanism)
+wpilib.SmartDashboard.putData("Elevator Side View", side_elevator.mechanism)
 
 # Debugging output
-print("DEBUG: Side Mechanism Components:")
-for name, data in side_mech.components.items():
+print("DEBUG: Elevator Front View Components:")
+for name, data in front_elevator.components.items():
     print(f"side:  {name}: {data}")
 
-print("DEBUG: Top Mechanism Components:")
-for name, data in top_mech.components.items():
-    print(f"top:  {name}: {data}")
+# print("DEBUG: Top Mechanism Components:")
+# for name, data in side_elevator.components.items():
+#     print(f"top:  {name}: {data}")

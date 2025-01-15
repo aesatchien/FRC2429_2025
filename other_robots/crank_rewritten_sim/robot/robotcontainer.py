@@ -12,9 +12,13 @@ from pathplannerlib.path import PathPlannerPath
 from subsystems.lower_crank import LowerCrank
 
 from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
-from commands.increment_elevator import IncrementElevator
+from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
+from commands.move_elevator import MoveElevator
+from commands.move_double_pivot import MoveDoublePivot
+
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
+from subsystems.double_pivot import DoublePivot
 
 class RobotContainer:
     """
@@ -32,6 +36,7 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
+        self.double_pivot = DoublePivot()
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -114,8 +119,8 @@ class RobotContainer:
     def bind_driver_buttons(self):
         # self.triggerX.whileTrue(PathPlannerAuto("test"))
 
-        self.triggerA.onTrue(IncrementElevator(container=self, elevator=self.elevator, direction="up"))
-        self.triggerB.onTrue(IncrementElevator(container=self, elevator=self.elevator, direction="down"))
+        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="up"))
+        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="down"))
 
         pass
 

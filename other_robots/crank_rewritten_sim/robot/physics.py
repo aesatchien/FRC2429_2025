@@ -22,6 +22,7 @@ from pyfrc.physics import motor_cfgs, tankmodel
 from pyfrc.physics.units import units
 
 import typing
+import constants
 
 if typing.TYPE_CHECKING:
     from robot import MyRobot
@@ -41,11 +42,7 @@ class PhysicsEngine:
         self.physics_controller = physics_controller
 
         self.robot = robot
-        self.elevator_height_sim = self.robot.container.elevator.get_height() * (50 / 1.5) #joshsugino 1/10/25 - (50/1.5) is the conversion from meters to simulation units.  Will implement constants later for better readability
-        sm.side_mech.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
-        sm.side_mech.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
-
-        self.count = 0
+        self.update_positions()
 
     def update_sim(self, now: float, tm_diff: float) -> None:
         """
@@ -57,21 +54,20 @@ class PhysicsEngine:
                         time that this function was called
         """
 
-        self.count += 0.25 * 360/50  # one quarter of a circle (360/4) per second,  running 50x per second (/50)
-
         # move the elevator based on controller input
-        self.elevator_height_sim = self.robot.container.elevator.get_height() * (50 / 1.5) #joshsugino 1/10/25 - (50/1.5) is the conversion from meters to simulation units.  Will implement constants later for better readability
-        sm.side_mech.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
-        sm.side_mech.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
+        self.update_positions()
 
-        # change some wheel angles and colors
-        # TODO: link the colors to the drive motor and the angles to the turn motor
-        test_color = wpilib.Color8Bit(wpilib.Color.kLimeGreen) if self.count % 360 > 180 else wpilib.Color8Bit(wpilib.Color.kDarkRed)
-
-        swerves = swerves = ['swerve_right', 'swerve_front', 'swerve_left', 'swerve_back']
-        for swerve in swerves:
-            start_angle = sm.top_mech.components[swerve + 'lig_front']['angle']
-            angle = (start_angle + self.count) % 360
-            sm.top_mech.components[swerve + 'lig_front']["ligament"].setAngle(angle)
-            sm.top_mech.components[swerve + 'lig_back']["ligament"].setAngle(angle+180)
-            sm.top_mech.components[swerve + 'lig_back']["ligament"].setColor(test_color)
+    def update_positions(self):
+        if self.robot is None:
+            raise ValueError("Robot is not defined")
+        
+        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
+        self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
+        self.elbow_pivot = self.robot.container.double_pivot.get_elbow_pivot()
+        
+        sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
+        sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
+        
+        sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
+        sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
+        sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
