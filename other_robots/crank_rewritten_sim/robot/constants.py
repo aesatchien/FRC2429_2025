@@ -64,7 +64,7 @@ class ElevatorConstants:
             "shoulder_pivot": 150, #angle between the vertical and the shoulder ligament
             "elbow_pivot": 145, #angle between shoulder ligament and elbow ligament
             "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
-            "wrist_color": wpilib.Color.kRed
+            "wrist_color": wpilib.Color.kBlue
         },
         "l2": {
             "elevator_height": 22,
