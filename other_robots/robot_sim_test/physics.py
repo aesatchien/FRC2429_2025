@@ -1,20 +1,3 @@
-#
-# Copyright (c) FIRST and other WPILib contributors.
-# Open Source Software; you can modify and/or share it under the terms of
-# the WPILib BSD license file in the root directory of this project.
-#
-
-#
-# See the documentation for more details on how this works
-#
-# The idea here is you provide a simulation object that overrides specific
-# pieces of WPILib, and modifies motors/sensors accordingly depending on the
-# state of the simulation. An example of this would be measuring a motor
-# moving for a set period of time, and then changing a limit switch to turn
-# on after that period of time. This can help you do more complex simulations
-# of your robot code without too much extra effort.
-#
-
 import math
 import wpilib
 import hal
@@ -144,6 +127,12 @@ class PhysicsEngine:
         # move the elevator based on controller input
         self.update_elevator_positions()
 
+        #get coral
+        if not self.robot.container.elevator.get_has_coral():
+            self.has_coral = self.update_intake_coral()
+            self.robot.container.elevator.set_has_coral(self.has_coral)
+        wpilib.SmartDashboard.putBoolean("Coral Acquired", self.has_coral)
+
     def update_elevator_positions(self):
         if self.robot is None:
             raise ValueError("Robot is not defined")
@@ -159,13 +148,30 @@ class PhysicsEngine:
         sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
         sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
 
-    def on_coral(self, x, y):
-        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_coordinates if valid_coord[2] > 0]:
-            if self.distance(x,y) <= constants.ElevatorConstants.k_robot_radius_sim:
-                return True
+    def update_intake_coral(self): #if robot is in range of coral + robot is at ground position, then intake. TODO: 'also if robot is at coral station position'
+        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_intake_coordinates if valid_coord[2] > 0]:
+            if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:                
+                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions["ground"]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
+                shoulder_in_range = abs(self.robot.container.double_pivot.get_shoulder_pivot() - constants.ElevatorConstants.k_positions["ground"]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
+                elbow_in_range = abs(self.robot.container.double_pivot.get_elbow_pivot() - constants.ElevatorConstants.k_positions["ground"]["elbow_pivot"]) <= constants.ElevatorConstants.k_tolerance
+
+                if elevator_in_range and shoulder_in_range and elbow_in_range:
+                    return True
+        return False
+
+    def update_outtake_coral(self):
+        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_outtake_coordinates if valid_coord[2] == 0]:
+            if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:
+                robot_target_pos = self.robot.container.elevator.get_target_pos() #returns "l1", "l2", "l3", etc
+                
+                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions[robot_target_pos]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
+                shoulder_in_range = abs(self.robot.container.double_pivot.get_shoulder_pivot() - constants.ElevatorConstants.k_positions[robot_target_pos]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
+                elbow_in_range = abs(self.robot.container.double_pivot.get_elbow_pivot() - constants.ElevatorConstants.k_positions[robot_target_pos]["elbow_pivot"]) <= constants.ElevatorConstants.k_tolerance
+
+                if elevator_in_range and shoulder_in_range and elbow_in_range:
+                    return True
         return False
 
     def distance(self, x, y):
-        current_robot_pose = self.physics_controller.get_pose() #unsure if (X,Y) in meters is correct unit for sim
-
+        current_robot_pose = self.physics_controller.get_pose()
         return math.sqrt((current_robot_pose.X() - x) ** 2 + (current_robot_pose.Y() - y) ** 2)
