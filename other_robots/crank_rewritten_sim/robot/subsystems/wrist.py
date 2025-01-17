@@ -10,6 +10,11 @@ import constants
 class Wrist(Subsystem):
     def __init__(self):
         super().__init__()
+        self.setName("Wrist")
 
-    def move_wrist():
+
+
+
+   # def move_wrist():
+
 
