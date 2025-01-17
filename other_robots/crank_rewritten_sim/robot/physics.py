@@ -72,4 +72,4 @@ class PhysicsEngine:
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
         sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
         sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
-        sm.side_elevator.components["wrist"]["ligament"].setColor(wpilib.Color(self.wrist_color))
+        sm.side_elevator.components["wrist"]["ligament"].setColor(self.wrist_color)
