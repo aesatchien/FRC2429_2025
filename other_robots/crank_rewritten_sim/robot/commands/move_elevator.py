@@ -3,7 +3,6 @@ import wpilib
 import typing
 import constants
 import math
-import elevator
 
 from wpilib import SmartDashboard
 from subsystems.elevator import Elevator
@@ -33,7 +32,7 @@ class MoveElevator(commands2.Command):
         SmartDashboard.putNumber("Elevator Position", self.elevator.get_height())
 
     def isFinished(self) -> bool:
-        constants.ElevatorConstants.k_positions[elevator.target_pos()]["wrist_color_for_setColor"]
+        constants.ElevatorConstants.k_positions[Elevator.target_pos()]["wrist_color_for_setColor"]
         return abs(self.elevator.get_height() - self.target) < constants.ElevatorConstants.k_tolerance
     
     def end(self, interrupted: bool) -> None:        
