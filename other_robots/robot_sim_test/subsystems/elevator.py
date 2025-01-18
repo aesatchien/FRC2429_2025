@@ -13,6 +13,8 @@ class Elevator(Subsystem):
         self.setName('Elevator')
 
         self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        
+        array = list(self.coral_positions.keys())
 
         #initialize motors and any other electrical component here (but skip for the purposes of simulation)
         #...

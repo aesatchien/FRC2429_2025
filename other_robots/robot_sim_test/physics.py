@@ -139,23 +139,20 @@ class PhysicsEngine:
         
         self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
         self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
-        self.elbow_pivot = self.robot.container.double_pivot.get_elbow_pivot()
         
         sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
         sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
         
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
         sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
-        sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
 
     def update_intake_coral(self): #if robot is in range of coral + robot is at ground position, then intake. TODO: 'also if robot is at coral station position'
         for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_intake_coordinates if valid_coord[2] > 0]:
             if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:                
                 elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions["ground"]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
                 shoulder_in_range = abs(self.robot.container.double_pivot.get_shoulder_pivot() - constants.ElevatorConstants.k_positions["ground"]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
-                elbow_in_range = abs(self.robot.container.double_pivot.get_elbow_pivot() - constants.ElevatorConstants.k_positions["ground"]["elbow_pivot"]) <= constants.ElevatorConstants.k_tolerance
 
-                if elevator_in_range and shoulder_in_range and elbow_in_range:
+                if elevator_in_range and shoulder_in_range:
                     return True
         return False
 
@@ -166,9 +163,8 @@ class PhysicsEngine:
                 
                 elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions[robot_target_pos]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
                 shoulder_in_range = abs(self.robot.container.double_pivot.get_shoulder_pivot() - constants.ElevatorConstants.k_positions[robot_target_pos]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
-                elbow_in_range = abs(self.robot.container.double_pivot.get_elbow_pivot() - constants.ElevatorConstants.k_positions[robot_target_pos]["elbow_pivot"]) <= constants.ElevatorConstants.k_tolerance
 
-                if elevator_in_range and shoulder_in_range and elbow_in_range:
+                if elevator_in_range and shoulder_in_range:
                     return True
         return False
 
