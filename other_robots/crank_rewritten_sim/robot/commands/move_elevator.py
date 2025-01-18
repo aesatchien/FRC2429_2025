@@ -16,7 +16,6 @@ class MoveElevator(commands2.Command):
         self.direction_sign = math.copysign(1, self.target - self.elevator.get_height())
         self.container = container
 
-        array = list(self.coral_positions.keys())
         self.addRequirements(self.elevator)
 
     def initialize(self) -> None:
