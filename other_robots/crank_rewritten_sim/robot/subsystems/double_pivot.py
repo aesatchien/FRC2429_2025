@@ -20,7 +20,7 @@ class DoublePivot(Subsystem):
 
         self.elbow_pivot = constants.ElevatorConstants.k_positions["stow"]["elbow_pivot"]
         self.shoulder_pivot = constants.ElevatorConstants.k_positions["stow"]["shoulder_pivot"]
-        self.wrist_color = constants.ElevatorConstants.k_positions["stow"]["wrist_color"]
+        self.wrist_color = constants.ElevatorConstants.k_positions["stow"]["wrist_color_for_setColor"]
 
     def get_elbow_pivot(self):
         return self.elbow_pivot
