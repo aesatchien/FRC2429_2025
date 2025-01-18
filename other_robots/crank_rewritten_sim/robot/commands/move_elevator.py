@@ -28,10 +28,10 @@ class MoveElevator(commands2.Command):
 
     def execute(self) -> None:
         self.elevator.set_height(self.elevator.get_height() + (0.1 * self.direction_sign))
+        constants.ElevatorConstants.k_positions[self.elevator.get_target_pos()]["wrist_color_for_setColor"]
         SmartDashboard.putNumber("Elevator Position", self.elevator.get_height())
 
     def isFinished(self) -> bool:
-        constants.ElevatorConstants.k_positions[self.elevator.get_target_pos()]["wrist_color_for_setColor"]
         return abs(self.elevator.get_height() - self.target) < constants.ElevatorConstants.k_tolerance
     
     def end(self, interrupted: bool) -> None:        
