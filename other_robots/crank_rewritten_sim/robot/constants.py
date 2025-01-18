@@ -50,42 +50,43 @@ class ElevatorConstants:
             "shoulder_pivot": 180,
             "elbow_pivot": 180, 
             "wrist_pivot": 0,
-            "wrist_color": wpilib.Color8Bit("#0000FF") #blue
+            "wrist_color": wpilib.Color8Bit.kBlue
+            #blue, ("#0000FF")
         },
         "ground": {
             "elevator_height": 22,
             "shoulder_pivot": 135,
             "elbow_pivot": 120,
             "wrist_pivot": 0,
-            "wrist_color": wpilib.Color8Bit("#0000FF")
+            "wrist_color": wpilib.Color8Bit.kBlue
         },
         "l1": {
             "elevator_height": 22,
             "shoulder_pivot": 150, #angle between the vertical and the shoulder ligament
             "elbow_pivot": 145, #angle between shoulder ligament and elbow ligament
             "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
-            "wrist_color": wpilib.Color8Bit("#0000FF")
+            "wrist_color": wpilib.Color8Bit.kBlue
         },
         "l2": {
             "elevator_height": 22,
             "shoulder_pivot": 180,
             "elbow_pivot": 150,
             "wrist_pivot": 90,
-            "wrist_color": wpilib.Color8Bit("#FF0000") #red
+            "wrist_color": wpilib.Color8Bit.kRed #red "#FF0000"
         },
         "l3": {
             "elevator_height": 38,
             "shoulder_pivot": 180,
             "elbow_pivot": 150, 
             "wrist_pivot": 90,
-            "wrist_color": wpilib.Color8Bit("#FF0000")
+            "wrist_color": wpilib.Color8Bit.kRed
         },
         "l4": {
             "elevator_height": 38,
             "shoulder_pivot": 35, 
             "elbow_pivot": 270,
             "wrist_pivot": 90,
-            "wrist_color": wpilib.Color8Bit("#FF0000")
+            "wrist_color": wpilib.Color8Bit.kRed
         },
         "processor": 0,
         "barge": 0,
