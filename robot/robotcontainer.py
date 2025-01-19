@@ -22,6 +22,7 @@ from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
 from subsystems.double_pivot import DoublePivot
+from subsystems.led import Led
 
 class RobotContainer:
     """
@@ -40,6 +41,7 @@ class RobotContainer:
         self.swerve = Swerve()
         self.elevator = Elevator()
         self.double_pivot = DoublePivot()
+        self.led = Led(self)
 
         self.configure_joysticks()
         self.bind_driver_buttons()
