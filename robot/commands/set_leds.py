@@ -7,7 +7,7 @@ from subsystems.led import Led
 
 class SetLEDs(commands2.Command):
     """Command to test the LED modes and indicators"""
-    def __init__(self, container, led:Led, indicator: typing.Union[None, dict] =None, mode: typing.Union[None, dict]=None) -> None:
+    def __init__(self, container, led:Led, indicator: typing.Union[None, Led.Indicator] =None, mode: typing.Union[None, Led.Mode]=None) -> None:
         super().__init__()
         self.setName('Set Leds')
         self.container = container
@@ -25,12 +25,12 @@ class SetLEDs(commands2.Command):
         msg_indicator = 'None'
         if self.indicator is not None:
             self.led.set_indicator(self.indicator)
-            msg_indicator = self.indicator['name']
+            msg_indicator = self.indicator.value['name']
         if self.mode is not None:
             # in this case we will turn off the indicator so we can see the mode
             self.led.set_indicator(self.led.Indicator.kNONE)
             self.led.set_mode(self.mode)
-            msg_mode = self.mode['name']
+            msg_mode = self.mode.value['name']
 
         self.start_time = round(self.container.get_enabled_time(), 2)
         msg = f"** Started {self.getName()} at {self.start_time} s with mode {msg_mode} and indicator {msg_indicator} **"

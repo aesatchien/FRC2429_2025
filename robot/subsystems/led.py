@@ -1,6 +1,6 @@
+from enum import Enum
 import math
 import commands2
-import wpilib
 from wpilib import AddressableLED
 from wpilib import SmartDashboard, Color  # can i make use of color at some point?
 import constants
@@ -10,10 +10,8 @@ import constants
 
 class Led(commands2.Subsystem):
 
-    class Indicator:
+    class Indicator(Enum):
         """ Indicator class is for showing conditions or animations """
-        white = (255, 255, 255)
-        black = (0, 0, 0)
         # the animated classes need to have their data specified here - so you may have to think about it a bit
         # RAINBOW has an illusion of backwards and forwards depending on if shift the data positive or negative
         kRAINBOW = {'name': "RAINBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.5, "flash_mod": 2,
@@ -27,7 +25,7 @@ class Led(commands2.Subsystem):
         kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
         kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
 
-    class Mode:
+    class Mode(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
         kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2}
         kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
@@ -40,11 +38,9 @@ class Led(commands2.Subsystem):
         self.container = container  # at the moment LED may want to query other subsystems, but this is not clean
         self.counter = 0
         self.animation_counter = 0  # will not be necessary after refactor
-        # need to fix this kludge
-        self.indicators = [self.Indicator.kNONE, self.Indicator.kSUCCESS, self.Indicator.kFAILURE, self.Indicator.kRAINBOW, self.Indicator.kCOOLBOW, self.Indicator.kPOLKA]
-        self.indicators_dict = {indicator['name']: indicator for indicator in self.indicators}
-        self.modes = [self.Mode.kNONE, self.Mode.kALGAE, self.Mode.kCORAL]
-        self.modes_dict = {mode['name']: mode for mode in self.modes}
+        # this should auto-update the lists for the dashboard.  you can iterate over enums
+        self.indicators_dict = {indicator.value["name"]: indicator for indicator in self.Indicator}
+        self.modes_dict = {indicator.value["name"]: indicator for indicator in self.Mode}
 
         # necessary initialization for the LED strip
         self.led_count = constants.k_led_count
@@ -68,14 +64,14 @@ class Led(commands2.Subsystem):
     def set_mode(self, mode) -> None:
         self.prev_mode = self.mode
         self.mode = mode
-        SmartDashboard.putString('led_mode', self.mode['name'])
+        SmartDashboard.putString('led_mode', self.mode.value['name'])
 
     def get_mode(self):
         return self.mode
 
     def set_indicator(self, indicator) -> None:
         self.indicator = indicator
-        SmartDashboard.putString('led_indicator', self.indicator['name'])
+        SmartDashboard.putString('led_indicator', self.indicator.value['name'])
 
     def set_indicator_with_timeout(self, indicator: Indicator, timeout: float) -> commands2.ParallelRaceGroup:
         return commands2.StartEndCommand(
@@ -91,37 +87,36 @@ class Led(commands2.Subsystem):
 
             if self.indicator != self.Indicator.kNONE:
 
-                if not self.indicator["animated"]:  # no animation
-                    if self.indicator["frequency"] == 0:  # solid color
-                        color = self.indicator["on_color"]
-                        # [self.led_data[i].setRGB(*indicator_parameters["on_color"]) for i in range(constants.k_led_count)]
+                if not self.indicator.value["animated"]:  # no animation
+                    if self.indicator.value["frequency"] == 0:  # solid color
+                        color = self.indicator.value["on_color"]
 
                     else:  # flashing color
-                        cycle = math.floor(self.animation_counter / self.indicator["frequency"])
+                        cycle = math.floor(self.animation_counter / self.indicator.value["frequency"])
 
-                        if cycle % self.indicator["flash_mod"] == 0:
-                            color = self.indicator["off_color"]
+                        if cycle % self.indicator.value["flash_mod"] == 0:
+                            color = self.indicator.value["off_color"]
 
                         else:
-                            color = self.indicator["on_color"]
+                            color = self.indicator.value["on_color"]
 
                     for i in range(constants.k_led_count):  # set all the LEDs to the same color
                         self.led_data[i].setRGB(*color)
 
                 else:  # special animation cases -
-                    data = self.indicator['animation_data']
+                    data = self.indicator.value['animation_data']
                     # a frequency < 1 slows down the animation
                     # TODO: control the direction of the animation by choosing a ±1 prefactor for the shift, maybe put in the dictionary
-                    shift = int(self.animation_counter * self.indicator['frequency']) % self.led_count
+                    shift = int(self.animation_counter * self.indicator.value['frequency']) % self.led_count
                     shifted_data = data[shift:] + data[:shift]  # rotate data efficiently
-                    if self.indicator['use_hsv']:
+                    if self.indicator.value['use_hsv']:
                         [self.led_data[i].setHSV(*shifted_data[i]) for i in range(self.led_count)]
                     else:
                         [self.led_data[i].setRGB(*shifted_data[i]) for i in range(self.led_count)]
 
             else:  # mode colors
                 pass  # todo programmatically figure out what mode to do
-                color = self.mode["on_color"]
+                color = self.mode.value["on_color"]
 
                 for i in range(constants.k_led_count):  # set all the LEDs to the same color
                     self.led_data[i].setRGB(*color)
