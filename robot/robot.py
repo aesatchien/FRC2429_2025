@@ -32,7 +32,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
-        self.container.led.set_indicator(Led.Indicator.RAINBOW)
+        self.container.led.set_indicator(Led.Indicator.kRAINBOW)
 
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
