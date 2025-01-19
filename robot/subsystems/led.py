@@ -9,25 +9,31 @@ import constants
 
 
 class Led(commands2.Subsystem):
+    indictator_dict = {
+        "RAINBOW": {"on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2},
+        "SUCCESS": {"on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2},
+        "FAILURE": {"on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
+    }
+
+    mode_dict = {
+        "CORAL": {"on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2},
+        "ALGAE": {"on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2},
+        "NONE": {"on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
+    }
+
     class Mode(enum.Enum):
-        NOTE_LOADED = 'NOTE_LOADED'
-        NOTE_SPOTTED = 'NOTE_SPOTTED'
+        CORAL = 'CORAL'
+        ALGAE = 'ALGAE'
         NONE = 'NONE'
 
     # temporary indicators (flashing for pickup, strafing, etc)
     class Indicator(enum.Enum):
-        READY_SHOOT = 'READY_SHOOT'  # flashing white
-        AMP = 'AMP'  # red
         INTAKE = 'INTAKE'  # flashing blue
-        PICKUP_COMPLETE = 'AUTO_STRAFE_COMPLETE'  # solid blue
         RAINBOW = 'RAINBOW'
-        INTAKE_ON = 'INTAKE_ON'
-        CALIBRATION_START = 'CALIBRATION_START'
-        CALIBRATION_SUCCESS = 'CALIBRATION_SUCCESS'
-        CALIBRATION_FAIL = 'CALIBRATION_FAIL'
         CLIMB = 'CLIMB'
+        SUCCESS = 'SUCCESS'
+        FAILURE = 'FAILURE'
         KILL = 'KILL'
-        SHOOTER_ON = 'SHOOTER_ON'
         NONE = 'NONE'
 
         POLKA = 'POLKA' # black and white spots looping around led string
@@ -72,6 +78,50 @@ class Led(commands2.Subsystem):
             lambda: self.set_indicator(Led.Indicator.NONE),
         ).withTimeout(timeout)
 
+    def new_periodic(self):
+
+        # update LEDs
+        if self.counter % 5 == 0:
+            SmartDashboard.putString('led_mode', self.mode.value)
+            SmartDashboard.putString('led_indicator', self.indicator.value)
+
+            self.animation_counter += 1
+
+            indicator_parameters = self.indictator_dict[self.indicator.value]
+            mode_parameters = self.mode_dict[self.mode.value]
+
+            if self.indicator.value is not None:
+
+                if not indicator_parameters["animated"]:
+                    if indicator_parameters["frequency"] == 0:  # solid color
+                        color = indicator_parameters["on_color"]
+                        # [self.led_data[i].setRGB(*indicator_parameters["on_color"]) for i in range(constants.k_led_count)]
+
+                    else:  # flashing color
+                        cycle = math.floor(self.animation_counter / indicator_parameters["frequency"])
+
+                        if cycle % indicator_parameters["flash_mod"] == 0:
+                            color = indicator_parameters["off_color"]
+
+                        else:
+                            color = indicator_parameters["on_color"]
+
+                    for i in range(constants.k_led_count):  # set all the LEDs to the same color
+                        self.led_data[i].setRGB(*color)
+
+                else:  # special animation cases
+                    pass
+
+            else:  # mode colors
+                pass  # todo programatically figure out what mode to do
+                color = mode_parameters["on_color"]
+
+                for i in range(constants.k_led_count):  # set all the LEDs to the same color
+                    self.led_data[i].setRGB(*color)
+
+            self.led_strip.setData(self.led_data)  # send the colors to the LEDs
+
+
     def periodic(self) -> None:
 
         # update LEDs
@@ -91,21 +141,7 @@ class Led(commands2.Subsystem):
 
                 # check if there is an indicator, and override
                 if self.indicator != Led.Indicator.NONE:
-                    if self.indicator == Led.Indicator.READY_SHOOT:
-                        # flashing yellow
-                        freq = 1  # 10 /s > 2x /s
-                        cycle = math.floor(self.animation_counter / freq)
-
-                        if cycle % 2 == 0:
-                            led.setRGB(0, 0, 0)
-                        else:
-                            led.setRGB(255, 255, 0)
-
-                    elif self.indicator == Led.Indicator.AMP:
-                        # solid red
-                        led.setRGB(180, 30, 30)
-
-                    elif self.indicator == Led.Indicator.INTAKE:
+                    if self.indicator == Led.Indicator.INTAKE:
                         # solid blue
                         # freq = 1  # 10 /s > 2x /s
                         # cycle = math.floor(self.animation_counter / freq)
@@ -115,9 +151,6 @@ class Led(commands2.Subsystem):
                         # else:
                         led.setRGB(0, 0, 255)
 
-                    elif self.indicator == Led.Indicator.PICKUP_COMPLETE:
-                        # solid orange
-                        led.setRGB(255, 40, 0)
 
                     elif self.indicator == Led.Indicator.RAINBOW: # Haochen emote
                         # rainbow
