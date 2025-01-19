@@ -64,7 +64,6 @@ class PhysicsEngine:
         self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
         self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
         self.elbow_pivot = self.robot.container.double_pivot.get_elbow_pivot()
-        self.wrist_color = self.robot.container.double_pivot.get_wrist_color()
         
         sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
         sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
@@ -72,4 +71,3 @@ class PhysicsEngine:
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
         sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
         sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
-        sm.side_elevator.components["wrist"]["ligament"].setColor(self.wrist_color)

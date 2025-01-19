@@ -114,4 +114,7 @@ class ElevatorConstants:
     k_elbow_length_sim = 22
     k_wrist_length_sim = 14
 
+    k_coral_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)]
+    k_robot_radius_sim = 0.5
+
 

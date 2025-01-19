@@ -14,8 +14,6 @@ k_use_apriltag_odometry = True
 k_swerve_only = True
 k_swerve_rate_limited = True
 k_field_oriented = True
-k_led_count = 20  # todo: update this to actual number
-k_led_pwm_port = 0  # todo: update this to actual number
 
 class LowerCrankConstants:
 
@@ -36,11 +34,11 @@ class LowerCrankConstants:
 class ElevatorConstants:
     k_CAN_id = 4
 
-    k_elevator_max_height = 50 #inches
-    k_elevator_min_height = 22 #inches
+    k_elevator_max_height = 60 #inches
+    k_elevator_dist_between_pivot_and_top = 29 #inches
+    k_elevator_min_height = 35 - k_elevator_dist_between_pivot_and_top #inches; treating the center of the shoulder pivot as the top of the elevator
 
-    k_shoulder_length = 12 #inches
-    k_elbow_length = 22 #inches
+    k_shoulder_length = 24 #inches
     k_wrist_length = 14 #inches
 
     k_tolerance = 1.5
@@ -48,38 +46,32 @@ class ElevatorConstants:
     k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
         "stow": {
             "elevator_height": k_elevator_min_height,
-            "shoulder_pivot": 180,
-            "elbow_pivot": 180, 
+            "shoulder_pivot": 0,
             "wrist_pivot": 0
         },
         "ground": {
-            "elevator_height": 22,
-            "shoulder_pivot": 135,
-            "elbow_pivot": 120,
+            "elevator_height": k_elevator_min_height,
+            "shoulder_pivot": 270,
             "wrist_pivot": 0
         },
         "l1": {
-            "elevator_height": 22,
-            "shoulder_pivot": 150, #angle between the vertical and the shoulder ligament
-            "elbow_pivot": 145, #angle between shoulder ligament and elbow ligament
+            "elevator_height": k_elevator_min_height + 10,
+            "shoulder_pivot": 270, #angle between the vertical and the shoulder ligament
             "wrist_pivot": 90 #angle between the horizontal and the wrist ligament
         },
         "l2": {
-            "elevator_height": 22,
-            "shoulder_pivot": 180,
-            "elbow_pivot": 150,
+            "elevator_height": k_elevator_min_height + 10,
+            "shoulder_pivot": 315,
             "wrist_pivot": 90
         },
         "l3": {
-            "elevator_height": 38,
-            "shoulder_pivot": 180,
-            "elbow_pivot": 150, 
+            "elevator_height": k_elevator_min_height + 22,
+            "shoulder_pivot": 315,
             "wrist_pivot": 90 
         },
         "l4": {
-            "elevator_height": 38,
-            "shoulder_pivot": 35, 
-            "elbow_pivot": 270,
+            "elevator_height": k_elevator_min_height + 32,
+            "shoulder_pivot": 270, 
             "wrist_pivot": 90
         },
         "processor": 0,
@@ -94,10 +86,13 @@ class ElevatorConstants:
     k_window_width = 60
     k_window_length = 60
 
-    k_elevator_sim_max_height = 50
+    k_elevator_sim_max_height = 60
     k_elevator_sim_length = 10
     k_elevator_sim_width = 20
 
-    k_shoulder_length_sim = 12
-    k_elbow_length_sim = 22
+    k_shoulder_length_sim = 23
     k_wrist_length_sim = 14
+
+    k_coral_intake_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)] #(x-coord, y-coord, number of corals at that location)
+    k_coral_outtake_coordinates = [(5,5,0)]
+    k_robot_radius_sim = 0.5

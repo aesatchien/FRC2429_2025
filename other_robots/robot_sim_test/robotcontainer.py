@@ -21,8 +21,7 @@ from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
-from subsystems.double_pivot import DoublePivot
-from subsystems.led import Led
+from subsystems.shoulder import Shoulder
 
 class RobotContainer:
     """
@@ -40,8 +39,7 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
-        self.double_pivot = DoublePivot()
-        self.led = Led(self)
+        self.double_pivot = Shoulder()
 
         self.configure_joysticks()
         self.bind_driver_buttons()
