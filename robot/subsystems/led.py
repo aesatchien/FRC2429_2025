@@ -18,7 +18,9 @@ class Led(commands2.Subsystem):
         # RAINBOW has an illusion of backwards and forwards depending on if shift the data positive or negative
         kRAINBOW = {'name': "RAINBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.5, "flash_mod": 2,
                     'animation_data': [(int(180 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True}
-        kPOLKA = {'name': "POLKA", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.5, "flash_mod": 2,
+        kCOOLBOW = {'name': "COOLBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2,
+                    'animation_data': [(int(60 + 90 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True}
+        kPOLKA = {'name': "POLKA", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.25, "flash_mod": 2,
                   'animation_data': [(255, 255, 255) if i % 2 == 0 else (0, 0, 0) for i in range(constants.k_led_count)], 'use_hsv': False}
         # classes that are not animated have their data generated on the fly
         kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
@@ -39,7 +41,7 @@ class Led(commands2.Subsystem):
         self.counter = 0
         self.animation_counter = 0  # will not be necessary after refactor
         # need to fix this kludge
-        self.indicators = [self.Indicator.kNONE, self.Indicator.kSUCCESS, self.Indicator.kFAILURE, self.Indicator.kRAINBOW, self.Indicator.kPOLKA]
+        self.indicators = [self.Indicator.kNONE, self.Indicator.kSUCCESS, self.Indicator.kFAILURE, self.Indicator.kRAINBOW, self.Indicator.kCOOLBOW, self.Indicator.kPOLKA]
         self.indicators_dict = {indicator['name']: indicator for indicator in self.indicators}
         self.modes = [self.Mode.kNONE, self.Mode.kALGAE, self.Mode.kCORAL]
         self.modes_dict = {mode['name']: mode for mode in self.modes}
@@ -109,6 +111,7 @@ class Led(commands2.Subsystem):
                 else:  # special animation cases -
                     data = self.indicator['animation_data']
                     # a frequency < 1 slows down the animation
+                    # TODO: control the direction of the animation by choosing a ±1 prefactor for the shift, maybe put in the dictionary
                     shift = int(self.animation_counter * self.indicator['frequency']) % self.led_count
                     shifted_data = data[shift:] + data[:shift]  # rotate data efficiently
                     if self.indicator['use_hsv']:
