@@ -139,12 +139,14 @@ class PhysicsEngine:
         
         self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
         self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
+        self.wrist_color = constants.ElevatorConstants.k_positions[self.robot.container.elevator.get_target_pos()]["wrist_color_for_setColor"]
         
         sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
         sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
         
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
         sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
+        sm.side_elevator.components["wrist"]["ligament"].setColor(self.wrist_color)
 
     def update_intake_coral(self): #if robot is in range of coral + robot is at ground position, then intake. TODO: 'also if robot is at coral station position'
         for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_intake_coordinates if valid_coord[2] > 0]:
