@@ -98,7 +98,7 @@ front_elevator.appendLigament("elevator_top", "elevator_left", elevator_height, 
 chassis_base_side = side_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
 side_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, 12, wpilib.Color.kGray)
 
-elevator_offset_x = width/2
+elevator_offset_x = width/3
 elevator_base = side_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
 side_elevator.appendLigament("elevator", "elevator_side", elevator_height, 90, bar_width * 1.5, wpilib.Color.kRed)
 side_elevator.appendLigament("elevator_side", "elevator_side_const", constants.ElevatorConstants.k_elevator_dist_between_pivot_and_top, 0, bar_width * 1.5, wpilib.Color.kRed)
