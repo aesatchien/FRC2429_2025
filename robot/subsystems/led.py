@@ -22,24 +22,24 @@ class Led(commands2.Subsystem):
         """ Indicator class is for showing conditions or animations """
         # the animated classes need to have their data specified here - so you may have to think about it a bit
         # RAINBOW has an illusion of backwards and forwards depending on if shift the data positive or negative
-        kRAINBOW = {'name': "RAINBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.5, "flash_mod": 2,
+        kRAINBOW = {'name': "RAINBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 5, "flash_mod": None,
                     'animation_data': [(int(180 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kCOOLBOW = {'name': "COOLBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2,
+        kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 10, "flash_mod": None,
                     'animation_data': [(int(60 + 90 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kPOLKA = {'name': "POLKA", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.25, "flash_mod": 2,
+        kPOLKA = {'name': "POLKA", "on_color": None, "off_color": None, "animated": True, "frequency": 2.5, "flash_mod": None,
                   'animation_data': [(255, 255, 255) if i % 2 == 0 else (0, 0, 0) for i in range(constants.k_led_count)], 'use_hsv': False, 'use_mode': True}
         # classes that are not animated have their data generated on the fly
-        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': False}
-        kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': True}
-        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': False}
-        kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': True}
-        kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': False}
+        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2, 'use_mode': False}
+        kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2, 'use_mode': True}
+        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2, 'use_mode': False}
+        kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2, 'use_mode': True}
+        kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2, 'use_mode': False}
 
     class Mode(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
-        kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2}
-        kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
-        kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
+        kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": True, "frequency": 10, "flash_mod": 2}
+        kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2}
+        kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "flash_mod": 2}
 
 
     def __init__(self, container):
@@ -103,7 +103,7 @@ class Led(commands2.Subsystem):
                         color = self.indicator.value["on_color"]
 
                     else:  # flashing color
-                        cycle = math.floor(self.animation_counter / self.indicator.value["frequency"])
+                        cycle = math.floor(self.animation_counter * self.indicator.value["frequency"])
 
                         if cycle % self.indicator.value["flash_mod"] == 0:  # off color
                             # allow us to use the mode value for off instead of the default in the indicator
