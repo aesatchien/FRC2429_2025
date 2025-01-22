@@ -71,7 +71,7 @@ side_elevator = MechTracker(length=length, width=width, height=height + 30, view
 chassis_length = 28
 bar_width = 12
 chassis_bottom = 2
-chassis_offset = (length - chassis_length) / 2
+chassis_offset = (length - chassis_length) / 3
 chassis_base_side = front_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
 front_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, bar_width, wpilib.Color.kGray)
 
@@ -85,7 +85,7 @@ bar_width = 10  # this is a percentage of the mech screen, so scales with the me
 double_pivot_shoulder_length = constants.ElevatorConstants.k_shoulder_length_sim
 
 # front view of elevator mechanism
-elevator_offset_x = (width - elevator_width) / 3
+elevator_offset_x = (width - elevator_width) / 2
 elevator_offset_y = 2 * chassis_bottom
 elevator_base = front_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
 
