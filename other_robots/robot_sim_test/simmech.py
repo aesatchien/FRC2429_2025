@@ -103,7 +103,7 @@ elevator_base = side_elevator.getRoot("elevator", elevator_offset_x, elevator_of
 side_elevator.appendLigament("elevator", "elevator_side", elevator_height, 90, bar_width * 1.5, wpilib.Color.kRed)
 side_elevator.appendLigament("elevator_side", "elevator_side_const", constants.ElevatorConstants.k_elevator_dist_between_pivot_and_top, 0, bar_width * 1.5, wpilib.Color.kRed)
 side_elevator.appendLigament("elevator_side", "double_pivot_shoulder", double_pivot_shoulder_length, constants.ElevatorConstants.k_positions["ground"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
-side_elevator.appendLigament("double_pivot_shoulder", "wrist", constants.ElevatorConstants.k_wrist_length, 0, 20, constants.ElevatorConstants.k_positions["stow"]["wrist_color_for_ligament"])
+side_elevator.appendLigament("double_pivot_shoulder", "wrist", constants.ElevatorConstants.k_wrist_length_sim, 0, 20, constants.ElevatorConstants.k_positions["stow"]["wrist_color_for_ligament"])
 
 #side view of coral
 small_branch_length = 12
