@@ -45,7 +45,6 @@ class RobotContainer:
             container=self,
             swerve=self.swerve,
             controller=self.driver_command_controller,
-            field_oriented=False,
             rate_limited=constants.k_swerve_rate_limited
         ))
 
