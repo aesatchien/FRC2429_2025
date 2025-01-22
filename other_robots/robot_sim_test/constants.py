@@ -105,7 +105,7 @@ class ElevatorConstants:
     k_elevator_sim_width = 20
 
     k_shoulder_length_sim = 23
-    k_wrist_length_sim = 14
+    k_wrist_length_sim = 7
 
     k_coral_intake_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)] #(x-coord, y-coord, number of corals at that location)
     k_coral_outtake_coordinates = [(5,5,0)]

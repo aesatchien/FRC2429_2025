@@ -71,7 +71,7 @@ side_elevator = MechTracker(length=length, width=width, height=height + 30, view
 chassis_length = 28
 bar_width = 12
 chassis_bottom = 2
-chassis_offset = (length - chassis_length) / 3
+chassis_offset = 6 #(length - chassis_length) / 3
 chassis_base_side = front_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
 front_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, bar_width, wpilib.Color.kGray)
 
