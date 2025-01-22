@@ -43,8 +43,12 @@ class Elevator(Subsystem):
         self.elevator_height_sensor = TimeOfFlight(constants.ElevatorConstants.k_timeofflight)
         self.elevator_height_sensor.setRangingMode(TimeOfFlight.RangingMode.kShort, 50)        
 
+        #initialize closed loop controller (PID controller)
+        self.elevator_pid = self.elevator_controller.getClosedLoopController()
+        # self.elevator_pid.setSmartMotionAllowedClosedLoopError(1)
+
         # initialize the height of the elevator  - sensor is in mm, so stick with that
-        initial_height = self.elevator_height_sensor.getRange() if wpilib.RobotBase.isReal() else constants.ElevatorConstants.k_positions["stow"]["elevator_height"]
+        initial_height = self.elevator_height_sensor.getRange() if wpilib.RobotBase.isReal() else constants.ElevatorConstants.k_positions["stow"]["elevator_height"] #note: range is got in mm, not in.
         self.set_height(initial_height)
         self.target_pos = "stow"
         self.has_coral = False #put in wrist later
@@ -56,10 +60,7 @@ class Elevator(Subsystem):
         self.encoder = self.elevator_controller.getEncoder()
         self.encoder.setPosition(initial_height)
 
-        #initialize closed loop controller (PID controller)
-        self.elevator_pid = self.elevator_controller.getClosedLoopController()
-        # self.elevator_pid.setSmartMotionAllowedClosedLoopError(1)
-        self.elevator_pid.setReference(value=self.set_point, ctrl=rev.SparkMax.ControlType.kPosition, pidSlot=0)
+        self.elevator_pid.setReference(value=self.set_point, ctrl=rev.SparkMax.ControlType.kPosition) #js - what is pid slot?
 
         SmartDashboard.putNumber('elevator_setpoint', self.setpoint)
         SmartDashboard.putNumber('elevator_height', self.height)
@@ -84,7 +85,7 @@ class Elevator(Subsystem):
 
         if mode == 'smartmotion':
             # use smartmotion to send you there quickly
-            self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kSmartMotion)
+            self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kSmartMotion) 
         elif mode == 'position':
             # just use the position PID
             self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kPosition)
