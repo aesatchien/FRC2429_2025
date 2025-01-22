@@ -103,15 +103,15 @@ class Swerve (Subsystem):
         self.apriltag_front_count_subscriber = self.inst.getDoubleTopic("/Cameras/TagcamFront/tags/targets").subscribe(0)
 
         # I'm fairly confident we don't need to use the DriveFeedForwards 12/22/24 LHACK
-        module_config = ModuleConfig(
-                    wheelRadiusMeters=mc.kWheelDiameterMeters/2,
-                    maxDriveVelocityMPS=mc.kDriveWheelFreeSpeedRps * mc.kWheelCircumferenceMeters * 0.85, # the robot advances one wheel circumference per rotation. 
-                    wheelCOF=mc.k_wheel_cof,
-                    driveMotor=mc.k_drive_motor,
-                    driveCurrentLimit=mc.k_max_current_amps,
-                    numMotors=1
-        )
-
+        # module_config = ModuleConfig(
+        #             wheelRadiusMeters=mc.kWheelDiameterMeters/2,
+        #             maxDriveVelocityMPS=mc.kDriveWheelFreeSpeedRps * mc.kWheelCircumferenceMeters * 0.85, # the robot advances one wheel circumference per rotation. 
+        #             wheelCOF=mc.k_wheel_cof,
+        #             driveMotor=mc.k_drive_motor,
+        #             driveCurrentLimit=mc.k_max_current_amps,
+        #             numMotors=1
+        # )
+        #
         # robot_config = RobotConfig(
         #         massKG=constants.k_robot_mass_kg,
         #         MOI=constants.k_robot_moi,
@@ -140,6 +140,9 @@ class Swerve (Subsystem):
         )
 
         self.automated_path = None
+
+        self.field2d_for_atag_testing = wpilib.Field2d()
+        wpilib.SmartDashboard.putData("fieldd", self.field2d_for_atag_testing)
 
     def get_pose(self) -> Pose2d:
         # return the pose of the robot  TODO: update the dashboard here?
@@ -316,11 +319,13 @@ class Swerve (Subsystem):
 
     def get_gyro_angle(self):  # if necessary reverse the heading for swerve math
         # note this does add in the current offset
+        print(f"get_gyro_angle is returning {-self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()}")
         return -self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()
 
     def get_angle(self):  # if necessary reverse the heading for swerve math
         # used to be get_gyro_angle but LHACK changed it 12/24/24 so we don't have to manually reset gyro anymore
-        return self.get_pose().rotation().degrees()
+        return self.get_gyro_angle()
+        # return self.get_pose().rotation().degrees()
 
     def get_yaw(self):  # helpful for determining nearest heading parallel to the wall
         # but you should probably never use this - just use get_angle to be consistent
@@ -407,6 +412,12 @@ class Swerve (Subsystem):
     def periodic(self) -> None:
 
         self.counter += 1
+
+        self.field2d_for_atag_testing.setRobotPose(
+                x=self.inst.getEntry("SmartDashboard/pose 0 idx x").getFloat(0),
+                y=self.inst.getEntry("SmartDashboard/pose 0 idx y").getFloat(0),
+                rotation=Rotation2d(0)
+        )
 
         # send the current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())

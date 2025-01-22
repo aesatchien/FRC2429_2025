@@ -9,6 +9,7 @@ import commands2
 from commands2.button import Trigger
 from wpimath.geometry import Pose2d
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.reset_gyro import ResetGyro
 import constants
 
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
@@ -18,6 +19,8 @@ from subsystems.lower_crank import LowerCrank
 
 from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
 from subsystems.swerve import Swerve
+
+wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
 class RobotContainer:
     """
@@ -116,7 +119,7 @@ class RobotContainer:
         pass
 
     def bind_driver_buttons(self):
-        self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
+        self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("test path")))
         self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
@@ -134,7 +137,9 @@ class RobotContainer:
                     constraints=pathfinding_constraints
                 )
         )
-        pass
+
+        self.triggerB.onTrue(ResetGyro(container=self, swerve=self.swerve))
+
 
     def bind_operator_buttons(self):
         pass
@@ -144,5 +149,5 @@ class RobotContainer:
         pass
 
     def get_autonomous_command(self):
-        return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
+        return commands2.InstantCommand(lambda: print(f"starting auto from alliance station {wpilib.DriverStation.getAlliance()}")).andThen(AutoBuilder.followPath(PathPlannerPath.fromPathFile("test path")))
         # return self.autonomous_chooser.getSelected()
