@@ -158,7 +158,7 @@ class Swerve (Subsystem):
         # self.odometry.resetPosition(
         #     Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(), pose)
         self.pose_estimator.resetPosition(
-            Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(), pose)
+            Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(), pose)
 
     def drive(self, xSpeed: float, ySpeed: float, rot: float, fieldRelative: bool, rate_limited: bool, keep_angle:bool=True) -> None:
         """Method to drive the robot using joystick info.
@@ -324,8 +324,8 @@ class Swerve (Subsystem):
 
     def get_angle(self):  # if necessary reverse the heading for swerve math
         # used to be get_gyro_angle but LHACK changed it 12/24/24 so we don't have to manually reset gyro anymore
-        return self.get_gyro_angle()
-        # return self.get_pose().rotation().degrees()
+        # return self.get_gyro_angle()
+        return self.get_pose().rotation().degrees()
 
     def get_yaw(self):  # helpful for determining nearest heading parallel to the wall
         # but you should probably never use this - just use get_angle to be consistent
