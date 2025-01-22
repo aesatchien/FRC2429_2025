@@ -1,5 +1,5 @@
 from enum import Enum
-import math
+import time  # import time for precise timing
 import commands2
 from wpilib import AddressableLED
 from wpilib import SmartDashboard, Color  # can i make use of color at some point?
@@ -20,26 +20,25 @@ class Led(commands2.Subsystem):
     """
     class Indicator(Enum):
         """ Indicator class is for showing conditions or animations """
-        # the animated classes need to have their data specified here - so you may have to think about it a bit
-        # RAINBOW has an illusion of backwards and forwards depending on if shift the data positive or negative
-        kRAINBOW = {'name': "RAINBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.5, "flash_mod": 2,
+        # animated indicators
+        kRAINBOW = {'name': "RAINBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 5, "duty_cycle": None,
                     'animation_data': [(int(180 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kCOOLBOW = {'name': "COOLBOW", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2,
+        kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
                     'animation_data': [(int(60 + 90 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kPOLKA = {'name': "POLKA", "on_color": [0, 0, 0], "off_color": [0, 0, 0], "animated": True, "frequency": 0.25, "flash_mod": 2,
+        kPOLKA = {'name': "POLKA", "on_color": None, "off_color": None, "animated": True, "frequency": 2, "duty_cycle": None,
                   'animation_data': [(255, 255, 255) if i % 2 == 0 else (0, 0, 0) for i in range(constants.k_led_count)], 'use_hsv': False, 'use_mode': True}
-        # classes that are not animated have their data generated on the fly
-        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': False}
-        kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': True}
-        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': False}
-        kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': True}
-        kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2, 'use_mode': False}
+        # non-animated indicators
+        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.25, 'use_mode': False}
+        kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
+        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.75, 'use_mode': False}
+        kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
+        kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],                   "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
 
     class Mode(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
-        kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": True, "frequency": 1, "flash_mod": 2}
-        kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
-        kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": 1, "flash_mod": 2}
+        kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
+        kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
+        kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
 
 
     def __init__(self, container):
@@ -48,10 +47,12 @@ class Led(commands2.Subsystem):
         self.container = container  # at the moment LED may want to query other subsystems, but this is not clean
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
         self.counter = 1
-        self.animation_counter = 0  # will not be necessary after refactor
+        self.animation_counter = 0
         # this should auto-update the lists for the dashboard.  you can iterate over enums
         self.indicators_dict = {indicator.value["name"]: indicator for indicator in self.Indicator}
         self.modes_dict = {mode.value["name"]: mode for mode in self.Mode}
+        self.last_toggle_time = time.monotonic()  # Tracks the last toggle time
+        self.toggle_state = False  # Keeps track of the current on/off state
 
         # necessary initialization for the LED strip
         self.led_count = constants.k_led_count
@@ -91,50 +92,54 @@ class Led(commands2.Subsystem):
         ).withTimeout(timeout)
 
     def periodic(self):
-
-        # update LEDs
-        if self.counter % 5 == 0:
-            self.animation_counter += 1  # need to slowly update the internal counter
+        if self.counter % 5 == 0:  # Execute every 5 cycles (10Hz update rate)
+            current_time = time.monotonic()  # Current time in seconds
+            time_since_toggle = current_time - self.last_toggle_time
 
             if self.indicator != self.Indicator.kNONE:
+                if not self.indicator.value["animated"]:  # Non-animated indicators
+                    frequency = self.indicator.value["frequency"]
+                    period = 1 / frequency  # Period for one cycle (on + off)
 
-                if not self.indicator.value["animated"]:  # no animation
-                    if self.indicator.value["frequency"] == 0:  # solid color
+                    # Calculate duty cycle timing
+                    duty_cycle = self.indicator.value.get("duty_cycle", 0.5)  # Default to 50% if not specified
+                    on_time = period * duty_cycle
+                    off_time = period * (1 - duty_cycle)
+
+                    if self.toggle_state and time_since_toggle >= on_time:
+                        self.toggle_state = False
+                        self.last_toggle_time = current_time
+                    elif not self.toggle_state and time_since_toggle >= off_time:
+                        self.toggle_state = True
+                        self.last_toggle_time = current_time
+
+                    # Determine color based on toggle state
+                    if self.toggle_state:
                         color = self.indicator.value["on_color"]
+                    else:
+                        color = self.mode.value["on_color"] if self.indicator.value["use_mode"] else self.indicator.value["off_color"]
 
-                    else:  # flashing color
-                        cycle = math.floor(self.animation_counter / self.indicator.value["frequency"])
-
-                        if cycle % self.indicator.value["flash_mod"] == 0:  # off color
-                            # allow us to use the mode value for off instead of the default in the indicator
-                            color = self.mode.value["on_color"] if self.indicator.value['use_mode'] else self.indicator.value["off_color"]
-
-                        else:  # on color
-                            color = self.indicator.value["on_color"]
-
-                    for i in range(constants.k_led_count):  # set all the LEDs to the same color
+                    for i in range(constants.k_led_count):  # Apply the color to all LEDs
                         self.led_data[i].setRGB(*color)
 
-                else:  # special animation cases -
-                    data = self.indicator.value['animation_data']
-                    # a frequency < 1 slows down the animation
-                    # TODO: control the direction of the animation by choosing a ±1 prefactor for the shift, maybe put in the dictionary
-                    shift = int(self.animation_counter * self.indicator.value['frequency']) % self.led_count
-                    shifted_data = data[shift:] + data[:shift]  # rotate data efficiently
-                    if self.indicator.value['use_hsv']:
+                else:  # Handle animated indicators
+                    data = self.indicator.value["animation_data"]
+                    if time_since_toggle > 1 / self.indicator.value["frequency"]:
+                        self.animation_counter +=1
+                        self.last_toggle_time = current_time
+
+                    shift = self.animation_counter % self.led_count
+                    shifted_data = data[shift:] + data[:shift]
+                    if self.indicator.value["use_hsv"]:
                         [self.led_data[i].setHSV(*shifted_data[i]) for i in range(self.led_count)]
                     else:
                         [self.led_data[i].setRGB(*shifted_data[i]) for i in range(self.led_count)]
 
-            else:  # mode colors
-                pass  # todo programmatically figure out what mode to do
+            else:  # Handle mode-only LEDs - they do not toggle
                 color = self.mode.value["on_color"]
-
-                for i in range(constants.k_led_count):  # set all the LEDs to the same color
+                for i in range(constants.k_led_count):
                     self.led_data[i].setRGB(*color)
 
-            self.led_strip.setData(self.led_data)  # send the colors to the LEDs
+            self.led_strip.setData(self.led_data)  # Send LED updates
 
-        self.counter += 1
-
-
+        self.counter += 1  # Increment the main counter
