@@ -44,7 +44,7 @@ class DriveConstants:
     kDriveKinematics = SwerveDrive4Kinematics(*kModulePositions)
 
     # which motors need to be inverted - depends on if on top or bottom
-    k_drive_motors_inverted = True  # False for 2023 - motors below
+    k_drive_motors_inverted = False  # False for 2023 - motors below
     k_turn_motors_inverted = True  # True for 2023 - motors below
     # incorrect gyro inversion will make the pose odometry have the wrong sign on rotation
     kGyroReversed = False  # False for 2023 (was upside down), True for 2024?

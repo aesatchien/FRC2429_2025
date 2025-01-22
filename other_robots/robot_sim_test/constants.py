@@ -35,12 +35,22 @@ class LowerCrankConstants:
 class ElevatorConstants:
     k_CAN_id = 4
 
+    kP = 6
+    kI = 0
+    kD = 0
+
+    k_forward_limit = 100 #need to test for actual robot
+    k_reverse_limit = 0
+    k_forward_limit_enabled = False
+    k_reverse_limit_enabled = False
+
+    k_timeofflight = 14 #elevator time of flight CAN ID
+    
+    k_elevator_encoder_conversion_factor = 1 # [dist_unit] per revolution
+
     k_elevator_max_height = 60 #inches
     k_elevator_dist_between_pivot_and_top = 29 #inches
     k_elevator_min_height = 35 - k_elevator_dist_between_pivot_and_top #inches; treating the center of the shoulder pivot as the top of the elevator
-
-    k_shoulder_length = 24 #inches
-    k_wrist_length = 14 #inches
 
     k_tolerance = 1.5
 
