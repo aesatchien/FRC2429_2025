@@ -18,10 +18,12 @@ from pathplannerlib.path import PathPlannerPath
 
 # from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
 from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
+from commands.set_leds import SetLEDs
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
 from subsystems.double_pivot import DoublePivot
+from subsystems.led import Led
 
 class RobotContainer:
     """
@@ -40,6 +42,7 @@ class RobotContainer:
         self.swerve = Swerve()
         self.elevator = Elevator()
         self.double_pivot = DoublePivot()
+        self.led = Led(self)
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -119,7 +122,18 @@ class RobotContainer:
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
         # lots of putdatas for testing on the dash
-        pass
+        self.led_mode_chooser = wpilib.SendableChooser()
+        [self.led_mode_chooser.addOption(key, value) for key, value in self.led.modes_dict.items()]  # add all the indicators
+        self.led_mode_chooser.onChange(listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
+            SetLEDs(container=self, led=self.led, mode=selected_value)))
+        wpilib.SmartDashboard.putData('LED Mode', self.led_mode_chooser)
+        self.led_indicator_chooser = wpilib.SendableChooser()
+        [self.led_indicator_chooser.addOption(key, value) for key, value in self.led.indicators_dict.items()]  # add all the indicators
+        self.led_indicator_chooser.onChange(listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
+            SetLEDs(container=self, led=self.led, indicator=selected_value)))
+        wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
+
+        wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
 
     def bind_driver_buttons(self):
         self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))

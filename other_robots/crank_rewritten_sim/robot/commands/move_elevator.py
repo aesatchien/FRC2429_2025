@@ -15,6 +15,7 @@ class MoveElevator(commands2.Command):
         self.target = target
         self.direction_sign = math.copysign(1, self.target - self.elevator.get_height())
         self.container = container
+
         self.addRequirements(self.elevator)
 
     def initialize(self) -> None:
@@ -27,6 +28,7 @@ class MoveElevator(commands2.Command):
 
     def execute(self) -> None:
         self.elevator.set_height(self.elevator.get_height() + (0.1 * self.direction_sign))
+        constants.ElevatorConstants.k_positions[self.elevator.get_target_pos()]["wrist_color_for_setColor"]
         SmartDashboard.putNumber("Elevator Position", self.elevator.get_height())
 
     def isFinished(self) -> bool:

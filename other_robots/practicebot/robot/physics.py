@@ -77,7 +77,7 @@ class PhysicsEngine:
         # if we want to add an armsim see test_robots/sparksim_test/
 
     def update_sim(self, now, tm_diff):
-        simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
+        # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
 
 
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
