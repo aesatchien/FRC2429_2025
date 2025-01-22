@@ -64,8 +64,8 @@ class PhysicsEngine:
             output = spark.getDouble('Applied Output')
             self.spark_dict.update({spark_name: {'controller': spark, 'position': position,
                                                  'velocity': velocity, 'output': output}})
-        for key, value in self.spark_dict.items():  # see if these make sense
-            print(f'{key}: {value}')
+        #for key, value in self.spark_dict.items():  # see if these make sense
+            #print(f'{key}: {value}')
 
         self.distances = [0, 0, 0, 0]
 

@@ -64,14 +64,14 @@ length = constants.ElevatorConstants.k_window_length
 width = constants.ElevatorConstants.k_window_width
 height = constants.ElevatorConstants.k_window_height
 front_elevator = MechTracker(length=length, width=width, height=height, view='side')
-side_elevator = MechTracker(length=length, width=width, height=height, view='side')
-coral_branch = MechTracker(length=length, width= width, height= height + 30, view='side')
+side_elevator = MechTracker(length=length, width=width, height=height + 30, view='side')
+
 
 # front view
 chassis_length = 28
 bar_width = 12
 chassis_bottom = 2
-chassis_offset = (length - chassis_length) / 2
+chassis_offset = 6 #(length - chassis_length) / 3
 chassis_base_side = front_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
 front_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, bar_width, wpilib.Color.kGray)
 
@@ -98,38 +98,38 @@ front_elevator.appendLigament("elevator_top", "elevator_left", elevator_height, 
 chassis_base_side = side_elevator.getRoot("chassisBase", chassis_offset, chassis_bottom)
 side_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, 12, wpilib.Color.kGray)
 
-elevator_offset_x = width/2
+elevator_offset_x = width/3
 elevator_base = side_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
 side_elevator.appendLigament("elevator", "elevator_side", elevator_height, 90, bar_width * 1.5, wpilib.Color.kRed)
 side_elevator.appendLigament("elevator_side", "elevator_side_const", constants.ElevatorConstants.k_elevator_dist_between_pivot_and_top, 0, bar_width * 1.5, wpilib.Color.kRed)
 side_elevator.appendLigament("elevator_side", "double_pivot_shoulder", double_pivot_shoulder_length, constants.ElevatorConstants.k_positions["ground"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
-side_elevator.appendLigament("double_pivot_shoulder", "wrist", constants.ElevatorConstants.k_wrist_length, 0, 20, constants.ElevatorConstants.k_positions["stow"]["wrist_color_for_ligament"])
+side_elevator.appendLigament("double_pivot_shoulder", "wrist", constants.ElevatorConstants.k_wrist_length_sim, 0, 20, constants.ElevatorConstants.k_positions["stow"]["wrist_color_for_ligament"])
 
-# top view - looking down front is on the right,  right is on the bottom.  remember - angles are relativeto parent!
-# ...
-
-#side view for coral branch
+#side view of coral
 small_branch_length = 12
 bar_width = 1.66
 bar_color = wpilib.Color.kPurple
 top_stems = 15.87
 branch_offset_x = length
 branch_offset_y = 0
-branch_base = coral_branch.getRoot("branch_base", branch_offset_x, branch_offset_y)
-coral_branch.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, bar_color)
-coral_branch.appendLigament("base_stem", "l1_branch", 12.84, 90, bar_width, wpilib.Color.kGray)
-coral_branch.appendLigament("base_stem", "l2_stem", 5.2, 0, bar_width, bar_color)
-coral_branch.appendLigament("l2_stem", "l2_branch", small_branch_length, 55, bar_width, bar_color)
-coral_branch.appendLigament("l2_stem", "l3_stem", top_stems, 0, bar_width, bar_color)
-coral_branch.appendLigament("l3_stem", "13_branch", small_branch_length, 55, bar_width, bar_color)
-coral_branch.appendLigament("l3_stem", "l4_stem", top_stems, 0, bar_width, bar_color)
-coral_branch.appendLigament("l4_stem", "bent_branch", 16.14, 55, bar_width, bar_color)
-coral_branch.appendLigament("bent_branch", "top_branch", 6.8, 305, bar_width, bar_color)
+branch_base = side_elevator.getRoot("branch_base", branch_offset_x, branch_offset_y)
+side_elevator.appendLigament("branch_base", "base_stem", 17.88, 90, bar_width, bar_color)
+side_elevator.appendLigament("base_stem", "l1_branch", 12.84, 90, bar_width, wpilib.Color.kGray)
+side_elevator.appendLigament("base_stem", "l2_stem", 5.2, 0, bar_width, bar_color)
+side_elevator.appendLigament("l2_stem", "l2_branch", small_branch_length, 55, bar_width, bar_color)
+side_elevator.appendLigament("l2_stem", "l3_stem", top_stems, 0, bar_width, bar_color)
+side_elevator.appendLigament("l3_stem", "13_branch", small_branch_length, 55, bar_width, bar_color)
+side_elevator.appendLigament("l3_stem", "l4_stem", top_stems, 0, bar_width, bar_color)
+side_elevator.appendLigament("l4_stem", "bent_branch", 16.14, 55, bar_width, bar_color)
+side_elevator.appendLigament("bent_branch", "top_branch", 6.8, 305, bar_width, bar_color)
+
+# top view - looking down front is on the right,  right is on the bottom.  remember - angles are relativeto parent!
+# ...
+
 
 # Push to SmartDashboard
 wpilib.SmartDashboard.putData("Elevator Front View", front_elevator.mechanism)
 wpilib.SmartDashboard.putData("Elevator Side View", side_elevator.mechanism)
-wpilib.SmartDashboard.putData("Coral Branch", coral_branch.mechanism)
 
 # Debugging output
 print("DEBUG: Elevator Front View Components:")
