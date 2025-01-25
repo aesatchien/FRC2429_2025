@@ -79,7 +79,7 @@ class PhysicsEngine:
         self.update_elevator_positions()
 
     def update_sim(self, now, tm_diff):
-        simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
+        # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
 
 
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
