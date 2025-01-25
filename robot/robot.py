@@ -32,10 +32,22 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
-        self.container.led.set_indicator(Led.Indicator.kRAINBOW)
+        self.disabled_counter = 0
 
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
+        if self.disabled_counter % 100 == 0:
+            if wpilib.DriverStation.isFMSAttached():
+                alliance_color = wpilib.DriverStation.getAlliance()
+                if alliance_color is not None:
+                    if alliance_color == wpilib.DriverStation.Alliance.kRed:
+                        self.container.led.set_indicator(Led.Indicator.kHOTBOW)
+                    elif alliance_color == wpilib.DriverStation.Alliance.kBlue:
+                        self.container.led.set_indicator(Led.Indicator.kCOOLBOW)
+            else:
+                self.container.led.set_indicator(Led.Indicator.kRAINBOW)
+        print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
+        self.disabled_counter += 1
 
     def autonomousInit(self) -> None:
         """This autonomous runs the autonomous command selected by your RobotContainer class."""
