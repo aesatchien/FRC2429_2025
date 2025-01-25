@@ -44,6 +44,8 @@ class MyRobot(commands2.TimedCommandRobot):
                         self.container.led.set_indicator(Led.Indicator.kHOTBOW)
                     elif alliance_color == wpilib.DriverStation.Alliance.kBlue:
                         self.container.led.set_indicator(Led.Indicator.kCOOLBOW)
+                    else:
+                        self.container.led.set_indicator(Led.Indicator.kPOLKA)
             else:
                 self.container.led.set_indicator(Led.Indicator.kRAINBOW)
         print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
