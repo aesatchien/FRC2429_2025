@@ -17,6 +17,17 @@ k_field_oriented = True
 k_led_count = 20  # todo: update this to actual number
 k_led_pwm_port = 0  # todo: update this to actual number
 
+class IntakeConstants:
+
+    k_CAN_id = 12
+    k_intake_config = SparkBaseConfig()
+    k_intake_config.inverted(True)
+    k_intake_config.closedLoop.pid(1, 0, 0)
+
+    k_tof_algae_port = 2
+    k_tof_coral_port = 2
+
+
 class LowerCrankConstants:
 
     k_CAN_id = 7

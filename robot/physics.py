@@ -81,6 +81,7 @@ class PhysicsEngine:
     def update_sim(self, now, tm_diff):
         # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
 
+        # -------------------- SWERVE SIM ----------------------
 
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
         target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
@@ -105,27 +106,11 @@ class PhysicsEngine:
 
         self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
 
-        #
-        # # send our poses to the dashboard so we can use it with our trackers
-        # pose = self.physics_controller.get_pose()
-        # self.x, self.y, self.theta = pose.X(), pose.Y(), pose.rotation().degrees()
-        #
-        # # attempt to update the real robot's odometry
-        # self.distances = [pos + tm_diff * self.spark_dict[drive]['velocity'].value for pos, drive in zip(self.distances, self.spark_drives)]
-        # [self.spark_dict[drive]['position'].set(self.spark_dict[drive]['position'].value + tm_diff * self.spark_dict[drive]['velocity'].value ) for drive in self.spark_drives]
-        #
-        # # TODO - why does this not take care of itself if I just update the simmed SPARK's position?
-        # swerve_positions = [SwerveModulePosition(distance=dist, angle=m.angle) for m, dist in zip(module_states, self.distances)]
-        # self.robot.container.swerve.pose_estimator.update(pose.rotation(), swerve_positions)
-        #
-        # wpilib.SmartDashboard.putNumberArray('sim_pose', [self.x, self.y, self.theta])
-        # wpilib.SmartDashboard.putNumberArray('drive_pose', [self.x, self.y, self.theta])  # need this for 2429 python dashboard to update
-        # now we do this in the periodic
-
         self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
 
         # move the elevator based on controller input
         self.update_elevator_positions()
+        self.update_intake(tm_diff)
 
     def update_elevator_positions(self):
         if self.robot is None:
@@ -141,3 +126,6 @@ class PhysicsEngine:
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
         sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
         sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
+
+    def update_intake(self, tm_diff):
+        self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
