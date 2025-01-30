@@ -42,16 +42,8 @@ class Intake(Subsystem):
         self.TOFSensorAlgae.setRangeOfInterest(2, 2, 2, 2)
         self.TOFSensorCoral.setRangeOfInterest(1, 1, 1, 1)
 
-
-    def turn_on(self) -> None:
-        self.controller.setReference(12, SparkMax.ControlType.kVoltage)
-        # if self.use_intake_sim:
-        #     self.sparkmax_sim.setMotorCurrent(23)
-
-    def turn_off(self):
-        self.controller.setReference(0, SparkMax.ControlType.kVoltage)
-        # if not self.use_intake_sim:
-        #     self.sparkmax_sim.setMotorCurrent(0)
+    def set_reference(self, value: float, control_type: SparkMax.ControlType):
+        self.controller.setReference(value, control_type)
 
     # Use TOF
     def has_algae(self) -> bool:
