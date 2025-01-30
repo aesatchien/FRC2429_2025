@@ -44,13 +44,6 @@ class Intake(Subsystem):
     def set_reference(self, value: float, control_type: SparkMax.ControlType):
         self.controller.setReference(value, control_type)
 
-
-    def turn_off(self):
-        self.controller.setReference(0, SparkMax.ControlType.kVoltage)
-        if not self.use_intake_sim:
-            self.sparkmax_sim.setMotorCurrent(0)
-        pass
-
     # Use TOF
     def has_algae(self) -> bool:
         average_algae_distance = self.TOFSensorAlgae.getRange()
