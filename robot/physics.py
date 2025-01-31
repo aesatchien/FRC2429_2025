@@ -1,10 +1,14 @@
 import math
+from rev import SparkMaxSim, SparkSim
 import wpilib
 import hal
 import wpilib.simulation as simlib  # 2021 name for the simulation library
+import wpimath
 import wpimath.geometry as geo
+from wpimath.system.plant import DCMotor
 from wpimath.kinematics._kinematics import SwerveDrive4Kinematics, SwerveModuleState, SwerveModulePosition
 from pyfrc.physics.core import PhysicsInterface
+from wpimath.units import feetToMeters
 
 from robot import MyRobot
 import constants
@@ -18,17 +22,94 @@ class PhysicsEngine:
         self.physics_controller = physics_controller  # must have for simulation
         self.robot = robot
 
-        # 1. create sparkbasesims for each spark in the swerve
-        # 2. create flywheelsims for each swerve dof
-        # in update sim:
-            # calculate flywheel states given sparkbasesim output
-            # tell sparkbasesim about the states
-                # no abs encoders required for drive motors
-                # yes abs encoder required for turn motor
-            # tell pyfrc.physics.drivetrain.four_motor_swerve_drivetrain about the states
-                # it wants duty cycle, which getAppliedOutput gives
+        # if we want to add an armsim see test_robots/sparksim_test/
+        self.initialize_swerve()
+        self.initialize_wrist()
+        self.update_elevator_positions()
+
+    def update_sim(self, now, tm_diff):
+        # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
+
+        amps = [0] # list of current draws
+        self.update_swerve(tm_diff)
+        self.update_intake(tm_diff)
+        amps.append(self.update_wrist(tm_diff))
+        self.update_elevator_positions()
+
+        simlib.RoboRioSim.setVInVoltage(
+                simlib.BatterySim.calculate(amps)
+        )
 
 
+    def update_wrist(self, tm_diff):
+        self.wrist_sim.setInput(0, self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
+        self.wrist_sim.update(tm_diff)
+        self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+        return self.wrist_sim.getCurrentDraw()
+
+    def update_intake(self, tm_diff):
+        self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
+
+    def update_elevator_positions(self):
+        if self.robot is None:
+            raise ValueError("Robot is not defined")
+        
+        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
+        self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
+        self.elbow_pivot = self.robot.container.double_pivot.get_elbow_pivot()
+        
+        sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
+        sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
+        
+        sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
+        sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
+        sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
+
+    def update_swerve(self, tm_diff):
+
+        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
+        target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
+        for spark_turn, target_angle in zip(self.spark_turns, target_angles):
+            self.spark_dict[spark_turn]['position'].set(target_angle)  # this works to update the simulated spark
+        if constants.k_swerve_debugging_messages:
+            wpilib.SmartDashboard.putNumberArray('target_angles', target_angles)
+
+        # send the speeds and positions from the spark sim devices to the fourmotorswervedrivetrain
+        module_states = []
+        for drive, turn in zip(self.spark_drives, self.spark_turns):
+            module_states.append(SwerveModuleState(
+                self.spark_dict[drive]['velocity'].value, geo.Rotation2d(self.spark_dict[turn]['position'].value))
+            )
+
+        # using our own kinematics to update the chassis speeds
+        module_states = self.robot.container.swerve.get_desired_swerve_module_states()
+        speeds = self.kinematics.toChassisSpeeds(tuple(module_states))
+
+        # update the sim's robot
+        self.physics_controller.drive(speeds, tm_diff)
+
+        self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
+
+        self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
+
+    # ---------------------------- INITIALIZATIONS -----------------------
+
+    def initialize_wrist(self):
+
+        self.wrist_sim = simlib.SingleJointedArmSim(gearbox=constants.WristConstants.k_plant,
+                                                    gearing=constants.WristConstants.k_gear_ratio,
+                                                    moi=constants.WristConstants.k_moi,
+                                                    armLength=constants.WristConstants.k_center_of_mass_to_axis_of_rotation_dist_meters, # not sure how to make this accurate
+                                                    minAngle=constants.WristConstants.k_min_angle,
+                                                    maxAngle=constants.WristConstants.k_max_angle,
+                                                    simulateGravity=False,
+                                                    startingAngle=constants.WristConstants.k_sim_starting_angle)
+
+        self.wrist_spark_sim = SparkMaxSim(self.robot.container.wrist.sparkmax, motor=constants.WristConstants.k_plant)
+
+
+    def initialize_swerve(self):
         self.kinematics: SwerveDrive4Kinematics = dc.kDriveKinematics  # our swerve drive kinematics
 
         # set up LEDs - apparently not necessary - glass gui grabs the default one and you can show it
@@ -75,57 +156,3 @@ class PhysicsEngine:
         initial_pose = geo.Pose2d(0, 0, geo.Rotation2d())
         self.physics_controller.move_robot(geo.Transform2d(self.x, self.y, 0))
 
-        # if we want to add an armsim see test_robots/sparksim_test/
-        self.update_elevator_positions()
-
-    def update_sim(self, now, tm_diff):
-        # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
-
-        # -------------------- SWERVE SIM ----------------------
-
-        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
-        target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
-        for spark_turn, target_angle in zip(self.spark_turns, target_angles):
-            self.spark_dict[spark_turn]['position'].set(target_angle)  # this works to update the simulated spark
-        if constants.k_swerve_debugging_messages:
-            wpilib.SmartDashboard.putNumberArray('target_angles', target_angles)
-
-        # send the speeds and positions from the spark sim devices to the fourmotorswervedrivetrain
-        module_states = []
-        for drive, turn in zip(self.spark_drives, self.spark_turns):
-            module_states.append(SwerveModuleState(
-                self.spark_dict[drive]['velocity'].value, geo.Rotation2d(self.spark_dict[turn]['position'].value))
-            )
-
-        # using our own kinematics to update the chassis speeds
-        module_states = self.robot.container.swerve.get_desired_swerve_module_states()
-        speeds = self.kinematics.toChassisSpeeds(tuple(module_states))
-
-        # update the sim's robot
-        self.physics_controller.drive(speeds, tm_diff)
-
-        self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
-
-        self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
-
-        # move the elevator based on controller input
-        self.update_elevator_positions()
-        self.update_intake(tm_diff)
-
-    def update_elevator_positions(self):
-        if self.robot is None:
-            raise ValueError("Robot is not defined")
-        
-        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
-        self.shoulder_pivot = self.robot.container.double_pivot.get_shoulder_pivot()
-        self.elbow_pivot = self.robot.container.double_pivot.get_elbow_pivot()
-        
-        sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
-        sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
-        
-        sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
-        sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
-        sm.side_elevator.components["double_pivot_elbow"]["ligament"].setAngle(self.elbow_pivot)
-
-    def update_intake(self, tm_diff):
-        self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)

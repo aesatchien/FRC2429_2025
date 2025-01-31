@@ -19,12 +19,14 @@ from pathplannerlib.path import PathPlannerPath
 # from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
 from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
 from commands.set_leds import SetLEDs
+from commands.move_wrist import MoveWrist
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
 from subsystems.double_pivot import DoublePivot
 from subsystems.intake import Intake
 from subsystems.led import Led
+from subsystems.wrist import Wrist
 
 class RobotContainer:
     """
@@ -43,6 +45,7 @@ class RobotContainer:
         self.swerve = Swerve()
         self.elevator = Elevator()
         self.double_pivot = DoublePivot()
+        self.wrist = Wrist()
         self.led = Led(self)
         self.intake = Intake()
 
@@ -57,7 +60,8 @@ class RobotContainer:
         ))
 
         if not constants.k_swerve_only:
-            self.bind_operator_buttons()
+            self.configure_codriver_joystick()
+            self.bind_codriver_buttons()
             self.bind_keyboard_buttons()
 
         # self.configure_swerve_bindings()
@@ -102,24 +106,28 @@ class RobotContainer:
         self.copilot_controller = commands2.button.CommandXboxController(1)
         self.copilot_controller = commands2.button.CommandXboxController(1) 
 
-        # co-pilot controller
-        """
-        self.co_driver_controller = wpilib.XboxController(constants.k_co_driver_controller_port)
-        self.co_buttonA = JoystickButton(self.co_driver_controller, 1)
-        self.co_buttonB = JoystickButton(self.co_driver_controller, 2)
-        self.co_buttonX = JoystickButton(self.co_driver_controller, 3)
-        self.co_buttonY = JoystickButton(self.co_driver_controller, 4)
-        self.co_buttonLB = JoystickButton(self.co_driver_controller, 5)
-        self.co_buttonRB = JoystickButton(self.co_driver_controller, 6)
-        self.co_buttonBack = JoystickButton(self.co_driver_controller, 7)
-        self.co_buttonStart = JoystickButton(self.co_driver_controller, 8)
-        self.co_buttonUp = POVButton(self.co_driver_controller, 0)
-        self.co_buttonDown = POVButton(self.co_driver_controller, 180)
-        self.co_buttonLeft = POVButton(self.co_driver_controller, 270)
-        self.co_buttonRight = POVButton(self.co_driver_controller, 90)
-        self.co_buttonLeftAxis = AxisButton(self.co_driver_controller, 2)
-        self.co_buttonRightAxis = AxisButton(self.co_driver_controller, 3)
-        """
+    def configure_codriver_joystick(self):
+
+        print("configuring codriver joystick")
+
+        self.co_pilot_command_controller = commands2.button.CommandXboxController(constants.k_co_driver_controller_port)  # 2024 way
+        self.co_trigger_left_stick_y = self.co_pilot_command_controller.axisGreaterThan(axis=1, threshold=0.5)
+        self.co_trigger_a = self.co_pilot_command_controller.a()  # 2024 way
+        self.co_trigger_b = self.co_pilot_command_controller.b()
+        self.co_trigger_y = self.co_pilot_command_controller.y()
+        self.co_trigger_x = self.co_pilot_command_controller.x()
+        self.co_trigger_rb = self.co_pilot_command_controller.rightBumper()
+        self.co_trigger_lb = self.co_pilot_command_controller.leftBumper()
+        self.co_trigger_r = self.co_pilot_command_controller.povRight()
+        self.co_trigger_l = self.co_pilot_command_controller.povLeft()
+        self.co_trigger_u = self.co_pilot_command_controller.povUp()
+        self.co_trigger_d = self.co_pilot_command_controller.povDown()
+        self.co_trigger_l_trigger = self.co_pilot_command_controller.leftTrigger(0.2)
+        self.co_trigger_r_trigger = self.co_pilot_command_controller.rightTrigger(0.2)
+        self.co_trigger_start = self.co_pilot_command_controller.start()
+        self.co_trigger_back = self.co_pilot_command_controller.back()
+
+
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -162,8 +170,18 @@ class RobotContainer:
 
         pass
 
-    def bind_operator_buttons(self):
-        pass
+    def bind_codriver_buttons(self):
+        print("bidning codriver buttons")
+        self.co_trigger_a.onTrue(
+                commands2.PrintCommand("moving wrist to 90 degrees").andThen(
+                MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90), wait_to_finish=True)
+        ))
+
+        self.co_trigger_b.onTrue(
+                commands2.PrintCommand("moving wrist to 0 degrees").andThen(
+                MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0), wait_to_finish=True)
+        ))
+
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down
