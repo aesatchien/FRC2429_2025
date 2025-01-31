@@ -113,7 +113,7 @@ class ElevatorConstants:
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
         },
         "l4": {
-            "elevator_height": k_elevator_min_height + 32,
+            "elevator_height": k_elevator_min_height + 65,
             "shoulder_pivot": 270, 
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
