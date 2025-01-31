@@ -23,6 +23,7 @@ from commands.set_leds import SetLEDs
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
 from subsystems.double_pivot import DoublePivot
+from subsystems.intake import Intake
 from subsystems.led import Led
 
 class RobotContainer:
@@ -43,6 +44,7 @@ class RobotContainer:
         self.elevator = Elevator()
         self.double_pivot = DoublePivot()
         self.led = Led(self)
+        self.intake = Intake()
 
         self.configure_joysticks()
         self.bind_driver_buttons()

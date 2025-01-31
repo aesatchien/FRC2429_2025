@@ -25,6 +25,8 @@ class Led(commands2.Subsystem):
                     'animation_data': [(int(180 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
         kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
                     'animation_data': [(int(60 + 90 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
+        kHOTBOW = {'name': "HOTBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
+                   'animation_data': [(int(150 + 60 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
         kPOLKA = {'name': "POLKA", "on_color": None, "off_color": None, "animated": True, "frequency": 2, "duty_cycle": None,
                   'animation_data': [(255, 255, 255) if i % 2 == 0 else (0, 0, 0) for i in range(constants.k_led_count)], 'use_hsv': False, 'use_mode': True}
         # non-animated indicators
