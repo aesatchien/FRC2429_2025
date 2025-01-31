@@ -14,7 +14,7 @@ class Elevator(Subsystem):
         super().__init__()
         self.setName('Elevator')
 
-        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "ground_to_l1", "l1", "l2", "l2_to_l3", "l3", "l3_to_l4", "l4"]}
         
         self.counter = 5
 
