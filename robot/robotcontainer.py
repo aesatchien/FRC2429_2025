@@ -9,6 +9,7 @@ import commands2
 from commands2.button import Trigger
 from wpimath.geometry import Pose2d
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.move_shoulder import MoveShoulder
 import constants
 
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
@@ -17,13 +18,12 @@ from pathplannerlib.path import PathPlannerPath
 # from subsystems.lower_crank import LowerCrank
 
 # from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
-from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
 from commands.set_leds import SetLEDs
 from commands.move_wrist import MoveWrist
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
-from subsystems.double_pivot import DoublePivot
+from subsystems.shoulder import Shoulder
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
@@ -44,7 +44,7 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
-        self.double_pivot = DoublePivot()
+        self.shoulder = Shoulder()
         self.wrist = Wrist()
         self.led = Led(self)
         self.intake = Intake()
@@ -165,13 +165,10 @@ class RobotContainer:
                 )
         )
 
-        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="up"))
-        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="down"))
-
-        pass
 
     def bind_codriver_buttons(self):
         print("bidning codriver buttons")
+
         self.co_trigger_a.onTrue(
                 commands2.PrintCommand("moving wrist to 90 degrees").andThen(
                 MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90), wait_to_finish=True)
@@ -182,6 +179,15 @@ class RobotContainer:
                 MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0), wait_to_finish=True)
         ))
 
+        self.co_trigger_x.onTrue(
+                commands2.PrintCommand("moving shoulder to 90 degrees").andThen(
+                MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(90), wait_to_finish=True)
+        ))
+
+        self.co_trigger_y.onTrue(
+                commands2.PrintCommand("moving shoulder to 0 degrees").andThen(
+                MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(0), wait_to_finish=True)
+        ))
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down

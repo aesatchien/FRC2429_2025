@@ -34,7 +34,7 @@ class IntakeConstants:
 
 class WristConstants:
 
-    k_CAN_id = 7
+    k_CAN_id = 10
     k_gear_ratio = 5 * 5 * 3 * 4.44
     k_abs_encoder_offset = 0
     k_length_meters = 20 * 0.0254
@@ -67,6 +67,50 @@ class WristConstants:
 
     k_config.softLimit.forwardSoftLimitEnabled(True)
     k_config.softLimit.reverseSoftLimitEnabled(True)
+
+class ShoulderConstants:
+
+    # angle is 0 when the shoulder is flat pointing forwards. 
+    # it increases as the shoulder goes clockwise from the perspective of the right side of the robot
+    # i.e. when it starts flat and goes up, the angle increases
+
+    k_CAN_id = 6
+    k_follower_CAN_id = 7
+
+    k_gear_ratio = 100
+    k_abs_encoder_offset = 0
+    k_length_meters = 0.5
+    k_mass_kg = 10
+    k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
+    k_plant = DCMotor.neoVortex(2)
+
+    k_min_angle = math.radians(-45)
+    k_max_angle = math.radians(225)
+    k_tolerance = math.radians(2.5)
+    k_sim_starting_angle = math.radians(0)
+
+    k_config = SparkMaxConfig()
+
+    k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
+    k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
+
+    k_config.absoluteEncoder.positionConversionFactor(math.tau / k_gear_ratio)
+    k_config.absoluteEncoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
+    
+    k_config.absoluteEncoder.zeroOffset(0.45)
+
+    k_config.closedLoop.pid(p=6, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
+        
+    k_config.softLimit.forwardSoftLimit(k_max_angle)
+    k_config.softLimit.reverseSoftLimit(k_min_angle)
+
+    k_config.softLimit.forwardSoftLimitEnabled(True)
+    k_config.softLimit.reverseSoftLimitEnabled(True)
+
+    k_follower_config = SparkMaxConfig()
+    k_follower_config.follow(k_CAN_id)
 
 class ElevatorConstants:
     k_CAN_id = 4

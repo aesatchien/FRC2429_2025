@@ -25,16 +25,18 @@ class PhysicsEngine:
         # if we want to add an armsim see test_robots/sparksim_test/
         self.initialize_swerve()
         self.initialize_wrist()
-        self.update_elevator_positions()
+        self.initialize_shoulder()
+        # self.update_elevator_positions()
 
     def update_sim(self, now, tm_diff):
         # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
 
         amps = [0] # list of current draws
+        amps.append(self.update_wrist(tm_diff))
+        amps.append(self.update_shoulder(tm_diff))
         self.update_swerve(tm_diff)
         self.update_intake(tm_diff)
-        amps.append(self.update_wrist(tm_diff))
-        self.update_elevator_positions()
+        # self.update_elevator_positions()
 
         simlib.RoboRioSim.setVInVoltage(
                 simlib.BatterySim.calculate(amps)
@@ -47,6 +49,16 @@ class PhysicsEngine:
         self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
         return self.wrist_sim.getCurrentDraw()
+
+    def update_shoulder(self, tm_diff):
+        self.shoulder_sim.setInput(0, self.shoulder_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
+        self.shoulder_sim.update(tm_diff)
+        self.shoulder_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+        self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+
+        return self.shoulder_sim.getCurrentDraw()
 
     def update_intake(self, tm_diff):
         self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
@@ -106,7 +118,21 @@ class PhysicsEngine:
                                                     simulateGravity=False,
                                                     startingAngle=constants.WristConstants.k_sim_starting_angle)
 
-        self.wrist_spark_sim = SparkMaxSim(self.robot.container.wrist.sparkmax, motor=constants.WristConstants.k_plant)
+        self.wrist_spark_sim = SparkMaxSim(self.robot.container.shoulder.sparkmax, motor=constants.WristConstants.k_plant)
+
+    def initialize_shoulder(self):
+
+        self.shoulder_sim = simlib.SingleJointedArmSim(gearbox=constants.ShoulderConstants.k_plant,
+                                                    gearing=constants.ShoulderConstants.k_gear_ratio,
+                                                    moi=constants.ShoulderConstants.k_moi,
+                                                    armLength=constants.ShoulderConstants.k_length_meters,
+                                                    minAngle=constants.ShoulderConstants.k_min_angle,
+                                                    maxAngle=constants.ShoulderConstants.k_max_angle,
+                                                    simulateGravity=True,
+                                                    startingAngle=constants.ShoulderConstants.k_sim_starting_angle)
+
+        self.shoulder_spark_sim = SparkMaxSim(self.robot.container.shoulder.sparkmax, constants.ShoulderConstants.k_plant)
+        self.shoulder_follower_spark_sim = SparkMaxSim(self.robot.container.shoulder.follower_sparkmax, constants.ShoulderConstants.k_plant)
 
 
     def initialize_swerve(self):
