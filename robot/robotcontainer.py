@@ -9,6 +9,7 @@ import commands2
 from commands2.button import Trigger
 from wpimath.geometry import Pose2d
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.move_elevator import MoveElevator
 from commands.move_shoulder import MoveShoulder
 import constants
 
@@ -146,6 +147,7 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
 
     def bind_driver_buttons(self):
+
         self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
         self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
@@ -188,6 +190,9 @@ class RobotContainer:
                 commands2.PrintCommand("moving shoulder to 0 degrees").andThen(
                 MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(0), wait_to_finish=True)
         ))
+
+        self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
+        self.co_trigger_rb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=0, wait_to_finish=True))
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down

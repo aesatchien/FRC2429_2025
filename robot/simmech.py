@@ -78,12 +78,11 @@ front_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, bar_w
 #elevator mechanism lengths (sim)
 elevator_length = constants.ElevatorConstants.k_elevator_sim_length
 elevator_width = constants.ElevatorConstants.k_elevator_sim_width
-elevator_height = constants.ElevatorConstants.k_elevator_max_height
+elevator_height = constants.ElevatorConstants.k_max_height
 bar_width = 10  # this is a percentage of the mech screen, so scales with the mech dimensions
 
-#double pivot lengths (sim)
-double_pivot_shoulder_length = constants.ElevatorConstants.k_shoulder_length_sim
-double_pivot_elbow_length = constants.ElevatorConstants.k_elbow_length_sim
+# shoulder length (sim)
+shoulder_length = constants.ElevatorConstants.k_shoulder_length_sim
 
 # front view of elevator mechanism
 elevator_offset_x = (width - elevator_width) / 2
@@ -102,8 +101,7 @@ side_elevator.appendLigament("chassisBase", "chassis", chassis_length, 0, 12, wp
 elevator_offset_x = width/2
 elevator_base = side_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
 side_elevator.appendLigament("elevator", "elevator_side", elevator_height, 90, bar_width * 1.5, wpilib.Color.kRed)
-side_elevator.appendLigament("elevator_side", "double_pivot_shoulder", double_pivot_shoulder_length, constants.ElevatorConstants.k_positions["l1"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
-side_elevator.appendLigament("double_pivot_shoulder", "double_pivot_elbow", double_pivot_elbow_length, constants.ElevatorConstants.k_positions["l1"]["elbow_pivot"], bar_width/3, wpilib.Color.kYellow)
+side_elevator.appendLigament("elevator_side", "shoulder", shoulder_length, constants.ElevatorConstants.k_positions["l1"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
 
 # top view - looking down front is on the right,  right is on the bottom.  remember - angles are relativeto parent!
 # ...

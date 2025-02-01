@@ -8,12 +8,13 @@ from wpilib import SmartDashboard
 from subsystems.elevator import Elevator
 
 class MoveElevator(commands2.Command):
-    def __init__(self, container, elevator:Elevator, target) -> None:
+    def __init__(self, container, elevator:Elevator, target, wait_to_finish=False) -> None:
         super().__init__()
         self.setName('Move Elevator')
         self.elevator = elevator
         self.target = target
         self.direction_sign = math.copysign(1, self.target - self.elevator.get_height())
+        self.wait_to_finish = wait_to_finish
         self.container = container
         self.addRequirements(self.elevator)
 
@@ -25,12 +26,17 @@ class MoveElevator(commands2.Command):
         SmartDashboard.putNumber("Elevator Target Position", self.target)
         SmartDashboard.putString("Elevator Target Position Name", self.elevator.get_target_pos())
 
+        self.elevator.set_height(self.target)
+
     def execute(self) -> None:
-        self.elevator.set_height(self.elevator.get_height() + (0.1 * self.direction_sign))
         SmartDashboard.putNumber("Elevator Position", self.elevator.get_height())
 
     def isFinished(self) -> bool:
-        return abs(self.elevator.get_height() - self.target) < constants.ElevatorConstants.k_tolerance
+        if self.wait_to_finish:
+            # should we put this in the subsystem, like in wrist?
+            return abs(self.elevator.get_height() - self.target) < constants.ElevatorConstants.k_tolerance
+        else:
+            return True
     
     def end(self, interrupted: bool) -> None:        
         end_time = self.container.get_enabled_time()
