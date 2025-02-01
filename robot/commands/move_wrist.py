@@ -7,11 +7,12 @@ class MoveWrist(commands2.Command):
 
     def __init__(self, container, wrist: Wrist, radians: float, wait_to_finish=False) -> None:
         super().__init__()
-        self.setName('Sample Name')
+        self.setName('Move Wrist')
         self.container = container
         self.wrist = wrist
         self.radians = radians
         self.wait_to_finish = wait_to_finish
+        self.addRequirements(self.wrist)
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""

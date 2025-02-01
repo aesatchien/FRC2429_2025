@@ -7,11 +7,12 @@ class MoveShoulder(commands2.Command):
 
     def __init__(self, container, shoulder: Shoulder, radians: float, wait_to_finish=False) -> None:
         super().__init__()
-        self.setName('Sample Name')
+        self.setName('Move Shoulder')
         self.container = container
         self.shoulder = shoulder
         self.radians = radians
         self.wait_to_finish = wait_to_finish
+        self.addRequirements(self.shoulder)
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""

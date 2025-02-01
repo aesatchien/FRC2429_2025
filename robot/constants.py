@@ -47,7 +47,7 @@ class WristConstants:
     k_min_angle = math.radians(0)
     k_max_angle = math.radians(180)
     k_tolerance = math.radians(2.5)
-    k_sim_starting_angle = math.radians(60)
+    k_sim_starting_angle = 0 # sim mechanism2d takes degrees
 
     k_config = SparkMaxConfig()
 
@@ -69,6 +69,8 @@ class WristConstants:
     k_config.softLimit.forwardSoftLimitEnabled(True)
     k_config.softLimit.reverseSoftLimitEnabled(True)
 
+    k_config.smartCurrentLimit(40)
+
 class ShoulderConstants:
 
     # angle is 0 when the shoulder is flat pointing forwards. 
@@ -88,7 +90,7 @@ class ShoulderConstants:
     k_min_angle = math.radians(-45)
     k_max_angle = math.radians(225)
     k_tolerance = math.radians(2.5)
-    k_sim_starting_angle = math.radians(0)
+    k_sim_starting_angle = 0
 
     k_config = SparkMaxConfig()
 
@@ -149,6 +151,8 @@ class ElevatorConstants:
 
     k_config.softLimit.forwardSoftLimitEnabled(True)
     k_config.softLimit.reverseSoftLimitEnabled(True)
+
+    k_config.smartCurrentLimit(60)
 
     k_follower_config = SparkMaxConfig()
     k_follower_config.follow(k_CAN_id)

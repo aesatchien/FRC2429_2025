@@ -25,8 +25,6 @@ class Shoulder(Subsystem):
 
         if wpilib.RobotBase.isReal():
             self.encoder.setPosition(self.abs_encoder.getPosition()) # may have to set offset here if the zeroOffset kParamInvalid error isn't fixed
-                                                                     # if so put the offset here into shoulderconstants
-
         else:
             self.encoder.setPosition(ShoulderConstants.k_sim_starting_angle)
 

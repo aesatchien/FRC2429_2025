@@ -26,6 +26,10 @@ class PhysicsEngine:
                                                                    angle=math.degrees(constants.ShoulderConstants.k_sim_starting_angle),
                                                                    color=wpilib.Color8Bit(red=30, green=200, blue=250))
 
+        self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_length_meters, 
+                                                                angle=constants.WristConstants.k_sim_starting_angle,
+                                                                color=wpilib.Color8Bit(red=255, green=200, blue=190))
+
         wpilib.SmartDashboard.putData("the mech", self.mech)
 
         self.initialize_swerve()
@@ -34,9 +38,10 @@ class PhysicsEngine:
         self.initialize_elevator()
 
     def update_sim(self, now, tm_diff):
+
         # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
 
-        amps = [0] # list of current draws
+        amps = []
 
         amps.append(self.update_wrist(tm_diff))
         amps.append(self.update_shoulder(tm_diff))
@@ -56,9 +61,15 @@ class PhysicsEngine:
     def update_wrist(self, tm_diff):
 
         self.wrist_sim.setInput(0, self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
+
         self.wrist_sim.update(tm_diff)
+        
+        self.wrist_spark_sim.setPosition(self.wrist_sim.getAngle())
+
         self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
+
+        self.mech2d_wrist.setAngle(math.degrees(self.wrist_sim.getAngle()) - self.mech2d_shoulder.getAngle())
 
         return self.wrist_sim.getCurrentDraw()
 
