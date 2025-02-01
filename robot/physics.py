@@ -60,13 +60,17 @@ class PhysicsEngine:
 
     def update_wrist(self, tm_diff):
 
-        self.wrist_sim.setInput(0, self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
+        wrist_sim_input = self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage()
+
+        print(f" telling wrist sim that our output is {wrist_sim_input:.2f}")
+        self.wrist_sim.setInput(0, wrist_sim_input)
 
         self.wrist_sim.update(tm_diff)
         
         self.wrist_spark_sim.setPosition(self.wrist_sim.getAngle())
+        print(f"wrist sim get angle: {math.degrees(self.wrist_sim.getAngle()):.2f}")
 
-        self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+        self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
 
         self.mech2d_wrist.setAngle(math.degrees(self.wrist_sim.getAngle()) - self.mech2d_shoulder.getAngle())
@@ -84,9 +88,9 @@ class PhysicsEngine:
 
         self.shoulder_follower_spark_sim.setPosition(self.shoulder_sim.getAngle()) # to get rid of what I think are integration errors
 
-        self.shoulder_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+        self.shoulder_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-        self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+        self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
 
         shoulder_pivot_degrees = math.degrees(self.shoulder_sim.getAngle())
@@ -111,10 +115,10 @@ class PhysicsEngine:
 
         self.elevator_follower_spark_sim.setPosition(self.elevator_sim.getPosition())
 
-        self.elevator_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+        self.elevator_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
 
-        self.elevator_follower_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=simlib.RoboRioSim.getVInVoltage(),
+        self.elevator_follower_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
 
         if self.robot is None:
@@ -175,7 +179,7 @@ class PhysicsEngine:
                                                     simulateGravity=False,
                                                     startingAngle=constants.WristConstants.k_sim_starting_angle)
 
-        self.wrist_spark_sim = SparkMaxSim(self.robot.container.shoulder.sparkmax, motor=constants.WristConstants.k_plant)
+        self.wrist_spark_sim = SparkMaxSim(self.robot.container.wrist.sparkmax, motor=constants.WristConstants.k_plant)
 
 
 
