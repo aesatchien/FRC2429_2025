@@ -22,7 +22,7 @@ from commands.set_leds import SetLEDs
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
-from subsystems.double_pivot import DoublePivot
+from subsystems.shoulder import Shoulder
 from subsystems.intake import Intake
 from subsystems.led import Led
 
@@ -42,7 +42,7 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
-        self.double_pivot = DoublePivot()
+        self.shoulder = Shoulder()
         self.led = Led(self)
         self.intake = Intake()
 
@@ -157,8 +157,8 @@ class RobotContainer:
                 )
         )
 
-        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="up"))
-        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="down"))
+        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.shoulder, direction="up"))
+        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.shoulder, direction="down"))
 
         pass
 

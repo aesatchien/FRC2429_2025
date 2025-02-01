@@ -32,88 +32,68 @@ class LowerCrankConstants:
     k_mass_kg = 8
     k_lower_crank_sim_starting_angle = math.radians(60)
 
-class ElevatorConstants:
-    k_CAN_id = 4
+class ScoringSystemConstants:
+    k_CAN_elevator_id = 4
+    k_CAN_shoulder_id = 6
 
     kP = 6
     kI = 0
     kD = 0
 
-    k_forward_limit = 100 #need to test for actual robot
+    k_forward_limit = 100 #MUST_TEST_FOR_ACTUAL_ROBOT
     k_reverse_limit = 0
     k_forward_limit_enabled = False
     k_reverse_limit_enabled = False
 
     k_timeofflight = 14 #elevator time of flight CAN ID
     
-    k_elevator_encoder_conversion_factor = 1 # [dist_unit] per revolution
+    k_elevator_max_height = 2.2 #MUST_TEST_FOR_ACTUAL_ROBOT
+    k_elevator_min_height = 0 #MUST_TEST_FOR_ACTUAL_ROBOT
+    k_elevator_encoder_conversion_factor = 1 # [dist_unit] per revolution; MUST_TEST_FOR_ACTUAL_ROBOT
 
-    k_elevator_max_height = 60 #inches
-    k_elevator_dist_between_pivot_and_top = 29 #inches
-    k_elevator_min_height = 35 - k_elevator_dist_between_pivot_and_top #inches; treating the center of the shoulder pivot as the top of the elevator
-
-    k_tolerance = 1.5
+    k_pivot_height = 0.15 #distance between bottom and pivot center point. Note: the sim will reflect this value, not the total elevator height (because the delta between pivot piont & bottom + between pivot & top are both variable)
+    k_tolerance = 0.01 # MUST_TEST_FOR_ACTUAL_ROBOT
+    k_tolerance_degrees = 1.5
 
     k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
         "stow": {
-            "elevator_height": k_elevator_min_height,
+            "elevator_height": k_pivot_height,
             "shoulder_pivot": 0,
             "wrist_pivot": 0,
             "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
         },
         "ground": {
-            "elevator_height": k_elevator_min_height,
+            "elevator_height": k_pivot_height,
             "shoulder_pivot": 270,
             "wrist_pivot": 0,
             "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
 
         },
-        "ground_to_l1": {
-            "elevator_height": k_elevator_min_height,
-            "shoulder_pivot": 0,  # angle between the vertical and the shoulder ligament
-            "wrist_pivot": 0,  # angle between the horizontal and the wrist ligament
-            "wrist_color_for_ligament": wpilib.Color.kBlue,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
-        },
         "l1": {
-            "elevator_height": k_elevator_min_height + 10,
+            "elevator_height": 0.5282,
             "shoulder_pivot": 270, #angle between the vertical and the shoulder ligament
             "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
         },
         "l2": {
-            "elevator_height": k_elevator_min_height + 10,
-            "shoulder_pivot": 315,
+            "elevator_height": 0.5282,
+            "shoulder_pivot": 300,
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
-        },
-        "l2_to_l3": {
-            "elevator_height": k_elevator_min_height + 10,
-            "shoulder_pivot": 0,  # angle between the vertical and the shoulder ligament
-            "wrist_pivot": 0,  # angle between the horizontal and the wrist ligament
-            "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
         },
         "l3": {
-            "elevator_height": k_elevator_min_height + 22,
-            "shoulder_pivot": 315,
+            "elevator_height": 1.00,
+            "shoulder_pivot": 300,
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
         },
-        "l3_to_l4": {
-            "elevator_height": k_elevator_min_height + 22,
-            "shoulder_pivot": 0,  # angle between the vertical and the shoulder ligament
-            "wrist_pivot": 0,  # angle between the horizontal and the wrist ligament
-            "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
-        },
         "l4": {
-            "elevator_height": k_elevator_min_height + 32,
+            "elevator_height": 2.0,
             "shoulder_pivot": 270, 
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -131,7 +111,7 @@ class ElevatorConstants:
     k_window_width = 60
     k_window_length = 60
 
-    k_elevator_sim_max_height = 60
+    k_elevator_sim_max_height = 72
     k_elevator_sim_length = 10
     k_elevator_sim_width = 20
 

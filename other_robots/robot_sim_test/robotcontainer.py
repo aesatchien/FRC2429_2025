@@ -39,7 +39,7 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
-        self.double_pivot = Shoulder()
+        self.shoulder = Shoulder()
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -141,8 +141,8 @@ class RobotContainer:
                 )
         )
 
-        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="up"))
-        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="down"))
+        self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.shoulder, direction="up"))
+        self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.shoulder, direction="down"))
 
         pass
 
