@@ -42,6 +42,10 @@ class Intake(Subsystem):
         self.TOFSensorAlgae.setRangeOfInterest(2, 2, 2, 2)
         self.TOFSensorCoral.setRangeOfInterest(1, 1, 1, 1)
 
+        self.coral_acquired = False
+        self.algae_acquired = False
+
+
     def set_reference(self, value: float, control_type: SparkMax.ControlType):
         self.controller.setReference(value, control_type)
 
@@ -51,10 +55,14 @@ class Intake(Subsystem):
         return average_algae_distance <= 0.5
 
     def has_coral(self) -> bool:
-        average_coral_distance = self.TOFSensorAlgae.getRange()
+        average_coral_distance = self.TOFSensorCoral.getRange()
         return average_coral_distance <= 2
+    
+    def set_has_coral(self, has_coral):
+        self.coral_acquired = has_coral
+        
+    def get_has_coral(self):
+        return self.coral_acquired
 
     def periodic(self) -> None:
-
         return super().periodic()
-

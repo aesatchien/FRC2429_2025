@@ -6,12 +6,12 @@ import math
 
 from wpilib import SmartDashboard
 from subsystems.elevator import Elevator
-from subsystems.double_pivot import DoublePivot
+from subsystems.shoulder import Shoulder
 from commands.move_elevator import MoveElevator
-from commands.move_double_pivot import MoveDoublePivot
+from commands.move_shoulder import MoveShoulder
 
 class IncrementElevatorAndPivot(commands2.Command):
-    def __init__(self, container, elevator:Elevator, pivot:DoublePivot, direction="down") -> None:
+    def __init__(self, container, elevator:Elevator, pivot:Shoulder, direction="down") -> None:
         super().__init__()
         self.setName('Increment Elevator and Pivot')
         self.elevator = elevator
@@ -31,7 +31,7 @@ class IncrementElevatorAndPivot(commands2.Command):
         
         command = commands2.cmd.parallel(
             MoveElevator(self.container, self.elevator, self.targets["elevator_height"]), 
-            MoveDoublePivot(self.container, self.double_pivot, self.targets["elbow_pivot"], self.targets["shoulder_pivot"]))
+            MoveShoulder(self.container, self.double_pivot, self.targets["shoulder_pivot"]))
         
         commands2.CommandScheduler.getInstance().schedule(command)
         
@@ -39,7 +39,7 @@ class IncrementElevatorAndPivot(commands2.Command):
         pass
 
     def isFinished(self) -> bool:
-        return True
+        return self.command.isFinished()
     
     def end(self, interrupted: bool) -> None:        
         end_time = self.container.get_enabled_time()

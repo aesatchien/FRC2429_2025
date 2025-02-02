@@ -18,6 +18,9 @@ class MoveElevator(commands2.Command):
         self.addRequirements(self.elevator)
 
     def initialize(self) -> None:
+        if not wpilib.RobotBase.isSimulation:
+            self.elevator.set_height(height=self.target, mode='smartmotion')
+
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
         print("\n" + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
@@ -26,11 +29,13 @@ class MoveElevator(commands2.Command):
         SmartDashboard.putString("Elevator Target Position Name", self.elevator.get_target_pos())
 
     def execute(self) -> None:
-        self.elevator.set_height(self.elevator.get_height() + (0.1 * self.direction_sign))
+        if wpilib.RobotBase.isSimulation:
+            self.elevator.set_height(self.elevator.get_height() + (0.005 * self.direction_sign))
+        
         SmartDashboard.putNumber("Elevator Position", self.elevator.get_height())
 
     def isFinished(self) -> bool:
-        return abs(self.elevator.get_height() - self.target) < constants.ElevatorConstants.k_tolerance
+        return abs(self.elevator.get_height() - self.target) < constants.ScoringSystemConstants.k_tolerance
     
     def end(self, interrupted: bool) -> None:        
         end_time = self.container.get_enabled_time()
