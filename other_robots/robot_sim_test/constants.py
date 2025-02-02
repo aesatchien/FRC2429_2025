@@ -81,7 +81,7 @@ class ElevatorConstants:
             "elevator_height": k_elevator_min_height + 10,
             "shoulder_pivot": 270, #angle between the vertical and the shoulder ligament
             "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
-            "wrist_color_for_ligament": wpilib.Color.kRed,
+            "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
         },
         "l2": {
@@ -110,11 +110,18 @@ class ElevatorConstants:
             "shoulder_pivot": 0,  # angle between the vertical and the shoulder ligament
             "wrist_pivot": 0,  # angle between the horizontal and the wrist ligament
             "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
         },
-        "l4": {
-            "elevator_height": k_elevator_min_height + 65,
-            "shoulder_pivot": 270, 
+        "move_to_l4": {
+            "elevator_height": k_elevator_min_height + 70,
+            "shoulder_pivot": 0,
+            "wrist_pivot": 90,
+            "wrist_color_for_ligament": wpilib.Color.kRed,
+            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+        },
+        "l4_score": {
+            "elevator_height": k_elevator_min_height + 70,
+            "shoulder_pivot": 270,
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
