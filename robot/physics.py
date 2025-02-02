@@ -128,18 +128,21 @@ class PhysicsEngine:
         self.update_elevator_positions()
 
         #get coral
-        if not self.robot.container.elevator.get_has_coral():
-            self.has_coral = self.update_intake_coral()
-            self.robot.container.elevator.set_has_coral(self.has_coral)
+        if not self.robot.container.intake.get_has_coral():
+            if wpilib.RobotBase.isSimulation():
+                self.has_coral = self.update_intake_coral()
+                self.robot.container.intake.set_has_coral(self.has_coral)
+            else:
+                self.robot.container.intake.set_has_coral(self.robot.container.intake.has_coral())
         wpilib.SmartDashboard.putBoolean("Coral Acquired", self.has_coral)
 
     def update_elevator_positions(self):
         if self.robot is None:
             raise ValueError("Robot is not defined")
         
-        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ScoringSystemConstants.k_elevator_sim_max_height / constants.ScoringSystemConstants.k_elevator_max_height)
+        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
         self.shoulder_pivot = self.robot.container.shoulder.get_shoulder_pivot()
-        self.wrist_color = constants.ScoringSystemConstants.k_positions[self.robot.container.elevator.get_target_pos()]["wrist_color_for_setColor"]
+        self.wrist_color = constants.ElevatorConstants.k_positions[self.robot.container.elevator.get_target_pos()]["wrist_color_for_setColor"]
         
         sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
         sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
@@ -149,24 +152,24 @@ class PhysicsEngine:
         sm.side_elevator.components["wrist"]["ligament"].setColor(self.wrist_color)
 
     def update_intake_coral(self): #if robot is in range of coral + robot is at ground position, then intake. TODO: 'also if robot is at coral station position'
-        for coord in [valid_coord for valid_coord in constants.ScoringSystemConstants.k_coral_intake_coordinates if valid_coord[2] > 0]:
-            if self.distance(coord[0],coord[1]) <= constants.ScoringSystemConstants.k_robot_radius_sim:                
-                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ScoringSystemConstants.k_positions["ground"]["elevator_height"]) <= constants.ScoringSystemConstants.k_tolerance
-                shoulder_in_range = abs(self.robot.container.shoulder.get_shoulder_pivot() - constants.ScoringSystemConstants.k_positions["ground"]["shoulder_pivot"]) <= constants.ScoringSystemConstants.k_tolerance
+        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_intake_coordinates if valid_coord[2] > 0]:
+            if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:                
+                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions["ground"]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
+                shoulder_in_range = abs(self.robot.container.shoulder.get_shoulder_pivot() - constants.ElevatorConstants.k_positions["ground"]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
 
-                if elevator_in_range and shoulder_in_range and not self.robot.container.elevator.get_has_coral():
+                if elevator_in_range and shoulder_in_range and not self.robot.container.intake.get_has_coral():
                     return True
         return False
 
     def update_outtake_coral(self):
-        for coord in [valid_coord for valid_coord in constants.ScoringSystemConstants.k_coral_outtake_coordinates if valid_coord[2] == 0]:
-            if self.distance(coord[0],coord[1]) <= constants.ScoringSystemConstants.k_robot_radius_sim:
+        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_outtake_coordinates if valid_coord[2] == 0]:
+            if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:
                 robot_target_pos = self.robot.container.elevator.get_target_pos() #returns "l1", "l2", "l3", etc
                 
-                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ScoringSystemConstants.k_positions[robot_target_pos]["elevator_height"]) <= constants.ScoringSystemConstants.k_tolerance
-                shoulder_in_range = abs(self.robot.container.shoulder.get_shoulder_pivot() - constants.ScoringSystemConstants.k_positions[robot_target_pos]["shoulder_pivot"]) <= constants.ScoringSystemConstants.k_tolerance
+                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions[robot_target_pos]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
+                shoulder_in_range = abs(self.robot.container.shoulder.get_shoulder_pivot() - constants.ElevatorConstants.k_positions[robot_target_pos]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
 
-                if elevator_in_range and shoulder_in_range and self.robot.container.elevator.get_has_coral():
+                if elevator_in_range and shoulder_in_range and self.robot.container.intake.get_has_coral():
                     return True
         return False
 

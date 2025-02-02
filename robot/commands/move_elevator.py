@@ -35,7 +35,7 @@ class MoveElevator(commands2.Command):
         SmartDashboard.putNumber("Elevator Position", self.elevator.get_height())
 
     def isFinished(self) -> bool:
-        return abs(self.elevator.get_height() - self.target) < constants.ScoringSystemConstants.k_tolerance
+        return abs(self.elevator.get_height() - self.target) < constants.ElevatorConstants.k_tolerance
     
     def end(self, interrupted: bool) -> None:        
         end_time = self.container.get_enabled_time()

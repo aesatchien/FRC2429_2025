@@ -14,31 +14,31 @@ class Elevator(Subsystem):
         super().__init__()
         self.setName('Elevator')
 
-        self.coral_positions = {key : constants.ScoringSystemConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
         
         self.counter = 5
 
         #initialize sparkmax controller + sparkmax configuration
         motor_type = rev.SparkMax.MotorType.kBrushless
-        self.elevator_controller = rev.SparkMax(constants.ScoringSystemConstants.k_CAN_elevator_id, motor_type)
+        self.elevator_controller = rev.SparkMax(constants.ElevatorConstants.k_CAN_elevator_id, motor_type)
 
         self.config = rev.SparkMaxConfig()
-        self.config.encoder.positionConversionFactor(constants.ScoringSystemConstants.k_elevator_encoder_conversion_factor).velocityConversionFactor(constants.ScoringSystemConstants.k_elevator_encoder_conversion_factor)
-        self.config.closedLoop.pid(p=constants.ScoringSystemConstants.kP, i=constants.ScoringSystemConstants.kI, d=constants.ScoringSystemConstants.kD) #the ClosedLoopSpot parameter is for the target
+        self.config.encoder.positionConversionFactor(constants.ElevatorConstants.k_conversion_factor).velocityConversionFactor(constants.ElevatorConstants.k_conversion_factor)
+        self.config.closedLoop.pid(p=constants.ElevatorConstants.kP, i=constants.ElevatorConstants.kI, d=constants.ElevatorConstants.kD) #the ClosedLoopSpot parameter is for the target
 
         # set soft limits
-        self.config.softLimit.forwardSoftLimitEnabled(constants.ScoringSystemConstants.k_forward_limit_enabled)
-        self.config.softLimit.reverseSoftLimitEnabled(constants.ScoringSystemConstants.k_reverse_limit_enabled)
+        self.config.softLimit.forwardSoftLimitEnabled(constants.ElevatorConstants.k_forward_limit_enabled)
+        self.config.softLimit.reverseSoftLimitEnabled(constants.ElevatorConstants.k_reverse_limit_enabled)
 
-        self.config.softLimit.forwardSoftLimit(constants.ScoringSystemConstants.k_forward_limit)
-        self.config.softLimit.reverseSoftLimit(constants.ScoringSystemConstants.k_reverse_limit)
+        self.config.softLimit.forwardSoftLimit(constants.ElevatorConstants.k_forward_limit)
+        self.config.softLimit.reverseSoftLimit(constants.ElevatorConstants.k_reverse_limit)
 
         self.elevator_controller.configure(config=self.config, 
                                            resetMode=rev.SparkMax.ResetMode.kResetSafeParameters, 
                                            persistMode=rev.SparkMax.PersistMode.kPersistParameters)
 
         #time of flight distance sensor:
-        self.elevator_height_sensor = TimeOfFlight(constants.ScoringSystemConstants.k_timeofflight)
+        self.elevator_height_sensor = TimeOfFlight(constants.ElevatorConstants.k_timeofflight)
         self.elevator_height_sensor.setRangingMode(TimeOfFlight.RangingMode.kShort, 50)        
 
         #initialize closed loop controller (PID controller)
@@ -46,10 +46,9 @@ class Elevator(Subsystem):
         # self.elevator_pid.setSmartMotionAllowedClosedLoopError(1)
 
         # initialize the height of the elevator  - sensor is in mm, so stick with that
-        initial_height = self.elevator_height_sensor.getRange() if wpilib.RobotBase.isReal() else constants.ScoringSystemConstants.k_positions["stow"]["elevator_height"] #note: range is got in mm, not in.
+        initial_height = (self.elevator_height_sensor.getRange()) if wpilib.RobotBase.isReal() else constants.ElevatorConstants.k_positions["stow"]["elevator_height"] #note: range is got in mm, not in.
         self.set_height(initial_height)
         self.target_pos = "stow"
-        self.has_coral = False #put in wrist later
         self.is_moving = False
 
         self.set_point = initial_height
@@ -83,7 +82,7 @@ class Elevator(Subsystem):
 
         if mode == 'smartmotion':
             # use smartmotion to send you there quickly
-            self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kSmartMotion) 
+            self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kMAXMotionPositionControl) 
         elif mode == 'position':
             # just use the position PID
             self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kPosition)
@@ -92,10 +91,10 @@ class Elevator(Subsystem):
         SmartDashboard.putNumber('elevator_setpoint', self.setpoint)
 
         if wpilib.RobotBase.isSimulation():
-            if height >= constants.ScoringSystemConstants.k_elevator_max_height:
-                self.height = constants.ScoringSystemConstants.k_elevator_max_height
-            elif height <= constants.ScoringSystemConstants.k_elevator_min_height:
-                self.height = constants.ScoringSystemConstants.k_elevator_min_height
+            if height >= constants.ElevatorConstants.k_elevator_max_height:
+                self.height = constants.ElevatorConstants.k_elevator_max_height
+            elif height <= constants.ElevatorConstants.k_elevator_min_height:
+                self.height = constants.ElevatorConstants.k_elevator_min_height
             else: self.height = height
             SmartDashboard.putNumber('elevator_height', self.height)
             
@@ -123,12 +122,6 @@ class Elevator(Subsystem):
                 self.target_pos = keys[current_index - 1]
                 return (self.coral_positions[self.target_pos])
             return (self.coral_positions[self.target_pos])
-    
-    def set_has_coral(self, has_coral):
-        self.has_coral = has_coral
-        
-    def get_has_coral(self):
-        return self.has_coral
     
     def periodic(self) -> None: #overrides Subsystem periodic() method
         self.counter += 1
