@@ -115,6 +115,7 @@ side_elevator.appendLigament("l3_stem", "13_branch", small_branch_length, 55, ba
 side_elevator.appendLigament("l3_stem", "l4_stem", top_stems, 0, bar_width, bar_color)
 side_elevator.appendLigament("l4_stem", "bent_branch", 16.14, 55, bar_width, bar_color)
 side_elevator.appendLigament("bent_branch", "top_branch", 6.8, 305, bar_width, bar_color)
+#total height: 70.88 inches
 
 # top view - looking down front is on the right,  right is on the bottom.  remember - angles are relative to parent!
 # ...

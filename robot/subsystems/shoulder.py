@@ -12,29 +12,29 @@ class Shoulder(Subsystem):
         super().__init__()
         self.setName('Shoulder')
 
-        self.coral_positions = {key : constants.ScoringSystemConstants.k_positions[key]["shoulder_pivot"] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key]["shoulder_pivot"] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
 
         #initialize motors
         motor_type = rev.SparkMax.MotorType.kBrushless
-        self.shoulder_controller = rev.SparkMax(constants.ScoringSystemConstants.k_CAN_shoulder_id, motor_type)
+        self.shoulder_controller = rev.SparkMax(constants.ShoulderConstants.k_CAN_shoulder_id, motor_type)
 
         self.config = rev.SparkMaxConfig()
-        self.config.absoluteEncoder.positionConversionFactor(constants.ScoringSystemConstants.k_elevator_encoder_conversion_factor).velocityConversionFactor(constants.ScoringSystemConstants.k_elevator_encoder_conversion_factor)
-        self.config.closedLoop.pid(p=constants.ScoringSystemConstants.kP, i=constants.ScoringSystemConstants.kI, d=constants.ScoringSystemConstants.kD) #what is the ClosedLoopSpot (?)
+        self.config.absoluteEncoder.positionConversionFactor(constants.ShoulderConstants.k_conversion_factor).velocityConversionFactor(constants.ShoulderConstants.k_conversion_factor)
+        self.config.closedLoop.pid(p=constants.ShoulderConstants.kP, i=constants.ShoulderConstants.kI, d=constants.ShoulderConstants.kD) #what is the ClosedLoopSpot (?)
 
         # set soft limits
-        self.config.softLimit.forwardSoftLimitEnabled(constants.ScoringSystemConstants.k_forward_limit_enabled)
-        self.config.softLimit.reverseSoftLimitEnabled(constants.ScoringSystemConstants.k_reverse_limit_enabled)
+        self.config.softLimit.forwardSoftLimitEnabled(constants.ShoulderConstants.k_forward_limit_enabled)
+        self.config.softLimit.reverseSoftLimitEnabled(constants.ShoulderConstants.k_reverse_limit_enabled)
 
-        self.config.softLimit.forwardSoftLimit(constants.ScoringSystemConstants.k_forward_limit)
-        self.config.softLimit.reverseSoftLimit(constants.ScoringSystemConstants.k_reverse_limit)
+        self.config.softLimit.forwardSoftLimit(constants.ShoulderConstants.k_forward_limit)
+        self.config.softLimit.reverseSoftLimit(constants.ShoulderConstants.k_reverse_limit)
 
         self.shoulder_controller.configure(config=self.config, 
                                            resetMode=rev.SparkMax.ResetMode.kResetSafeParameters, 
                                            persistMode=rev.SparkMax.PersistMode.kPersistParameters)
 
 
-        self.shoulder_pivot = constants.ScoringSystemConstants.k_positions["stow"]["shoulder_pivot"]
+        self.shoulder_pivot = constants.ElevatorConstants.k_positions["stow"]["shoulder_pivot"]
 
         #initialize closed loop controller (PID controller)
         self.shoulder_pid = self.shoulder_controller.getClosedLoopController()
@@ -59,7 +59,7 @@ class Shoulder(Subsystem):
 
         if mode == 'smartmotion':
             # use smartmotion to send you there quickly
-            self.shoulder_pid.setReference(angle, rev.SparkMax.ControlType.kSmartMotion)
+            self.shoulder_pid.setReference(angle, rev.SparkMax.ControlType.kMAXMotionPositionControl)
         elif mode == 'position':
             # just use the position PID
             self.shoulder_pid.setReference(angle, rev.SparkMax.ControlType.kPosition)

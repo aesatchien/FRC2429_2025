@@ -28,6 +28,9 @@ class IntakeConstants:
     k_tof_algae_port = 2
     k_tof_coral_port = 2
 
+    #SIM
+    k_wrist_length_sim = 7
+
 
 class LowerCrankConstants:
 
@@ -45,28 +48,27 @@ class LowerCrankConstants:
     k_mass_kg = 8
     k_lower_crank_sim_starting_angle = math.radians(60)
 
-class ScoringSystemConstants:
+class ElevatorConstants:
     k_CAN_elevator_id = 4
-    k_CAN_shoulder_id = 6
 
-    kP = 6
-    kI = 0
+    kP = 6 # (???)
+    kI = 0 
     kD = 0
 
-    k_forward_limit = 100 #MUST_TEST_FOR_ACTUAL_ROBOT
-    k_reverse_limit = 0
+    k_forward_limit = 100 #(???)
+    k_reverse_limit = 0 # (???)
     k_forward_limit_enabled = False
     k_reverse_limit_enabled = False
 
     k_timeofflight = 14 #elevator time of flight CAN ID
-    
-    k_elevator_max_height = 2.2 #MUST_TEST_FOR_ACTUAL_ROBOT
-    k_elevator_min_height = 0 #MUST_TEST_FOR_ACTUAL_ROBOT
-    k_elevator_encoder_conversion_factor = 1 # [dist_unit] per revolution; MUST_TEST_FOR_ACTUAL_ROBOT
+
+    k_elevator_max_height = 2.2 #(???)
+    k_elevator_min_height = 0 #(???)
+    k_conversion_factor = 1 # meter per revolution; (???)
 
     k_pivot_height = 0.15 #distance between bottom and pivot center point. Note: the sim will reflect this value, not the total elevator height (because the delta between pivot piont & bottom + between pivot & top are both variable)
-    k_tolerance = 0.01 # MUST_TEST_FOR_ACTUAL_ROBOT
-    k_tolerance_degrees = 1.5
+    k_tolerance = 0.01 # (???)
+    k_tolerance_degrees = 1.5 # (???)
 
     k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
         "stow": {
@@ -127,9 +129,30 @@ class ScoringSystemConstants:
     k_elevator_sim_length = 10
     k_elevator_sim_width = 20
 
-    k_shoulder_length_sim = 23
-    k_wrist_length_sim = 7
-
     k_coral_intake_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)] #(x-coord, y-coord, number of corals at that location)
     k_coral_outtake_coordinates = [(5,5,0)]
     k_robot_radius_sim = 0.5
+
+
+class ShoulderConstants:
+    k_CAN_shoulder_id = 6
+
+    kP = 6
+    kI = 0
+    kD = 0
+
+    k_conversion_factor = 1 # meter per revolution; (???)
+
+    k_forward_limit = 100 #(???)
+    k_reverse_limit = 0 # (???)
+    k_forward_limit_enabled = False
+    k_reverse_limit_enabled = False
+
+    k_pivot_height = 0.15 #distance between bottom and pivot center point. Note: the sim will reflect this value, not the total elevator height (because the delta between pivot piont & bottom + between pivot & top are both variable)
+    k_tolerance = 0.01 # (???)
+    k_tolerance_degrees = 1.5 # (???)
+
+    #SIM
+    k_shoulder_length_sim = 23
+    
+    

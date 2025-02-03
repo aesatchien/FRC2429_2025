@@ -8,25 +8,25 @@ from wpilib import SmartDashboard
 from subsystems.shoulder import Shoulder
 
 class MoveShoulder(commands2.Command):
-    def __init__(self, container, double_pivot:Shoulder, shoulder_target_angle) -> None:
+    def __init__(self, container, shoulder:Shoulder, shoulder_target_angle) -> None:
         super().__init__()
         self.setName('Move Double Pivot')
-        self.double_pivot = double_pivot
+        self.shoulder = shoulder
         self.shoulder_target = shoulder_target_angle
 
-        self.shoulder_direction_sign = math.copysign(1, self.double_pivot.deltaAngle(self.shoulder_target, self.double_pivot.get_shoulder_pivot()))
+        self.shoulder_direction_sign = math.copysign(1, self.shoulder.deltaAngle(self.shoulder_target, self.shoulder.get_shoulder_pivot()))
 
         self.container = container
-        self.addRequirements(self.double_pivot)
+        self.addRequirements(self.shoulder)
 
         SmartDashboard.putNumber("Shoulder Target Angle", self.shoulder_target)
         SmartDashboard.putNumber("Shoulder Target Angle DIRECTION", self.shoulder_direction_sign)
-        SmartDashboard.putNumber("Shoulder Target Delta Angle", self.double_pivot.deltaAngle(self.shoulder_target, self.double_pivot.get_shoulder_pivot()))
+        SmartDashboard.putNumber("Shoulder Target Delta Angle", self.shoulder.deltaAngle(self.shoulder_target, self.shoulder.get_shoulder_pivot()))
 
     def initialize(self) -> None:
         
         if wpilib.RobotBase.isReal():
-            self.double_pivot.set_shoulder_pivot(self.shoulder_target)
+            self.shoulder.set_shoulder_pivot(self.shoulder_target)
 
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
@@ -35,13 +35,13 @@ class MoveShoulder(commands2.Command):
 
     def execute(self) -> None:        
         if wpilib.RobotBase.isSimulation():
-            self.double_pivot.set_shoulder_pivot(self.double_pivot.get_shoulder_pivot() + (1.0 * self.shoulder_direction_sign))
+            self.shoulder.set_shoulder_pivot(self.shoulder.get_shoulder_pivot() + (1.0 * self.shoulder_direction_sign))
 
-        SmartDashboard.putNumber("Shoulder Position", self.double_pivot.get_shoulder_pivot())
-        SmartDashboard.putNumber("Shoulder Target Delta Angle", self.double_pivot.deltaAngle(self.shoulder_target, self.double_pivot.get_shoulder_pivot()))
+        SmartDashboard.putNumber("Shoulder Position", self.shoulder.get_shoulder_pivot())
+        SmartDashboard.putNumber("Shoulder Target Delta Angle", self.shoulder.deltaAngle(self.shoulder_target, self.shoulder.get_shoulder_pivot()))
 
     def isFinished(self) -> bool:
-        return abs(self.double_pivot.deltaAngle(self.shoulder_target, self.double_pivot.get_shoulder_pivot())) < constants.ScoringSystemConstants.k_tolerance_degrees
+        return abs(self.shoulder.deltaAngle(self.shoulder_target, self.shoulder.get_shoulder_pivot())) < constants.ElevatorConstants.k_tolerance_degrees
     
     def end(self, interrupted: bool) -> None:        
         end_time = self.container.get_enabled_time()
