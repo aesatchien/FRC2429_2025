@@ -10,64 +10,26 @@ import constants
 class Shoulder(Subsystem):
     def __init__(self):
         super().__init__()
-        self.setName('Shoulder')
+        self.setName('Double Pivot')
 
-        self.coral_positions = {key : constants.ScoringSystemConstants.k_positions[key]["shoulder_pivot"] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        # self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["l1", "l2", "l3", "l4"]}
+        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key]["shoulder_pivot"] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
 
-        #initialize motors
-        motor_type = rev.SparkMax.MotorType.kBrushless
-        self.shoulder_controller = rev.SparkMax(constants.ScoringSystemConstants.k_CAN_shoulder_id, motor_type)
+        #initialize motors and any other electrical component here (but skip for the purposes of simulation)
+        #...
 
-        self.config = rev.SparkMaxConfig()
-        self.config.absoluteEncoder.positionConversionFactor(constants.ScoringSystemConstants.k_elevator_encoder_conversion_factor).velocityConversionFactor(constants.ScoringSystemConstants.k_elevator_encoder_conversion_factor)
-        self.config.closedLoop.pid(p=constants.ScoringSystemConstants.kP, i=constants.ScoringSystemConstants.kI, d=constants.ScoringSystemConstants.kD) #what is the ClosedLoopSpot (?)
-
-        # set soft limits
-        self.config.softLimit.forwardSoftLimitEnabled(constants.ScoringSystemConstants.k_forward_limit_enabled)
-        self.config.softLimit.reverseSoftLimitEnabled(constants.ScoringSystemConstants.k_reverse_limit_enabled)
-
-        self.config.softLimit.forwardSoftLimit(constants.ScoringSystemConstants.k_forward_limit)
-        self.config.softLimit.reverseSoftLimit(constants.ScoringSystemConstants.k_reverse_limit)
-
-        self.shoulder_controller.configure(config=self.config, 
-                                           resetMode=rev.SparkMax.ResetMode.kResetSafeParameters, 
-                                           persistMode=rev.SparkMax.PersistMode.kPersistParameters)
-
-
-        self.shoulder_pivot = constants.ScoringSystemConstants.k_positions["stow"]["shoulder_pivot"]
-
-        #initialize closed loop controller (PID controller)
-        self.shoulder_pid = self.shoulder_controller.getClosedLoopController()
-        # self.elevator_pid.setSmartMotionAllowedClosedLoopError(1)
-
-        #get the encoder
-        self.absoluteEncoder = self.shoulder_controller.getAbsoluteEncoder()
-
-        #set intial shoulder pivot position
-        # self.set_shoulder_pivot(90)
-
-        # SmartDashboard.putNumber('shoulder_setpoint', self.setpoint)
+        self.shoulder_pivot = constants.ElevatorConstants.k_positions["stow"]["shoulder_pivot"]
 
             
     def get_shoulder_pivot(self):
+        return self.shoulder_pivot
+
+    def set_shoulder_pivot(self, shoulder_pivot):
         if wpilib.RobotBase.isReal():
-            return self.absoluteEncoder.getPosition()
+            #code to move the shoulder pivot in real life
+            pass
         else:
-            return self.shoulder_pivot
-
-    def set_shoulder_pivot(self, angle, mode='smartmotion'):
-
-        if mode == 'smartmotion':
-            # use smartmotion to send you there quickly
-            self.shoulder_pid.setReference(angle, rev.SparkMax.ControlType.kSmartMotion)
-        elif mode == 'position':
-            # just use the position PID
-            self.shoulder_pid.setReference(angle, rev.SparkMax.ControlType.kPosition)
-
-        if wpilib.RobotBase.isSimulation():
-            self.shoulder_pivot = angle % 360
-
-        SmartDashboard.putNumber('wrist_setpoint', angle)
+            self.shoulder_pivot = shoulder_pivot % 360
 
     def deltaAngle(self, target, current): #returns the shorter angle (and sign/direction) between two angles.
         target %= 360

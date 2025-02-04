@@ -1,18 +1,18 @@
 import commands2
 from wpilib import SmartDashboard
-from subsystems.shoulder import Shoulder
+from subsystems.wrist import Wrist
 
 
-class MoveShoulder(commands2.Command):
+class MoveWrist(commands2.Command):
 
-    def __init__(self, container, shoulder: Shoulder, radians: float, wait_to_finish=False) -> None:
+    def __init__(self, container, wrist: Wrist, radians: float, wait_to_finish=False) -> None:
         super().__init__()
-        self.setName('Move Shoulder')
+        self.setName('Move Wrist')
         self.container = container
-        self.shoulder = shoulder
+        self.wrist = wrist
         self.radians = radians
         self.wait_to_finish = wait_to_finish
-        self.addRequirements(self.shoulder)
+        self.addRequirements(self.wrist)
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
@@ -21,14 +21,14 @@ class MoveShoulder(commands2.Command):
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 
-        self.shoulder.set_position(self.radians)
+        self.wrist.set_position(self.radians)
 
     def execute(self) -> None:
         pass
 
     def isFinished(self) -> bool:
         if self.wait_to_finish:
-            return self.shoulder.get_at_setpoint()
+            return self.wrist.get_at_setpoint()
         else:
             return True
 

@@ -1,6 +1,6 @@
 import math
+from rev import SparkMaxSim
 import wpilib
-import hal
 import wpilib.simulation as simlib  # 2021 name for the simulation library
 import wpimath.geometry as geo
 from wpimath.kinematics._kinematics import SwerveDrive4Kinematics, SwerveModuleState, SwerveModulePosition
@@ -18,17 +18,205 @@ class PhysicsEngine:
         self.physics_controller = physics_controller  # must have for simulation
         self.robot = robot
 
-        # 1. create sparkbasesims for each spark in the swerve
-        # 2. create flywheelsims for each swerve dof
-        # in update sim:
-            # calculate flywheel states given sparkbasesim output
-            # tell sparkbasesim about the states
-                # no abs encoders required for drive motors
-                # yes abs encoder required for turn motor
-            # tell pyfrc.physics.drivetrain.four_motor_swerve_drivetrain about the states
-                # it wants duty cycle, which getAppliedOutput gives
+        # if we want to add an armsim see test_robots/sparksim_test/
+        self.mech = wpilib.Mechanism2d(3, 3)
+        self.root = self.mech.getRoot("chassis", 1, 0)
+        self.mech2d_elevator = self.root.appendLigament("elevator", constants.ElevatorConstants.k_sim_starting_height, 90)
+        self.mech2d_shoulder = self.mech2d_elevator.appendLigament("shoulder", length=constants.ShoulderConstants.k_length_meters, 
+                                                                   angle=math.degrees(constants.ShoulderConstants.k_sim_starting_angle),
+                                                                   color=wpilib.Color8Bit(red=30, green=200, blue=250))
+
+        self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_length_meters, 
+                                                                angle=constants.WristConstants.k_sim_starting_angle,
+                                                                color=wpilib.Color8Bit(red=255, green=200, blue=190))
+
+        wpilib.SmartDashboard.putData("the mech", self.mech)
+
+        self.initialize_swerve()
+        self.initialize_wrist()
+        self.initialize_shoulder()
+        self.initialize_elevator()
+
+    def update_sim(self, now, tm_diff):
+
+        # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
+
+        amps = []
+
+        amps.append(self.update_wrist(tm_diff))
+        amps.append(self.update_shoulder(tm_diff))
+        amps.append(self.update_elevator_positions(tm_diff))
+
+        self.update_swerve(tm_diff)
+        self.update_intake(tm_diff)
+
+        simlib.RoboRioSim.setVInVoltage(
+                simlib.BatterySim.calculate(amps)
+        )
 
 
+    # ------------------ SUBSYSTEM UPDATES --------------------
+
+
+    def update_wrist(self, tm_diff):
+
+        wrist_sim_input = self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage()
+
+        print(f" telling wrist sim that our output is {wrist_sim_input:.2f}")
+        self.wrist_sim.setInput(0, wrist_sim_input)
+
+        self.wrist_sim.update(tm_diff)
+        
+        self.wrist_spark_sim.setPosition(self.wrist_sim.getAngle())
+        print(f"wrist sim get angle: {math.degrees(self.wrist_sim.getAngle()):.2f}")
+
+        self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+
+        self.mech2d_wrist.setAngle(math.degrees(self.wrist_sim.getAngle()) - self.mech2d_shoulder.getAngle())
+
+        return self.wrist_sim.getCurrentDraw()
+
+
+
+    def update_shoulder(self, tm_diff):
+
+        self.shoulder_sim.setInput(0, self.shoulder_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
+        self.shoulder_sim.update(tm_diff)
+
+        self.shoulder_spark_sim.setPosition(self.shoulder_sim.getAngle()) # to get rid of what I think are integration errors
+
+        self.shoulder_follower_spark_sim.setPosition(self.shoulder_sim.getAngle()) # to get rid of what I think are integration errors
+
+        self.shoulder_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+        self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+
+        shoulder_pivot_degrees = math.degrees(self.shoulder_sim.getAngle())
+
+        self.mech2d_shoulder.setAngle(shoulder_pivot_degrees - 90)
+
+        return self.shoulder_sim.getCurrentDraw()
+
+
+
+    def update_intake(self, tm_diff):
+
+        self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
+
+
+    def update_elevator_positions(self, tm_diff):
+
+        self.elevator_sim.setInput(0, self.elevator_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
+        self.elevator_sim.update(tm_diff)
+
+        self.elevator_spark_sim.setPosition(self.elevator_sim.getPosition())
+
+        self.elevator_follower_spark_sim.setPosition(self.elevator_sim.getPosition())
+
+        self.elevator_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+
+        self.elevator_follower_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+
+        if self.robot is None:
+            raise ValueError("Robot is not defined")
+
+        self.mech2d_elevator.setLength(self.elevator_sim.getPosition())
+
+        elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_max_height)
+
+        sm.front_elevator.components["elevator_right"]["ligament"].setLength(elevator_height_sim)
+        sm.front_elevator.components["elevator_left"]["ligament"].setLength(elevator_height_sim)
+
+        sm.side_elevator.components["elevator_side"]["ligament"].setLength(elevator_height_sim)
+
+        return self.elevator_sim.getCurrentDraw()
+
+
+
+    def update_swerve(self, tm_diff):
+
+        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
+        target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
+        for spark_turn, target_angle in zip(self.spark_turns, target_angles):
+            self.spark_dict[spark_turn]['position'].set(target_angle)  # this works to update the simulated spark
+        if constants.k_swerve_debugging_messages:
+            wpilib.SmartDashboard.putNumberArray('target_angles', target_angles)
+
+        # send the speeds and positions from the spark sim devices to the fourmotorswervedrivetrain
+        module_states = []
+        for drive, turn in zip(self.spark_drives, self.spark_turns):
+            module_states.append(SwerveModuleState(
+                self.spark_dict[drive]['velocity'].value, geo.Rotation2d(self.spark_dict[turn]['position'].value))
+            )
+
+        # using our own kinematics to update the chassis speeds
+        module_states = self.robot.container.swerve.get_desired_swerve_module_states()
+        speeds = self.kinematics.toChassisSpeeds(tuple(module_states))
+
+        # update the sim's robot
+        self.physics_controller.drive(speeds, tm_diff)
+
+        self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
+
+        self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
+
+
+
+    # ---------------------------- SUBSYSTEM INITIALIZATIONS -----------------------
+
+    def initialize_wrist(self):
+
+        self.wrist_sim = simlib.SingleJointedArmSim(gearbox=constants.WristConstants.k_plant,
+                                                    gearing=constants.WristConstants.k_gear_ratio,
+                                                    moi=constants.WristConstants.k_moi,
+                                                    armLength=constants.WristConstants.k_center_of_mass_to_axis_of_rotation_dist_meters, # not sure how to make this accurate
+                                                    minAngle=constants.WristConstants.k_min_angle,
+                                                    maxAngle=constants.WristConstants.k_max_angle,
+                                                    simulateGravity=False,
+                                                    startingAngle=constants.WristConstants.k_sim_starting_angle)
+
+        self.wrist_spark_sim = SparkMaxSim(self.robot.container.wrist.sparkmax, motor=constants.WristConstants.k_plant)
+
+
+
+    def initialize_shoulder(self):
+
+        self.shoulder_sim = simlib.SingleJointedArmSim(gearbox=constants.ShoulderConstants.k_plant,
+                                                    gearing=constants.ShoulderConstants.k_gear_ratio,
+                                                    moi=constants.ShoulderConstants.k_moi,
+                                                    armLength=constants.ShoulderConstants.k_length_meters,
+                                                    minAngle=constants.ShoulderConstants.k_min_angle,
+                                                    maxAngle=constants.ShoulderConstants.k_max_angle,
+                                                    simulateGravity=True,
+                                                    startingAngle=constants.ShoulderConstants.k_sim_starting_angle)
+
+        self.shoulder_spark_sim = SparkMaxSim(self.robot.container.shoulder.sparkmax, constants.ShoulderConstants.k_plant)
+        self.shoulder_follower_spark_sim = SparkMaxSim(self.robot.container.shoulder.follower_sparkmax, constants.ShoulderConstants.k_plant)
+
+
+
+    def initialize_elevator(self):
+
+        self.elevator_sim = simlib.ElevatorSim(gearbox=constants.ElevatorConstants.k_plant,
+                                               gearing=constants.ElevatorConstants.k_gear_ratio,
+                                               carriageMass=constants.ElevatorConstants.k_mass_kg,
+                                               drumRadius=constants.ElevatorConstants.k_effective_pulley_diameter / 2,
+                                               minHeight=constants.ElevatorConstants.k_min_height,
+                                               maxHeight=constants.ElevatorConstants.k_max_height,
+                                               simulateGravity=True,
+                                               startingHeight=constants.ElevatorConstants.k_sim_starting_height)
+
+        self.elevator_spark_sim = SparkMaxSim(self.robot.container.elevator.elevator_controller, constants.ElevatorConstants.k_plant)
+        self.elevator_follower_spark_sim = SparkMaxSim(self.robot.container.elevator.elevator_follower_controller, constants.ElevatorConstants.k_plant)
+
+
+
+
+    def initialize_swerve(self):
         self.kinematics: SwerveDrive4Kinematics = dc.kDriveKinematics  # our swerve drive kinematics
 
         # set up LEDs - apparently not necessary - glass gui grabs the default one and you can show it
@@ -64,8 +252,8 @@ class PhysicsEngine:
             output = spark.getDouble('Applied Output')
             self.spark_dict.update({spark_name: {'controller': spark, 'position': position,
                                                  'velocity': velocity, 'output': output}})
-        #for key, value in self.spark_dict.items():  # see if these make sense
-            #print(f'{key}: {value}')
+        for key, value in self.spark_dict.items():  # see if these make sense
+            print(f'{key}: {value}')
 
         self.distances = [0, 0, 0, 0]
 
@@ -75,104 +263,3 @@ class PhysicsEngine:
         initial_pose = geo.Pose2d(0, 0, geo.Rotation2d())
         self.physics_controller.move_robot(geo.Transform2d(self.x, self.y, 0))
 
-        # if we want to add an armsim see test_robots/sparksim_test/
-        self.update_elevator_positions()
-
-    def update_sim(self, now, tm_diff):
-        simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
-
-
-        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
-        target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
-        for spark_turn, target_angle in zip(self.spark_turns, target_angles):
-            self.spark_dict[spark_turn]['position'].set(target_angle)  # this works to update the simulated spark
-        if constants.k_swerve_debugging_messages:
-            wpilib.SmartDashboard.putNumberArray('target_angles', target_angles)
-
-        # send the speeds and positions from the spark sim devices to the fourmotorswervedrivetrain
-        module_states = []
-        for drive, turn in zip(self.spark_drives, self.spark_turns):
-            module_states.append(SwerveModuleState(
-                self.spark_dict[drive]['velocity'].value, geo.Rotation2d(self.spark_dict[turn]['position'].value))
-            )
-
-        # using our own kinematics to update the chassis speeds
-        module_states = self.robot.container.swerve.get_desired_swerve_module_states()
-        speeds = self.kinematics.toChassisSpeeds(tuple(module_states))
-
-        # update the sim's robot
-        self.physics_controller.drive(speeds, tm_diff)
-
-        self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
-
-        #
-        # # send our poses to the dashboard so we can use it with our trackers
-        # pose = self.physics_controller.get_pose()
-        # self.x, self.y, self.theta = pose.X(), pose.Y(), pose.rotation().degrees()
-        #
-        # # attempt to update the real robot's odometry
-        # self.distances = [pos + tm_diff * self.spark_dict[drive]['velocity'].value for pos, drive in zip(self.distances, self.spark_drives)]
-        # [self.spark_dict[drive]['position'].set(self.spark_dict[drive]['position'].value + tm_diff * self.spark_dict[drive]['velocity'].value ) for drive in self.spark_drives]
-        #
-        # # TODO - why does this not take care of itself if I just update the simmed SPARK's position?
-        # swerve_positions = [SwerveModulePosition(distance=dist, angle=m.angle) for m, dist in zip(module_states, self.distances)]
-        # self.robot.container.swerve.pose_estimator.update(pose.rotation(), swerve_positions)
-        #
-        # wpilib.SmartDashboard.putNumberArray('sim_pose', [self.x, self.y, self.theta])
-        # wpilib.SmartDashboard.putNumberArray('drive_pose', [self.x, self.y, self.theta])  # need this for 2429 python dashboard to update
-        # now we do this in the periodic
-
-        self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
-
-        # move the elevator based on controller input
-        self.update_elevator_positions()
-
-        #get coral
-        if not self.robot.container.intake.get_has_coral():
-            if wpilib.RobotBase.isSimulation():
-                self.has_coral = self.update_intake_coral()
-                self.robot.container.intake.set_has_coral(self.has_coral)
-            else:
-                self.robot.container.intake.set_has_coral(self.robot.container.intake.has_coral())
-        wpilib.SmartDashboard.putBoolean("Coral Acquired", self.has_coral)
-
-    def update_elevator_positions(self):
-        if self.robot is None:
-            raise ValueError("Robot is not defined")
-        
-        self.elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_elevator_max_height)
-        self.shoulder_pivot = self.robot.container.shoulder.get_shoulder_pivot()
-        self.wrist_color = constants.ElevatorConstants.k_positions[self.robot.container.elevator.get_target_pos()]["wrist_color_for_setColor"]
-        
-        sm.front_elevator.components["elevator_right"]["ligament"].setLength(self.elevator_height_sim)
-        sm.front_elevator.components["elevator_left"]["ligament"].setLength(self.elevator_height_sim)
-        
-        sm.side_elevator.components["elevator_side"]["ligament"].setLength(self.elevator_height_sim)
-        sm.side_elevator.components["double_pivot_shoulder"]["ligament"].setAngle(self.shoulder_pivot)
-        sm.side_elevator.components["wrist"]["ligament"].setColor(self.wrist_color)
-
-    def update_intake_coral(self): #if robot is in range of coral + robot is at ground position, then intake. TODO: 'also if robot is at coral station position'
-        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_intake_coordinates if valid_coord[2] > 0]:
-            if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:                
-                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions["ground"]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
-                shoulder_in_range = abs(self.robot.container.shoulder.get_shoulder_pivot() - constants.ElevatorConstants.k_positions["ground"]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
-
-                if elevator_in_range and shoulder_in_range and not self.robot.container.intake.get_has_coral():
-                    return True
-        return False
-
-    def update_outtake_coral(self):
-        for coord in [valid_coord for valid_coord in constants.ElevatorConstants.k_coral_outtake_coordinates if valid_coord[2] == 0]:
-            if self.distance(coord[0],coord[1]) <= constants.ElevatorConstants.k_robot_radius_sim:
-                robot_target_pos = self.robot.container.elevator.get_target_pos() #returns "l1", "l2", "l3", etc
-                
-                elevator_in_range = abs(self.robot.container.elevator.get_height() - constants.ElevatorConstants.k_positions[robot_target_pos]["elevator_height"]) <= constants.ElevatorConstants.k_tolerance
-                shoulder_in_range = abs(self.robot.container.shoulder.get_shoulder_pivot() - constants.ElevatorConstants.k_positions[robot_target_pos]["shoulder_pivot"]) <= constants.ElevatorConstants.k_tolerance
-
-                if elevator_in_range and shoulder_in_range and self.robot.container.intake.get_has_coral():
-                    return True
-        return False
-
-    def distance(self, x, y):
-        current_robot_pose = self.physics_controller.get_pose()
-        return math.sqrt((current_robot_pose.X() - x) ** 2 + (current_robot_pose.Y() - y) ** 2)

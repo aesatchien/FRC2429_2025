@@ -1,27 +1,21 @@
 from dataclasses import field
-import math
 import time, enum
-from pathplannerlib.pathfinders import LocalADStar
-from pathplannerlib.pathfinding import Pathfinding
-from pathplannerlib.path import PathConstraints
 import wpilib
 import commands2
 from commands2.button import Trigger
-from wpimath.geometry import Pose2d
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 import constants
 
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
+from pathplannerlib.auto import PathPlannerAuto
 from pathplannerlib.path import PathPlannerPath
 
-# from subsystems.lower_crank import LowerCrank
+from subsystems.lower_crank import LowerCrank
 
-# from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
 from commands.increment_elevator_and_pivot import IncrementElevatorAndPivot
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
-from subsystems.shoulder import Shoulder
+from subsystems.double_pivot import DoublePivot
 
 class RobotContainer:
     """
@@ -39,7 +33,7 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
-        self.double_pivot = Shoulder()
+        self.double_pivot = DoublePivot()
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -58,8 +52,6 @@ class RobotContainer:
         # self.configure_swerve_bindings()
         
         self.initialize_dashboard()
-
-        Pathfinding.setPathfinder(LocalADStar())
 
         # swerve driving
 
@@ -122,24 +114,7 @@ class RobotContainer:
         pass
 
     def bind_driver_buttons(self):
-        self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
-        self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
-        self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
-
-        pathfinding_constraints = PathConstraints(
-                maxVelocityMps=0.5,
-                maxAccelerationMpsSq=3,
-                maxAngularVelocityRps=math.radians(90),
-                maxAngularAccelerationRpsSq=math.degrees(720),
-                nominalVoltage=12
-        )
-
-        self.triggerY.whileTrue(
-                AutoBuilder.pathfindToPoseFlipped(
-                    pose=Pose2d(15, 4, 0),
-                    constraints=pathfinding_constraints
-                )
-        )
+        # self.triggerX.whileTrue(PathPlannerAuto("test"))
 
         self.triggerA.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="up"))
         self.triggerB.onTrue(IncrementElevatorAndPivot(container=self, elevator=self.elevator, pivot=self.double_pivot, direction="down"))
@@ -154,5 +129,5 @@ class RobotContainer:
         pass
 
     def get_autonomous_command(self):
-        return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
+        pass 
         # return self.autonomous_chooser.getSelected()

@@ -31,69 +31,65 @@ class LowerCrankConstants:
     k_length_meters = 20 * 0.0254
     k_mass_kg = 8
     k_lower_crank_sim_starting_angle = math.radians(60)
-
+    
 class ElevatorConstants:
     k_CAN_id = 4
 
-    kP = 6
-    kI = 0
-    kD = 0
+    k_elevator_max_height = 50 #inches
+    k_elevator_min_height = 22 #inches
 
-    k_forward_limit = 100 #need to test for actual robot
-    k_reverse_limit = 0
-    k_forward_limit_enabled = False
-    k_reverse_limit_enabled = False
-
-    k_timeofflight = 14 #elevator time of flight CAN ID
-    
-    k_elevator_encoder_conversion_factor = 1 # [dist_unit] per revolution
-
-    k_elevator_max_height = 60 #inches
-    k_elevator_dist_between_pivot_and_top = 29 #inches
-    k_elevator_min_height = 35 - k_elevator_dist_between_pivot_and_top #inches; treating the center of the shoulder pivot as the top of the elevator
+    k_shoulder_length = 12 #inches
+    k_elbow_length = 22 #inches
+    k_wrist_length = 14 #inches
 
     k_tolerance = 1.5
 
     k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
         "stow": {
             "elevator_height": k_elevator_min_height,
-            "shoulder_pivot": 0,
+            "shoulder_pivot": 180,
+            "elbow_pivot": 180, 
             "wrist_pivot": 0,
             "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+            #blue, ("#0000FF")
         },
         "ground": {
-            "elevator_height": k_elevator_min_height,
-            "shoulder_pivot": 270,
+            "elevator_height": 22,
+            "shoulder_pivot": 135,
+            "elbow_pivot": 120,
             "wrist_pivot": 0,
             "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
-
         },
         "l1": {
-            "elevator_height": k_elevator_min_height + 10,
-            "shoulder_pivot": 270, #angle between the vertical and the shoulder ligament
+            "elevator_height": 22,
+            "shoulder_pivot": 150, #angle between the vertical and the shoulder ligament
+            "elbow_pivot": 145, #angle between shoulder ligament and elbow ligament
             "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
-            "wrist_color_for_ligament": wpilib.Color.kRed,
+            "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
         },
         "l2": {
-            "elevator_height": k_elevator_min_height + 10,
-            "shoulder_pivot": 315,
+            "elevator_height": 22,
+            "shoulder_pivot": 180,
+            "elbow_pivot": 150,
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0) #red "#FF0000"
         },
         "l3": {
-            "elevator_height": k_elevator_min_height + 22,
-            "shoulder_pivot": 315,
+            "elevator_height": 38,
+            "shoulder_pivot": 180,
+            "elbow_pivot": 150, 
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
         },
         "l4": {
-            "elevator_height": k_elevator_min_height + 32,
-            "shoulder_pivot": 270, 
+            "elevator_height": 38,
+            "shoulder_pivot": 35, 
+            "elbow_pivot": 270,
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -110,13 +106,15 @@ class ElevatorConstants:
     k_window_width = 60
     k_window_length = 60
 
-    k_elevator_sim_max_height = 60
+    k_elevator_sim_max_height = 50
     k_elevator_sim_length = 10
     k_elevator_sim_width = 20
 
-    k_shoulder_length_sim = 23
-    k_wrist_length_sim = 7
+    k_shoulder_length_sim = 12
+    k_elbow_length_sim = 22
+    k_wrist_length_sim = 14
 
-    k_coral_intake_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)] #(x-coord, y-coord, number of corals at that location)
-    k_coral_outtake_coordinates = [(5,5,0)]
+    k_coral_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)]
     k_robot_radius_sim = 0.5
+
+
