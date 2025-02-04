@@ -60,10 +60,10 @@ class Elevator(Subsystem):
         self.elevator_pid.setReference(value=self.set_point, ctrl=rev.SparkMax.ControlType.kPosition) #js - what is pid slot?
 
         SmartDashboard.putNumber('elevator_setpoint', self.setpoint)
-        SmartDashboard.putNumber('elevator_height', self.height)
+        # SmartDashboard.putNumber('elevator_height', self.height)
 
     def get_height(self):
-        if wpilib.RobotBase.isReal():
+        if True: # wpilib.RobotBase.isReal():
             return self.encoder.getPosition()
         else:
             return self.height
@@ -130,5 +130,5 @@ class Elevator(Subsystem):
 
             self.is_moving = abs(self.encoder.getVelocity()) > 1000
 
-            SmartDashboard.putNumber('elevator_height', self.height)
+            # SmartDashboard.putNumber('elevator_height', self.height)
             SmartDashboard.putNumber('elevator_tof', self.elevator_height_sensor.getRange())
