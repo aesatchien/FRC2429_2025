@@ -16,14 +16,22 @@ class MyRobot(wpilib.TimedRobot):
     autonomousCommand: typing.Optional[commands2.Command] = None
 
     def robotInit(self) -> None:
-        self.sparkmax = rev.SparkMax(deviceID=20, type=rev.SparkMax.MotorType.kBrushless)
+        ids = list(range(20, 28))
+        print(f"ids: {ids}")
+        self.sparkflexes = [rev.SparkFlex(deviceID=id, type=rev.SparkFlex.MotorType.kBrushless) for id in ids]
+        # self.sparkflex = rev.SparkFlex(deviceID=25, type=rev.SparkFlex.MotorType.kBrushless)
 
-        sparkmax_config = rev.SparkMaxConfig()
-        sparkmax_config.closedLoop.P(1)
+        sparkflex_config = rev.SparkFlexConfig()
+        sparkflex_config.closedLoop.pidf(0, 0, 0, 0.01)
 
-        self.sparkmax.configure(sparkmax_config, rev.SparkMax.ResetMode.kResetSafeParameters, persistMode=rev.SparkMax.PersistMode.kPersistParameters)
+        errors = []
+        for sparkflex in self.sparkflexes:
+            errors.append(sparkflex.configure(sparkflex_config, rev.SparkFlex.ResetMode.kResetSafeParameters, persistMode=rev.SparkFlex.PersistMode.kPersistParameters))
+
+        print(f"errors: {errors}")
+
         wpilib.SmartDashboard.putNumber("setpoint", 0)
-        print("** ROBOT INITIALIZING **")
+        print("** SPARKMAX TROUBLESHOOTING INITIALIZING! **")
         self.counter = 0
 
     def disabledInit(self) -> None:
@@ -51,10 +59,12 @@ class MyRobot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically during operator control"""
-        # self.sparkmax.getClosedLoopController().setReference(value=math.sin(self.counter/50), ctrl=rev.SparkMax.ControlType.kPosition)
-        self.sparkmax.set(math.sin(self.counter/50))
-        wpilib.SmartDashboard.putNumber("sparkmax applied output: ", self.sparkmax.getAppliedOutput())
-        wpilib.SmartDashboard.putNumber("sparkmax reference: ", math.sin(self.counter/50))
+        # self.sparkflex.getClosedLoopController().setReference(value=math.sin(self.counter/50), ctrl=rev.SparkFlex.ControlType.kVoltage, slot=rev.ClosedLoopSlot(0))
+        for sparkflex in self.sparkflexes:
+            sparkflex.getClosedLoopController().setReference(value=math.sin(self.counter/100) * 5, ctrl=rev.SparkFlex.ControlType.kVelocity, slot=rev.ClosedLoopSlot(0))
+        # self.sparkflex.set(math.sin(self.counter/50))
+        # wpilib.SmartDashboard.putNumber("sparkflex applied output: ", self.sparkflex.getAppliedOutput())
+        wpilib.SmartDashboard.putNumber("sparkflex reference: ", math.sin(self.counter/100))
         self.counter += 1
 
     def testInit(self) -> None:

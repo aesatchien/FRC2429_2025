@@ -484,6 +484,9 @@ class Swerve (Subsystem):
             if constants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
                 angles = [m.turningEncoder.getPosition() for m in self.swerve_modules]
                 absolutes = [m.get_turn_encoder() for m in self.swerve_modules]
+                for idx, absolute in enumerate(absolutes):
+                    wpilib.SmartDashboard.putNumber(f"absolute {idx}", absolute)
+
                 wpilib.SmartDashboard.putNumberArray(f'_angles', angles)
                 wpilib.SmartDashboard.putNumberArray(f'_analog_radians', absolutes)
 

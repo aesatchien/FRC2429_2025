@@ -59,10 +59,10 @@ class DriveConstants:
 
     # absolute encoder values when wheels facing forward  - 20230322 CJH
     # NOW IN RADIANS to feed right to the AnalogPotentiometer on the module
-    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.842)  #  rad
-    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.748)  #  rad   billet gear out on rf
-    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.722)  #  rad
-    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.864)  #  rad  billet gear out on rb
+    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.532)  #  rad
+    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.937)  #  rad   billet gear out on rf
+    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.573)  #  rad
+    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.988)  #  rad  billet gear out on rb
     k_analog_encoder_offsets = {'lf':0.829, 'rf':0.783, 'lb':0.304, 'rb':0.986}  # use in sim
 
     # SPARK MAX CAN IDs
@@ -131,10 +131,11 @@ class ModuleConstants:
     k_driving_config.voltageCompensation(12)
     k_driving_config.encoder.positionConversionFactor((kWheelDiameterMeters * math.pi) / kDrivingMotorReduction) # meters
     k_driving_config.encoder.velocityConversionFactor((kWheelDiameterMeters * math.pi) / ( kDrivingMotorReduction * 60)) # meters per second
+    # k_driving_config.closedLoop.pidf(0, 0, 0, 0.01)
 
     # note: we don't use any spark pid or ff for turning
     k_turning_config = SparkMaxConfig()
-    k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+    k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
     k_turning_config.smartCurrentLimit(stallLimit=0)
     k_turning_config.voltageCompensation(12)
 

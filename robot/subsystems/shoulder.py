@@ -1,3 +1,4 @@
+import math
 from commands2.subsystem import Subsystem
 import wpilib
 from rev import ClosedLoopSlot, SparkMax
@@ -9,15 +10,17 @@ class Shoulder(Subsystem):
 
         self.sparkmax = SparkMax(ShoulderConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
-        self.sparkmax.configure(config=ShoulderConstants.k_config, 
+        controller_revlib_error = self.sparkmax.configure(config=ShoulderConstants.k_config, 
                                 resetMode=SparkMax.ResetMode.kResetSafeParameters,
                                 persistMode=SparkMax.PersistMode.kPersistParameters)
 
         self.follower_sparkmax = SparkMax(ShoulderConstants.k_follower_CAN_id, SparkMax.MotorType.kBrushless)
 
-        self.follower_sparkmax.configure(config=ShoulderConstants.k_follower_config,
+        follower_revlib_error = self.follower_sparkmax.configure(config=ShoulderConstants.k_follower_config,
                                          resetMode=SparkMax.ResetMode.kResetSafeParameters,
                                          persistMode=SparkMax.PersistMode.kPersistParameters)
+
+        print(f"Configured shoulder sparkmaxes.\nShoulder controller status: {controller_revlib_error}\nFollower controller status: {follower_revlib_error}")
 
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
@@ -51,5 +54,12 @@ class Shoulder(Subsystem):
     def periodic(self) -> None:
 
         self.counter += 1
+
+        if self.counter % 10 == 0:
+
+            wpilib.SmartDashboard.putNumber("shoulder abs encoder, rad", self.abs_encoder.getPosition())
+            wpilib.SmartDashboard.putNumber("shoulder relative encoder, rad", self.encoder.getPosition())
+            wpilib.SmartDashboard.putNumber("shoulder abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
+            wpilib.SmartDashboard.putNumber("shoulder relative encoder, degrees", math.degrees(self.encoder.getPosition()))
 
         return super().periodic()
