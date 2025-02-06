@@ -14,7 +14,7 @@ class Elevator(Subsystem):
         super().__init__()
         self.setName('Elevator')
 
-        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        self.coral_positions = {key : constants.ElevatorConstants.k_sim_positions_degrees[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
         
         self.counter = 5
 
@@ -96,6 +96,7 @@ class Elevator(Subsystem):
         self.encoder.setPosition(height)
         SmartDashboard.putNumber('elevator_height', self.height)
 
+    # unused 2/5/2025
     def next_pos(self, direction="down"):
         keys = list(self.coral_positions.keys())
         current_index = keys.index(self.target_pos)

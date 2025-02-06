@@ -22,6 +22,59 @@ k_field_oriented = True
 k_led_count = 20  # todo: update this to actual number
 k_led_pwm_port = 0  # todo: update this to actual number
 
+k_positions = { 
+    "stow": {
+        "elevator_height": 0,
+        "shoulder_pivot": math.radians(0),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "ground": {
+        "elevator_height": 0,
+        "shoulder_pivot": math.radians(270),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+
+    },
+    "l1": {
+        "elevator_height": 10,
+        "shoulder_pivot": math.radians(270), #angle between the vertical and the shoulder ligament
+        "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "l2": {
+        "elevator_height": 10,
+        "shoulder_pivot": math.radians(315),
+        "wrist_pivot": math.radians(90),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    },
+    "l3": {
+        "elevator_height": 22,
+        "shoulder_pivot": math.radians(315),
+        "wrist_pivot": math.radians(90),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    },
+    "l4": {
+        "elevator_height": 32,
+        "shoulder_pivot": math.radians(270), 
+        "wrist_pivot": math.radians(90),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    },
+
+    "processor": 0,
+    "barge": 0,
+    "coral station": 0,
+    "algae 1": 0,
+    "algae 2": 0
+}
+
+
 class IntakeConstants:
 
     k_CAN_id = 12
@@ -159,7 +212,7 @@ class ElevatorConstants:
 
     k_timeofflight = 14 #elevator time of flight CAN ID
     
-    k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
+    k_sim_positions_degrees = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
         "stow": {
             "elevator_height": k_min_height,
             "shoulder_pivot": 0,

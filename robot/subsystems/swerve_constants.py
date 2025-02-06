@@ -47,7 +47,7 @@ class DriveConstants:
     k_drive_motors_inverted = True  # False for 2023 - motors below
     k_turn_motors_inverted = True  # True for 2023 - motors below
     # incorrect gyro inversion will make the pose odometry have the wrong sign on rotation
-    kGyroReversed = False  # False for 2023 (was upside down), True for 2024?
+    kGyroReversed = True  # False for 2023 (was upside down), True for 2024?
     # used in the swerve modules themselves to reverse the direction of the analog encoder
     # note turn motors and analog encoders must agree - or you go haywire
     k_reverse_analog_encoders = False  # False for 2024 and probably always.
@@ -135,7 +135,7 @@ class ModuleConstants:
 
     # note: we don't use any spark pid or ff for turning
     k_turning_config = SparkMaxConfig()
-    k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kCoast)
+    k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
     k_turning_config.smartCurrentLimit(stallLimit=0)
     k_turning_config.voltageCompensation(12)
 
