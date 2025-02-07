@@ -85,7 +85,7 @@ class DriveByJoystickSwerve(commands2.Command):
 
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed and self.field_oriented:
             # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
-            print("inverting forward and strafe because we're in field-centric mode and on red alliance!")
+            # print("inverting forward and strafe because we're in field-centric mode and on red alliance!")
             desired_fwd *= -1
             desired_strafe *= -1
 

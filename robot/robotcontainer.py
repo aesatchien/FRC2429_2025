@@ -4,13 +4,15 @@ import rev
 import wpilib
 import commands2
 
-import constants
+from wpimath.geometry import Pose2d
 
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
 from pathplannerlib.path import PathConstraints
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
+from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath
+
+import constants
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
@@ -19,15 +21,12 @@ from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
 
-from wpimath.geometry import Pose2d
-
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
 from commands.move_shoulder import MoveShoulder
-from commands.run_intake import RunIntake
-
-from commands.set_leds import SetLEDs
 from commands.move_wrist import MoveWrist
+from commands.run_intake import RunIntake
+from commands.set_leds import SetLEDs
 
 class RobotContainer:
     """
@@ -56,7 +55,7 @@ class RobotContainer:
             container=self,
             swerve=self.swerve,
             controller=self.driver_command_controller,
-            field_oriented=False,
+            # field_oriented=False,
             rate_limited=constants.k_swerve_rate_limited
         ))
 
@@ -148,6 +147,8 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
+        self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
+
         self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
         self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
@@ -190,6 +191,10 @@ class RobotContainer:
                 commands2.PrintCommand("moving shoulder to 0 degrees").andThen(
                 MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(0), wait_to_finish=True)
         ))
+
+        self.co_trigger_a.onTrue(
+
+                )
 
         self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
         self.co_trigger_rb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=0, wait_to_finish=True))

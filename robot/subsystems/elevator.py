@@ -14,7 +14,7 @@ class Elevator(Subsystem):
         super().__init__()
         self.setName('Elevator')
 
-        self.coral_positions = {key : constants.ElevatorConstants.k_positions[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
+        self.coral_positions = {key : constants.ElevatorConstants.k_sim_positions_degrees[key] for key in ["stow", "ground", "l1", "l2", "l3", "l4"]}
         
         self.counter = 5
 
@@ -23,15 +23,17 @@ class Elevator(Subsystem):
 
         self.elevator_controller = rev.SparkMax(constants.ElevatorConstants.k_CAN_id, motor_type)
 
-        self.elevator_controller.configure(config=constants.ElevatorConstants.k_config,
+        controller_revlib_error = self.elevator_controller.configure(config=constants.ElevatorConstants.k_config,
                                            resetMode=rev.SparkMax.ResetMode.kResetSafeParameters, 
                                            persistMode=rev.SparkMax.PersistMode.kPersistParameters)
 
         self.elevator_follower_controller = rev.SparkMax(constants.ElevatorConstants.k_follower_CAN_id, motor_type)
 
-        self.elevator_follower_controller.configure(config=constants.ElevatorConstants.k_follower_config,
+        follower_revlib_error = self.elevator_follower_controller.configure(config=constants.ElevatorConstants.k_follower_config,
                                                     resetMode=rev.SparkMax.ResetMode.kResetSafeParameters,
                                                     persistMode=rev.SparkMax.PersistMode.kPersistParameters)
+
+        print(f"Configured elevator sparkmaxes.\nElevator controller status: {controller_revlib_error}\nFollower controller status: {follower_revlib_error}")
 
         #time of flight distance sensor:
         self.elevator_height_sensor = TimeOfFlight(constants.ElevatorConstants.k_timeofflight)
@@ -94,6 +96,7 @@ class Elevator(Subsystem):
         self.encoder.setPosition(height)
         SmartDashboard.putNumber('elevator_height', self.height)
 
+    # unused 2/5/2025
     def next_pos(self, direction="down"):
         keys = list(self.coral_positions.keys())
         current_index = keys.index(self.target_pos)
@@ -117,7 +120,7 @@ class Elevator(Subsystem):
     
     def periodic(self) -> None: #overrides Subsystem periodic() method
         self.counter += 1
-        if self.counter % 25 == 0:
+        if self.counter % 10 == 0:
             self.height = self.get_height()
 
             self.is_moving = abs(self.encoder.getVelocity()) > 1000

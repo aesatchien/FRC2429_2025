@@ -316,6 +316,7 @@ class Swerve (Subsystem):
 
     def get_gyro_angle(self):  # if necessary reverse the heading for swerve math
         # note this does add in the current offset
+        # print(f"get_gyro_angle is returning {-self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()}")
         return -self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()
 
     def get_angle(self):  # if necessary reverse the heading for swerve math
@@ -484,6 +485,9 @@ class Swerve (Subsystem):
             if constants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
                 angles = [m.turningEncoder.getPosition() for m in self.swerve_modules]
                 absolutes = [m.get_turn_encoder() for m in self.swerve_modules]
+                for idx, absolute in enumerate(absolutes):
+                    wpilib.SmartDashboard.putNumber(f"absolute {idx}", absolute)
+
                 wpilib.SmartDashboard.putNumberArray(f'_angles', angles)
-                wpilib.SmartDashboard.putNumberArray(f'_analog_radians', absolutes)
+                # wpilib.SmartDashboard.putNumberArray(f'_analog_radians', absolutes)
 

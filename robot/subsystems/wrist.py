@@ -1,4 +1,5 @@
 from commands2.subsystem import Subsystem
+import math
 import wpilib
 from rev import ClosedLoopSlot, SparkMax
 from constants import WristConstants
@@ -9,13 +10,14 @@ class Wrist(Subsystem):
 
         self.sparkmax = SparkMax(WristConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
-        self.sparkmax.configure(config=WristConstants.k_config, 
+        controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config, 
                                 resetMode=SparkMax.ResetMode.kResetSafeParameters,
                                 persistMode=SparkMax.PersistMode.kPersistParameters)
 
+        print(f"Configured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
+
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
-        self.abs_encoder
 
         if wpilib.RobotBase.isReal():
             self.encoder.setPosition(self.abs_encoder.getPosition()) # may have to set offset here if the zeroOffset kParamInvalid error isn't fixed
@@ -46,5 +48,12 @@ class Wrist(Subsystem):
     def periodic(self) -> None:
 
         self.counter += 1
+
+        if self.counter % 10 == 0:
+
+            wpilib.SmartDashboard.putNumber("wrist abs encoder, rad", self.abs_encoder.getPosition())
+            wpilib.SmartDashboard.putNumber("wrist relative encoder, rad", self.encoder.getPosition())
+            wpilib.SmartDashboard.putNumber("wrist abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
+            wpilib.SmartDashboard.putNumber("wrist relative encoder, degrees", math.degrees(self.encoder.getPosition()))
 
         return super().periodic()
