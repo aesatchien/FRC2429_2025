@@ -194,7 +194,7 @@ class RobotContainer:
 
         self.co_trigger_a.onTrue(
 
-                )
+        )
 
         self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
         self.co_trigger_rb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=0, wait_to_finish=True))
