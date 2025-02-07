@@ -1,26 +1,16 @@
-from dataclasses import field
 import math
-import time, enum
+import time
+import rev
+import wpilib
+import commands2
+
+import constants
+
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
 from pathplannerlib.path import PathConstraints
-import wpilib
-import commands2
-from commands2.button import Trigger
-from wpimath.geometry import Pose2d
-from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
-from commands.move_elevator import MoveElevator
-from commands.move_shoulder import MoveShoulder
-import constants
-
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
 from pathplannerlib.path import PathPlannerPath
-
-# from subsystems.lower_crank import LowerCrank
-
-# from commands.move_lower_arm_by_network_tables import MoveLowerArmByNetworkTables
-from commands.set_leds import SetLEDs
-from commands.move_wrist import MoveWrist
 
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
@@ -28,6 +18,16 @@ from subsystems.shoulder import Shoulder
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
+
+from wpimath.geometry import Pose2d
+
+from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.move_elevator import MoveElevator
+from commands.move_shoulder import MoveShoulder
+from commands.run_intake import RunIntake
+
+from commands.set_leds import SetLEDs
+from commands.move_wrist import MoveWrist
 
 class RobotContainer:
     """
@@ -193,6 +193,9 @@ class RobotContainer:
 
         self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
         self.co_trigger_rb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=0, wait_to_finish=True))
+
+        self.co_trigger_start.onTrue(RunIntake(container=self, intake=self.intake, value=12, control_type=rev.SparkMax.ControlType.kVoltage))
+        self.co_trigger_back.onTrue(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage))
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down

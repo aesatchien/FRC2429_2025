@@ -30,6 +30,9 @@ class PhysicsEngine:
                                                                 angle=constants.WristConstants.k_sim_starting_angle,
                                                                 color=wpilib.Color8Bit(red=255, green=200, blue=190))
 
+        self.mech2d_intake = self.mech2d_wrist.appendLigament("intake", length=constants.IntakeConstants.k_sim_length, 
+                                                              angle=0, color=wpilib.Color8Bit(0, 0, 0))
+
         wpilib.SmartDashboard.putData("the mech", self.mech)
 
         self.initialize_swerve()
@@ -62,13 +65,11 @@ class PhysicsEngine:
 
         wrist_sim_input = self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage()
 
-        print(f" telling wrist sim that our output is {wrist_sim_input:.2f}")
         self.wrist_sim.setInput(0, wrist_sim_input)
 
         self.wrist_sim.update(tm_diff)
         
         self.wrist_spark_sim.setPosition(self.wrist_sim.getAngle())
-        print(f"wrist sim get angle: {math.degrees(self.wrist_sim.getAngle()):.2f}")
 
         self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
@@ -104,6 +105,11 @@ class PhysicsEngine:
     def update_intake(self, tm_diff):
 
         self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
+
+        intake_redness = max(-255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
+        intake_greenness = max(255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
+
+        self.mech2d_intake.setColor(wpilib.Color8Bit(red=int(intake_redness), green=int(intake_greenness), blue=0))
 
 
     def update_elevator_positions(self, tm_diff):

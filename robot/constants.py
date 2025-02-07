@@ -32,6 +32,8 @@ class IntakeConstants:
     k_tof_algae_port = 2
     k_tof_coral_port = 2
 
+    k_sim_length = 0.25
+
 
 class WristConstants:
 

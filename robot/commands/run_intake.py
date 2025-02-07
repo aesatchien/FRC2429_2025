@@ -4,16 +4,15 @@ from wpilib import SmartDashboard
 from subsystems.intake import Intake
 
 
-class CommandTemplate(commands2.Command):  # change the name for your command
+class RunIntake(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, intake: Intake, on: bool) -> None:
-        """
-        :param on: whether it should be on or not
-        """
+    def __init__(self, container, intake: Intake, value: float, control_type: SparkMax.ControlType) -> None:
         super().__init__()
-        self.setName('Sample Name')  # change this to something appropriate for this command
+        self.setName('Run Intake')  # change this to something appropriate for this command
         self.container = container
         self.intake = intake
+        self.control_type = control_type
+        self.value = value
         # self.addRequirements(self.container.)  # commandsv2 version of requirements
 
     def initialize(self) -> None:
@@ -23,7 +22,7 @@ class CommandTemplate(commands2.Command):  # change the name for your command
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 
-        self.intake.turn_on()
+        self.intake.set_reference(value=self.value, control_type=self.control_type)
 
     def execute(self) -> None:
         pass
