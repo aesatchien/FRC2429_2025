@@ -1,10 +1,11 @@
+from enum import Enum
 import math
 import time
 import rev
 import wpilib
 import commands2
 
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Rotation2d
 
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
@@ -36,6 +37,14 @@ class RobotContainer:
     subsystems, commands, and button mappings) should be declared here.
     """
 
+    class RobotMode(Enum):
+        EMPTY = "e"
+        HAS_CORAL = "c"
+        HAS_ALGAE = "a"
+
+    def set_robot_mode(self, mode: RobotMode): # because we can't assign inside lambdas
+        self.robot_mode = mode
+
     def __init__(self) -> None:
 
         self.start_time = time.time()
@@ -51,6 +60,7 @@ class RobotContainer:
 
         self.configure_joysticks()
         self.bind_driver_buttons()
+
         self.swerve.setDefaultCommand(DriveByJoystickSwerve(
             container=self,
             swerve=self.swerve,
@@ -64,17 +74,12 @@ class RobotContainer:
             self.bind_codriver_buttons()
             self.bind_keyboard_buttons()
 
-        # self.configure_swerve_bindings()
-        
         self.initialize_dashboard()
 
         Pathfinding.setPathfinder(LocalADStar())
 
-        # swerve driving
+        self.robot_mode = self.RobotMode.EMPTY
 
-        # initialize the turret
-        # commands2.ScheduleCommand(TurretInitialize(container=self, turret=self.turret, samples=50)).initialize()
-        # testing
 
     def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
         self.start_time = time.time()
@@ -110,8 +115,46 @@ class RobotContainer:
 
         print("configuring codriver joystick")
 
+        def stick_between_degree_angles(angle_a, angle_b, stick_x, stick_y) -> bool:
+            """
+            returns whether the stick is between angle a (lower limit) and angle b (higher limit).
+            0 <= a < b <= 360. Returns true if stick angle = a, but false if stick angle = b.
+            cannot handle wraparound for now (how is there no method for this)
+            """
+            angle_a = math.radians(angle_a)
+            angle_b = math.radians(angle_b)
+
+            stick_angle = math.atan2(stick_x, stick_y)
+            if stick_angle < 0: stick_angle = math.tau + stick_angle # compensate because atan returns -180 to 180 but we want 0 to 360
+
+            return (angle_a <= stick_angle and stick_angle < angle_b)
+
         self.co_pilot_command_controller = commands2.button.CommandXboxController(constants.k_co_driver_controller_port)  # 2024 way
-        self.co_trigger_left_stick_y = self.co_pilot_command_controller.axisGreaterThan(axis=1, threshold=0.5)
+        
+        self.co_trigger_right_stick_between_0_60_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(0, 60,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
+
+        self.co_trigger_right_stick_between_60_120_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(60, 120,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
+
+        self.co_trigger_right_stick_between_120_180_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(120, 180,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
+
+        self.co_trigger_right_stick_between_180_240_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(180, 240,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
+
+        self.co_trigger_right_stick_between_240_300_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(240, 300,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
+
+        self.co_trigger_right_stick_between_300_360_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(300, 360,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
+
         self.co_trigger_a = self.co_pilot_command_controller.a()  # 2024 way
         self.co_trigger_b = self.co_pilot_command_controller.b()
         self.co_trigger_y = self.co_pilot_command_controller.y()
@@ -122,11 +165,16 @@ class RobotContainer:
         self.co_trigger_l = self.co_pilot_command_controller.povLeft()
         self.co_trigger_u = self.co_pilot_command_controller.povUp()
         self.co_trigger_d = self.co_pilot_command_controller.povDown()
+
         self.co_trigger_l_trigger = self.co_pilot_command_controller.leftTrigger(0.2)
         self.co_trigger_r_trigger = self.co_pilot_command_controller.rightTrigger(0.2)
         self.co_trigger_start = self.co_pilot_command_controller.start()
         self.co_trigger_back = self.co_pilot_command_controller.back()
 
+        self.co_trigger_any_dpad = self.co_trigger_u.or_(
+                                        self.co_trigger_d.or_(
+                                            self.co_trigger_l.or_(
+                                                self.co_trigger_r)))
 
 
     def initialize_dashboard(self):
@@ -172,6 +220,8 @@ class RobotContainer:
     def bind_codriver_buttons(self):
         print("bidning codriver buttons")
 
+        self.co_trigger_lb.onTrue(commands2.InstantCommand(self.set_robot_mode(self.RobotMode.EMPTY)))
+
         self.co_trigger_a.onTrue(
                 commands2.PrintCommand("moving wrist to 90 degrees").andThen(
                 MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90), wait_to_finish=True)
@@ -191,10 +241,6 @@ class RobotContainer:
                 commands2.PrintCommand("moving shoulder to 0 degrees").andThen(
                 MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(0), wait_to_finish=True)
         ))
-
-        self.co_trigger_a.onTrue(
-
-        )
 
         self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
         self.co_trigger_rb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=0, wait_to_finish=True))
