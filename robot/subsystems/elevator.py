@@ -79,11 +79,9 @@ class Elevator(Subsystem):
         if mode == 'maxmotion':
             # use smartmotion to send you there quickly
             self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kMAXMotionPositionControl) 
-            print(f"setting elevator maxmotion reference to {height}")
         elif mode == 'position':
             # just use the position PID
             self.elevator_pid.setReference(height, rev.SparkMax.ControlType.kPosition)
-            print(f"setting elevator pid reference to {height}")
         else:
             raise ValueError("invalid control mode!")
 

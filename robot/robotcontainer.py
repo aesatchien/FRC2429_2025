@@ -28,6 +28,9 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 
+from commands.go_to_position import GoToPosition
+from commands.reset_field_centric import ResetFieldCentric
+
 class RobotContainer:
     """
     This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -170,30 +173,23 @@ class RobotContainer:
 
 
     def bind_codriver_buttons(self):
-        print("bidning codriver buttons")
+
+        print("Binding codriver buttons")
 
         self.co_trigger_a.onTrue(
-                commands2.PrintCommand("moving wrist to 90 degrees").andThen(
-                MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90), wait_to_finish=True)
-        ))
+            GoToPosition(container=self, position="stow")
+        )
 
         self.co_trigger_b.onTrue(
-                commands2.PrintCommand("moving wrist to 0 degrees").andThen(
-                MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0), wait_to_finish=True)
-        ))
+            GoToPosition(container=self, position="l2")
+        )
 
         self.co_trigger_x.onTrue(
-                commands2.PrintCommand("moving shoulder to 90 degrees").andThen(
-                MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(90), wait_to_finish=True)
-        ))
+            GoToPosition(container=self, position="l3")
+        )
 
         self.co_trigger_y.onTrue(
-                commands2.PrintCommand("moving shoulder to 0 degrees").andThen(
-                MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(0), wait_to_finish=True)
-        ))
-
-        self.co_trigger_a.onTrue(
-
+            GoToPosition(container=self, position="l4")
         )
 
         self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
