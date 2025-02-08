@@ -270,13 +270,13 @@ class RobotContainer:
                 )
         )
 
-        self.co_trigger_lb.onTrue(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY)))
+        self.co_trigger_lb.onTrue(commands2.PrintCommand("** Setting robot mode to empty **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY))))
 
         self.co_trigger_rb.onTrue(Score(container=self))
         
-        self.co_trigger_r_trigger.onTrue(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE)))
+        self.co_trigger_r_trigger.onTrue(commands2.PrintCommand("** Setting robot mode to has algae **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE))))
 
-        self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL)))
+        self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.PrintCommand("** Setting robot mode to has coral **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL))))
 
         self.co_trigger_d.or_(self.co_trigger_l).onTrue(GoToPosition(container=self, position="coral station"))
 

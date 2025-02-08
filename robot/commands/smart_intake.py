@@ -9,8 +9,9 @@ import constants
 
 class SmartIntake(commands2.Command):
 
-    def __init__(self, container, intake: Intake, game_piece: constants.GamePiece, timeout=15, wait_to_finish=True) -> None:
+    def __init__(self, container, intake: Intake, game_piece: constants.GamePiece, timeout=15, wait_to_finish=True, indent=0) -> None:
         super().__init__()
+        self.indent = indent
         self.setName('SmartIntake')
         self.container = container
         self.intake = intake
@@ -32,7 +33,7 @@ class SmartIntake(commands2.Command):
 
     def initialize(self) -> None:
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print("\n" + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
+        print(f"{'    ' * self.indent}** Started {self.getName()} at {self.start_time} s **", flush=True)
 
         self.timer.restart()
 
@@ -44,6 +45,8 @@ class SmartIntake(commands2.Command):
         self.count += 1
 
     def isFinished(self) -> bool:
+        print(f"has algae: {self.intake.has_algae()}")
+        print(f"has coral: {self.intake.has_coral()}")
         if self.wait_to_finish:
             return self.intake.has_algae() or self.intake.has_coral() or self.timer.hasElapsed(self.timeout)
         else:
@@ -67,7 +70,7 @@ class SmartIntake(commands2.Command):
 
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
-        print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
+        print(f"{'    ' * self.indent}** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
         SmartDashboard.putString(f"alert", f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
 
 

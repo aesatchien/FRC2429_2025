@@ -82,6 +82,10 @@ class MyRobot(commands2.TimedCommandRobot):
         # Cancels all running commands at the start of test mode
         commands2.CommandScheduler.getInstance().cancelAll()
 
+    def robotPeriodic(self) -> None:
+        wpilib.SmartDashboard.putString("robot mode", self.container.get_robot_mode().value)
+        return super().robotPeriodic()
+
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)

@@ -6,20 +6,23 @@ from commands.move_wrist import MoveWrist
 
 
 class IntakeSequence(commands2.SequentialCommandGroup):
-    def __init__(self, container, position: str) -> None:
+    def __init__(self, container, position: str, indent=0) -> None:
         super().__init__()
 
         if position not in ["ground", "coral station", "algae low", "algae high"]:
             raise ValueError(f"Cannot run IntakeSequence on {position}!")
 
-        self.setName(f'IntakeSequence (with position {position})')
+        self.setName(f'{self.getName()} (with position {position})')
 
         self.container = container
 
         gamepiece_being_intaked = constants.GamePiece.CORAL if position in ["ground", "coral station"] else constants.GamePiece.ALGAE
 
-        self.addCommands(MoveWrist(container=self.container, wrist=self.container.wrist, radians=constants.k_positions[position]["wrist"], wait_to_finish=False))
-        self.addCommands(GoToPosition(container=self.container, position=position))
-        self.addCommands(SmartIntake(container=self.container, intake=self.container.intake, game_piece=gamepiece_being_intaked))
-        self.addCommands(GoToPosition(container=self.container, position="stow"))
+        self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} to {position} **"))
+        self.addCommands(MoveWrist(container=self.container, wrist=self.container.wrist, radians=constants.k_positions[position]["wrist_pivot"], wait_to_finish=False, indent=indent+1))
+        self.addCommands(GoToPosition(container=self.container, position=position, indent=indent+1))
+        self.addCommands(SmartIntake(container=self.container, intake=self.container.intake, game_piece=gamepiece_being_intaked, indent=indent+1))
+        self.addCommands(GoToPosition(container=self.container, position="stow", indent=indent+1))
+        self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} to {position} **"))
 
+        

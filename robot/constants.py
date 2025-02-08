@@ -74,10 +74,34 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
-    "processor": 0,
-    "barge": 0,
-    "algae low": 0,
-    "algae high": 0
+    "processor": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "barge": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "algae low": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "algae high": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
 }
 
 
