@@ -25,8 +25,6 @@ class Intake(Subsystem):
         self.sparkmax.configure(config=constants.IntakeConstants.k_intake_config,
                                 resetMode=SparkMax.ResetMode.kResetSafeParameters,
                                 persistMode=SparkMax.PersistMode.kPersistParameters)
-
-
         self.controller = self.sparkmax.getClosedLoopController()
 
         if wpilib.RobotBase.isSimulation():

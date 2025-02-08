@@ -7,7 +7,8 @@ k_start_x = 0
 k_start_y = 0
 k_driver_controller_port = 0
 k_robot_mass_kg = 56
-k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
+k_robot_moi = 1 / 12 * k_robot_mass_kg * (
+            DriveConstants.kWheelBase ** 2 + DriveConstants.kWheelBase ** 2)  # (https://choreo.autos/usage/estimating-moi/)
 k_reset_sparks_to_default = False
 k_swerve_debugging_messages = True
 k_use_apriltag_odometry = True
@@ -17,8 +18,8 @@ k_field_oriented = True
 k_led_count = 20  # todo: update this to actual number
 k_led_pwm_port = 0  # todo: update this to actual number
 
-class IntakeConstants:
 
+class IntakeConstants:
     k_CAN_id = 12
     k_intake_config = SparkBaseConfig()
     k_intake_config.inverted(True)
@@ -28,8 +29,20 @@ class IntakeConstants:
     k_tof_coral_port = 2
 
 
-class LowerCrankConstants:
+class ClimberConstants:
+    k_CAN_id = 2
+    k_climber_motor_rotation = math.radians((math.pi / 2) * (-1))
+    k
+    # The PID constants will be changed later on.
+    kP = 0
+    kI = 1
+    kD = 1
+    k_climber_motor_voltage = 12
 
+
+
+
+class LowerCrankConstants:
     k_CAN_id = 7
     kP = 6
     kI = 0
@@ -44,23 +57,25 @@ class LowerCrankConstants:
     k_mass_kg = 8
     k_lower_crank_sim_starting_angle = math.radians(60)
 
+
 class ElevatorConstants:
     k_CAN_id = 4
 
-    k_elevator_max_height = 50 #inches
-    k_elevator_min_height = 22 #inches
+    k_elevator_max_height = 50  # inches
+    k_elevator_min_height = 22  # inches
 
-    k_shoulder_length = 12 #inches
-    k_elbow_length = 22 #inches
-    k_wrist_length = 14 #inches
+    k_shoulder_length = 12  # inches
+    k_elbow_length = 22  # inches
+    k_wrist_length = 14  # inches
 
     k_tolerance = 1.5
 
-    k_positions = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
+    k_positions = {
+        # note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
         "stow": {
             "elevator_height": k_elevator_min_height,
             "shoulder_pivot": 180,
-            "elbow_pivot": 180, 
+            "elbow_pivot": 180,
             "wrist_pivot": 0
         },
         "ground": {
@@ -71,9 +86,9 @@ class ElevatorConstants:
         },
         "l1": {
             "elevator_height": 22,
-            "shoulder_pivot": 150, #angle between the vertical and the shoulder ligament
-            "elbow_pivot": 145, #angle between shoulder ligament and elbow ligament
-            "wrist_pivot": 90 #angle between the horizontal and the wrist ligament
+            "shoulder_pivot": 150,  # angle between the vertical and the shoulder ligament
+            "elbow_pivot": 145,  # angle between shoulder ligament and elbow ligament
+            "wrist_pivot": 90  # angle between the horizontal and the wrist ligament
         },
         "l2": {
             "elevator_height": 22,
@@ -84,12 +99,12 @@ class ElevatorConstants:
         "l3": {
             "elevator_height": 38,
             "shoulder_pivot": 180,
-            "elbow_pivot": 150, 
-            "wrist_pivot": 90 
+            "elbow_pivot": 150,
+            "wrist_pivot": 90
         },
         "l4": {
             "elevator_height": 38,
-            "shoulder_pivot": 35, 
+            "shoulder_pivot": 35,
             "elbow_pivot": 270,
             "wrist_pivot": 90
         },
@@ -100,7 +115,7 @@ class ElevatorConstants:
         "algae 2": 0
     }
 
-    #sim elevator
+    # sim elevator
     k_window_height = 80
     k_window_width = 60
     k_window_length = 60
