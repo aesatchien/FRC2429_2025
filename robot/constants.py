@@ -33,15 +33,15 @@ k_positions = {
     },
     "ground": {
         "elevator": 0,
-        "shoulder_pivot": math.radians(270),
+        "shoulder_pivot": math.radians(-5),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
 
     },
     "l1": {
-        "elevator": 10,
-        "shoulder_pivot": math.radians(270), #angle between the vertical and the shoulder ligament
+        "elevator": 0,
+        "shoulder_pivot": math.radians(60), #angle between the vertical and the shoulder ligament
         "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)

@@ -232,7 +232,7 @@ class RobotContainer:
                     onFalse=commands2.ConditionalCommand(
                         onTrue=GoToPosition(container=self, position="processor"),
                         onFalse=IntakeSequence(container=self, position="ground"),
-                        condition=lambda: self.get_robot_mode == self.RobotMode.HAS_ALGAE
+                        condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
                     ),
 
                     condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
@@ -263,7 +263,7 @@ class RobotContainer:
                         onTrue=GoToPosition(container=self, position="barge"),
                         onFalse=IntakeSequence(container=self, position="algae high"),
 
-                        condition=lambda: self.get_robot_mode == self.RobotMode.HAS_ALGAE
+                        condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
                     ),
 
                     condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
