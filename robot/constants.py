@@ -136,7 +136,7 @@ class WristConstants:
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
     k_plant = DCMotor.NEO550(1)
 
-    k_min_angle = math.radians(0)
+    k_min_angle = math.radians(-90)
     k_max_angle = math.radians(180)
     k_tolerance = math.radians(2.5)
     k_sim_starting_angle = 0 # sim mechanism2d takes degrees

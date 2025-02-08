@@ -19,7 +19,6 @@ class IntakeSequence(commands2.SequentialCommandGroup):
         gamepiece_being_intaked = constants.GamePiece.CORAL if position in ["ground", "coral station"] else constants.GamePiece.ALGAE
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} to {position} **"))
-        self.addCommands(MoveWrist(container=self.container, wrist=self.container.wrist, radians=constants.k_positions[position]["wrist_pivot"], wait_to_finish=False, indent=indent+1))
         self.addCommands(GoToPosition(container=self.container, position=position, indent=indent+1))
         self.addCommands(SmartIntake(container=self.container, intake=self.container.intake, game_piece=gamepiece_being_intaked, indent=indent+1))
         self.addCommands(GoToPosition(container=self.container, position="stow", indent=indent+1))

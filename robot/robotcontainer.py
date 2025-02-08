@@ -278,10 +278,10 @@ class RobotContainer:
 
         self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.PrintCommand("** Setting robot mode to has coral **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL))))
 
-        self.co_trigger_d.or_(self.co_trigger_l).onTrue(GoToPosition(container=self, position="coral station"))
+        self.co_trigger_d.or_(self.co_trigger_l).onTrue(IntakeSequence(container=self, position="coral station"))
 
-        self.co_trigger_start.onTrue(RunIntake(container=self, intake=self.intake, value=12, control_type=rev.SparkMax.ControlType.kVoltage))
-        self.co_trigger_back.onTrue(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage))
+        self.co_trigger_start.onTrue(MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90))) # TODO: replace with coastmode command
+        self.co_trigger_back.onTrue(MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0))) # for misc testing
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down

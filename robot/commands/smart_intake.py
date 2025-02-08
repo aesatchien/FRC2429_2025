@@ -45,8 +45,6 @@ class SmartIntake(commands2.Command):
         self.count += 1
 
     def isFinished(self) -> bool:
-        print(f"has algae: {self.intake.has_algae()}")
-        print(f"has coral: {self.intake.has_coral()}")
         if self.wait_to_finish:
             return self.intake.has_algae() or self.intake.has_coral() or self.timer.hasElapsed(self.timeout)
         else:
