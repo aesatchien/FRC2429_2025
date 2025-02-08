@@ -4,8 +4,7 @@ import time
 import rev
 import wpilib
 import commands2
-
-from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.geometry import Pose2d
 
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
@@ -29,6 +28,11 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 
+from commands.go_to_position import GoToPosition
+from commands.intake_sequence import IntakeSequence
+from commands.reset_field_centric import ResetFieldCentric
+from commands.score import Score
+
 class RobotContainer:
     """
     This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -37,13 +41,19 @@ class RobotContainer:
     subsystems, commands, and button mappings) should be declared here.
     """
 
-    class RobotMode(Enum):
+    class RobotMode(Enum): # use this instead of intake results directly because we want to be able to override intake results for testing and emergencies
         EMPTY = "e"
         HAS_CORAL = "c"
         HAS_ALGAE = "a"
 
     def set_robot_mode(self, mode: RobotMode): # because we can't assign inside lambdas
         self.robot_mode = mode
+
+    def get_robot_mode(self) -> RobotMode:
+        return self.robot_mode
+    
+    def is_robot_mode(self, mode: RobotMode) -> bool:
+        return self.robot_mode == mode
 
     def __init__(self) -> None:
 
@@ -171,12 +181,6 @@ class RobotContainer:
         self.co_trigger_start = self.co_pilot_command_controller.start()
         self.co_trigger_back = self.co_pilot_command_controller.back()
 
-        self.co_trigger_any_dpad = self.co_trigger_u.or_(
-                                        self.co_trigger_d.or_(
-                                            self.co_trigger_l.or_(
-                                                self.co_trigger_r)))
-
-
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
         # lots of putdatas for testing on the dash
@@ -218,32 +222,63 @@ class RobotContainer:
 
 
     def bind_codriver_buttons(self):
-        print("bidning codriver buttons")
 
-        self.co_trigger_lb.onTrue(commands2.InstantCommand(self.set_robot_mode(self.RobotMode.EMPTY)))
+        print("Binding codriver buttons")
 
-        self.co_trigger_a.onTrue(
-                commands2.PrintCommand("moving wrist to 90 degrees").andThen(
-                MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90), wait_to_finish=True)
-        ))
+        self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
+                commands2.ConditionalCommand(
+                    onTrue=GoToPosition(container=self, position="l1"),
+
+                    onFalse=commands2.ConditionalCommand(
+                        onTrue=GoToPosition(container=self, position="processor"),
+                        onFalse=IntakeSequence(container=self, position="ground"),
+                        condition=lambda: self.get_robot_mode == self.RobotMode.HAS_ALGAE
+                    ),
+
+                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+                )
+        )
 
         self.co_trigger_b.onTrue(
-                commands2.PrintCommand("moving wrist to 0 degrees").andThen(
-                MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0), wait_to_finish=True)
-        ))
+                commands2.ConditionalCommand(
+                    onTrue=GoToPosition(container=self, position="l2"),
+                    onFalse=IntakeSequence(container=self, position="ground"), # can make either a or b into a different position if needed for algae and coral
+                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+                )
+        )
 
         self.co_trigger_x.onTrue(
-                commands2.PrintCommand("moving shoulder to 90 degrees").andThen(
-                MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(90), wait_to_finish=True)
-        ))
+                commands2.ConditionalCommand(
+                    onTrue=GoToPosition(container=self, position="l3"),
+                    onFalse=IntakeSequence(container=self, position="algae low"),
+                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+                )
+        )
 
-        self.co_trigger_y.onTrue(
-                commands2.PrintCommand("moving shoulder to 0 degrees").andThen(
-                MoveShoulder(container=self, shoulder=self.shoulder, radians=math.radians(0), wait_to_finish=True)
-        ))
+        self.co_trigger_y.onTrue( # when trigger Y is pressed, if we have coral, go to l4; else if we have algae, go to net; else go to intake algae high
+                commands2.ConditionalCommand(
+                    onTrue=GoToPosition(container=self, position="l4"),
 
-        self.co_trigger_lb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=1, wait_to_finish=True))
-        self.co_trigger_rb.onTrue(MoveElevator(container=self, elevator=self.elevator, target=0, wait_to_finish=True))
+                    onFalse=commands2.ConditionalCommand(
+                        onTrue=GoToPosition(container=self, position="barge"),
+                        onFalse=IntakeSequence(container=self, position="algae high"),
+
+                        condition=lambda: self.get_robot_mode == self.RobotMode.HAS_ALGAE
+                    ),
+
+                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+                )
+        )
+
+        self.co_trigger_lb.onTrue(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY)))
+
+        self.co_trigger_rb.onTrue(Score(container=self))
+        
+        self.co_trigger_r_trigger.onTrue(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE)))
+
+        self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL)))
+
+        self.co_trigger_d.or_(self.co_trigger_l).onTrue(GoToPosition(container=self, position="coral station"))
 
         self.co_trigger_start.onTrue(RunIntake(container=self, intake=self.intake, value=12, control_type=rev.SparkMax.ControlType.kVoltage))
         self.co_trigger_back.onTrue(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage))

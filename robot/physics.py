@@ -20,15 +20,18 @@ class PhysicsEngine:
 
         # if we want to add an armsim see test_robots/sparksim_test/
         self.mech = wpilib.Mechanism2d(3, 3)
+        self.mech.setBackgroundColor(wpilib.Color8Bit(40, 40, 60))
         self.root = self.mech.getRoot("chassis", 1, 0)
-        self.mech2d_elevator = self.root.appendLigament("elevator", constants.ElevatorConstants.k_sim_starting_height, 90)
+        self.mech2d_elevator = self.root.appendLigament("elevator", length=constants.ElevatorConstants.k_sim_starting_height, 
+                                                        angle=90,
+                                                        color=wpilib.Color8Bit(red=150, green=255, blue=160))
         self.mech2d_shoulder = self.mech2d_elevator.appendLigament("shoulder", length=constants.ShoulderConstants.k_length_meters, 
                                                                    angle=math.degrees(constants.ShoulderConstants.k_sim_starting_angle),
                                                                    color=wpilib.Color8Bit(red=30, green=200, blue=250))
 
         self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_length_meters, 
                                                                 angle=constants.WristConstants.k_sim_starting_angle,
-                                                                color=wpilib.Color8Bit(red=255, green=200, blue=190))
+                                                                color=wpilib.Color8Bit(red=255, green=160, blue=150))
 
         self.mech2d_intake = self.mech2d_wrist.appendLigament("intake", length=constants.IntakeConstants.k_sim_length, 
                                                               angle=0, color=wpilib.Color8Bit(0, 0, 0))

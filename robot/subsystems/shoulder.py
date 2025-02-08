@@ -37,7 +37,11 @@ class Shoulder(Subsystem):
 
         self.counter = 0
 
-    def set_position(self, radians: float) -> None:
+    def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition) -> None:
+
+        if control_type not in [SparkMax.ControlType.kPosition, SparkMax.ControlType.kMAXMotionPositionControl]:
+            raise ValueError("Commanding something other than the position of the shoulder seems like a terrible idea.")
+
         self.setpoint = radians
         self.controller.setReference(value=self.setpoint, ctrl=SparkMax.ControlType.kPosition, slot=ClosedLoopSlot(0))
 
