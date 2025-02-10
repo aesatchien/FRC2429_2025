@@ -2,7 +2,7 @@ import math
 import wpilib
 
 from rev import ClosedLoopSlot, SparkMaxConfig
-from wpimath.units import inchesToMeters
+from wpimath.units import inchesToMeters, lbsToKilograms
 from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
 from subsystems.swerve_constants import DriveConstants
@@ -188,9 +188,9 @@ class ElevatorConstants:
 
     k_gear_ratio = 12 # 9, 12, or 15 gear ratio said victor 1/30/25
                       # we need it seperate for the sim
-    k_effective_pulley_diameter = inchesToMeters(2)
+    k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
     k_meters_per_revolution = k_effective_pulley_diameter / k_gear_ratio
-    k_mass_kg = 15
+    k_mass_kg = lbsToKilograms(25)
     k_plant = DCMotor.NEO(2)
 
     k_min_height = 0
