@@ -6,19 +6,20 @@ from subsystems.intake import Intake
 
 class RunIntake(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, intake: Intake, value: float, control_type: SparkMax.ControlType) -> None:
+    def __init__(self, container, intake: Intake, value: float, control_type: SparkMax.ControlType, indent=0) -> None:
         super().__init__()
         self.setName('Run Intake')  # change this to something appropriate for this command
         self.container = container
         self.intake = intake
         self.control_type = control_type
         self.value = value
+        self.indent = indent
         # self.addRequirements(self.container.)  # commandsv2 version of requirements
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print("\n" + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
+        print("\n" + self.indent * "    " + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 
@@ -35,6 +36,6 @@ class RunIntake(commands2.Command):  # change the name for your command
         message = 'Interrupted' if interrupted else 'Ended'
         print_end_message = False
         if print_end_message:
-            print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
+            print(self.indent * "    " + f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
             SmartDashboard.putString(f"alert",
                                      f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")

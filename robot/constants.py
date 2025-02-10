@@ -1,3 +1,4 @@
+from enum import Enum
 import math
 import wpilib
 
@@ -32,15 +33,15 @@ k_positions = {
     },
     "ground": {
         "elevator": 0,
-        "shoulder_pivot": math.radians(270),
+        "shoulder_pivot": math.radians(-5),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
 
     },
     "l1": {
-        "elevator": 10,
-        "shoulder_pivot": math.radians(270), #angle between the vertical and the shoulder ligament
+        "elevator": 0,
+        "shoulder_pivot": math.radians(60), #angle between the vertical and the shoulder ligament
         "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
@@ -73,12 +74,40 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
-    "processor": 0,
-    "barge": 0,
-    "algae 1": 0,
-    "algae 2": 0
+    "processor": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "barge": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "algae low": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "algae high": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
 }
 
+
+class GamePiece(Enum):
+    ALGAE = 1
+    CORAL = 2
 
 class IntakeConstants:
 
@@ -92,6 +121,9 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
+    k_coral_intaking_voltage = 3
+    k_algae_intaking_voltage = -2
+
 
 class WristConstants:
 
@@ -104,7 +136,7 @@ class WristConstants:
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
     k_plant = DCMotor.NEO550(1)
 
-    k_min_angle = math.radians(0)
+    k_min_angle = math.radians(-90)
     k_max_angle = math.radians(180)
     k_tolerance = math.radians(2.5)
     k_sim_starting_angle = 0 # sim mechanism2d takes degrees
