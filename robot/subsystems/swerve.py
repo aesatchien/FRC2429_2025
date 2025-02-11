@@ -1,31 +1,28 @@
 import math
+import wpilib
 import typing
 
-import commands2
-from pathplannerlib.controller import PPHolonomicDriveController
-import wpilib
+import navx
+import ntcore
 
 from commands2 import Subsystem
+
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation3d, Pose3d, Rotation3d
 from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics)
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.controller import PIDController
-import navx
-import rev
-from pathplannerlib.path import PathPlannerTrajectory
-import ntcore
+from pathplannerlib.controller import PPHolonomicDriveController
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
+from pathplannerlib.config import ModuleConfig, RobotConfig
+
 import robotpy_apriltag as ra
 import wpimath.geometry as geo
-
 
 import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
-
-from pathplannerlib.config import ModuleConfig, RobotConfig
 
 class Swerve (Subsystem):
     def __init__(self) -> None:
@@ -414,23 +411,38 @@ class Swerve (Subsystem):
         # update pose based on apriltags
         if constants.k_use_apriltag_odometry:
 
-            if self.apriltag_front_count_subscriber.get() > 0:  # use front camera
-                # update pose from apriltags
-                tag_data = self.apriltag_front_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
-                tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
-                tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+            poses_and_timestamps = {}
 
-            if self.apriltag_rear_count_subscriber.get() > 0:  # use rear camera - should I make this an elif?
-                # update pose from apriltags
-                tag_data = self.apriltag_rear_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
-                tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
-                tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+            # iterate over the things supplied by each pi
+            for pi_name in constants.VisionConstants.k_pi_names:
 
+                # this list has 4*n floats (n is an integer), 
+                # where each 4-float chunk represents the robot pose as computed from one tag. 
+                # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
+                this_camera_apriltag_robot_pose_infos = self.inst.getEntry(f"vision/{pi_name}/robot_pose_info").getFloatArray([0, 0, 0, 0])
 
+                # iterate over each chunk
+                for single_apriltag_robot_pose_info_start_idx in range(0, len(this_camera_apriltag_robot_pose_infos), 4):
+
+                    this_single_apriltag_timestamp = this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx]
+
+                    our_now = ntcore._now()
+                    this_pis_now = self.inst.getEntry(f"vision/{pi_name}/wpinow_time").getFloat(0)
+
+                    # supposing our now is 5, and
+                    # this pi's now is 8.
+                    # we must add -3 to this pi's now.
+                    # -3 = ournow - thispisnow
+
+                    delta = our_now - this_pis_now
+
+                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp + delta
+
+                    this_single_apriltag_pose2d = Pose2d(x=this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx + 1],
+                                                         y=this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx + 2],
+                                                         angle=this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx + 3])
+
+                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
         # Update the odometry in the periodic block -
         if wpilib.RobotBase.isReal():
@@ -440,13 +452,6 @@ class Swerve (Subsystem):
         # in sim, we update from physics.py
         # TODO: if we want to be cool and have spare time, we could use SparkBaseSim with FlywheelSim to do
         # actual physics simulation on the swerve modules instead of assuming perfect behavior
-
-        # else:
-        #     # sim is not updating the odometry right yet, not sure why since all the sparks should be set in the sim
-        #     # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
-        #     self.pose_estimator.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions())
-        #     pose = self.get_pose()
-        #     wpilib.SmartDashboard.putNumberArray('real_robot_pose', [pose.x, pose.y, pose.rotation().degrees()])
 
         if self.counter % 10 == 0:
             pose = self.get_pose()  # self.odometry.getPose()
