@@ -32,6 +32,7 @@ from commands.go_to_position import GoToPosition
 from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
 from commands.score import Score
+from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
 class RobotContainer:
     """
@@ -272,7 +273,8 @@ class RobotContainer:
 
         self.co_trigger_lb.onTrue(commands2.PrintCommand("** Setting robot mode to empty **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY))))
 
-        self.co_trigger_rb.onTrue(Score(container=self))
+        # self.co_trigger_rb.onTrue(Score(container=self))
+        self.co_trigger_rb.whileTrue(DriveByJoystickSubsystem(container=self, controller=self.co_pilot_command_controller, subsystem=self.intake, duty_cycle_coef=0.01))
         
         self.co_trigger_r_trigger.onTrue(commands2.PrintCommand("** Setting robot mode to has algae **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE))))
 

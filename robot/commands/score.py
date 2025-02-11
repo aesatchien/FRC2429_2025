@@ -22,5 +22,7 @@ class Score(commands2.SequentialCommandGroup):
                 condition=lambda: self.container.get_robot_mode() == self.container.RobotMode.HAS_ALGAE
             )
         )
+        self.addCommands(commands2.WaitCommand(constants.IntakeConstants.k_seconds_to_stay_on_while_scoring))
+        self.addCommands(RunIntake(container=self.container, intake=self.container.intake, value=0, control_type=SparkMax.ControlType.kVoltage))
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 
