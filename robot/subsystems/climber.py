@@ -29,6 +29,8 @@ class Climber(Subsystem):
     def is_stowed(self):
         return self.climber_position == constants.ClimberConstants.k_climber_motor_rotation
 
+    def
+
     #def
      #   pass
 
