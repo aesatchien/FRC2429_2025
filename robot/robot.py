@@ -48,7 +48,7 @@ class MyRobot(commands2.TimedCommandRobot):
                         self.container.led.set_indicator(Led.Indicator.kPOLKA)
             else:
                 self.container.led.set_indicator(Led.Indicator.kRAINBOW)
-            print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
+            # print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
         self.disabled_counter += 1
 
     def autonomousInit(self) -> None:
