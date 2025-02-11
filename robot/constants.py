@@ -124,6 +124,8 @@ class IntakeConstants:
     k_coral_intaking_voltage = 3
     k_algae_intaking_voltage = -2
 
+    k_seconds_to_stay_on_while_scoring = 1
+
 
 class WristConstants:
 
