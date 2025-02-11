@@ -18,6 +18,8 @@ class Climber(Subsystem):
         self.climber_abs_encoder = rev.AbsoluteEncoder()
         self.climber_position = self.climber_abs_encoder.getPosition()
         self.controller = self.sparkmax.getClosedLoopController()
+        
+
 
 
     # 3 Climber Positions:

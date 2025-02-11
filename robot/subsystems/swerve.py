@@ -1,31 +1,28 @@
 import math
+import wpilib
 import typing
 
-import commands2
-from pathplannerlib.controller import PPHolonomicDriveController
-import wpilib
+import navx
+import ntcore
 
 from commands2 import Subsystem
+
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation3d, Pose3d, Rotation3d
 from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics)
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.controller import PIDController
-import navx
-import rev
-from pathplannerlib.path import PathPlannerTrajectory
-import ntcore
+from pathplannerlib.controller import PPHolonomicDriveController
+from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
+from pathplannerlib.config import ModuleConfig, RobotConfig
+
 import robotpy_apriltag as ra
 import wpimath.geometry as geo
-
 
 import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 
-from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
-
-from pathplannerlib.config import ModuleConfig, RobotConfig
 
 class Swerve (Subsystem):
     def __init__(self) -> None:
@@ -155,7 +152,7 @@ class Swerve (Subsystem):
         # self.odometry.resetPosition(
         #     Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(), pose)
         self.pose_estimator.resetPosition(
-            Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(), pose)
+            Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(), pose)
 
     def drive(self, xSpeed: float, ySpeed: float, rot: float, fieldRelative: bool, rate_limited: bool, keep_angle:bool=True) -> None:
         """Method to drive the robot using joystick info.
@@ -316,6 +313,7 @@ class Swerve (Subsystem):
 
     def get_gyro_angle(self):  # if necessary reverse the heading for swerve math
         # note this does add in the current offset
+        # print(f"get_gyro_angle is returning {-self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()}")
         return -self.gyro.getAngle() if dc.kGyroReversed else self.gyro.getAngle()
 
     def get_angle(self):  # if necessary reverse the heading for swerve math
@@ -408,28 +406,41 @@ class Swerve (Subsystem):
 
         self.counter += 1
 
-        # send the current time to the dashboard
+        # send our current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
         # update pose based on apriltags
         if constants.k_use_apriltag_odometry:
 
-            if self.apriltag_front_count_subscriber.get() > 0:  # use front camera
-                # update pose from apriltags
-                tag_data = self.apriltag_front_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
-                tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
-                tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+            # iterate over the lists of poses supplied by each pi
+            for pi_name in constants.VisionConstants.k_pi_names:
 
-            if self.apriltag_rear_count_subscriber.get() > 0:  # use rear camera - should I make this an elif?
-                # update pose from apriltags
-                tag_data = self.apriltag_rear_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
-                tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
-                tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+                # this list has 4*n floats (n is an integer), 
+                # where each 4-float chunk represents the robot pose as computed from one tag. 
+                # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
+                robot_pose_info_list_from_this_pi = self.inst.getEntry(f"vision/{pi_name}/robot_pose_info").getFloatArray([])
 
+                # iterate over each chunk using its start idx
+                for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
 
+                    this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
+
+                    our_now = ntcore._now()
+                    this_pis_now = self.inst.getEntry(f"vision/{pi_name}/wpinow_time").getFloat(0)
+
+                    # supposing our now is 5, and
+                    # this pi's now is 8.
+                    # we must add -3 to this pi's now.
+                    # -3 = ournow - thispisnow
+
+                    delta = our_now - this_pis_now
+
+                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp + delta
+
+                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
+                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
+                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+
+                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
         # Update the odometry in the periodic block -
         if wpilib.RobotBase.isReal():
@@ -439,13 +450,6 @@ class Swerve (Subsystem):
         # in sim, we update from physics.py
         # TODO: if we want to be cool and have spare time, we could use SparkBaseSim with FlywheelSim to do
         # actual physics simulation on the swerve modules instead of assuming perfect behavior
-
-        # else:
-        #     # sim is not updating the odometry right yet, not sure why since all the sparks should be set in the sim
-        #     # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
-        #     self.pose_estimator.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions())
-        #     pose = self.get_pose()
-        #     wpilib.SmartDashboard.putNumberArray('real_robot_pose', [pose.x, pose.y, pose.rotation().degrees()])
 
         if self.counter % 10 == 0:
             pose = self.get_pose()  # self.odometry.getPose()
@@ -484,6 +488,9 @@ class Swerve (Subsystem):
             if constants.k_swerve_debugging_messages:  # this is just a bit much unless debugging the swerve
                 angles = [m.turningEncoder.getPosition() for m in self.swerve_modules]
                 absolutes = [m.get_turn_encoder() for m in self.swerve_modules]
+                for idx, absolute in enumerate(absolutes):
+                    wpilib.SmartDashboard.putNumber(f"absolute {idx}", absolute)
+
                 wpilib.SmartDashboard.putNumberArray(f'_angles', angles)
-                wpilib.SmartDashboard.putNumberArray(f'_analog_radians', absolutes)
+                # wpilib.SmartDashboard.putNumberArray(f'_analog_radians', absolutes)
 

@@ -13,13 +13,13 @@ from wpimath.filter import Debouncer
 from subsystems.swerve_constants import DriveConstants as dc
 
 class DriveByJoystickSwerve(commands2.Command):
-    def __init__(self, container, swerve: Swerve, controller: CommandXboxController, field_oriented=True, rate_limited=False) -> None:
+    def __init__(self, container, swerve: Swerve, controller: CommandXboxController, rate_limited=False) -> None:
         # TODO: sanjith would like his joystick to directly adjust heading so if he puts his stick at 45 deg the robot will go to 45 deg
         super().__init__()
         self.setName('drive_by_joystick_swerve')
         self.container = container
         self.swerve = swerve
-        self.field_oriented = field_oriented  # Sanjith wants this on a button instead
+        self.field_oriented = True
         self.rate_limited = rate_limited
         self.addRequirements(*[self.swerve])
         # can't import container and don't want to pass lambdas just yet
@@ -62,6 +62,7 @@ class DriveByJoystickSwerve(commands2.Command):
         joystick_strafe = self.controller.getLeftX()
 
         linear_mapping = True  # two ways to make sure diagonal is at "full speed"
+                               # TODO: find why our transforms are weird at low speed- they don't act intuitively
         if linear_mapping:
             # this lets you go full speed diagonal at the cost of sensitivity on the low end
             desired_fwd = -self.input_transform_linear(1.0 * joystick_fwd) * max_linear
@@ -82,6 +83,12 @@ class DriveByJoystickSwerve(commands2.Command):
 
         SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
 
+        if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed and self.field_oriented:
+            # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
+            # print("inverting forward and strafe because we're in field-centric mode and on red alliance!")
+            desired_fwd *= -1
+            desired_strafe *= -1
+
         correct_like_1706 = False  # this is what 1706 does (normalization), but Rev put all that in the swerve module's drive
         if correct_like_1706:
             desired_translation = Translation2d(desired_fwd, desired_strafe)
@@ -90,9 +97,11 @@ class DriveByJoystickSwerve(commands2.Command):
                 desired_translation = desired_translation * max_linear / desired_magnitude
             self.swerve.drive(desired_translation.X(), desired_translation.Y(), desired_rot,
                           fieldRelative= self.field_oriented, rate_limited=self.rate_limited)
+
         else:
             self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
                               fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
+
 
     def end(self, interrupted: bool) -> None:
         # probably should leave the wheels where they are?
