@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from IPython.display import display, clear_output
-from ipywidgets import interact, FloatSlider
+# from ipywidgets import interact, FloatSlider
 import time
 import panel as pn
 
