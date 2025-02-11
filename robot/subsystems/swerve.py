@@ -406,25 +406,23 @@ class Swerve (Subsystem):
 
         self.counter += 1
 
-        # send the current time to the dashboard
+        # send our current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
         # update pose based on apriltags
         if constants.k_use_apriltag_odometry:
 
-            poses_and_timestamps = {}
-
-            # iterate over the things supplied by each pi
+            # iterate over the lists of poses supplied by each pi
             for pi_name in constants.VisionConstants.k_pi_names:
 
                 # this list has 4*n floats (n is an integer), 
                 # where each 4-float chunk represents the robot pose as computed from one tag. 
                 # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
-                this_camera_apriltag_robot_pose_infos = self.inst.getEntry(f"vision/{pi_name}/robot_pose_info").getFloatArray([0, 0, 0, 0])
+                robot_pose_info_list_from_this_pi = self.inst.getEntry(f"vision/{pi_name}/robot_pose_info").getFloatArray([])
 
-                # iterate over each chunk
-                for single_apriltag_robot_pose_info_start_idx in range(0, len(this_camera_apriltag_robot_pose_infos), 4):
+                # iterate over each chunk using its start idx
+                for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
 
-                    this_single_apriltag_timestamp = this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx]
+                    this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
 
                     our_now = ntcore._now()
                     this_pis_now = self.inst.getEntry(f"vision/{pi_name}/wpinow_time").getFloat(0)
@@ -438,9 +436,9 @@ class Swerve (Subsystem):
 
                     this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp + delta
 
-                    this_single_apriltag_pose2d = Pose2d(x=this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx + 1],
-                                                         y=this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx + 2],
-                                                         angle=this_camera_apriltag_robot_pose_infos[single_apriltag_robot_pose_info_start_idx + 3])
+                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
+                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
+                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
 
                     self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
