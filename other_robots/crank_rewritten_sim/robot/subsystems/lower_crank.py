@@ -35,7 +35,6 @@ class LowerCrank(Subsystem):
 
         self.config.softLimit.forwardSoftLimitEnabled(True)
         self.config.softLimit.reverseSoftLimitEnabled(True)
-
         self.sparkmax.configure(config=self.config, 
                                 resetMode=SparkMax.ResetMode.kResetSafeParameters,
                                 persistMode=SparkMax.PersistMode.kPersistParameters)

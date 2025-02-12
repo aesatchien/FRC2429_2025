@@ -2,7 +2,7 @@ import rev
 import constants
 from commands2 import Subsystem
 import wpilib
-from rev import SparkMax, SoftLimitConfig, SparkMaxConfig
+from rev import SparkMax, SoftLimitConfig, SparkMaxConfig, SoftLimitConfig
 
 
 class Climber(Subsystem):
@@ -18,7 +18,9 @@ class Climber(Subsystem):
         self.climber_abs_encoder = rev.AbsoluteEncoder()
         self.climber_position = self.climber_abs_encoder.getPosition()
         self.controller = self.sparkmax.getClosedLoopController()
-        
+        self.config.softLimit.forwardSoftLimit(constants.ClimberConstants.k_climber_rotation_limit)
+        self.config.softLimit.reverseSoftLimit(constants.ClimberConstants.k_climber_reverse_rotation_limit)
+
 
 
 
@@ -27,6 +29,9 @@ class Climber(Subsystem):
     def rotate_motor_arms(self):
         if self.is_stowed():
             self.sparkmax.setReference(constants.ClimberConstants.k_climber_motor_voltage, SparkMax.ControlType)
+        else:
+            self.sparkmax.setReference(-1 * (constants.ClimberConstants.k_climber_motor_voltage, SparkMax.ControlType))
+
 
     def is_stowed(self):
         return self.climber_position == constants.ClimberConstants.k_climber_motor_rotation

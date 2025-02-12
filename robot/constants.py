@@ -134,8 +134,9 @@ class IntakeConstants:
 <<<<<<< HEAD
 class ClimberConstants:
     k_CAN_id = 2
-    k_climber_motor_rotation = math.radians((math.pi / 2) * (-1))
-    k
+    k_climber_motor_rotation = math.radians((math.pi / 2))
+    k_climber_forward_rotation_limit = 90
+    k_climber_reverse_rotation_limit = 0
     # The PID constants will be changed later on.
     kP = 0
     kI = 1
