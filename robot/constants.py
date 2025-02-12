@@ -110,8 +110,6 @@ class GamePiece(Enum):
     CORAL = 2
 
 class IntakeConstants:
-
-class IntakeConstants:
     k_CAN_id = 12
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(True)
