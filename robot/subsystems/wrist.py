@@ -31,7 +31,7 @@ class Wrist(Subsystem):
 
         self.counter = 0
 
-    def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kMAXMotionPositionControl) -> None:
+    def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition) -> None:
 
         if control_type not in [SparkMax.ControlType.kPosition, SparkMax.ControlType.kMAXMotionPositionControl]:
             raise ValueError("Commanding something other than the position of the wrist seems like a terrible idea.")

@@ -1,8 +1,9 @@
+from enum import Enum
 import math
 import wpilib
 
 from rev import ClosedLoopSlot, SparkMaxConfig
-from wpimath.units import inchesToMeters
+from wpimath.units import inchesToMeters, lbsToKilograms
 from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
 from subsystems.swerve_constants import DriveConstants
@@ -32,15 +33,15 @@ k_positions = {
     },
     "ground": {
         "elevator": 0,
-        "shoulder_pivot": math.radians(270),
+        "shoulder_pivot": math.radians(-5),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
 
     },
     "l1": {
-        "elevator": 10,
-        "shoulder_pivot": math.radians(270), #angle between the vertical and the shoulder ligament
+        "elevator": 0,
+        "shoulder_pivot": math.radians(60), #angle between the vertical and the shoulder ligament
         "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
@@ -73,15 +74,42 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
-    "processor": 0,
-    "barge": 0,
-    "algae 1": 0,
-    "algae 2": 0
+    "processor": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "barge": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "algae low": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
+    "algae high": { # TODO: find real values- this is a placeholder using stow's values
+        "elevator": 0,
+        "shoulder_pivot": math.radians(90),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kBlue,
+        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+    },
 }
 
 
-class IntakeConstants:
+class GamePiece(Enum):
+    ALGAE = 1
+    CORAL = 2
 
+class IntakeConstants:
     k_CAN_id = 12
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(True)
@@ -91,6 +119,11 @@ class IntakeConstants:
     k_tof_coral_port = 2
 
     k_sim_length = 0.25
+
+    k_coral_intaking_voltage = 3
+    k_algae_intaking_voltage = -2
+
+    k_seconds_to_stay_on_while_scoring = 1
 
 
 class WristConstants:
@@ -104,7 +137,7 @@ class WristConstants:
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
     k_plant = DCMotor.NEO550(1)
 
-    k_min_angle = math.radians(0)
+    k_min_angle = math.radians(-90)
     k_max_angle = math.radians(180)
     k_tolerance = math.radians(2.5)
     k_sim_starting_angle = 0 # sim mechanism2d takes degrees
@@ -177,6 +210,7 @@ class ShoulderConstants:
     k_follower_config = SparkMaxConfig()
     k_follower_config.follow(k_CAN_id)
 
+
 class ElevatorConstants:
     # all in meters
     # although the tof uses mm, wpilib uses m, and we're using radians according to the wpilib standard
@@ -188,9 +222,9 @@ class ElevatorConstants:
 
     k_gear_ratio = 12 # 9, 12, or 15 gear ratio said victor 1/30/25
                       # we need it seperate for the sim
-    k_effective_pulley_diameter = inchesToMeters(2)
+    k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
     k_meters_per_revolution = k_effective_pulley_diameter / k_gear_ratio
-    k_mass_kg = 15
+    k_mass_kg = lbsToKilograms(25)
     k_plant = DCMotor.NEO(2)
 
     k_min_height = 0
@@ -272,7 +306,7 @@ class ElevatorConstants:
         "algae 2": 0
     }
 
-    #sim elevator
+    # sim elevator
     k_window_height = 80
     k_window_width = 60
     k_window_length = 60
@@ -287,3 +321,6 @@ class ElevatorConstants:
     k_coral_intake_coordinates = [(1.2, 2.2, 1), (1.2, 4, 1), (1.2, 6, 1), (1,7, 10), (1,1, 10)] #(x-coord, y-coord, number of corals at that location)
     k_coral_outtake_coordinates = [(5,5,0)]
     k_robot_radius_sim = 0.5
+
+class VisionConstants:
+    k_pi_names = ["top_pi"]
