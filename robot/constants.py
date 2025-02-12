@@ -13,14 +13,8 @@ k_start_y = 0
 k_driver_controller_port = 0
 k_co_driver_controller_port = 1
 k_robot_mass_kg = 56
-<<<<<<< HEAD
-k_robot_moi = 1 / 12 * k_robot_mass_kg * (
-            DriveConstants.kWheelBase ** 2 + DriveConstants.kWheelBase ** 2)  # (https://choreo.autos/usage/estimating-moi/)
-k_reset_sparks_to_default = False
-=======
 k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
 k_reset_sparks_to_default = True
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
 k_swerve_debugging_messages = True
 k_use_apriltag_odometry = True
 k_swerve_only = False
@@ -29,8 +23,6 @@ k_field_oriented = True
 k_led_count = 20  # todo: update this to actual number
 k_led_pwm_port = 0  # todo: update this to actual number
 
-<<<<<<< HEAD
-=======
 k_positions = { 
     "stow": {
         "elevator": 0,
@@ -118,7 +110,6 @@ class GamePiece(Enum):
     CORAL = 2
 
 class IntakeConstants:
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
 
 class IntakeConstants:
     k_CAN_id = 12
@@ -131,29 +122,6 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-<<<<<<< HEAD
-class ClimberConstants:
-    k_CAN_id = 2
-    k_climber_motor_rotation = math.radians((math.pi / 2))
-    k_climber_forward_rotation_limit = 90
-    k_climber_reverse_rotation_limit = 0
-    # The PID constants will be changed later on.
-    kP = 0
-    kI = 1
-    kD = 1
-    k_climber_motor_voltage = 12
-
-
-
-
-class LowerCrankConstants:
-    k_CAN_id = 7
-    kP = 6
-    kI = 0
-    kD = 0
-    kIZone = 0
-    kIMaxAccum = 0
-=======
     k_coral_intaking_voltage = 3
     k_algae_intaking_voltage = -2
 
@@ -163,7 +131,6 @@ class LowerCrankConstants:
 class WristConstants:
 
     k_CAN_id = 10
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
     k_gear_ratio = 5 * 5 * 3 * 4.44
     k_abs_encoder_offset = 0
     k_length_meters = 20 * 0.0254
@@ -255,14 +222,6 @@ class ElevatorConstants:
     k_CAN_id = 4
     k_follower_CAN_id = 5
 
-<<<<<<< HEAD
-    k_elevator_max_height = 50  # inches
-    k_elevator_min_height = 22  # inches
-
-    k_shoulder_length = 12  # inches
-    k_elbow_length = 22  # inches
-    k_wrist_length = 14  # inches
-=======
     k_gear_ratio = 12 # 9, 12, or 15 gear ratio said victor 1/30/25
                       # we need it seperate for the sim
     k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
@@ -273,19 +232,9 @@ class ElevatorConstants:
     k_min_height = 0
     k_max_height = 1
     k_tolerance = 2 / 100 # 2 cm
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
 
     k_sim_starting_height = 2
 
-<<<<<<< HEAD
-    k_positions = {
-        # note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
-        "stow": {
-            "elevator_height": k_elevator_min_height,
-            "shoulder_pivot": 180,
-            "elbow_pivot": 180,
-            "wrist_pivot": 0
-=======
     k_config = SparkMaxConfig()
 
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
@@ -315,7 +264,6 @@ class ElevatorConstants:
             "wrist_pivot": 0,
             "wrist_color_for_ligament": wpilib.Color.kBlue,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
         },
         "ground": {
             "elevator_height": k_min_height,
@@ -326,18 +274,11 @@ class ElevatorConstants:
 
         },
         "l1": {
-<<<<<<< HEAD
-            "elevator_height": 22,
-            "shoulder_pivot": 150,  # angle between the vertical and the shoulder ligament
-            "elbow_pivot": 145,  # angle between shoulder ligament and elbow ligament
-            "wrist_pivot": 90  # angle between the horizontal and the wrist ligament
-=======
             "elevator_height": k_min_height + 10,
             "shoulder_pivot": 270, #angle between the vertical and the shoulder ligament
             "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
         },
         "l2": {
             "elevator_height": k_min_height + 10,
@@ -347,18 +288,6 @@ class ElevatorConstants:
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
         },
         "l3": {
-<<<<<<< HEAD
-            "elevator_height": 38,
-            "shoulder_pivot": 180,
-            "elbow_pivot": 150,
-            "wrist_pivot": 90
-        },
-        "l4": {
-            "elevator_height": 38,
-            "shoulder_pivot": 35,
-            "elbow_pivot": 270,
-            "wrist_pivot": 90
-=======
             "elevator_height": k_min_height + 22,
             "shoulder_pivot": 315,
             "wrist_pivot": 90,
@@ -371,7 +300,6 @@ class ElevatorConstants:
             "wrist_pivot": 90,
             "wrist_color_for_ligament": wpilib.Color.kRed,
             "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
->>>>>>> f41ff40dfb10334dfe4321dfbb823151d086b802
         },
         "processor": 0,
         "barge": 0,
