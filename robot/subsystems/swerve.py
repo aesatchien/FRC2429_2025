@@ -94,28 +94,13 @@ class Swerve (Subsystem):
 
         # get poses from NT
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        self.apriltag_rear_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/Tagcam/poses/tag1").subscribe([0] * 8)
-        self.apriltag_rear_count_subscriber = self.inst.getDoubleTopic("/Cameras/Tagcam/tags/targets").subscribe(0)
-        self.apriltag_front_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/TagcamFront/poses/tag1").subscribe([0]*8)
-        self.apriltag_front_count_subscriber = self.inst.getDoubleTopic("/Cameras/TagcamFront/tags/targets").subscribe(0)
 
-        # I'm fairly confident we don't need to use the DriveFeedForwards 12/22/24 LHACK
-        module_config = ModuleConfig(
-                    wheelRadiusMeters=mc.kWheelDiameterMeters/2,
-                    maxDriveVelocityMPS=mc.kDriveWheelFreeSpeedRps * mc.kWheelCircumferenceMeters * 0.85, # the robot advances one wheel circumference per rotation. 
-                    wheelCOF=mc.k_wheel_cof,
-                    driveMotor=mc.k_drive_motor,
-                    driveCurrentLimit=mc.k_max_current_amps,
-                    numMotors=1
-        )
-
-        # robot_config = RobotConfig(
-        #         massKG=constants.k_robot_mass_kg,
-        #         MOI=constants.k_robot_moi,
-        #         moduleConfig=module_config,
-        #         moduleOffsets=dc.kModulePositions,
-        #         # trackwidthMeters=dc.kTrackWidth
-        # )
+        self.pi_subscriber_dict = {} # dict of sub-dicts. One sub-dict for each pi, containing its subscribers.
+        for pi_name in constants.VisionConstants.k_pi_names:
+            this_pi_subscriber_dict = {}
+            this_pi_subscriber_dict.update({"robot_pose_info_subscriber": self.inst.getDoubleArrayTopic(f"vision/{pi_name}/robot_pose_info").subscribe([])})
+            this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time")})
+            self.pi_subscriber_dict.update({pi_name: this_pi_subscriber_dict})
 
         robot_config = RobotConfig.fromGUISettings()
 
@@ -410,6 +395,36 @@ class Swerve (Subsystem):
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
         # update pose based on apriltags
         if constants.k_use_apriltag_odometry:
+
+            for robot_pose_info_subscriber in self.robot_pose_info_subscribers:
+
+                # this list has 4*n floats (n is an integer), 
+                # where each 4-float chunk represents the robot pose as computed from one tag. 
+                # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
+                robot_pose_info = robot_pose_info_subscriber.get()
+
+                # iterate over each chunk using its start idx
+                for chunk_start_idx in range(0, len(robot_pose_info) - 3, 4):
+
+                    this_single_apriltag_timestamp = robot_pose_info[chunk_start_idx]
+
+                    our_now = ntcore._now()
+                    this_pis_now = self.inst.getEntry(f"vision/{pi_name}/wpinow_time").getFloat(0)
+
+                    # supposing our now is 5, and
+                    # this pi's now is 8.
+                    # we must add -3 to this pi's now.
+                    # -3 = ournow - thispisnow
+
+                    delta = our_now - this_pis_now
+
+                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp + delta
+
+                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
+                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
+                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+
+                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
             # iterate over the lists of poses supplied by each pi
             for pi_name in constants.VisionConstants.k_pi_names:

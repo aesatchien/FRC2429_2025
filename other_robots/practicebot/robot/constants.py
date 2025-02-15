@@ -32,3 +32,5 @@ class LowerCrankConstants:
     k_lower_crank_sim_starting_angle = math.radians(60)
     
 
+class VisionConstants:
+    k_pi_names = ["top_pi"]

@@ -97,28 +97,13 @@ class Swerve (Subsystem):
 
         # get poses from NT
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        self.apriltag_rear_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/Tagcam/poses/tag1").subscribe([0] * 8)
-        self.apriltag_rear_count_subscriber = self.inst.getDoubleTopic("/Cameras/Tagcam/tags/targets").subscribe(0)
-        self.apriltag_front_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/TagcamFront/poses/tag1").subscribe([0]*8)
-        self.apriltag_front_count_subscriber = self.inst.getDoubleTopic("/Cameras/TagcamFront/tags/targets").subscribe(0)
 
-        # I'm fairly confident we don't need to use the DriveFeedForwards 12/22/24 LHACK
-        # module_config = ModuleConfig(
-        #             wheelRadiusMeters=mc.kWheelDiameterMeters/2,
-        #             maxDriveVelocityMPS=mc.kDriveWheelFreeSpeedRps * mc.kWheelCircumferenceMeters * 0.85, # the robot advances one wheel circumference per rotation. 
-        #             wheelCOF=mc.k_wheel_cof,
-        #             driveMotor=mc.k_drive_motor,
-        #             driveCurrentLimit=mc.k_max_current_amps,
-        #             numMotors=1
-        # )
-        #
-        # robot_config = RobotConfig(
-        #         massKG=constants.k_robot_mass_kg,
-        #         MOI=constants.k_robot_moi,
-        #         moduleConfig=module_config,
-        #         moduleOffsets=dc.kModulePositions,
-        #         # trackwidthMeters=dc.kTrackWidth
-        # )
+        self.pi_subscriber_dicts: typing.List[typing.Dict[str, typing.Union[ntcore.DoubleArraySubscriber, ntcore.DoubleSubscriber]]] = []
+        for pi_name in constants.VisionConstants.k_pi_names:
+            this_pi_subscriber_dict = {}
+            this_pi_subscriber_dict.update({"robot_pose_info_subscriber": self.inst.getDoubleArrayTopic(f"vision/{pi_name}/robot_pose_info").subscribe([])})
+            this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
+            self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
 
         robot_config = RobotConfig.fromGUISettings()
 
@@ -413,33 +398,45 @@ class Swerve (Subsystem):
 
         self.counter += 1
 
-        self.field2d_for_atag_testing.setRobotPose(
-                x=self.inst.getEntry("SmartDashboard/pose 0 idx x").getFloat(0),
-                y=self.inst.getEntry("SmartDashboard/pose 0 idx y").getFloat(0),
-                rotation=Rotation2d(0)
-        )
-
-        # send the current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
         # update pose based on apriltags
         if constants.k_use_apriltag_odometry:
 
-            if self.apriltag_front_count_subscriber.get() > 0:  # use front camera
-                # update pose from apriltags
-                tag_data = self.apriltag_front_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
-                tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
-                tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+            # iterate over the lists of poses supplied by each pi
+            for pi_subscriber_dict in self.pi_subscriber_dicts:
 
-            if self.apriltag_rear_count_subscriber.get() > 0:  # use rear camera - should I make this an elif?
-                # update pose from apriltags
-                tag_data = self.apriltag_rear_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
-                tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
-                tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+                # this list has 4*n floats (n is an integer), 
+                # where each 4-float chunk represents the robot pose as computed from one tag. 
+                # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
+                robot_pose_info_list_from_this_pi: list[float] = pi_subscriber_dict["robot_pose_info_subscriber"].get()
 
+                # iterate over each chunk using its start idx
+                for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
+                    print("Adding apriltag measurement!")
+
+                    this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
+
+                    our_now = wpilib.Timer.getFPGATimestamp()
+                    this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
+
+                    print(f"this pis now: {this_pis_now}")
+
+                    # supposing our now is 5, and
+                    # this pi's now is 8.
+                    # we must add -3 to this pi's now.
+                    # -3 = ournow - thispisnow
+
+                    delta = our_now - this_pis_now
+                    wpilib.SmartDashboard.putNumber("delta time", delta)
+
+                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
+                    wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
+
+                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
+                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
+                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+
+                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
 
         # Update the odometry in the periodic block -
@@ -447,16 +444,11 @@ class Swerve (Subsystem):
             # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
             self.pose_estimator.updateWithTime(wpilib.Timer.getFPGATimestamp(), Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
 
+        self.field2d_for_atag_testing.setRobotPose(self.get_pose())
+
         # in sim, we update from physics.py
         # TODO: if we want to be cool and have spare time, we could use SparkBaseSim with FlywheelSim to do
         # actual physics simulation on the swerve modules instead of assuming perfect behavior
-
-        # else:
-        #     # sim is not updating the odometry right yet, not sure why since all the sparks should be set in the sim
-        #     # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
-        #     self.pose_estimator.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions())
-        #     pose = self.get_pose()
-        #     wpilib.SmartDashboard.putNumberArray('real_robot_pose', [pose.x, pose.y, pose.rotation().degrees()])
 
         if self.counter % 10 == 0:
             pose = self.get_pose()  # self.odometry.getPose()
