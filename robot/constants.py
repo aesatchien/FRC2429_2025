@@ -125,6 +125,18 @@ class IntakeConstants:
 
     k_seconds_to_stay_on_while_scoring = 1
 
+class ClimberConstants:
+    k_CAN_id = 2
+    k_climber_motor_rotation = math.radians((math.pi / 2))
+    k_climber_motor_stowed_angle = 0
+    k_climber_motor_climber_reference_angle = 10
+    k_climber_forward_rotation_limit = 90
+    k_climber_reverse_rotation_limit = 0
+    # The PID constants will be changed later on.
+    kP = 0
+    kI = 1
+    kD = 1
+    k_climber_motor_voltage = 12
 
 class WristConstants:
 
