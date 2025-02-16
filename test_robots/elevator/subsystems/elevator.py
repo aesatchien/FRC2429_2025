@@ -15,9 +15,10 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         'motor_can_id': 4, 'follower_can_id': 5,
         'gear_ratio': 15,
 
-        'k_MaxVelocityMeterPerSecond': 1.0,  #
-        'k_MaxAccelerationMeterPerSecSquared': 2.0,
-        'k_kP': 0.00,  #TODO - update this
+        # these values are for the carriage, which is 2x the chain - will be divided by 2 later in the USESTATE
+        'k_MaxVelocityMeterPerSecond': 1.5,  # max possible speed of gearing is about 2 m/s
+        'k_MaxAccelerationMeterPerSecSquared': 2.5,
+        'k_kP': 1.2,  # TODO - at zero we seem to be off a few cm - why?
 
         # Elevator stuff - from recalc
         'k_kSVolts': 0.0,  # constant to always add - seems redundant with kG?
