@@ -64,7 +64,7 @@ target_pipes = {
     "H4": {"height": 71.9, "x": 19.8, 'offset':-2},
 }
 
-def solve_engagement(H_target, x_target, offset):
+def solve_engagement(H_target, x_target, offset, bottom=6, debug=False):
     """Solve for H and THETA given the bottom center of the gamepiece must align with (x_target, H_target)."""
     min_height, max_height = 0, 64
     min_theta, max_theta = -25, 80
@@ -81,15 +81,16 @@ def solve_engagement(H_target, x_target, offset):
         gamepiece_y = arm_y + 2 * np.sin(theta)
 
         # Compute bottom center of the gamepiece (6 inches perpendicular to the arm direction)
-        bottom_x = gamepiece_x  + 6 * np.cos(theta - np.radians(90))
-        bottom_y = gamepiece_y  + 6 * np.sin(theta - np.radians(90))
+        bottom_x = gamepiece_x + bottom * np.cos(theta - np.radians(90))
+        bottom_y = gamepiece_y + bottom * np.sin(theta - np.radians(90))
 
         return [bottom_x - x_target, bottom_y - H_target]
 
     # Use least squares optimization for better stability
     initial_guess = [H_target - 10 , 45]  # Start with a reasonable guess
     result = least_squares(equations, initial_guess, bounds=([min_height, min_theta], [max_height, max_theta]))
-    print(f'for target at ({x_target:.1f}, {H_target:.1f}): H, Theta is ({result.x[0]:.1f}, {result.x[1]:.1f})')
+    if debug:
+        print(f'for target at ({x_target:.1f}, {H_target:.1f}): H, Theta is ({result.x[0]:.1f}, {result.x[1]:.1f})')
 
     return {"H": float(round(result.x[0],2)), "THETA": float(round(result.x[1],2)), 'offset':offset}
 
