@@ -436,6 +436,8 @@ class Swerve (Subsystem):
                                                          y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
                                                          angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
 
+                    self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
+
                     self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
 
@@ -443,8 +445,6 @@ class Swerve (Subsystem):
         if wpilib.RobotBase.isReal():
             # self.odometry.update(Rotation2d.fromDegrees(self.get_angle()), self.get_module_positions(),)
             self.pose_estimator.updateWithTime(wpilib.Timer.getFPGATimestamp(), Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
-
-        self.field2d_for_atag_testing.setRobotPose(self.get_pose())
 
         # in sim, we update from physics.py
         # TODO: if we want to be cool and have spare time, we could use SparkBaseSim with FlywheelSim to do

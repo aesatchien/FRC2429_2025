@@ -1,5 +1,6 @@
 from enum import Enum
 import math
+import rev
 import wpilib
 
 from rev import ClosedLoopSlot, SparkMaxConfig
@@ -25,14 +26,14 @@ k_led_pwm_port = 0  # todo: update this to actual number
 
 k_positions = { 
     "stow": {
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "ground": {
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(-5),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
@@ -40,21 +41,21 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(60), #angle between the vertical and the shoulder ligament
         "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "l2": {
-        "elevator": inchesToMeters(5),
+        "elevator": inchesToMeters(13),
         "shoulder_pivot": math.radians(43),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": inchesToMeters(13),
+        "elevator": inchesToMeters(21),
         "shoulder_pivot": math.radians(43),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -75,28 +76,28 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "processor": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "barge": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae low": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae high": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0,
+        "elevator": 8,
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
@@ -232,15 +233,15 @@ class ElevatorConstants:
     k_CAN_id = 4
     k_follower_CAN_id = 5
 
-    k_gear_ratio = 12 # 9, 12, or 15 gear ratio said victor 1/30/25
+    k_gear_ratio = 15 # 9, 12, or 15 gear ratio said victor 1/30/25
                       # we need it seperate for the sim
     k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
-    k_meters_per_revolution = k_effective_pulley_diameter / k_gear_ratio
+    k_meters_per_revolution = math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio # 2 because our elevator goes twice as fast as the chain because continuous rigging
     k_mass_kg = lbsToKilograms(25)
     k_plant = DCMotor.NEO(2)
 
-    k_min_height = 0
-    k_max_height = 1
+    k_min_height = inchesToMeters(8)
+    k_max_height = inchesToMeters(64)
     k_tolerance = 2 / 100 # 2 cm
 
     k_sim_starting_height = 2
@@ -250,6 +251,7 @@ class ElevatorConstants:
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
     k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)
 
+    # k_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.)
     k_config.closedLoop.pid(p=6, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))

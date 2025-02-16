@@ -6,6 +6,7 @@ import rev
 from commands2 import Subsystem
 from wpilib import SmartDashboard
 from playingwithfusion import TimeOfFlight
+from wpimath.units import inchesToMeters
 
 import constants
 
@@ -44,7 +45,8 @@ class Elevator(Subsystem):
         # self.elevator_pid.setSmartMotionAllowedClosedLoopError(1)
 
         # initialize the height of the elevator  - sensor is in mm, so convert to m
-        initial_height = 1/100 * self.elevator_height_sensor.getRange() if wpilib.RobotBase.isReal() else constants.ElevatorConstants.k_sim_starting_height # note: range is got in mm, not in.
+        # initial_height = 1/1000 * self.elevator_height_sensor.getRange() if wpilib.RobotBase.isReal() else constants.ElevatorConstants.k_sim_starting_height # note: range is got in mm, not in.
+        initial_height = inchesToMeters(8) # no tof yet so assuming at bottom 2/15/25
         self.set_height(initial_height)
 
         self.target_pos = "stow"
