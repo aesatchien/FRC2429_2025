@@ -102,7 +102,7 @@ class RobotContainer:
         self.score_test_chooser.onChange(
             listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
                 commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=selected_value))))
-        wpilib.SmartDashboard.putData('Robot Scoring Mode', self.score_test_chooser)
+        wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
 
     def get_autonomous_command(self):
         pass
