@@ -7,13 +7,14 @@ from subsystems.robot_state import RobotState
 
 class MovePivot(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, pivot: Pivot,  mode='scoring', use_dash=True, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, container, pivot: Pivot,  mode='scoring', angle=degreesToRadians(90), use_dash=True, wait_to_finish=False, indent=0) -> None:
         super().__init__()
         self.setName('Move Pivot')  # change this to something appropriate for this command
         self.indent = indent
         self.container = container
         self.pivot = pivot
         self.mode = mode
+        self.angle = angle
         self.use_dash = use_dash  # testing mode - read target from dashboard?
         self.wait_to_finish = wait_to_finish
         self.addRequirements(self.pivot)  # commandsv2 version of requirements
@@ -31,6 +32,9 @@ class MovePivot(commands2.Command):  # change the name for your command
         # a little bit complicated because I want to test everything here
         if self.mode == 'scoring':  # what will eventually be the norm
             self.goal = self.container.robot_state.get_pivot_goal()
+            self.pivot.set_goal(self.goal)  # should already be in radians
+        elif self.mode == 'specified':
+            self.goal = self.angle
             self.pivot.set_goal(self.goal)  # should already be in radians
         elif self.use_dash:
             self.goal = SmartDashboard.getNumber('pivot_cmd_goal_deg', 90)  # get the elevator sp from the dash
