@@ -9,9 +9,11 @@ import commands2
 #import constants
 
 from subsystems.elevator import Elevator
+from subsystems.pivot import Pivot
 from subsystems.led import Led
 from commands.set_leds import SetLEDs
 from commands.move_elevator import MoveElevator
+from commands.move_pivot import MovePivot
 
 
 class RobotContainer:
@@ -28,6 +30,7 @@ class RobotContainer:
 
         # The robot's subsystems
         self.elevator = Elevator()
+        self.pivot = Pivot()
         self.led = Led(self)
 
         # configure the controllers
@@ -86,6 +89,7 @@ class RobotContainer:
 
         wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
         wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator))
+        wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot))
 
     def get_autonomous_command(self):
         pass
