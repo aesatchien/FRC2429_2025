@@ -1,5 +1,5 @@
 import math
-from rev import SparkMaxSim
+from rev import SparkFlex, SparkFlexSim, SparkMaxSim
 import wpilib
 import wpilib.simulation as simlib  # 2021 name for the simulation library
 import wpimath.geometry as geo
@@ -203,8 +203,8 @@ class PhysicsEngine:
                                                     simulateGravity=True,
                                                     startingAngle=constants.ShoulderConstants.k_sim_starting_angle)
 
-        self.shoulder_spark_sim = SparkMaxSim(self.robot.container.shoulder.sparkmax, constants.ShoulderConstants.k_plant)
-        self.shoulder_follower_spark_sim = SparkMaxSim(self.robot.container.shoulder.follower_sparkmax, constants.ShoulderConstants.k_plant)
+        self.shoulder_spark_sim = SparkFlexSim(self.robot.container.pivot.motor, constants.ShoulderConstants.k_plant)
+        self.shoulder_follower_spark_sim = SparkFlexSim(self.robot.container.pivot.motor, constants.ShoulderConstants.k_plant)
 
 
 
@@ -219,8 +219,8 @@ class PhysicsEngine:
                                                simulateGravity=True,
                                                startingHeight=constants.ElevatorConstants.k_sim_starting_height)
 
-        self.elevator_spark_sim = SparkMaxSim(self.robot.container.elevator.elevator_controller, constants.ElevatorConstants.k_plant)
-        self.elevator_follower_spark_sim = SparkMaxSim(self.robot.container.elevator.elevator_follower_controller, constants.ElevatorConstants.k_plant)
+        self.elevator_spark_sim = SparkMaxSim(self.robot.container.elevator.motor, constants.ElevatorConstants.k_plant)
+        self.elevator_follower_spark_sim = SparkMaxSim(self.robot.container.elevator.follower, constants.ElevatorConstants.k_plant)
 
 
 

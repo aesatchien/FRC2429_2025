@@ -12,27 +12,29 @@ from pathplannerlib.path import PathConstraints
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath
 
+from commands.sequential_scoring import SequentialScoring
 import constants
 
+from subsystems.robot_state import RobotState
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
-from subsystems.shoulder import Shoulder
+from subsystems.pivot import Pivot
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
 
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
-from commands.move_shoulder import MoveShoulder
+from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
-
-from commands.go_to_position import GoToPosition
-from commands.intake_sequence import IntakeSequence
+#
+# from commands.go_to_position import GoToPosition
+# from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
 from commands.score import Score
-from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
+# from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
 class RobotContainer:
     """
@@ -69,10 +71,11 @@ class RobotContainer:
         # self.lower_crank = LowerCrank(container=self) # I don't want to test without a sim yet
         self.swerve = Swerve()
         self.elevator = Elevator()
-        self.shoulder = Shoulder()
+        self.pivot = Pivot()
         self.wrist = Wrist()
         self.led = Led(self)
         self.intake = Intake()
+        self.robot_state = RobotState(self)
 
         self.configure_joysticks()
         self.bind_driver_buttons()
@@ -202,6 +205,17 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
 
         wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
+        wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator))
+        wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot))
+        wpilib.SmartDashboard.putData('SequentialScore', SequentialScoring(container=self))
+
+        # quick way to test all scoring positions from dashboard
+        self.score_test_chooser = wpilib.SendableChooser()
+        [self.score_test_chooser.addOption(key, value) for key, value in self.robot_state.targets_dict.items()]  # add all the indicators
+        self.score_test_chooser.onChange(
+            listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
+                commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=selected_value))))
+        wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
 
     def bind_driver_buttons(self):
 
@@ -231,64 +245,75 @@ class RobotContainer:
 
         print("Binding codriver buttons")
 
-        self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
-                commands2.ConditionalCommand(
-                    onTrue=GoToPosition(container=self, position="l1"),
+        self.co_trigger_a()
 
-                    onFalse=commands2.ConditionalCommand(
-                        onTrue=GoToPosition(container=self, position="processor"),
-                        onFalse=IntakeSequence(container=self, position="ground"),
-                        condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
-                    ),
+        #  leo's way: make a command that goes to any position. specify the position in command construction.
+            # => a command object for each position
+        # cory's way: make a command that goes to any position. specify the position in another subsystem that this command looks at.
+            # => one command object and one subsystem
+            # now we need a a command object for each position to tell that subsystem where to go
+            # but we can change setpoints outside of construct-time
 
-                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-                )
-        )
+        self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
-        self.co_trigger_b.onTrue(
-                commands2.ConditionalCommand(
-                    onTrue=GoToPosition(container=self, position="l2"),
-                    onFalse=IntakeSequence(container=self, position="ground"), # can make either a or b into a different position if needed for algae and coral
-                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-                )
-        )
-
-        self.co_trigger_x.onTrue(
-                commands2.ConditionalCommand(
-                    onTrue=GoToPosition(container=self, position="l3"),
-                    onFalse=IntakeSequence(container=self, position="algae low"),
-                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-                )
-        )
-
-        self.co_trigger_y.onTrue( # when trigger Y is pressed, if we have coral, go to l4; else if we have algae, go to net; else go to intake algae high
-                commands2.ConditionalCommand(
-                    onTrue=GoToPosition(container=self, position="l4"),
-
-                    onFalse=commands2.ConditionalCommand(
-                        onTrue=GoToPosition(container=self, position="barge"),
-                        onFalse=IntakeSequence(container=self, position="algae high"),
-
-                        condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
-                    ),
-
-                    condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-                )
-        )
-
-        self.co_trigger_lb.onTrue(commands2.PrintCommand("** Setting robot mode to empty **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY))))
-
-        # self.co_trigger_rb.onTrue(Score(container=self))
-        self.co_trigger_rb.whileTrue(DriveByJoystickSubsystem(container=self, controller=self.co_pilot_command_controller, subsystem=self.intake, duty_cycle_coef=0.01))
-        
-        self.co_trigger_r_trigger.onTrue(commands2.PrintCommand("** Setting robot mode to has algae **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE))))
-
-        self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.PrintCommand("** Setting robot mode to has coral **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL))))
-
-        self.co_trigger_d.or_(self.co_trigger_l).onTrue(IntakeSequence(container=self, position="coral station"))
-
-        self.co_trigger_start.onTrue(MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90))) # TODO: replace with coastmode command
-        self.co_trigger_back.onTrue(MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0))) # for misc testing
+        # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
+        #         commands2.ConditionalCommand(
+        #             onTrue=GoToPosition(container=self, position="l1"),
+        #
+        #             onFalse=commands2.ConditionalCommand(
+        #                 onTrue=GoToPosition(container=self, position="processor"),
+        #                 onFalse=IntakeSequence(container=self, position="ground"),
+        #                 condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
+        #             ),
+        #
+        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+        #         )
+        # )
+        #
+        # self.co_trigger_b.onTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=GoToPosition(container=self, position="l2"),
+        #             onFalse=IntakeSequence(container=self, position="ground"), # can make either a or b into a different position if needed for algae and coral
+        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+        #         )
+        # )
+        #
+        # self.co_trigger_x.onTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=GoToPosition(container=self, position="l3"),
+        #             onFalse=IntakeSequence(container=self, position="algae low"),
+        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+        #         )
+        # )
+        #
+        # self.co_trigger_y.onTrue( # when trigger Y is pressed, if we have coral, go to l4; else if we have algae, go to net; else go to intake algae high
+        #         commands2.ConditionalCommand(
+        #             onTrue=GoToPosition(container=self, position="l4"),
+        #
+        #             onFalse=commands2.ConditionalCommand(
+        #                 onTrue=GoToPosition(container=self, position="barge"),
+        #                 onFalse=IntakeSequence(container=self, position="algae high"),
+        #
+        #                 condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
+        #             ),
+        #
+        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
+        #         )
+        # )
+        #
+        # self.co_trigger_lb.onTrue(commands2.PrintCommand("** Setting robot mode to empty **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY))))
+        #
+        # # self.co_trigger_rb.onTrue(Score(container=self))
+        # self.co_trigger_rb.whileTrue(DriveByJoystickSubsystem(container=self, controller=self.co_pilot_command_controller, subsystem=self.intake, duty_cycle_coef=0.01))
+        #
+        # self.co_trigger_r_trigger.onTrue(commands2.PrintCommand("** Setting robot mode to has algae **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE))))
+        #
+        # self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.PrintCommand("** Setting robot mode to has coral **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL))))
+        #
+        # self.co_trigger_d.or_(self.co_trigger_l).onTrue(IntakeSequence(container=self, position="coral station"))
+        #
+        # self.co_trigger_start.onTrue(MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90))) # TODO: replace with coastmode command
+        # self.co_trigger_back.onTrue(MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0))) # for misc testing
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down

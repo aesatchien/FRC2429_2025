@@ -1,23 +1,24 @@
 import commands2
 from wpilib import SmartDashboard
-from subsystems.elevator import Elevator
+from subsystems.pivot import Pivot
+from wpimath.units import inchesToMeters, radiansToDegrees, degreesToRadians
 from subsystems.robot_state import RobotState
 
-class MoveElevator(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, elevator: Elevator, mode='scoring', use_dash=True, offset=0.0, wait_to_finish=False, indent=0) -> None:
+class MovePivot(commands2.Command):  # change the name for your command
+
+    def __init__(self, container, pivot: Pivot,  mode='scoring', use_dash=True, wait_to_finish=False, indent=0) -> None:
         super().__init__()
-        self.setName('Move Elevator')  # change this to something appropriate for this command
+        self.setName('Move Pivot')  # change this to something appropriate for this command
         self.indent = indent
         self.container = container
-        self.elevator = elevator
+        self.pivot = pivot
         self.mode = mode
         self.use_dash = use_dash  # testing mode - read target from dashboard?
-        self.offset = offset  # attempt to have an offset
         self.wait_to_finish = wait_to_finish
-        self.addRequirements(self.elevator)  # commandsv2 version of requirements
-        SmartDashboard.putNumber('elevator_cmd_goal', 0.21)  # initialize the key we will use to run this command
-        SmartDashboard.putString('elevator_cmd_mode', 'absolute')
+        self.addRequirements(self.pivot)  # commandsv2 version of requirements
+        SmartDashboard.putNumber('pivot_cmd_goal_deg', 90)  # initialize the key we will use to run this command
+        SmartDashboard.putString('pivot_cmd_mode', 'absolute')
 
         # sick of IDE complaining
         self.start_time = None
@@ -29,16 +30,15 @@ class MoveElevator(commands2.Command):  # change the name for your command
 
         # a little bit complicated because I want to test everything here
         if self.mode == 'scoring':  # what will eventually be the norm
-            self.goal = self.container.robot_state.get_elevator_goal() + self.offset
-            self.elevator.set_goal(self.goal)
+            self.goal = self.container.robot_state.get_pivot_goal()
+            self.pivot.set_goal(self.goal)  # should already be in radians
         elif self.use_dash:
-            self.goal = SmartDashboard.getNumber('elevator_cmd_goal', 0.21)  # get the elevator sp from the dash
-            self.goal = self.goal + self.offset  # allow for an offset from our goal
-            self.mode = SmartDashboard.getString('elevator_cmd_mode', 'absolute')
+            self.goal = SmartDashboard.getNumber('pivot_cmd_goal_deg', 90)  # get the elevator sp from the dash
+            self.mode = SmartDashboard.getString('pivot_cmd_mode', 'absolute')
             if self.mode == 'absolute':
-                self.elevator.set_goal(self.goal)
+                self.pivot.set_goal(degreesToRadians(self.goal))
             elif self.mode == 'relative':
-                self.elevator.move_meters(delta_meters=self.goal)
+                self.pivot.move_degrees(delta_degrees=self.goal)
         else:
             print(f'Invalid Elevator move mode: {self.mode}')
 
@@ -48,11 +48,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
         pass
 
     def isFinished(self) -> bool:
-        if self.wait_to_finish:
-            return self.elevator.at_goal # TODO - put in a timeout, and probably a minimum time to allow to start moving
-        else:
-            return True
-
+        return True
 
     def end(self, interrupted: bool) -> None:
         end_time = self.container.get_enabled_time()

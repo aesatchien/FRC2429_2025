@@ -7,7 +7,7 @@ from subsystems.robot_state import RobotState
 
 class MoveElevator(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, elevator: Elevator, mode='scoring', use_dash=True, offset=0, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, container, elevator: Elevator, mode='scoring', use_dash=True, offset=0.0, wait_to_finish=False, indent=0) -> None:
         super().__init__()
         self.setName('Move Elevator')  # change this to something appropriate for this command
         self.indent = indent

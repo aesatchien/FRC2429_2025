@@ -95,12 +95,13 @@ class Swerve (Subsystem):
         # get poses from NT
         self.inst = ntcore.NetworkTableInstance.getDefault()
 
-        self.pi_subscriber_dict = {} # dict of sub-dicts. One sub-dict for each pi, containing its subscribers.
+        self.pi_subscriber_dicts: typing.List[typing.Dict[str, typing.Union[ntcore.DoubleArraySubscriber, ntcore.DoubleSubscriber]]] = []
         for pi_name in constants.VisionConstants.k_pi_names:
             this_pi_subscriber_dict = {}
             this_pi_subscriber_dict.update({"robot_pose_info_subscriber": self.inst.getDoubleArrayTopic(f"vision/{pi_name}/robot_pose_info").subscribe([])})
-            this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time")})
-            self.pi_subscriber_dict.update({pi_name: this_pi_subscriber_dict})
+            this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
+            self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
+
 
         robot_config = RobotConfig.fromGUISettings()
 
@@ -396,51 +397,24 @@ class Swerve (Subsystem):
         # update pose based on apriltags
         if constants.k_use_apriltag_odometry:
 
-            for robot_pose_info_subscriber in self.robot_pose_info_subscribers:
-
-                # this list has 4*n floats (n is an integer), 
-                # where each 4-float chunk represents the robot pose as computed from one tag. 
-                # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
-                robot_pose_info = robot_pose_info_subscriber.get()
-
-                # iterate over each chunk using its start idx
-                for chunk_start_idx in range(0, len(robot_pose_info) - 3, 4):
-
-                    this_single_apriltag_timestamp = robot_pose_info[chunk_start_idx]
-
-                    our_now = ntcore._now()
-                    this_pis_now = self.inst.getEntry(f"vision/{pi_name}/wpinow_time").getFloat(0)
-
-                    # supposing our now is 5, and
-                    # this pi's now is 8.
-                    # we must add -3 to this pi's now.
-                    # -3 = ournow - thispisnow
-
-                    delta = our_now - this_pis_now
-
-                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp + delta
-
-                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
-                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
-                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
-
-                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
-
             # iterate over the lists of poses supplied by each pi
-            for pi_name in constants.VisionConstants.k_pi_names:
+            for pi_subscriber_dict in self.pi_subscriber_dicts:
 
                 # this list has 4*n floats (n is an integer), 
                 # where each 4-float chunk represents the robot pose as computed from one tag. 
                 # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
-                robot_pose_info_list_from_this_pi = self.inst.getEntry(f"vision/{pi_name}/robot_pose_info").getFloatArray([])
+                robot_pose_info_list_from_this_pi: list[float] = pi_subscriber_dict["robot_pose_info_subscriber"].get()
 
                 # iterate over each chunk using its start idx
                 for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
+                    print("Adding apriltag measurement!")
 
                     this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
 
-                    our_now = ntcore._now()
-                    this_pis_now = self.inst.getEntry(f"vision/{pi_name}/wpinow_time").getFloat(0)
+                    our_now = wpilib.Timer.getFPGATimestamp()
+                    this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
+
+                    print(f"this pis now: {this_pis_now}")
 
                     # supposing our now is 5, and
                     # this pi's now is 8.
@@ -448,12 +422,16 @@ class Swerve (Subsystem):
                     # -3 = ournow - thispisnow
 
                     delta = our_now - this_pis_now
+                    wpilib.SmartDashboard.putNumber("delta time", delta)
 
-                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp + delta
+                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
+                    wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
 
                     this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
                                                          y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
                                                          angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+
+                    self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
 
                     self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
