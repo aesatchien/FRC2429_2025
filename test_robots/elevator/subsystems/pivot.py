@@ -138,6 +138,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.goal = goal
         # print(f'setting goal to {self.goal}')
         self.setGoal(self.goal)
+        self.at_goal = False
 
     def move_degrees(self, delta_degrees: float, silent=False) -> None:  # way to bump up and down for testing
         current_angle = self.get_angle()
@@ -151,7 +152,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
         self.counter += 1
-        if self.counter % 2 == 0:
+        if self.counter % 5 == 0:
             self.angle = self.encoder.getPosition()
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance  # maybe we want to call this an error
             self.error = self.angle - self.goal

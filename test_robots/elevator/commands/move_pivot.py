@@ -2,32 +2,45 @@ import commands2
 from wpilib import SmartDashboard
 from subsystems.pivot import Pivot
 from wpimath.units import inchesToMeters, radiansToDegrees, degreesToRadians
+from subsystems.robot_state import RobotState
 
 
 class MovePivot(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, pivot:Pivot, mode='absoltue', indent=0) -> None:
+    def __init__(self, container, pivot: Pivot,  mode='scoring', use_dash=True, wait_to_finish=False, indent=0) -> None:
         super().__init__()
         self.setName('Move Pivot')  # change this to something appropriate for this command
         self.indent = indent
         self.container = container
         self.pivot = pivot
         self.mode = mode
-        # self.addRequirements(self.container.)  # commandsv2 version of requirements
+        self.use_dash = use_dash  # testing mode - read target from dashboard?
+        self.wait_to_finish = wait_to_finish
+        self.addRequirements(self.pivot)  # commandsv2 version of requirements
         SmartDashboard.putNumber('pivot_cmd_goal_deg', 90)  # initialize the key we will use to run this command
         SmartDashboard.putString('pivot_cmd_mode', 'absolute')
+
+        # sick of IDE complaining
+        self.start_time = None
+        self.goal = None
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
 
-        self.goal = SmartDashboard.getNumber('pivot_cmd_goal_deg', 90)  # get the elevator sp from the dash
-        self.mode = SmartDashboard.getString('pivot_cmd_mode', 'absolute')
-
-        if self.mode == 'absolute':
-            self.pivot.set_goal(degreesToRadians(self.goal))
+        # a little bit complicated because I want to test everything here
+        if self.mode == 'scoring':  # what will eventually be the norm
+            self.goal = self.container.robot_state.get_pivot_goal()
+            self.pivot.set_goal(self.goal)  # should already be in radians
+        elif self.use_dash:
+            self.goal = SmartDashboard.getNumber('pivot_cmd_goal_deg', 90)  # get the elevator sp from the dash
+            self.mode = SmartDashboard.getString('pivot_cmd_mode', 'absolute')
+            if self.mode == 'absolute':
+                self.pivot.set_goal(degreesToRadians(self.goal))
+            elif self.mode == 'relative':
+                self.pivot.move_degrees(delta_degrees=self.goal)
         else:
-            self.pivot.move_degrees(delta_degrees=self.goal)
+            print(f'Invalid Elevator move mode: {self.mode}')
 
         print(f"{self.indent * '    '}** Started {self.getName()} with mode {self.mode} and goal {self.goal:.2f} at {self.start_time} s **", flush=True)
 

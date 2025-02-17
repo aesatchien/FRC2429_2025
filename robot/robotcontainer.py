@@ -42,6 +42,8 @@ class RobotContainer:
     subsystems, commands, and button mappings) should be declared here.
     """
 
+
+    # set robot modes
     class RobotMode(Enum): # use this instead of intake results directly because we want to be able to override intake results for testing and emergencies
         EMPTY = "e"
         HAS_CORAL = "c"
@@ -55,6 +57,9 @@ class RobotContainer:
     
     def is_robot_mode(self, mode: RobotMode) -> bool:
         return self.robot_mode == mode
+
+    # set scoring mode
+
 
     def __init__(self) -> None:
 

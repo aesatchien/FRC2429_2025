@@ -11,9 +11,12 @@ import commands2
 from subsystems.elevator import Elevator
 from subsystems.pivot import Pivot
 from subsystems.led import Led
+from subsystems.robot_state import RobotState
+
 from commands.set_leds import SetLEDs
 from commands.move_elevator import MoveElevator
 from commands.move_pivot import MovePivot
+from commands.sequential_scoring import SequentialScoring
 
 
 class RobotContainer:
@@ -31,7 +34,8 @@ class RobotContainer:
         # The robot's subsystems
         self.elevator = Elevator()
         self.pivot = Pivot()
-        self.led = Led(self)
+        self.led = Led(container=self)
+        self.robot_state = RobotState(container=self)
 
         # configure the controllers
         self.configure_joysticks()
@@ -67,11 +71,11 @@ class RobotContainer:
         self.triggerLeft = self.driver_command_controller.povLeft()
         self.triggerRight = self.driver_command_controller.povRight()
 
-        self.copilot_controller = commands2.button.CommandXboxController(1)
-        self.copilot_controller = commands2.button.CommandXboxController(1) 
+        # self.copilot_controller = commands2.button.CommandXboxController(1)
 
     def bind_driver_buttons(self):
-        pass
+        self.triggerA.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(self.robot_state.Target.L3)))
+        self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(self.robot_state.Target.L2)))
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -90,6 +94,15 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
         wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator))
         wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot))
+        wpilib.SmartDashboard.putData('SequentialScore', SequentialScoring(container=self))
+
+        # quick way to test all scoring positions from dashboard
+        self.score_test_chooser = wpilib.SendableChooser()
+        [self.score_test_chooser.addOption(key, value) for key, value in self.robot_state.targets_dict.items()]  # add all the indicators
+        self.score_test_chooser.onChange(
+            listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
+                commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=selected_value))))
+        wpilib.SmartDashboard.putData('Robot Scoring Mode', self.score_test_chooser)
 
     def get_autonomous_command(self):
         pass

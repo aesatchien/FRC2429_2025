@@ -26,14 +26,14 @@ k_led_pwm_port = 0  # todo: update this to actual number
 
 k_positions = { 
     "stow": {
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "ground": {
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(-5),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
@@ -41,7 +41,7 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(60), #angle between the vertical and the shoulder ligament
         "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -76,28 +76,28 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "processor": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "barge": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae low": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae high": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 8,
+        "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
