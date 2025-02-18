@@ -35,7 +35,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.setName(ElevatorConstants.k_name)
         self.counter = 4
         self.is_moving = False  # may want to keep track of if we are in motion
-        self.tolerance = 0.01  # meters
+        self.tolerance = 0.03  # meters - then we will be "at goal"
         self.goal = ElevatorConstants.k_min_height
         self.at_goal = True
 

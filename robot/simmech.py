@@ -101,6 +101,8 @@ elevator_offset_x = width/2
 elevator_base = side_elevator.getRoot("elevator", elevator_offset_x, elevator_offset_y)
 side_elevator.appendLigament("elevator", "elevator_side", elevator_height, 90, bar_width * 1.5, wpilib.Color.kRed)
 side_elevator.appendLigament("elevator_side", "shoulder", shoulder_length, constants.ElevatorConstants.k_sim_positions_degrees["l1"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
+side_elevator.appendLigament("shoulder", "coral_left", 6, 90, bar_width, wpilib.Color.kWhite)  # CJH added 20250218
+side_elevator.appendLigament("shoulder", "coral_right", 6, -90, bar_width, wpilib.Color.kWhite)
 
 # top view - looking down front is on the right,  right is on the bottom.  remember - angles are relativeto parent!
 # ...
