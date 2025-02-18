@@ -7,8 +7,7 @@ import commands2
 from robotcontainer import RobotContainer
 from subsystems.led import Led  # allows indexing of LED colors
 
-if wpilib.RobotBase.isSimulation():
-    wpilib.DriverStation.silenceJoystickConnectionWarning(True)
+wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
 class MyRobot(commands2.TimedCommandRobot):
     """

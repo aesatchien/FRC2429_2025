@@ -33,7 +33,7 @@ class ResetFieldCentric(commands2.Command):
     def end(self, interrupted: bool) -> None:
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
-        print_end_message = False
+        print_end_message = True
         if print_end_message:
             print(f"{'    ' * self.indent}** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
             SmartDashboard.putString(f"alert",

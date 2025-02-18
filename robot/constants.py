@@ -3,7 +3,7 @@ import math
 import rev
 import wpilib
 
-from rev import ClosedLoopSlot, SparkMaxConfig
+from rev import ClosedLoopSlot, SparkFlexConfig, SparkMax, SparkMaxConfig
 from wpimath.units import inchesToMeters, lbsToKilograms
 from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
@@ -48,22 +48,22 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "l2": {
-        "elevator": inchesToMeters(13),
-        "shoulder_pivot": math.radians(43),
+        "elevator": 0.45,
+        "shoulder_pivot": math.radians(55),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": inchesToMeters(21),
-        "shoulder_pivot": math.radians(43),
+        "elevator": 0.8,
+        "shoulder_pivot": math.radians(50),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": inchesToMeters(25.5),
-        "shoulder_pivot": math.radians(43), 
+        "elevator": 1.41,
+        "shoulder_pivot": math.radians(60), 
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -115,6 +115,7 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(True)
     k_intake_config.closedLoop.pid(1, 0, 0)
+    k_intake_config.smartCurrentLimit(5)
 
     k_tof_algae_port = 2
     k_tof_coral_port = 2
@@ -142,7 +143,7 @@ class ClimberConstants:
 class WristConstants:
 
     k_CAN_id = 10
-    k_gear_ratio = 5 * 5 * 3 * 4.44
+    k_gear_ratio = 88
     k_abs_encoder_offset = 0
     k_length_meters = 20 * 0.0254
     k_center_of_mass_to_axis_of_rotation_dist_meters = inchesToMeters(6)
@@ -150,12 +151,15 @@ class WristConstants:
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
     k_plant = DCMotor.NEO550(1)
 
-    k_min_angle = math.radians(-90)
-    k_max_angle = math.radians(180)
+    k_min_angle = math.radians(-95)
+    k_max_angle = math.radians(95)
     k_tolerance = math.radians(2.5)
-    k_sim_starting_angle = 0 # sim mechanism2d takes degrees
+    k_starting_angle = 0 # sim mechanism2d takes degrees
 
     k_config = SparkMaxConfig()
+
+    k_config.inverted(True)
+    k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
@@ -165,7 +169,7 @@ class WristConstants:
     
     k_config.absoluteEncoder.zeroOffset(0.45)
 
-    k_config.closedLoop.pid(p=6, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.1, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
         
@@ -182,6 +186,8 @@ class ShoulderConstants:
     # angle is 0 when the shoulder is flat pointing forwards. 
     # it increases as the shoulder goes clockwise from the perspective of the right side of the robot
     # i.e. when it starts flat and goes up, the angle increases
+    
+    k_name = "profiled_pivot"
 
     k_CAN_id = 6
     k_follower_CAN_id = 7
@@ -193,12 +199,23 @@ class ShoulderConstants:
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
     k_plant = DCMotor.neoVortex(2)
 
+    k_max_velocity_rad_per_second = 1.5
+    k_max_acceleration_rad_per_sec_squared = 2.5
+    k_kS_volts = 0 # constant to always add, uses the sign of velocity
+    k_kG_volts = 1.4/2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
+    k_kV_volt_second_per_radian = 1.69  # stays the same with one or two motors, based on the NEO itself and gear ratio
+    k_kA_volt_second_squared_per_meter = 0.04 / 2.0 # cuts in half with 2 motors
+
     k_min_angle = math.radians(-45)
     k_max_angle = math.radians(225)
     k_tolerance = math.radians(2.5)
-    k_sim_starting_angle = 0
+    k_starting_angle = math.radians(90) # until we have an abs encoder this is where we expect it to start
 
-    k_config = SparkMaxConfig()
+    k_config = SparkFlexConfig()
+
+    k_config.inverted(False)
+    k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
+    k_config.smartCurrentLimit(40)
 
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
@@ -208,9 +225,10 @@ class ShoulderConstants:
     
     k_config.absoluteEncoder.zeroOffset(0.45)
 
-    k_config.closedLoop.pid(p=6, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.75, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.outputRange(-1, 1)
     # k_config.closedLoop.maxMotion.maxAcceleration(1)
     # k_config.closedLoop.maxMotion.maxVelocity(1000)
         
@@ -221,7 +239,7 @@ class ShoulderConstants:
     k_config.softLimit.reverseSoftLimitEnabled(True)
 
     k_follower_config = SparkMaxConfig()
-    k_follower_config.follow(k_CAN_id)
+    k_follower_config.follow(k_CAN_id, invert=False)
 
 
 class ElevatorConstants:
@@ -230,8 +248,17 @@ class ElevatorConstants:
     # therefore, according to the wpilib standard, we will use m
     # 24 tooth sprocket, no. 25 chain
 
+    k_name = "elevator"
+
     k_CAN_id = 4
     k_follower_CAN_id = 5
+
+    k_max_velocity_meter_per_second = 1.5
+    k_max_acceleration_meter_per_sec_squared = 2.5
+    k_kS_volts = 0 # constant to always add, uses the sign of velocity
+    k_kG_volts = 0.88 / 2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
+    k_kV_volt_second_per_radian = 12.05  # stays the same with one or two motors, based on the NEO itself and gear ratio
+    k_kA_volt_second_squared_per_meter = 0.10 / 2.0 # cuts in half with 2 motors
 
     k_gear_ratio = 15 # 9, 12, or 15 gear ratio said victor 1/30/25
                       # we need it seperate for the sim
@@ -248,13 +275,16 @@ class ElevatorConstants:
 
     k_config = SparkMaxConfig()
 
+    k_config.inverted(True)
+
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
     k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)
 
     # k_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.)
-    k_config.closedLoop.pid(p=6, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=1.2, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.outputRange(-1, 1)
         
     k_config.softLimit.forwardSoftLimit(k_max_height)
     k_config.softLimit.reverseSoftLimit(k_min_height)
@@ -262,10 +292,12 @@ class ElevatorConstants:
     k_config.softLimit.forwardSoftLimitEnabled(True)
     k_config.softLimit.reverseSoftLimitEnabled(True)
 
-    k_config.smartCurrentLimit(60)
+    k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+    k_config.smartCurrentLimit(40)
 
     k_follower_config = SparkMaxConfig()
-    k_follower_config.follow(k_CAN_id)
+    k_follower_config.follow(k_CAN_id, invert=True)
+    k_follower_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
     k_timeofflight = 14 #elevator time of flight CAN ID
     

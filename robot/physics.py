@@ -26,11 +26,11 @@ class PhysicsEngine:
                                                         angle=90,
                                                         color=wpilib.Color8Bit(red=150, green=255, blue=160))
         self.mech2d_shoulder = self.mech2d_elevator.appendLigament("shoulder", length=constants.ShoulderConstants.k_length_meters, 
-                                                                   angle=math.degrees(constants.ShoulderConstants.k_sim_starting_angle),
+                                                                   angle=math.degrees(constants.ShoulderConstants.k_starting_angle),
                                                                    color=wpilib.Color8Bit(red=30, green=200, blue=250))
 
         self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_length_meters, 
-                                                                angle=constants.WristConstants.k_sim_starting_angle,
+                                                                angle=constants.WristConstants.k_starting_angle,
                                                                 color=wpilib.Color8Bit(red=255, green=160, blue=150))
 
         self.mech2d_intake = self.mech2d_wrist.appendLigament("intake", length=constants.IntakeConstants.k_sim_length, 
@@ -186,7 +186,7 @@ class PhysicsEngine:
                                                     minAngle=constants.WristConstants.k_min_angle,
                                                     maxAngle=constants.WristConstants.k_max_angle,
                                                     simulateGravity=False,
-                                                    startingAngle=constants.WristConstants.k_sim_starting_angle)
+                                                    startingAngle=constants.WristConstants.k_starting_angle)
 
         self.wrist_spark_sim = SparkMaxSim(self.robot.container.wrist.sparkmax, motor=constants.WristConstants.k_plant)
 
@@ -201,7 +201,7 @@ class PhysicsEngine:
                                                     minAngle=constants.ShoulderConstants.k_min_angle,
                                                     maxAngle=constants.ShoulderConstants.k_max_angle,
                                                     simulateGravity=True,
-                                                    startingAngle=constants.ShoulderConstants.k_sim_starting_angle)
+                                                    startingAngle=constants.ShoulderConstants.k_starting_angle)
 
         self.shoulder_spark_sim = SparkFlexSim(self.robot.container.pivot.motor, constants.ShoulderConstants.k_plant)
         self.shoulder_follower_spark_sim = SparkFlexSim(self.robot.container.pivot.motor, constants.ShoulderConstants.k_plant)

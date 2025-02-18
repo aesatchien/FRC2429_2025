@@ -19,11 +19,13 @@ class Wrist(Subsystem):
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
 
-        if wpilib.RobotBase.isReal():
-            self.encoder.setPosition(self.abs_encoder.getPosition()) # may have to set offset here if the zeroOffset kParamInvalid error isn't fixed
-                                                                     # if so put the offset here into wristconstants
-        else:
-            self.encoder.setPosition(WristConstants.k_sim_starting_angle)
+        # if wpilib.RobotBase.isReal():
+        #     self.encoder.setPosition(self.abs_encoder.getPosition()) # may have to set offset here if the zeroOffset kParamInvalid error isn't fixed
+        #                                                              # if so put the offset here into wristconstants
+        # else:
+        #     self.encoder.setPosition(WristConstants.k_starting_angle)
+
+        self.encoder.setPosition(WristConstants.k_starting_angle)
 
         self.controller = self.sparkmax.getClosedLoopController()
 

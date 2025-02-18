@@ -6,34 +6,18 @@ import wpilib
 from wpimath.units import inchesToMeters
 import math
 
+from constants import ElevatorConstants
+
 
 class Elevator(commands2.TrapezoidProfileSubsystem):
-
-    config = {
-        'name': 'profiled_elevator',
-        'max_height': inchesToMeters(64), 'min_height': inchesToMeters(8),
-        'motor_can_id': 4, 'follower_can_id': 5,
-        'gear_ratio': 15,
-
-        # these values are for the carriage, which is 2x the chain - will be divided by 2 later in the USESTATE
-        'k_MaxVelocityMeterPerSecond': 1.5,  # max possible speed of gearing is about 2 m/s
-        'k_MaxAccelerationMeterPerSecSquared': 2.5,
-        'k_kP': 1.2,  # TODO - at zero we seem to be off a few cm - why?
-
-        # Elevator stuff - from recalc
-        'k_kSVolts': 0.0,  # constant to always add - uses the sign of velocity
-        'k_kGVolts': 0.88/2.0,  # 16kg, cuts in half with two motors, goes up with mass and distance, down with efficiency
-        'k_kVVoltSecondPerMeter': 12.05,  # stays the same with one or two motors, based on the NEO itself and gear ratio
-        'k_kAVoltSecondSquaredPerMeter': 0.10 / 2.0,  # cuts in half with two motors
-    }
 
     def __init__(self) -> None:
         super().__init__(
             constraints=wpimath.trajectory.TrapezoidProfile.Constraints(
-                self.config['k_MaxVelocityMeterPerSecond'],
-                self.config['k_MaxAccelerationMeterPerSecSquared'],
+                ElevatorConstants.k_max_velocity_meter_per_second,
+                ElevatorConstants.k_max_acceleration_meter_per_sec_squared
             ),
-            initial_position=self.config['min_height'],  # bottom of elevator
+            initial_position=ElevatorConstants.k_min_height,
             period=0.02,
         )
 
@@ -41,68 +25,40 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         # note that the velocity of this half the actual velocity of our carriage because it is cascade
         # i'm not sure where we need to trick it - probably send it the cascade statge velocity / 2
         self.feedforward = wpimath.controller.ElevatorFeedforward(
-            kS=self.config['k_kSVolts'],
-            kG=self.config['k_kGVolts'],
-            kV=self.config['k_kVVoltSecondPerMeter'],
-            kA=self.config['k_kAVoltSecondSquaredPerMeter'],
+            kS=ElevatorConstants.k_kS_volts,
+            kG=ElevatorConstants.k_kG_volts,
+            kV=ElevatorConstants.k_kV_volt_second_per_radian,
+            kA=ElevatorConstants.k_kA_volt_second_squared_per_meter,
             dt=0.02)
 
 # ------------   2429 Additions to the template's __init__  ------------
-        self.setName(self.config['name'])
+        self.setName(ElevatorConstants.k_name)
         self.counter = 4
         self.is_moving = False  # may want to keep track of if we are in motion
         self.tolerance = 0.01  # meters
-        self.setpoint = self.config['min_height']  # current setpoint
-        self.goal = self.config['min_height']  # current goal
+        self.goal = ElevatorConstants.k_min_height
         self.at_goal = True
 
-        self.configure_motors()
-        self.enable()
-
-    def configure_motors(self):
-        # too much to put in init
-        #  *** LEADER CONFIG ***
-        self.motor_config = rev.SparkMaxConfig()
-        self.motor_config.inverted(True)
-        # we need it separate for the sim
-        k_effective_pulley_diameter = inchesToMeters(1.91)
-        k_meters_per_revolution = math.pi * 2 * k_effective_pulley_diameter / self.config['gear_ratio']  # elevator goes 2x the chain
-        self.motor_config.encoder.positionConversionFactor(k_meters_per_revolution)  # meters
-        self.motor_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)  # meters per second
-
-        self.motor_config.closedLoop.pidf(p=self.config['k_kP'], i=0, d=0, ff=0, slot=rev.ClosedLoopSlot(0))
-        self.motor_config.closedLoop.outputRange(-1, 1)
-
-        self.motor_config.softLimit.forwardSoftLimit(self.config['max_height'])
-        self.motor_config.softLimit.reverseSoftLimit(self.config['min_height'])
-        self.motor_config.softLimit.forwardSoftLimitEnabled(True)
-        self.motor_config.softLimit.reverseSoftLimitEnabled(True)
-        self.motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
-        self.motor_config.smartCurrentLimit(40)
-
-        #  *** FOLLOWER CONFIG ***
-        self.follower_config = rev.SparkMaxConfig()
-        self.follower_config.follow(self.config['motor_can_id'], invert=True)
-        self.follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
-
         # initialize the motors and keep a list of them for configuration later
-        self.motor = rev.SparkMax(self.config['motor_can_id'], rev.SparkMax.MotorType.kBrushless)
-        self.follower = rev.SparkMax(self.config['follower_can_id'], rev.SparkMax.MotorType.kBrushless)
+        self.motor = rev.SparkMax(ElevatorConstants.k_CAN_id, rev.SparkMax.MotorType.kBrushless)
+        self.follower = rev.SparkMax(ElevatorConstants.k_follower_CAN_id, rev.SparkMax.MotorType.kBrushless)
         self.sparks = [self.motor, self.follower]
 
         self.rev_resets = rev.SparkMax.ResetMode.kResetSafeParameters
         self.rev_persists = rev.SparkMax.PersistMode.kPersistParameters
 
         # this should be its own function later - we will call it whenever we change brake mode
-        self.motor.configure(self.motor_config, self.rev_resets, self.rev_persists)
-        self.follower.configure(self.follower_config, self.rev_resets, self.rev_persists)
+        self.motor.configure(ElevatorConstants.k_config, self.rev_resets, self.rev_persists)
+        self.follower.configure(ElevatorConstants.k_follower_config, self.rev_resets, self.rev_persists)
 
         # configure our PID controller
         self.controller = self.motor.getClosedLoopController()
         # does this still work?
         # self.controller.setP(self.config['k_kP'])  # P is pretty much all we need in the controller!
         self.encoder = self.motor.getEncoder()
-        self.encoder.setPosition(self.setpoint)
+        self.encoder.setPosition(self.goal)
+
+        self.enable()
 
     def useState(self, setpoint: wpimath.trajectory.TrapezoidProfile.State) -> None:
         # Calculate the feedforward from the setpoint
@@ -116,22 +72,22 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
 
     def set_brake_mode(self, mode='brake'):
         if mode == 'brake':
-            self.motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
-            self.follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+            ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
+            ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
         else:
-            self.motor_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
-            self.follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
+            ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
+            ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
 
-        self.motor.configure(self.motor_config, self.rev_resets, self.rev_persists)
-        self.follower.configure(self.follower_config, self.rev_resets, self.rev_persists)
+        self.motor.configure(ElevatorConstants.k_config, self.rev_resets, self.rev_persists)
+        self.follower.configure(ElevatorConstants.k_follower_config, self.rev_resets, self.rev_persists)
 
     def get_height(self):
         return self.encoder.getPosition()
 
     def set_goal(self, goal):
         # make our own sanity-check on the subsystem's setGoal function
-        goal = goal if goal < self.config['max_height'] else self.config['max_height']
-        goal = goal if goal > self.config['min_height'] else self.config['min_height']
+        goal = goal if goal < ElevatorConstants.k_max_height else ElevatorConstants.k_max_height
+        goal = goal if goal > ElevatorConstants.k_min_height else ElevatorConstants.k_min_height
         self.goal = goal
         # print(f'setting goal to {self.goal}')
         self.setGoal(self.goal)
@@ -144,6 +100,9 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         if not silent:
             message = f'setting {self.getName()} from {current_position:.2f} to {self.goal:.2f}'
             print(message)
+
+    def get_at_goal(self):
+        return self.at_goal
 
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?

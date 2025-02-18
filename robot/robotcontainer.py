@@ -30,10 +30,10 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 #
-# from commands.go_to_position import GoToPosition
+from commands.go_to_position import GoToPosition
 # from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
-from commands.score import Score
+# from commands.score import Score
 # from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
 class RobotContainer:
@@ -205,9 +205,12 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
 
         wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
-        wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator))
-        wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot))
+        wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator, mode='absolute'))
+        wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot, mode='absolute'))
         wpilib.SmartDashboard.putData('SequentialScore', SequentialScoring(container=self))
+        wpilib.SmartDashboard.putData('move wrist to -90 deg', MoveWrist(container=self, wrist=self.wrist, radians=math.radians(-90)))
+        wpilib.SmartDashboard.putData('move wrist to 0 deg', MoveWrist(container=self, wrist=self.wrist, radians=math.radians(0)))
+        wpilib.SmartDashboard.putData('move wrist to 90 deg', MoveWrist(container=self, wrist=self.wrist, radians=math.radians(90)))
 
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
@@ -254,7 +257,7 @@ class RobotContainer:
             # now we need a a command object for each position to tell that subsystem where to go
             # but we can change setpoints outside of construct-time
 
-        self.co_trigger_a.whileTrue(SequentialScoring(container=self))
+        # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
         # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
         #         commands2.ConditionalCommand(
@@ -304,7 +307,7 @@ class RobotContainer:
         # self.co_trigger_lb.onTrue(commands2.PrintCommand("** Setting robot mode to empty **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY))))
         #
         # # self.co_trigger_rb.onTrue(Score(container=self))
-        # self.co_trigger_rb.whileTrue(DriveByJoystickSubsystem(container=self, controller=self.co_pilot_command_controller, subsystem=self.intake, duty_cycle_coef=0.01))
+        # # self.co_trigger_rb.whileTrue(DriveByJoystickSubsystem(container=self, controller=self.co_pilot_command_controller, subsystem=self.intake, duty_cycle_coef=0.01))
         #
         # self.co_trigger_r_trigger.onTrue(commands2.PrintCommand("** Setting robot mode to has algae **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE))))
         #

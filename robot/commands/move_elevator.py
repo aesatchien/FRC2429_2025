@@ -1,17 +1,20 @@
 import commands2
 from wpilib import SmartDashboard
+from wpimath.units import inchesToMeters
+
 from subsystems.elevator import Elevator
 from subsystems.robot_state import RobotState
 
 class MoveElevator(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, elevator: Elevator, mode='scoring', use_dash=True, offset=0.0, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, container, elevator: Elevator, mode='scoring', height=inchesToMeters(8), use_dash=True, offset=0, wait_to_finish=False, indent=0) -> None:
         super().__init__()
         self.setName('Move Elevator')  # change this to something appropriate for this command
         self.indent = indent
         self.container = container
         self.elevator = elevator
         self.mode = mode
+        self.height = height
         self.use_dash = use_dash  # testing mode - read target from dashboard?
         self.offset = offset  # attempt to have an offset
         self.wait_to_finish = wait_to_finish
@@ -31,6 +34,9 @@ class MoveElevator(commands2.Command):  # change the name for your command
         if self.mode == 'scoring':  # what will eventually be the norm
             self.goal = self.container.robot_state.get_elevator_goal() + self.offset
             self.elevator.set_goal(self.goal)
+        elif self.mode == 'specified':
+            self.goal = self.height
+            self.elevator.set_goal(self.goal)
         elif self.use_dash:
             self.goal = SmartDashboard.getNumber('elevator_cmd_goal', 0.21)  # get the elevator sp from the dash
             self.goal = self.goal + self.offset  # allow for an offset from our goal
@@ -49,7 +55,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
 
     def isFinished(self) -> bool:
         if self.wait_to_finish:
-            return self.elevator.at_goal # TODO - put in a timeout, and probably a minimum time to allow to start moving
+            return self.elevator.get_at_goal() # TODO - put in a timeout, and probably a minimum time to allow to start moving
         else:
             return True
 
@@ -57,7 +63,7 @@ class MoveElevator(commands2.Command):  # change the name for your command
     def end(self, interrupted: bool) -> None:
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
-        print_end_message = False
+        print_end_message = True
         if print_end_message:
             print(f"{self.indent * '    '}** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
             SmartDashboard.putString(f"alert",
