@@ -29,7 +29,7 @@ class PhysicsEngine:
                                                                    angle=math.degrees(constants.ShoulderConstants.k_starting_angle),
                                                                    color=wpilib.Color8Bit(red=30, green=200, blue=250))
 
-        self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_length_meters, 
+        self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_sim_length_meters, 
                                                                 angle=constants.WristConstants.k_starting_angle,
                                                                 color=wpilib.Color8Bit(red=255, green=160, blue=150))
 

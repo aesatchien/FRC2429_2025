@@ -145,10 +145,10 @@ class WristConstants:
     k_CAN_id = 10
     k_gear_ratio = 88
     k_abs_encoder_offset = 0
-    k_length_meters = 20 * 0.0254
-    k_center_of_mass_to_axis_of_rotation_dist_meters = inchesToMeters(6)
-    k_mass_kg = 8
-    k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
+    k_sim_length_meters = 0.4
+    k_center_of_mass_to_axis_of_rotation_dist_meters = 0.164
+    k_mass_kg = lbsToKilograms(5.57)
+    k_moi = 0.0474
     k_plant = DCMotor.NEO550(1)
 
     k_min_angle = math.radians(-180)
@@ -200,9 +200,10 @@ class ShoulderConstants:
 
     k_gear_ratio = 100
     k_abs_encoder_offset = 0
-    k_length_meters = 0.5
-    k_mass_kg = 10
+    k_length_meters = 0.6785
+    k_mass_kg = lbsToKilograms(17.6)
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
+    k_moi = 0.5914
     k_plant = DCMotor.neoVortex(2)
 
     k_max_velocity_rad_per_second = 1.5
@@ -272,7 +273,7 @@ class ElevatorConstants:
                       # we need it seperate for the sim
     k_effective_pulley_diameter = inchesToMeters(1.91) # (https://www.andymark.com/products/25-24-tooth-0-375-in-hex-sprocket) although we're using rev, rev doesn't give a pitch diameter
     k_meters_per_revolution = math.pi * 2 * k_effective_pulley_diameter / k_gear_ratio # 2 because our elevator goes twice as fast as the chain because continuous rigging
-    k_mass_kg = lbsToKilograms(25)
+    k_mass_kg = lbsToKilograms(19)
     k_plant = DCMotor.NEO(2)
 
     k_min_height = inchesToMeters(8)
@@ -309,57 +310,6 @@ class ElevatorConstants:
 
     k_timeofflight = 14 #elevator time of flight CAN ID
     
-    k_sim_positions_degrees = { #note: angles are relative to the parent ligament they're connected to. (test if negative angles are understood by sim)
-        "stow": {
-            "elevator_height": k_min_height,
-            "shoulder_pivot": 0,
-            "wrist_pivot": 0,
-            "wrist_color_for_ligament": wpilib.Color.kBlue,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
-        },
-        "ground": {
-            "elevator_height": k_min_height,
-            "shoulder_pivot": 270,
-            "wrist_pivot": 0,
-            "wrist_color_for_ligament": wpilib.Color.kBlue,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
-
-        },
-        "l1": {
-            "elevator_height": k_min_height + 10,
-            "shoulder_pivot": 270, #angle between the vertical and the shoulder ligament
-            "wrist_pivot": 90, #angle between the horizontal and the wrist ligament
-            "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
-        },
-        "l2": {
-            "elevator_height": k_min_height + 10,
-            "shoulder_pivot": 315,
-            "wrist_pivot": 90,
-            "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
-        },
-        "l3": {
-            "elevator_height": k_min_height + 22,
-            "shoulder_pivot": 315,
-            "wrist_pivot": 90,
-            "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
-        },
-        "l4": {
-            "elevator_height": k_min_height + 32,
-            "shoulder_pivot": 270, 
-            "wrist_pivot": 90,
-            "wrist_color_for_ligament": wpilib.Color.kRed,
-            "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
-        },
-        "processor": 0,
-        "barge": 0,
-        "coral station": 0,
-        "algae 1": 0,
-        "algae 2": 0
-    }
-
     # sim elevator
     k_window_height = 80
     k_window_width = 60
