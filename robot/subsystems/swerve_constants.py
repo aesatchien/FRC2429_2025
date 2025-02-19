@@ -76,7 +76,6 @@ class DriveConstants:
     kFrontRightTurningCanId = 24
     kRearRightTurningCanId = 26
 
-    # not used but looks like we may have to use the Rio
     kFrontLeftAbsEncoderPort = 0
     kFrontRightAbsEncoderPort = 1
     kBackLeftAbsEncoderPort = 2

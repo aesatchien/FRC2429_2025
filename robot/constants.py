@@ -69,9 +69,9 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "coral station": {
-        "elevator": inchesToMeters(3),
-        "shoulder_pivot": math.radians(55), 
-        "wrist_pivot": math.radians(90),
+        "elevator": 0.7,
+        "shoulder_pivot": math.radians(60),
+        "wrist_pivot": math.radians(-180), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -151,7 +151,7 @@ class WristConstants:
     k_moi = SingleJointedArmSim.estimateMOI(k_length_meters, k_mass_kg) # TODO: get from CAD
     k_plant = DCMotor.NEO550(1)
 
-    k_min_angle = math.radians(-95)
+    k_min_angle = math.radians(-180)
     k_max_angle = math.radians(95)
     k_tolerance = math.radians(2.5)
     k_starting_angle = 0 # sim mechanism2d takes degrees
@@ -180,6 +180,12 @@ class WristConstants:
     k_config.softLimit.reverseSoftLimitEnabled(True)
 
     k_config.smartCurrentLimit(40)
+
+    k_min_arm_angle_where_spinning_dangerous = math.radians(70)
+    k_max_arm_angle_where_spinning_dangerous = math.radians(110)
+
+    k_stowed_min_angle = math.radians(-15)
+    k_stowed_max_angle = math.radians(15)
 
 class ShoulderConstants:
 
@@ -240,6 +246,8 @@ class ShoulderConstants:
 
     k_follower_config = SparkMaxConfig()
     k_follower_config.follow(k_CAN_id, invert=False)
+
+    k_min_angle_to_elevate_in_front_of_reef = 80
 
 
 class ElevatorConstants:
