@@ -54,7 +54,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.setName(constants.ShoulderConstants.k_name)
         self.counter = 5
         self.is_moving = False  # may want to keep track of if we are in motion
-        self.tolerance = 0.034  # rads equal to two degrees
+        self.tolerance = 0.087  # rads equal to five degrees - then we will be "at goal"
         self.goal = constants.ShoulderConstants.k_starting_angle
         self.at_goal = True
 

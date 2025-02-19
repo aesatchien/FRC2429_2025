@@ -46,9 +46,7 @@ class PhysicsEngine:
     def update_sim(self, now, tm_diff):
 
         # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
-
         amps = []
-
         amps.append(self.update_wrist(tm_diff))
         amps.append(self.update_shoulder(tm_diff))
         amps.append(self.update_elevator_positions(tm_diff))
@@ -60,50 +58,33 @@ class PhysicsEngine:
                 simlib.BatterySim.calculate(amps)
         )
 
-
     # ------------------ SUBSYSTEM UPDATES --------------------
-
 
     def update_wrist(self, tm_diff):
 
         wrist_sim_input = self.wrist_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage()
-
         self.wrist_sim.setInput(0, wrist_sim_input)
-
         self.wrist_sim.update(tm_diff)
-        
         self.wrist_spark_sim.setPosition(self.wrist_sim.getAngle())
-
         self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-
         self.mech2d_wrist.setAngle(math.degrees(self.wrist_sim.getAngle()) - self.mech2d_shoulder.getAngle())
-
         return self.wrist_sim.getCurrentDraw()
-
-
 
     def update_shoulder(self, tm_diff):
 
         self.shoulder_sim.setInput(0, self.shoulder_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
         self.shoulder_sim.update(tm_diff)
-
         self.shoulder_spark_sim.setPosition(self.shoulder_sim.getAngle()) # to get rid of what I think are integration errors
-
         self.shoulder_follower_spark_sim.setPosition(self.shoulder_sim.getAngle()) # to get rid of what I think are integration errors
-
         self.shoulder_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
         self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-
         shoulder_pivot_degrees = math.degrees(self.shoulder_sim.getAngle())
-
         self.mech2d_shoulder.setAngle(shoulder_pivot_degrees - 90)
-
+        sm.side_elevator.components["shoulder"]["ligament"].setAngle(shoulder_pivot_degrees -90 )  # CJH added
         return self.shoulder_sim.getCurrentDraw()
-
-
 
     def update_intake(self, tm_diff):
 
@@ -111,40 +92,28 @@ class PhysicsEngine:
 
         intake_redness = max(-255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
         intake_greenness = max(255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
-
         self.mech2d_intake.setColor(wpilib.Color8Bit(red=int(intake_redness), green=int(intake_greenness), blue=0))
-
 
     def update_elevator_positions(self, tm_diff):
 
         self.elevator_sim.setInput(0, self.elevator_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage())
         self.elevator_sim.update(tm_diff)
-
         self.elevator_spark_sim.setPosition(self.elevator_sim.getPosition())
-
         self.elevator_follower_spark_sim.setPosition(self.elevator_sim.getPosition())
-
         self.elevator_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-
         self.elevator_follower_spark_sim.iterate(velocity=self.elevator_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-
         if self.robot is None:
             raise ValueError("Robot is not defined")
 
         self.mech2d_elevator.setLength(self.elevator_sim.getPosition())
-
         elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_max_height)
 
         sm.front_elevator.components["elevator_right"]["ligament"].setLength(elevator_height_sim)
         sm.front_elevator.components["elevator_left"]["ligament"].setLength(elevator_height_sim)
-
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(elevator_height_sim)
-
         return self.elevator_sim.getCurrentDraw()
-
-
 
     def update_swerve(self, tm_diff):
 
@@ -173,10 +142,7 @@ class PhysicsEngine:
 
         self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
 
-
-
     # ---------------------------- SUBSYSTEM INITIALIZATIONS -----------------------
-
     def initialize_wrist(self):
 
         self.wrist_sim = simlib.SingleJointedArmSim(gearbox=constants.WristConstants.k_plant,
@@ -189,8 +155,6 @@ class PhysicsEngine:
                                                     startingAngle=constants.WristConstants.k_starting_angle)
 
         self.wrist_spark_sim = SparkMaxSim(self.robot.container.wrist.sparkmax, motor=constants.WristConstants.k_plant)
-
-
 
     def initialize_shoulder(self):
 
@@ -206,12 +170,12 @@ class PhysicsEngine:
         self.shoulder_spark_sim = SparkFlexSim(self.robot.container.pivot.motor, constants.ShoulderConstants.k_plant)
         self.shoulder_follower_spark_sim = SparkFlexSim(self.robot.container.pivot.motor, constants.ShoulderConstants.k_plant)
 
-
-
     def initialize_elevator(self):
 
+        # the elevator is a cascade, so it will go twice as fast as the chain.  This models the chain, so I will fake it
+        # by dividing the gear ratio by two FOR THE SIM ONLY  - 20250218 CJH
         self.elevator_sim = simlib.ElevatorSim(gearbox=constants.ElevatorConstants.k_plant,
-                                               gearing=constants.ElevatorConstants.k_gear_ratio,
+                                               gearing=constants.ElevatorConstants.k_gear_ratio / 2, # JUST FOR THE SIM
                                                carriageMass=constants.ElevatorConstants.k_mass_kg,
                                                drumRadius=constants.ElevatorConstants.k_effective_pulley_diameter / 2,
                                                minHeight=constants.ElevatorConstants.k_min_height,
@@ -221,9 +185,6 @@ class PhysicsEngine:
 
         self.elevator_spark_sim = SparkMaxSim(self.robot.container.elevator.motor, constants.ElevatorConstants.k_plant)
         self.elevator_follower_spark_sim = SparkMaxSim(self.robot.container.elevator.follower, constants.ElevatorConstants.k_plant)
-
-
-
 
     def initialize_swerve(self):
         self.kinematics: SwerveDrive4Kinematics = dc.kDriveKinematics  # our swerve drive kinematics
@@ -271,4 +232,3 @@ class PhysicsEngine:
         self.theta = 0
         initial_pose = geo.Pose2d(0, 0, geo.Rotation2d())
         self.physics_controller.move_robot(geo.Transform2d(self.x, self.y, 0))
-

@@ -15,7 +15,7 @@ class SequentialScoring(commands2.SequentialCommandGroup):
 
         # NOTE - STOWING SHOULD PROBABLY NOT USE THIS
         self.addCommands(MovePivot(container=self.container, pivot=self.container.pivot,
-                                   mode='specified', angle=math.radians(90), use_dash=False, wait_to_finish=True, indent=indent+1).withTimeout(5))
+                                   mode='specified', angle=math.radians(90), use_dash=False, wait_to_finish=True, indent=indent+1).withTimeout(3))
         # move elevator to right above scoring position
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
@@ -24,12 +24,12 @@ class SequentialScoring(commands2.SequentialCommandGroup):
         # TODO - DO YOU WANT TO MAKE SURE THE ARM IS STOWED FIRST?
         # move elevator above the target (if possible)
         self.addCommands(MoveElevator(container=self.container, elevator=self.container.elevator,
-                                      mode='scoring', offset=0.0, use_dash=False, wait_to_finish=True, indent=indent+1).withTimeout(5))
+                                      mode='scoring', offset=0.0, use_dash=False, wait_to_finish=True, indent=indent+1).withTimeout(3))
         self.addCommands(WaitCommand(seconds=0.1))
         # TODO - HERE YOU WOULD WANT TO SET THE WRIST IF WE HAVE CLEARANCE
         # move pivot to scoring position
         self.addCommands(MovePivot(container=self.container, pivot=self.container.pivot,
-                                   mode='scoring', use_dash=False, wait_to_finish=True, indent=indent+1).withTimeout(5))
+                                   mode='scoring', use_dash=False, wait_to_finish=True, indent=indent+1).withTimeout(3))
         # move elevator to right above scoring position
         self.addCommands(WaitCommand(seconds=0.1))
         # self.addCommands(MoveElevator(container=self.container, elevator=self.container.elevator,
