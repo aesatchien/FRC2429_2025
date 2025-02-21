@@ -20,7 +20,7 @@ class RunIntake(commands2.Command):  # change the name for your command
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print("\n" + self.indent * "    " + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
+        print(self.indent * "    " + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 

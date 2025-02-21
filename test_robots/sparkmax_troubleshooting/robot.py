@@ -18,15 +18,15 @@ class MyRobot(wpilib.TimedRobot):
     def robotInit(self) -> None:
         ids = list(range(20, 28))
         print(f"ids: {ids}")
-        self.sparkflexes = [rev.SparkFlex(deviceID=id, type=rev.SparkFlex.MotorType.kBrushless) for id in ids]
-        # self.sparkflex = rev.SparkFlex(deviceID=25, type=rev.SparkFlex.MotorType.kBrushless)
+        self.sparkflexes = [rev.SparkMax(deviceID=id, type=rev.SparkFlex.MotorType.kBrushless) for id in ids]
+        # self.sparkflex = rev.SparkMax(deviceID=25, type=rev.SparkFlex.MotorType.kBrushless)
 
-        sparkflex_config = rev.SparkFlexConfig()
+        sparkflex_config = rev.SparkMaxConfig()
         sparkflex_config.closedLoop.pidf(0, 0, 0, 0.01)
 
         errors = []
         for sparkflex in self.sparkflexes:
-            errors.append(sparkflex.configure(sparkflex_config, rev.SparkFlex.ResetMode.kResetSafeParameters, persistMode=rev.SparkFlex.PersistMode.kPersistParameters))
+            errors.append(sparkflex.configure(sparkflex_config, rev.SparkMax.ResetMode.kResetSafeParameters, persistMode=rev.SparkFlex.PersistMode.kPersistParameters))
 
         print(f"errors: {errors}")
 
@@ -59,9 +59,9 @@ class MyRobot(wpilib.TimedRobot):
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically during operator control"""
-        # self.sparkflex.getClosedLoopController().setReference(value=math.sin(self.counter/50), ctrl=rev.SparkFlex.ControlType.kVoltage, slot=rev.ClosedLoopSlot(0))
+        # self.sparkflex.getClosedLoopController().setReference(value=math.sin(self.counter/50), ctrl=rev.SparkMax.ControlType.kVoltage, slot=rev.ClosedLoopSlot(0))
         for sparkflex in self.sparkflexes:
-            sparkflex.getClosedLoopController().setReference(value=math.sin(self.counter/100) * 5, ctrl=rev.SparkFlex.ControlType.kVelocity, slot=rev.ClosedLoopSlot(0))
+            sparkflex.set(math.sin(self.counter/100))
         # self.sparkflex.set(math.sin(self.counter/50))
         # wpilib.SmartDashboard.putNumber("sparkflex applied output: ", self.sparkflex.getAppliedOutput())
         wpilib.SmartDashboard.putNumber("sparkflex reference: ", math.sin(self.counter/100))

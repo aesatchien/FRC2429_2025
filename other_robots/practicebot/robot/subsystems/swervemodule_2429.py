@@ -2,7 +2,7 @@ import wpilib
 from rev import SparkMaxConfig, SparkMax, SparkFlex
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
-from wpilib import AnalogEncoder, AnalogPotentiometer, Spark
+from wpilib import AnalogEncoder, AnalogPotentiometer, SmartDashboard, Spark
 from wpimath.controller import PIDController
 import math
 
@@ -124,18 +124,23 @@ class SwerveModule:
             correctedDesiredState.angle = self.getState().angle
 
         # Command driving and turning SPARKS MAX towards their respective setpoints.
-        self.drivingClosedLoopController.setReference(correctedDesiredState.speed, dc.k_drive_controller_type.ControlType.kVelocity)
+        if not self.label == "lf": # we have no abs encoder on lf
+            SmartDashboard.putNumber(f"setting driving thingy of {self.label} to: ", correctedDesiredState.speed)
+            self.drivingSparkMax.set(correctedDesiredState.speed / 4.75)
 
         # calculate the PID value for the turning motor  - use the roborio instead of the sparkmax. todo: explain why
         # self.turningPIDController.setReference(optimizedDesiredState.angle.radians(), CANSparkMax.ControlType.kPosition)
         self.turning_output = self.turning_PID_controller.calculate(self.get_turn_encoder(), correctedDesiredState.angle.radians())
         # clean up the turning Spark LEDs by cleaning out the noise - 20240226 CJH
         self.turning_output = 0 if math.fabs(self.turning_output) < 0.01 else self.turning_output
-        self.turningSparkMax.set(self.turning_output)
+        if not self.label == "lf": # we have no abs encoder on lf
+            self.turningSparkMax.set(self.turning_output)
+        # self.turningSparkMax.set(1)
+        # self.drivingSparkMax.set(0.3)
 
         # CJH added for debugging and tuning
         # leo removed because hopefully the revlib simulation will handle it
-        if False: # wpilib.RobotBase.isSimulation():
+        if True: # wpilib.RobotBase.isSimulation():
             if dc.k_swerve_state_messages:  # only do this when debugging - it's pretty intensive
                 wpilib.SmartDashboard.putNumberArray(f'{self.label}_target_vel_angle',
                                     [correctedDesiredState.speed, correctedDesiredState.angle.radians()])

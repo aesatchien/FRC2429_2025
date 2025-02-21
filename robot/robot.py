@@ -3,6 +3,7 @@
 import typing
 import wpilib
 import commands2
+from wpimath.geometry import Translation2d
 
 from robotcontainer import RobotContainer
 from subsystems.led import Led  # allows indexing of LED colors
@@ -82,7 +83,7 @@ class MyRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def robotPeriodic(self) -> None:
-        wpilib.SmartDashboard.putString("robot mode", self.container.get_robot_mode().value)
+
         return super().robotPeriodic()
 
 

@@ -12,6 +12,7 @@ from pathplannerlib.path import PathConstraints
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath
 
+from commands.drive_by_distance_swerve import DriveByVelocitySwerve
 from commands.sequential_scoring import SequentialScoring
 import constants
 
@@ -35,6 +36,8 @@ from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
 # from commands.score import Score
 # from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
+
+from autonomous.leave_then_score_1 import LeaveThenScore
 
 class RobotContainer:
     """
@@ -356,5 +359,6 @@ class RobotContainer:
         pass
 
     def get_autonomous_command(self):
-        return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
+        return LeaveThenScore(container=self)
+        # return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()

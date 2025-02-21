@@ -11,6 +11,7 @@ from wpimath.geometry import Pose2d
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.reset_gyro import ResetGyro
 from commands.reset_field_centric import ResetFieldCentric
+from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
 import constants
 
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto
@@ -140,6 +141,8 @@ class RobotContainer:
 
         # self.triggerX.whileTrue(PathPlannerAuto("test"))
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
+
+        self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, id=6, target_angle=0))
         pass
 
     def bind_operator_buttons(self):

@@ -134,9 +134,10 @@ class ModuleConstants:
 
     # note: we don't use any spark pid or ff for turning
     k_turning_config = SparkMaxConfig()
-    k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_turning_config.smartCurrentLimit(stallLimit=0)
-    k_turning_config.voltageCompensation(12)
+    k_turning_config.closedLoop.pidf(0, 0, 0, 0.01)
+    # k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+    # k_turning_config.smartCurrentLimit(stallLimit=0)
+    # k_turning_config.voltageCompensation(12)
 
     # nor do we use this encoder-- we configure it "just to watch it if we need to for velocities, etc."
 

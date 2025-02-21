@@ -29,7 +29,7 @@ class GoToPosition(commands2.SequentialCommandGroup):
                 self.addCommands(MoveWrist(container=container, radians=constants.k_positions[position]["wrist_pivot"], timeout=4, wait_to_finish=True, indent=indent+1))
 
 
-        if position in ["l1", "l2", "l3", "l4", "algae low", "algae high"]:
+        if position in ["l1", "l2", "l3", "l4", "algae low", "algae high", "stow"]: # stow is in here because we often stow right after scoring
             # retract till it's safe to move elevator
             self.addCommands(commands2.ConditionalCommand(
                 onTrue=MovePivot(container=container, pivot=self.container.pivot, mode="specified", angle=math.radians(90), wait_to_finish=True, indent=indent+1).withTimeout(5),

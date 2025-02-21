@@ -70,7 +70,7 @@ k_positions = {
     },
     "coral station": {
         "elevator": 0.7,
-        "shoulder_pivot": math.radians(60),
+        "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(-180), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -122,8 +122,10 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = 3
-    k_algae_intaking_voltage = -2
+    k_coral_intaking_voltage = -3
+    k_algae_intaking_voltage = 2
+
+    k_coral_scoring_voltage = 2
 
     k_seconds_to_stay_on_while_scoring = 1
 
@@ -169,7 +171,7 @@ class WristConstants:
     
     k_config.absoluteEncoder.zeroOffset(0.45)
 
-    k_config.closedLoop.pid(p=0.1, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.5, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
         
