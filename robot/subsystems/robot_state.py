@@ -20,9 +20,9 @@ class RobotState(commands2.Subsystem):
     """
     class Target(Enum):
         """ Target class is for showing current goal """
-        # can I do this programmatically from the constants file's list of positions
-        STOW = {'name': 'stow', 'lit_leds': constants.k_led_count, 'mode': 'none'}
-        GROUND = {'name': 'ground', 'lit_leds': constants.k_led_count, 'mode': 'none'}
+        # can I generate this programmatically from the constants file's list of positions? Some of it.
+        STOW = {'name': 'stow', 'lit_leds': constants.k_led_count, 'mode': 'keep'}
+        GROUND = {'name': 'ground', 'lit_leds': constants.k_led_count, 'mode': 'keep'}
         # coral modes
         L1 = {'name': 'l1', 'lit_leds': constants.k_led_count // 8, 'mode': 'coral'}
         L2 = {'name': 'l2', 'lit_leds': constants.k_led_count // 4, 'mode': 'coral'}
@@ -32,7 +32,7 @@ class RobotState(commands2.Subsystem):
         # algae modes
         PROCESSOR = {'name': 'processor', 'lit_leds': constants.k_led_count // 8, 'mode': 'algae'}
         BARGE = {'name': 'barge', 'lit_leds': constants.k_led_count // 2, 'mode': 'algae'}
-        ALGAE_LOW = {'name': 'algae low', 'lit_leds': constants.k_led_count //4, 'mode': 'algae'}
+        ALGAE_LOW = {'name': 'algae low', 'lit_leds': constants.k_led_count // 4, 'mode': 'algae'}
         ALGAE_HIGH = {'name': 'algae high', 'lit_leds': 3 * constants.k_led_count // 8, 'mode': 'algae'}
 
         NONE = {'name': 'NONE', 'lit_leds': constants.k_led_count, 'mode': 'none'}
@@ -42,7 +42,6 @@ class RobotState(commands2.Subsystem):
         RIGHT = {'name': "LEFT", }
         LEFT = {'name': "RIGHT", }
         NONE = {'name': "NONE", }
-
 
     def __init__(self, container):
         super().__init__()
@@ -74,7 +73,7 @@ class RobotState(commands2.Subsystem):
         for callback in self._callbacks:
             callback(self.target, self.side)
 
-    def set_target(self, target:Target) -> None:
+    def set_target(self, target: Target) -> None:
         self.prev_target = self.target
         self.target = target
         self._notify_callbacks()  # Call all registered callbacks
@@ -84,7 +83,7 @@ class RobotState(commands2.Subsystem):
     def get_target(self):
         return self.target
 
-    def set_side(self, side:Side) -> None:
+    def set_side(self, side: Side) -> None:
         self.side = side
         self._notify_callbacks()  # Call all registered callbacks
 
@@ -106,7 +105,6 @@ class RobotState(commands2.Subsystem):
 
     def get_pivot_goal(self):
         return constants.k_positions[self.target.value['name']]['shoulder_pivot']
-
 
     def periodic(self):
         if self.counter % 5 == 0:  # Execute every 5 cycles (10Hz update rate)

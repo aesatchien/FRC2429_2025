@@ -43,7 +43,6 @@ class Led(commands2.Subsystem):
         kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
         kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
 
-
     def __init__(self, container):
         super().__init__()
         self.setName('Led')
@@ -86,6 +85,8 @@ class Led(commands2.Subsystem):
             self.set_mode(self.Mode.kCORAL)
         elif target.value['mode'] == 'algae':
             self.set_mode(self.Mode.kALGAE)
+        elif target.value['mode'] == 'keep':
+            pass  # don't change the mode
         else:
             self.set_mode(self.Mode.kNONE)
         self.set_indicator(self.Indicator.kNONE)
@@ -142,7 +143,7 @@ class Led(commands2.Subsystem):
                 else:  # Handle animated indicators
                     data = self.indicator.value["animation_data"]
                     if time_since_toggle > 1 / self.indicator.value["frequency"]:
-                        self.animation_counter +=1
+                        self.animation_counter += 1
                         self.last_toggle_time = current_time
 
                     shift = self.animation_counter % self.led_count
@@ -166,7 +167,6 @@ class Led(commands2.Subsystem):
                     _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(lit_leds) ]
                     # turn on the other section
                     _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(constants.k_led_count-1, constants.k_led_count-lit_leds-1, -1) ]
-
 
             self.led_strip.setData(self.led_data)  # Send LED updates
 

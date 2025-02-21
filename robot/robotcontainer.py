@@ -36,6 +36,7 @@ from commands.reset_field_centric import ResetFieldCentric
 # from commands.score import Score
 # from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
+
 class RobotContainer:
     """
     This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -44,14 +45,13 @@ class RobotContainer:
     subsystems, commands, and button mappings) should be declared here.
     """
 
-
     # set robot modes
     class RobotMode(Enum):  # use this instead of intake results directly because we want to be able to override intake results for testing and emergencies
         EMPTY = "e"
         HAS_CORAL = "c"
         HAS_ALGAE = "a"
 
-    def set_robot_mode(self, mode: RobotMode): # because we can't assign inside lambdas
+    def set_robot_mode(self, mode: RobotMode):  # because we can't assign inside lambdas
         self.robot_mode = mode
 
     def get_robot_mode(self) -> RobotMode:
@@ -61,7 +61,6 @@ class RobotContainer:
         return self.robot_mode == mode
 
     # set scoring mode
-
 
     def __init__(self) -> None:
 
@@ -98,7 +97,6 @@ class RobotContainer:
         Pathfinding.setPathfinder(LocalADStar())
 
         self.robot_mode = self.RobotMode.EMPTY
-
 
     def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
         self.start_time = time.time()
@@ -144,7 +142,8 @@ class RobotContainer:
             angle_b = math.radians(angle_b)
 
             stick_angle = math.atan2(stick_x, stick_y)
-            if stick_angle < 0: stick_angle = math.tau + stick_angle # compensate because atan returns -180 to 180 but we want 0 to 360
+            if stick_angle < 0:
+                stick_angle = math.tau + stick_angle  # compensate because atan returns -180 to 180 but we want 0 to 360
 
             return (angle_a <= stick_angle and stick_angle < angle_b)
 
@@ -248,7 +247,6 @@ class RobotContainer:
                 )
         )
 
-
     def bind_codriver_buttons(self):
 
         print("Binding codriver buttons")
@@ -259,7 +257,7 @@ class RobotContainer:
             # => a command object for each position
         # cory's way: make a command that goes to any position. specify the position in another subsystem that this command looks at.
             # => one command object and one subsystem
-            # now we need a a command object for each position to tell that subsystem where to go
+            # now we need a command object for each position to tell that subsystem where to go
             # but we can change setpoints outside of construct-time
 
         # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
@@ -290,7 +288,7 @@ class RobotContainer:
 
         self.co_trigger_l_stick_positive_x.whileTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
 
-        self.co_trigger_l_stick_positive_y.whileTrue(MoveWrist(container=self, radians=math.radians(-90), timeout=4)) # this seems backwards but is not because y-axis is inverted
+        self.co_trigger_l_stick_positive_y.whileTrue(MoveWrist(container=self, radians=math.radians(-90), timeout=4))  # this seems backwards but is not because y-axis is inverted
 
         self.co_trigger_l_stick_negative_y.whileTrue(MoveWrist(container=self, radians=math.radians(90), timeout=4))
 
@@ -349,7 +347,6 @@ class RobotContainer:
         # self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.PrintCommand("** Setting robot mode to has coral **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL))))
 
         # self.co_trigger_d.or_(self.co_trigger_l).onTrue(IntakeSequence(container=self, position="coral station"))
-
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down
