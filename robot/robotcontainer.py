@@ -46,7 +46,7 @@ class RobotContainer:
 
 
     # set robot modes
-    class RobotMode(Enum): # use this instead of intake results directly because we want to be able to override intake results for testing and emergencies
+    class RobotMode(Enum):  # use this instead of intake results directly because we want to be able to override intake results for testing and emergencies
         EMPTY = "e"
         HAS_CORAL = "c"
         HAS_ALGAE = "a"
@@ -73,9 +73,9 @@ class RobotContainer:
         self.elevator = Elevator()
         self.pivot = Pivot()
         self.wrist = Wrist()
-        self.led = Led(self)
         self.intake = Intake()
-        self.robot_state = RobotState(self)
+        self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
+        self.led = Led(self)  # may want LED last because it may want to know about other systems
 
         self.configure_joysticks()
         self.bind_driver_buttons()

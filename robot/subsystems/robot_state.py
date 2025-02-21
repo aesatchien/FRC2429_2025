@@ -3,7 +3,7 @@ import commands2
 from wpilib import SmartDashboard
 import constants
 
-# TODO -
+# TODO - do something better than putting a callback in LED
 
 
 class RobotState(commands2.Subsystem):
@@ -21,18 +21,21 @@ class RobotState(commands2.Subsystem):
     class Target(Enum):
         """ Target class is for showing current goal """
         # can I do this programmatically from the constants file's list of positions
-        STOW = {'name': 'stow'}
-        GROUND = {'name': 'ground'}
-        L1 = {'name': 'l1'}
-        L2 = {'name': 'l2'}
-        L3 = {'name': 'l3'}
-        L4 = {'name': 'l4'}
-        CORAL_STATION = {'name': 'coral station'}
-        PROCESSOR = {'name': 'processor'}
-        BARGE = {'name': 'barge'}
-        ALGAE_LOW = {'name': 'algae low'}
-        ALGAE_HIGH = {'name': 'algae high'}
-        NONE = {'name': 'NONE'}
+        STOW = {'name': 'stow', 'lit_leds': constants.k_led_count, 'mode': 'none'}
+        GROUND = {'name': 'ground', 'lit_leds': constants.k_led_count, 'mode': 'none'}
+        # coral modes
+        L1 = {'name': 'l1', 'lit_leds': constants.k_led_count // 8, 'mode': 'coral'}
+        L2 = {'name': 'l2', 'lit_leds': constants.k_led_count // 4, 'mode': 'coral'}
+        L3 = {'name': 'l3', 'lit_leds': 3 * constants.k_led_count // 8, 'mode': 'coral'}
+        L4 = {'name': 'l4', 'lit_leds': constants.k_led_count // 2, 'mode': 'coral'}
+        CORAL_STATION = {'name': 'coral station', 'lit_leds': constants.k_led_count, 'mode': 'coral'}
+        # algae modes
+        PROCESSOR = {'name': 'processor', 'lit_leds': constants.k_led_count // 8, 'mode': 'algae'}
+        BARGE = {'name': 'barge', 'lit_leds': constants.k_led_count // 2, 'mode': 'algae'}
+        ALGAE_LOW = {'name': 'algae low', 'lit_leds': constants.k_led_count //4, 'mode': 'algae'}
+        ALGAE_HIGH = {'name': 'algae high', 'lit_leds': 3 * constants.k_led_count // 8, 'mode': 'algae'}
+
+        NONE = {'name': 'NONE', 'lit_leds': constants.k_led_count, 'mode': 'none'}
 
     class Side(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
@@ -48,6 +51,8 @@ class RobotState(commands2.Subsystem):
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
         self.counter = 1
 
+        self._callbacks = []  # Store functions to notify
+
         # initialize modes and indicators
         self.target = self.Target.L3
         self.side = self.Side.RIGHT
@@ -59,9 +64,21 @@ class RobotState(commands2.Subsystem):
         self.targets_dict = {target.value["name"]: target for target in self.Target}
         self.sides_dict = {side.value["name"]: side for side in self.Side}
 
+    # put in a callback so the logic to LED is not circular
+    def register_callback(self, callback):
+        """ Allow external systems (like LED) to register for updates. """
+        self._callbacks.append(callback)
+
+    def _notify_callbacks(self):
+        """ Notify all registered callbacks when RobotState updates. """
+        for callback in self._callbacks:
+            callback(self.target, self.side)
+
     def set_target(self, target:Target) -> None:
         self.prev_target = self.target
         self.target = target
+        self._notify_callbacks()  # Call all registered callbacks
+
         SmartDashboard.putString('_target', self.target.value['name'])
 
     def get_target(self):
@@ -69,6 +86,8 @@ class RobotState(commands2.Subsystem):
 
     def set_side(self, side:Side) -> None:
         self.side = side
+        self._notify_callbacks()  # Call all registered callbacks
+
         SmartDashboard.putString('_side', self.side.value['name'])
 
     def get_side(self):

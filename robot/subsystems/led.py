@@ -4,6 +4,7 @@ import commands2
 from wpilib import AddressableLED
 from wpilib import SmartDashboard, Color  # can i make use of color at some point?
 import constants
+from subsystems.robot_state import RobotState
 
 # TODO - make the frequencies actual times per second - so divide by the LED update rate (currently 10x per second)
 
@@ -47,6 +48,10 @@ class Led(commands2.Subsystem):
         super().__init__()
         self.setName('Led')
         self.container = container  # at the moment LED may want to query other subsystems, but this is not clean
+
+        # Register LED to listen for RobotState updates
+        self.container.robot_state.register_callback(self.update_from_robot_state)
+
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
         self.counter = 1
         self.animation_counter = 0
@@ -73,6 +78,16 @@ class Led(commands2.Subsystem):
         self.indicator = Led.Indicator.kPOLKA
 
         self.set_mode(self.Mode.kNONE)
+        self.set_indicator(self.Indicator.kNONE)
+
+    def update_from_robot_state(self, target, side):
+        """ Update LED mode based on RobotState changes. """
+        if target.value['mode'] == 'coral':
+            self.set_mode(self.Mode.kCORAL)
+        elif target.value['mode'] == 'algae':
+            self.set_mode(self.Mode.kALGAE)
+        else:
+            self.set_mode(self.Mode.kNONE)
         self.set_indicator(self.Indicator.kNONE)
 
     def set_mode(self, mode) -> None:
@@ -138,9 +153,20 @@ class Led(commands2.Subsystem):
                         [self.led_data[i].setRGB(*shifted_data[i]) for i in range(self.led_count)]
 
             else:  # Handle mode-only LEDs - they do not toggle
-                color = self.mode.value["on_color"]
-                for i in range(constants.k_led_count):
-                    self.led_data[i].setRGB(*color)
+                # thinking of using the target state to light the robot
+                lit_leds: RobotState.Target.value = self.container.robot_state.get_target().value['lit_leds']
+                if lit_leds == constants.k_led_count:
+                    color = self.mode.value["on_color"]
+                    for i in range(constants.k_led_count):
+                        self.led_data[i].setRGB(*color)
+                else:  # target dependent LED states:
+                    # turn them all off
+                    _ = [ self.led_data[i].setRGB(*self.mode.value["off_color"]) for i in range(constants.k_led_count) ]
+                    # turn on the first section
+                    _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(lit_leds) ]
+                    # turn on the other section
+                    _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(constants.k_led_count-1, constants.k_led_count-lit_leds-1, -1) ]
+
 
             self.led_strip.setData(self.led_data)  # Send LED updates
 
