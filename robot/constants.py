@@ -21,7 +21,7 @@ k_use_apriltag_odometry = True
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
-k_led_count = 20  # todo: update this to actual number
+k_led_count = 36  # todo: update this to actual number
 k_led_pwm_port = 0  # todo: update this to actual number
 
 k_positions = { 
