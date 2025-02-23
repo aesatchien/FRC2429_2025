@@ -113,6 +113,8 @@ class PhysicsEngine:
         sm.front_elevator.components["elevator_right"]["ligament"].setLength(elevator_height_sim)
         sm.front_elevator.components["elevator_left"]["ligament"].setLength(elevator_height_sim)
         sm.side_elevator.components["elevator_side"]["ligament"].setLength(elevator_height_sim)
+        sm.side_elevator.components["elevator_bar_left"]["ligament"].setLength(elevator_height_sim + 3)
+        sm.side_elevator.components["elevator_bar_right"]["ligament"].setLength(elevator_height_sim + 3)
         return self.elevator_sim.getCurrentDraw()
 
     def update_swerve(self, tm_diff):
