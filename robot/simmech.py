@@ -108,7 +108,7 @@ side_elevator.appendLigament("elevator_bar1", "elevator_bar_left", elevator_heig
 side_elevator.appendLigament("elevator_bar_left", "elevator_bar_top", 10, 270, bar_width/3, wpilib.Color.kGreen)
 elevator_bar2 = side_elevator.getRoot("elevator_bar2", elevator_offset_x + 5, elevator_offset_y)
 side_elevator.appendLigament("elevator_bar2", "elevator_bar_right", elevator_height + 5, 90, bar_width/3, wpilib.Color.kGreen)
-side_elevator.appendLigament("elevator_bar2", "elevator_bar_bottom", 10, 90, bar_width/3, wpilib.Color.kGreen)
+side_elevator.appendLigament("elevator_bar2", "elevator_bar_bottom", 10, 180, bar_width/3, wpilib.Color.kGreen)
 
 side_bar1 = side_elevator.getRoot("side_bar1", elevator_offset_x - 6, elevator_offset_y)
 side_elevator.appendLigament("side_bar1", "side_bar_left", elevator_height + 7, 90, bar_width/3, wpilib.Color.kGreen)
