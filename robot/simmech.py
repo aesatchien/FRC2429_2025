@@ -111,9 +111,9 @@ side_elevator.appendLigament("elevator_bar2", "elevator_bar_right", elevator_hei
 side_elevator.appendLigament("elevator_bar2", "elevator_bar_bottom", 10, 180, bar_width/3, wpilib.Color.kGreen)
 
 side_bar1 = side_elevator.getRoot("side_bar1", elevator_offset_x - 6, elevator_offset_y)
-side_elevator.appendLigament("side_bar1", "side_bar_left", elevator_height + 7, 90, bar_width/3, wpilib.Color.kGreen)
+side_elevator.appendLigament("side_bar1", "side_bar_left", elevator_height + 10, 90, bar_width/3, wpilib.Color.kGreen)
 side_bar2 = side_elevator.getRoot("side_bar2", elevator_offset_x + 6, elevator_offset_y)
-side_elevator.appendLigament("side_bar2", "side_bar_right", elevator_height + 7, 90, bar_width/3, wpilib.Color.kGreen)
+side_elevator.appendLigament("side_bar2", "side_bar_right", elevator_height + 10, 90, bar_width/3, wpilib.Color.kGreen)
 
 
 side_elevator.appendLigament("shoulder", "coral_left", 6, 90, bar_width, wpilib.Color.kWhite)  # CJH added 20250218
