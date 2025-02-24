@@ -111,11 +111,13 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance  # maybe we want to call this an error
             self.error = self.angle - self.goal
 
-            wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
-            wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', self.error)
-            wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', self.goal)
-            # wpilib.SmartDashboard.putNumber(f'{self.getName()}_curr_sp',) not sure how to ask for this - controller won't give it
-            wpilib.SmartDashboard.putNumber(f'{self.getName()}_spark_angle', self.angle)
-            wpilib.SmartDashboard.putNumber(f'{self.getName()}_output', self.motor.getAppliedOutput())
+            debug = False
+            if debug:
+                wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
+                wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', self.error)
+                wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', self.goal)
+                # wpilib.SmartDashboard.putNumber(f'{self.getName()}_curr_sp',) not sure how to ask for this - controller won't give it
+                wpilib.SmartDashboard.putNumber(f'{self.getName()}_output', self.motor.getAppliedOutput())
             self.is_moving = abs(self.encoder.getVelocity()) > 0.001  # m per second
             wpilib.SmartDashboard.putBoolean(f'{self.getName()}_is_moving', self.is_moving)
+            wpilib.SmartDashboard.putNumber(f'{self.getName()}_spark_angle', radiansToDegrees(self.angle))
