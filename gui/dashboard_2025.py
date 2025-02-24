@@ -361,7 +361,7 @@ class Ui(QtWidgets.QMainWindow):
         # FINISHED FOR 2024
             # GUI UPDATES
         'drive_pose': {'widget': None, 'nt': '/SmartDashboard/drive_pose', 'command': None},
-        'qcombobox_autonomous_routines': {'widget':self.qcombobox_autonomous_routines, 'nt':r'/SmartDashboard/autonomous routines/options', 'command':None, 'selected': r'/SmartDashboard/autonomous routines/selected'},
+        'qcombobox_autonomous_routines': {'widget':self.qcombobox_autonomous_routines, 'nt': r'/SmartDashboard/autonomous routines/options', 'command':None, 'selected': r'/SmartDashboard/autonomous routines/selected'},
         'qlabel_nt_connected': {'widget': self.qlabel_nt_connected, 'nt': None, 'command': None},
         'qlabel_matchtime': {'widget': self.qlabel_matchtime, 'nt': '/SmartDashboard/match_time', 'command': None},
         'qlabel_alliance_indicator': {'widget': self.qlabel_alliance_indicator, 'nt': '/FMSInfo/IsRedAlliance', 'command': None,
@@ -373,15 +373,18 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_tagcam_front_indicator': {'widget': self.qlabel_tagcam_front_indicator, 'nt': None, 'command': None},
 
             # COMMANDS
-        'qlabel_navx_reset_indicator': {'widget': self.qlabel_navx_reset_indicator, 'nt': '/SmartDashboard/GyroReset/running', 'command': '/SmartDashboard/GyroReset/running'},
-        'qlabel_elevator_up_indicator': {'widget': self.qlabel_elevator_up_indicator, 'nt': '/SmartDashboard/UpperCrankMoveUp/running', 'command': '/SmartDashboard/UpperCrankMoveUp/running'},
-        'qlabel_elevator_down_indicator': {'widget': self.qlabel_elevator_down_indicator, 'nt': '/SmartDashboard/UpperCrankMoveDown/running', 'command': '/SmartDashboard/UpperCrankMoveDown/running'},
-        'qlabel_pivot_up_indicator': {'widget': self.qlabel_pivot_up_indicator, 'nt': '/SmartDashboard/LowerCrankMoveUp/running', 'command': '/SmartDashboard/LowerCrankMoveUp/running'},
-        'qlabel_pivot_down_indicator': {'widget': self.qlabel_pivot_down_indicator, 'nt': '/SmartDashboard/LowerCrankMoveDown/running', 'command': '/SmartDashboard/LowerCrankMoveDown/running'},
-        'qlabel_intake_off_indicator': {'widget': self.qlabel_intake_off_indicator, 'nt': '/SmartDashboard/IntakeOff/running','command': '/SmartDashboard/IntakeOff/running'},
+        'qlabel_elevator_up_indicator': {'widget': self.qlabel_elevator_up_indicator, 'nt': '/SmartDashboard/MoveElevatorUp/running', 'command': '/SmartDashboard/MoveElevatorUp/running'},
+        'qlabel_elevator_down_indicator': {'widget': self.qlabel_elevator_down_indicator, 'nt': '/SmartDashboard/MoveElevatorDown/running', 'command': '/SmartDashboard/MoveElevatorDown/running'},
+        'qlabel_pivot_up_indicator': {'widget': self.qlabel_pivot_up_indicator, 'nt': '/SmartDashboard/MovePivotUp/running', 'command': '/SmartDashboard/MovePivotUp/running'},
+        'qlabel_pivot_down_indicator': {'widget': self.qlabel_pivot_down_indicator, 'nt': '/SmartDashboard/MovePivotDown/running', 'command': '/SmartDashboard/MovePivotDown/running'},
+        'qlabel_wrist_up_indicator': {'widget': self.qlabel_wrist_up_indicator, 'nt': '/SmartDashboard/MoveWristUp/running', 'command': '/SmartDashboard/MoveWristUp/running'},
+        'qlabel_wrist_down_indicator': {'widget': self.qlabel_wrist_down_indicator, 'nt': '/SmartDashboard/MoveWristDown/running', 'command': '/SmartDashboard/MoveWristDown/running'},
         'qlabel_intake_on_indicator': {'widget': self.qlabel_intake_on_indicator, 'nt': '/SmartDashboard/IntakeOn/running', 'command': '/SmartDashboard/IntakeOn/running'},
-        'qlabel_wrist_down_indicator': {'widget': self.qlabel_wrist_down_indicator, 'nt': '/SmartDashboard/IndexerOff/running', 'command': '/SmartDashboard/IndexerOff/running'},
-        'qlabel_wrist_up_indicator': {'widget': self.qlabel_wrist_up_indicator, 'nt': '/SmartDashboard/IndexerOn/running', 'command': '/SmartDashboard/IndexerOn/running'},
+        'qlabel_intake_off_indicator': {'widget': self.qlabel_intake_off_indicator, 'nt': '/SmartDashboard/IntakeOff/running','command': '/SmartDashboard/IntakeOff/running'},
+        'qlabel_intake_reverse_indicator': {'widget': self.qlabel_intake_reverse_indicator, 'nt': '/SmartDashboard/IntakeReverse/running','command': '/SmartDashboard/IntakeReverse/running'},
+
+            # UNFINISHED for 2025
+        'qlabel_navx_reset_indicator': {'widget': self.qlabel_navx_reset_indicator, 'nt': '/SmartDashboard/GyroReset/running', 'command': '/SmartDashboard/GyroReset/running'},
         'qlabel_shooter_off_indicator': {'widget': self.qlabel_shooter_off_indicator, 'nt': '/SmartDashboard/ShooterOff/running', 'command': '/SmartDashboard/ShooterOff/running'},
         'qlabel_shooter_on_indicator': {'widget': self.qlabel_shooter_on_indicator, 'nt': '/SmartDashboard/ShooterOn/running', 'command': '/SmartDashboard/ShooterOn/running'},
         'qlabel_shooter_indicator': {'widget': self.qlabel_shooter_indicator,'nt': '/SmartDashboard/shooter_on', 'command': None, 'flash': True},
@@ -401,7 +404,7 @@ class Ui(QtWidgets.QMainWindow):
 
             # NUMERIC INDICATORS - LCDS should be phased out since they are a legacy item (and not particularly cool anyway)
         'qlcd_navx_heading': {'widget': self.qlcd_navx_heading, 'nt': '/SmartDashboard/_navx', 'command': None},
-        'qlcd_elevator_height': {'widget': self.qlcd_elevator_height, 'nt':'/SmartDashboard/elevator_spark_pos', 'command': None},
+        'qlcd_elevator_height': {'widget': self.qlcd_elevator_height, 'nt': '/SmartDashboard/elevator_spark_pos', 'command': None},
         'qlcd_pivot_angle': {'widget': self.qlcd_pivot_angle, 'nt': '/SmartDashboard/profiled_pivot_spark_angle', 'command': None},
         'qlcd_wrist_angle': {'widget' :self.qlcd_wrist_angle, 'nt': '/SmartDashboard/wrist abs encoder, degrees', 'command': None},
         'qlcd_intake_speed': {'widget': self.qlcd_intake_speed, 'nt': '/SmartDashboard/intake_output', 'command': None},

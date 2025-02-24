@@ -104,7 +104,7 @@ color:rgb(0, 0, 0);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_shoot_cycle_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -138,7 +138,7 @@ background-color:rgb(80, 235, 0);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_indexer_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -172,7 +172,7 @@ background-color:rgb(80, 235, 0);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_shooter_on_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -207,7 +207,7 @@ background-color:rgb(0, 20, 250);</string>
       </widget>
       <widget class="QLCDNumber" name="qlcd_shooter_speed">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -236,7 +236,7 @@ background-color:rgb(0, 20, 250);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_shooter_off_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -271,7 +271,7 @@ background-color:rgb(0, 20, 250);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_intake_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -304,6 +304,9 @@ background-color:rgb(80, 235, 0);</string>
        </property>
       </widget>
       <widget class="QLabel2" name="qlabel_position_indicator">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -538,7 +541,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_indexer_on_indicator">
+      <widget class="QLabel2" name="qlabel_wrist_up_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -561,7 +564,7 @@ color:rgb(255, 255, 255);
 background-color:rgb(0, 20, 250);</string>
        </property>
        <property name="text">
-        <string>ON</string>
+        <string>UP</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -570,7 +573,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_indexer_off_indicator">
+      <widget class="QLabel2" name="qlabel_wrist_down_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -593,7 +596,7 @@ color:rgb(255, 255, 255);
 background-color:rgb(0, 20, 250);</string>
        </property>
        <property name="text">
-        <string>OFF</string>
+        <string>DOWN</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -702,8 +705,8 @@ background-color:rgb(0, 20, 250);</string>
        <property name="geometry">
         <rect>
          <x>129</x>
-         <y>247</y>
-         <width>41</width>
+         <y>246</y>
+         <width>21</width>
          <height>21</height>
         </rect>
        </property>
@@ -721,7 +724,39 @@ color:rgb(255, 255, 255);
 background-color:rgb(0, 20, 250);</string>
        </property>
        <property name="text">
-        <string>ON</string>
+        <string>F</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::AutoText</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel2" name="qlabel_intake_reverse_indicator">
+       <property name="geometry">
+        <rect>
+         <x>152</x>
+         <y>246</y>
+         <width>21</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: 7px;
+border-radius: 7px;
+color:rgb(255, 255, 255);
+background-color:rgb(0, 20, 250);</string>
+       </property>
+       <property name="text">
+        <string>R</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -763,6 +798,9 @@ background-color:rgb(0, 20, 250);</string>
        </property>
       </widget>
       <widget class="QLCDNumber" name="qlcd_navx_heading">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -776,6 +814,9 @@ background-color:rgb(0, 20, 250);</string>
        </property>
       </widget>
       <widget class="QLabel2" name="qlabel_navx_reset_indicator">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>121</x>
@@ -809,7 +850,7 @@ background-color:rgb(0, 20, 250);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_orange_target_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -843,7 +884,7 @@ background-color:rgb(80, 235, 0);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_apriltag_front_target_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -878,7 +919,7 @@ TAG</string>
       </widget>
       <widget class="QLabel2" name="qlabel_note_captured_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -912,6 +953,9 @@ CAPTURED</string>
        </property>
       </widget>
       <widget class="QLabel" name="qlabel_shot_distance">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -945,7 +989,7 @@ color:rgb(230,230,230);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_apriltag_back_target_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -993,7 +1037,7 @@ TAG</string>
       </property>
       <widget class="QLabel2" name="qlabel_reset_gyro_from_pose_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1026,7 +1070,7 @@ background-color:rgb(180,180,180);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_drive_to_speaker_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1059,7 +1103,7 @@ background-color:rgb(180,180,180);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_drive_to_stage_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1092,7 +1136,7 @@ background-color:rgb(180,180,180);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_drive_to_amp_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1159,7 +1203,7 @@ background-color:rgb(180,180,180);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_can_report_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1193,6 +1237,9 @@ background-color:rgb(180,180,180);</string>
        </property>
       </widget>
       <widget class="QLabel2" name="qlabel_game_piece_indicator">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -2047,6 +2094,41 @@ color:rgb(230,230,230);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
+   <widget class="QLabel" name="qlabel_TBD">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>900</x>
+      <y>30</y>
+      <width>541</width>
+      <height>291</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>MS Shell Dlg 2</family>
+      <pointsize>14</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgba(0, 0, 0,85);
+color:rgb(230,230,230);</string>
+    </property>
+    <property name="text">
+     <string>TBD</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
    <zorder>tabWidget</zorder>
    <zorder>qt_text_status</zorder>
    <zorder>tabWidget_2</zorder>
@@ -2060,6 +2142,7 @@ color:rgb(230,230,230);</string>
    <zorder>qt_button_swap_sim</zorder>
    <zorder>qlabel_camera_view</zorder>
    <zorder>qlabel_alliance_indicator</zorder>
+   <zorder>qlabel_TBD</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

@@ -11,6 +11,7 @@ from pathplannerlib.pathfinding import Pathfinding
 from pathplannerlib.path import PathConstraints
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath
+from wpimath.units import degreesToRadians
 
 from commands.sequential_scoring import SequentialScoring
 import constants
@@ -215,6 +216,17 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
+
+        # COMMANDS FOR GUI (ROBOT DEBUGGING) - 20250224 CJH
+        wpilib.SmartDashboard.putData('MoveElevatorUp', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=0.1 ))
+        wpilib.SmartDashboard.putData('MoveElevatorDown', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=-0.1))
+        wpilib.SmartDashboard.putData('MovePivotUp', MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
+        wpilib.SmartDashboard.putData('MovePivotDown', MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+        wpilib.SmartDashboard.putData('MoveWristUp', MoveWrist(container=self, incremental=True, radians=degreesToRadians(10), timeout=0.2))
+        wpilib.SmartDashboard.putData('MoveWristDown', MoveWrist(container=self, incremental=True, radians=degreesToRadians(-10), timeout=0.2))
+        wpilib.SmartDashboard.putData('IntakeOn', RunIntake(container=self, intake=self.intake, value=3, stop_on_end=False))
+        wpilib.SmartDashboard.putData('IntakeOff', RunIntake(container=self, intake=self.intake, value=0, stop_on_end=False))
+        wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-3, stop_on_end=False))
 
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()

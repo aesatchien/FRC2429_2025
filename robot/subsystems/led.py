@@ -24,24 +24,24 @@ class Led(commands2.Subsystem):
         # animated indicators
         kRAINBOW = {'name': "RAINBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 5, "duty_cycle": None,
                     'animation_data': [(int(180 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
+        kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 10, "duty_cycle": None,
                     'animation_data': [(int(60 + 90 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kHOTBOW = {'name': "HOTBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
+        kHOTBOW = {'name': "HOTBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 10, "duty_cycle": None,
                    'animation_data': [(int(150 + 60 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
         kPOLKA = {'name': "POLKA", "on_color": None, "off_color": None, "animated": True, "frequency": 2, "duty_cycle": None,
                   'animation_data': [(255, 255, 255) if i % 2 == 0 else (0, 0, 0) for i in range(constants.k_led_count)], 'use_hsv': False, 'use_mode': True}
         # non-animated indicators
-        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.25, 'use_mode': False}
+        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
         kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
-        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.75, 'use_mode': False}
+        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
         kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
         kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],                   "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
 
     class Mode(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
-        kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
-        kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
-        kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
+        kCORAL = {'name': "CORAL", "on_color": [200, 200, 200], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
+        kALGAE = {'name': "ALGAE", "on_color": [0, 120, 120], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}  # [0, 180, 180] still looks too blue
+        kNONE = {'name': "NONE", "on_color": [160, 0, 160], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
 
     def __init__(self, container):
         super().__init__()

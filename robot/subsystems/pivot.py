@@ -94,7 +94,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.setGoal(self.goal)
         self.at_goal = False
 
-    def move_degrees(self, delta_degrees: float, silent=False) -> None:  # way to bump up and down for testing
+    def move_degrees(self, delta_degrees: float, silent=True) -> None:  # way to bump up and down for testing
         current_angle = self.get_angle()
         goal = current_angle + degreesToRadians(delta_degrees)
         self.set_goal(goal)  # check and set

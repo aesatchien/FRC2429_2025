@@ -6,7 +6,7 @@ from subsystems.intake import Intake
 
 class RunIntake(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, intake: Intake, value: float, control_type: SparkMax.ControlType, stop_on_end=False, indent=0) -> None:
+    def __init__(self, container, intake: Intake, value: float, control_type: SparkMax.ControlType = SparkMax.ControlType.kVoltage, stop_on_end=False, indent=0) -> None:
         super().__init__()
         self.setName('Run Intake')  # change this to something appropriate for this command
         self.container = container
@@ -20,9 +20,9 @@ class RunIntake(commands2.Command):  # change the name for your command
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print("\n" + self.indent * "    " + f"** Started {self.getName()} at {self.start_time} s **", flush=True)
-        SmartDashboard.putString("alert",
-                                 f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
+        msg = self.indent * "    " + f"** Started {self.getName()} with value {self.value} at {self.start_time} s **"
+        print(msg, flush=True)
+        SmartDashboard.putString("alert", msg)
 
         self.intake.set_reference(value=self.value, control_type=self.control_type)
 
@@ -41,7 +41,7 @@ class RunIntake(commands2.Command):  # change the name for your command
         if self.stop_on_end:
             self.intake.set_reference(value=0, control_type=SparkMax.ControlType.kVoltage)
 
-        print_end_message = True
+        print_end_message = False
         if print_end_message:
             print(self.indent * "    " + f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
             SmartDashboard.putString(f"alert",
