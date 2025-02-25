@@ -40,6 +40,9 @@ class MovePivot(commands2.Command):  # change the name for your command
         elif self.mode == 'specified':
             self.goal = self.angle
             self.pivot.set_goal(self.goal)  # should already be in radians
+        elif self.mode == 'incremental':  # for GUI troubleshooting
+            self.goal = self.angle
+            self.pivot.move_degrees(delta_degrees=self.goal)
         elif self.use_dash:
             self.goal = SmartDashboard.getNumber('pivot_cmd_goal_deg', 90)  # get the elevator sp from the dash
             self.mode = SmartDashboard.getString('pivot_cmd_mode', 'absolute')

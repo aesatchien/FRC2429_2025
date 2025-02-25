@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>png/blockhead.ico</file>
+  </qresource>
+</RCC>
