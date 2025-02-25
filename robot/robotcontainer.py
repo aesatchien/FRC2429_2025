@@ -359,6 +359,6 @@ class RobotContainer:
         pass
 
     def get_autonomous_command(self):
-        return LeaveThenScore(container=self)
+        return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")).andThen(DriveByVelocitySwerve(container=self, swerve=self.swerve, velocity=Pose2d(1, 1, 1), timeout=2).andThen(LeaveThenScore(container=self)))
         # return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()

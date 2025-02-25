@@ -124,17 +124,14 @@ class SwerveModule:
             correctedDesiredState.angle = self.getState().angle
 
         # Command driving and turning SPARKS MAX towards their respective setpoints.
-        if not self.label == "lf": # we have no abs encoder on lf
-            SmartDashboard.putNumber(f"setting driving thingy of {self.label} to: ", correctedDesiredState.speed)
-            self.drivingSparkMax.set(correctedDesiredState.speed / 4.75)
+        self.drivingSparkMax.set(correctedDesiredState.speed / 4.75)
 
         # calculate the PID value for the turning motor  - use the roborio instead of the sparkmax. todo: explain why
         # self.turningPIDController.setReference(optimizedDesiredState.angle.radians(), CANSparkMax.ControlType.kPosition)
         self.turning_output = self.turning_PID_controller.calculate(self.get_turn_encoder(), correctedDesiredState.angle.radians())
         # clean up the turning Spark LEDs by cleaning out the noise - 20240226 CJH
         self.turning_output = 0 if math.fabs(self.turning_output) < 0.01 else self.turning_output
-        if not self.label == "lf": # we have no abs encoder on lf
-            self.turningSparkMax.set(self.turning_output)
+        self.turningSparkMax.set(self.turning_output)
         # self.turningSparkMax.set(1)
         # self.drivingSparkMax.set(0.3)
 

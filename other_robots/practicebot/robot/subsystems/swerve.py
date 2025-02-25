@@ -7,13 +7,13 @@ import wpilib
 
 from commands2 import Subsystem
 from wpimath.filter import SlewRateLimiter
-from wpimath.geometry import Pose2d, Rotation2d, Translation3d, Pose3d, Rotation3d
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Translation3d, Pose3d, Rotation3d
 from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics)
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.controller import PIDController
 import navx
 import rev
-from pathplannerlib.path import PathPlannerTrajectory
+from pathplannerlib.path import PathPlannerTrajectory, translation2dFromJson
 import ntcore
 import robotpy_apriltag as ra
 import wpimath.geometry as geo
@@ -102,8 +102,11 @@ class Swerve (Subsystem):
         for pi_name in constants.VisionConstants.k_pi_names:
             this_pi_subscriber_dict = {}
             this_pi_subscriber_dict.update({"robot_pose_info_subscriber": self.inst.getDoubleArrayTopic(f"vision/{pi_name}/robot_pose_info").subscribe([])})
+            this_pi_subscriber_dict.update({"tag_vectors_subscriber": self.inst.getDoubleArrayTopic(f"vision/{pi_name}/tag_vectors").subscribe([])})
             this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
             self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
+
+        self.layout = ra.AprilTagFieldLayout().loadField(ra.AprilTagField.k2024Crescendo)
 
         robot_config = RobotConfig.fromGUISettings()
 
@@ -410,11 +413,23 @@ class Swerve (Subsystem):
                 # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
                 robot_pose_info_list_from_this_pi: list[float] = pi_subscriber_dict["robot_pose_info_subscriber"].get()
 
-                # iterate over each chunk using its start idx
-                for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
-                    print("Adding apriltag measurement!")
+                vector_list_from_this_pi: list[float] = pi_subscriber_dict["tag_vectors_subscriber"].get()
 
-                    this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
+                for vector_start_idx in range(0, len(vector_list_from_this_pi) - 2, 3):
+                    
+                    bot_to_tag_vector = Translation2d(distance=vector_list_from_this_pi[vector_start_idx + 2], angle=Rotation2d(vector_list_from_this_pi[vector_start_idx + 3]))
+                    
+                    field_centric_bot_to_tag_vector = bot_to_tag_vector.rotateBy(Rotation2d(self.get_angle())) # note this is a circular definition, not sure it will handle it nicely
+
+                    origin_to_tag_pose2d = self.layout.getTagPose(int(vector_list_from_this_pi[vector_start_idx])).toPose2d()
+                    origin_to_tag_vector = Translation2d(origin_to_tag_pose2d.X(), origin_to_tag_pose2d.Y())
+
+                    origin_to_bot_vector = field_centric_bot_to_tag_vector + origin_to_tag_vector
+
+                    origin_to_bot_pose2d = Pose2d(translation=origin_to_bot_vector, rotation=Rotation2d(self.get_angle()))
+
+                    # --------- TIMESTAMP CALCULATIONS ------------
+                    this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[vector_start_idx + 1]
 
                     our_now = wpilib.Timer.getFPGATimestamp()
                     this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
@@ -432,13 +447,40 @@ class Swerve (Subsystem):
                     this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
                     wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
 
-                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
-                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
-                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+                    self.field2d_for_atag_testing.setRobotPose(origin_to_bot_pose2d)
 
-                    self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
+                    self.pose_estimator.addVisionMeasurement(visionRobotPose=origin_to_bot_pose2d, timestamp=this_single_apriltag_timestamp_in_our_time)
 
-                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
+
+                # # iterate over each chunk using its start idx
+                # for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
+                #     print("Adding apriltag measurement!")
+                #
+                #     this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
+                #
+                #     our_now = wpilib.Timer.getFPGATimestamp()
+                #     this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
+                #
+                #     print(f"this pis now: {this_pis_now}")
+                #
+                #     # supposing our now is 5, and
+                #     # this pi's now is 8.
+                #     # we must add -3 to this pi's now.
+                #     # -3 = ournow - thispisnow
+                #
+                #     delta = our_now - this_pis_now
+                #     wpilib.SmartDashboard.putNumber("delta time", delta)
+                #
+                #     this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
+                #     wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
+                #
+                #     this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
+                #                                          y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
+                #                                          angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+                #
+                #     self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
+                #
+                #     self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
 
         # Update the odometry in the periodic block -
