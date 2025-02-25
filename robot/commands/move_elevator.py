@@ -34,9 +34,12 @@ class MoveElevator(commands2.Command):  # change the name for your command
         if self.mode == 'scoring':  # what will eventually be the norm
             self.goal = self.container.robot_state.get_elevator_goal() + self.offset
             self.elevator.set_goal(self.goal)
-        elif self.mode == 'specified':
+        elif self.mode == 'specified':  # send to a specific height
             self.goal = self.height
             self.elevator.set_goal(self.goal)
+        elif self.mode == 'incremental':  # call from GUI to increment up and down
+            self.goal = self.height  # height is a delta in this case
+            self.elevator.move_meters(delta_meters=self.goal)
         elif self.use_dash:
             self.goal = SmartDashboard.getNumber('elevator_cmd_goal', 0.21)  # get the elevator sp from the dash
             self.goal = self.goal + self.offset  # allow for an offset from our goal

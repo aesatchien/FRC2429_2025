@@ -4,6 +4,7 @@ import commands2
 from wpilib import AddressableLED
 from wpilib import SmartDashboard, Color  # can i make use of color at some point?
 import constants
+from subsystems.robot_state import RobotState
 
 # TODO - make the frequencies actual times per second - so divide by the LED update rate (currently 10x per second)
 
@@ -23,30 +24,33 @@ class Led(commands2.Subsystem):
         # animated indicators
         kRAINBOW = {'name': "RAINBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 5, "duty_cycle": None,
                     'animation_data': [(int(180 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
+        kCOOLBOW = {'name': "COOLBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 10, "duty_cycle": None,
                     'animation_data': [(int(60 + 90 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
-        kHOTBOW = {'name': "HOTBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 20, "duty_cycle": None,
+        kHOTBOW = {'name': "HOTBOW", "on_color": None, "off_color": None, "animated": True, "frequency": 10, "duty_cycle": None,
                    'animation_data': [(int(150 + 60 * (i / constants.k_led_count)), 255, 255) for i in range(constants.k_led_count)], 'use_hsv': True, 'use_mode': False}
         kPOLKA = {'name': "POLKA", "on_color": None, "off_color": None, "animated": True, "frequency": 2, "duty_cycle": None,
                   'animation_data': [(255, 255, 255) if i % 2 == 0 else (0, 0, 0) for i in range(constants.k_led_count)], 'use_hsv': False, 'use_mode': True}
         # non-animated indicators
-        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.25, 'use_mode': False}
+        kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
         kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
-        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.75, 'use_mode': False}
+        kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
         kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
         kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],                   "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
 
     class Mode(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
-        kCORAL = {'name': "CORAL", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
-        kALGAE = {'name': "ALGAE", "on_color": [0, 180, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
-        kNONE = {'name': "NONE", "on_color": [180, 0, 180], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
-
+        kCORAL = {'name': "CORAL", "on_color": [200, 200, 200], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
+        kALGAE = {'name': "ALGAE", "on_color": [0, 120, 120], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}  # [0, 180, 180] still looks too blue
+        kNONE = {'name': "NONE", "on_color": [160, 0, 160], "off_color": [0, 0, 0], "animated": False, "frequency": None, "duty_cycle": None}
 
     def __init__(self, container):
         super().__init__()
         self.setName('Led')
         self.container = container  # at the moment LED may want to query other subsystems, but this is not clean
+
+        # Register LED to listen for RobotState updates
+        self.container.robot_state.register_callback(self.update_from_robot_state)
+
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
         self.counter = 1
         self.animation_counter = 0
@@ -73,6 +77,18 @@ class Led(commands2.Subsystem):
         self.indicator = Led.Indicator.kPOLKA
 
         self.set_mode(self.Mode.kNONE)
+        self.set_indicator(self.Indicator.kNONE)
+
+    def update_from_robot_state(self, target, side):
+        """ Update LED mode based on RobotState changes. """
+        if target.value['mode'] == 'coral':
+            self.set_mode(self.Mode.kCORAL)
+        elif target.value['mode'] == 'algae':
+            self.set_mode(self.Mode.kALGAE)
+        elif target.value['mode'] == 'keep':
+            pass  # don't change the mode
+        else:
+            self.set_mode(self.Mode.kNONE)
         self.set_indicator(self.Indicator.kNONE)
 
     def set_mode(self, mode) -> None:
@@ -127,7 +143,7 @@ class Led(commands2.Subsystem):
                 else:  # Handle animated indicators
                     data = self.indicator.value["animation_data"]
                     if time_since_toggle > 1 / self.indicator.value["frequency"]:
-                        self.animation_counter +=1
+                        self.animation_counter += 1
                         self.last_toggle_time = current_time
 
                     shift = self.animation_counter % self.led_count
@@ -138,9 +154,19 @@ class Led(commands2.Subsystem):
                         [self.led_data[i].setRGB(*shifted_data[i]) for i in range(self.led_count)]
 
             else:  # Handle mode-only LEDs - they do not toggle
-                color = self.mode.value["on_color"]
-                for i in range(constants.k_led_count):
-                    self.led_data[i].setRGB(*color)
+                # thinking of using the target state to light the robot
+                lit_leds: RobotState.Target.value = self.container.robot_state.get_target().value['lit_leds']
+                if lit_leds == constants.k_led_count:
+                    color = self.mode.value["on_color"]
+                    for i in range(constants.k_led_count):
+                        self.led_data[i].setRGB(*color)
+                else:  # target dependent LED states:
+                    # turn them all off
+                    _ = [ self.led_data[i].setRGB(*self.mode.value["off_color"]) for i in range(constants.k_led_count) ]
+                    # turn on the first section
+                    _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(lit_leds) ]
+                    # turn on the other section
+                    _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(constants.k_led_count-1, constants.k_led_count-lit_leds-1, -1) ]
 
             self.led_strip.setData(self.led_data)  # Send LED updates
 

@@ -8,13 +8,18 @@ import wpilib
 from subsystems.swerve import Swerve  # allows us to access the definitions
 from wpilib import SmartDashboard
 from commands2.button import CommandXboxController
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Rotation2d, Translation2d
 from wpimath.filter import Debouncer
 from subsystems.swerve_constants import DriveConstants as dc
 
 class DriveByJoystickSwerve(commands2.Command):
     def __init__(self, container, swerve: Swerve, controller: CommandXboxController, rate_limited=False) -> None:
-        # TODO: sanjith would like his joystick to directly adjust heading so if he puts his stick at 45 deg the robot will go to 45 deg
+        # def calculateratelimitedoutvelocity(commanded velocity, actual velocity, deltatime, max allowed accel):
+            # if |(commanded - actual / deltatime)| > max allowed accel:
+                # return vector with correct direction
+            # else:
+                # return commanded vector
+
         super().__init__()
         self.setName('drive_by_joystick_swerve')
         self.container = container
@@ -33,6 +38,8 @@ class DriveByJoystickSwerve(commands2.Command):
                                       )))
         self.debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
         self.robot_oriented_debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
+
+        self.prev_commanded_vector = Translation2d(0, 0) # we should start stationary so this should be valid
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
@@ -62,7 +69,7 @@ class DriveByJoystickSwerve(commands2.Command):
         joystick_strafe = self.controller.getLeftX()
 
         linear_mapping = True  # two ways to make sure diagonal is at "full speed"
-                               # TODO: find why our transforms are weird at low speed- they don't act intuitively
+                               # TODO: find why our transforms are weird at low speed- they don't act right
         if linear_mapping:
             # this lets you go full speed diagonal at the cost of sensitivity on the low end
             desired_fwd = -self.input_transform_linear(1.0 * joystick_fwd) * max_linear
@@ -89,17 +96,10 @@ class DriveByJoystickSwerve(commands2.Command):
             desired_fwd *= -1
             desired_strafe *= -1
 
-        correct_like_1706 = False  # this is what 1706 does (normalization), but Rev put all that in the swerve module's drive
-        if correct_like_1706:
-            desired_translation = Translation2d(desired_fwd, desired_strafe)
-            desired_magnitude = desired_translation.norm()
-            if desired_magnitude > max_linear:
-                desired_translation = desired_translation * max_linear / desired_magnitude
-            self.swerve.drive(desired_translation.X(), desired_translation.Y(), desired_rot,
-                          fieldRelative= self.field_oriented, rate_limited=self.rate_limited)
+        # desired_fwd, desired_strafe = self.calculate_rate_limited_velocity(desired_fwd, desired_strafe, 0.02, 0.5)
 
-        else:
-            self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
+
+        self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
                               fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
 
 
@@ -129,3 +129,35 @@ class DriveByJoystickSwerve(commands2.Command):
         # 1706 uses a nice transform
         db_value = self.apply_deadband(value)
         return db_value
+
+    def calculate_rate_limited_velocity(self, commanded_fwd, commanded_strafe, time_since_last_called, max_accel):
+        """
+        all in meters/sec^n
+        BUG: is very very broken and will cook a robot. DO NOT USE
+        """
+
+        commanded_vector = Translation2d(commanded_fwd, commanded_strafe)
+        print(f"prev commanded: {self.prev_commanded_vector.X()}, {self.prev_commanded_vector.Y()}")
+        print(f"     commanded: {commanded_vector.X()}, {commanded_vector.Y()}")
+        # commanded is (0, 0)
+        # prev commanded is (0, 4)
+        # too much accel!
+        # add (1, 0) to  prev commanded
+
+        commanded_accel_vector: Translation2d = (commanded_vector - self.prev_commanded_vector) / time_since_last_called
+        print("we're being commanded an acceleration of", commanded_accel_vector.norm())
+        
+        if commanded_accel_vector.norm() > max_accel:
+            # print("commanding too much acceleration!")
+            # print(f"giving angle of {commanded_vector.angle()}")
+            # print(f"initial x: {commanded_fwd}; initial y: {commanded_strafe}; final x: {commanded_vector.X()}; final y: {commanded_vector.Y()}")
+            if commanded_vector.norm() == 0:
+                print(f"suposed to go to 0")
+                commanded_vector = self.prev_commanded_vector - Translation2d(distance=max_accel * time_since_last_called, angle=self.prev_commanded_vector.angle())
+            else:
+                print(" ")
+                commanded_vector = self.prev_commanded_vector + Translation2d(distance=max_accel * time_since_last_called, angle=commanded_vector.angle())
+
+        self.prev_commanded_vector = commanded_vector
+        return (commanded_vector.X(), commanded_vector.Y())
+
