@@ -55,7 +55,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.8,
+        "elevator": 0.85,
         "shoulder_pivot": math.radians(50),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -68,10 +68,17 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
+    "wrist_clearing": { # intermediate position in which we spin the wrist before scoring
+        "elevator": inchesToMeters(20),
+        "shoulder_pivot": math.radians(57), 
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    },
     "coral station": {
-        "elevator": 0.7,
-        "shoulder_pivot": math.radians(130),
-        "wrist_pivot": math.radians(-180), # hopefully the negative makes it turn the safer way
+        "elevator": 0.5,
+        "shoulder_pivot": math.radians(70),
+        "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -125,7 +132,7 @@ class IntakeConstants:
     k_coral_intaking_voltage = -3
     k_algae_intaking_voltage = 2
 
-    k_coral_scoring_voltage = 2
+    k_coral_scoring_voltage = 10
 
     k_seconds_to_stay_on_while_scoring = 1
 
@@ -185,6 +192,8 @@ class WristConstants:
 
     k_min_arm_angle_where_spinning_dangerous = math.radians(70)
     k_max_arm_angle_where_spinning_dangerous = math.radians(110)
+
+    k_max_elevator_height_where_spinning_dangerous = inchesToMeters(35)
 
     k_stowed_min_angle = math.radians(-15)
     k_stowed_max_angle = math.radians(15)

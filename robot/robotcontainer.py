@@ -14,6 +14,8 @@ from pathplannerlib.path import PathPlannerPath
 from wpimath.units import degreesToRadians
 
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
+from commands.score_on_reef import ScoreOnReef
+from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
 import constants
 
@@ -276,13 +278,13 @@ class RobotContainer:
 
         # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
-        self.co_trigger_a.whileTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
+        self.co_trigger_a.onTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
         
-        self.co_trigger_b.whileTrue(GoToPosition(container=self, position="l2"))
+        self.co_trigger_b.onTrue(ScoreOnReef(container=self, level=2))
 
-        self.co_trigger_x.whileTrue(GoToPosition(container=self, position="l3"))
+        self.co_trigger_x.onTrue(ScoreOnReef(container=self, level=3))
 
-        self.co_trigger_y.whileTrue(GoToPosition(container=self, position="l4"))
+        self.co_trigger_y.onTrue(ScoreOnReef(container=self, level=4))
 
         # trigger on true: go to the position, start intake
         # trigger on false: go to stow, stop intake
@@ -296,9 +298,9 @@ class RobotContainer:
         self.co_trigger_u.or_(self.co_trigger_r).whileTrue(GoToPosition(container=self, position="stow"))
 
 
-        self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage))
+        self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))
         
-        self.co_trigger_rb.whileTrue(RunIntake(container=self, intake=self.intake, value=3, control_type=rev.SparkMax.ControlType.kVoltage))
+        self.co_trigger_rb.onTrue(Score(container=self))
 
         self.co_trigger_l_stick_positive_x.whileTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
 
