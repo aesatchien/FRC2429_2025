@@ -406,7 +406,7 @@ class Ui(QtWidgets.QMainWindow):
         'qlcd_navx_heading': {'widget': self.qlcd_navx_heading, 'nt': '/SmartDashboard/_navx', 'command': None},
         'qlcd_elevator_height': {'widget': self.qlcd_elevator_height, 'nt': '/SmartDashboard/elevator_spark_pos', 'command': None},
         'qlcd_pivot_angle': {'widget': self.qlcd_pivot_angle, 'nt': '/SmartDashboard/profiled_pivot_spark_angle', 'command': None},
-        'qlcd_wrist_angle': {'widget' :self.qlcd_wrist_angle, 'nt': '/SmartDashboard/wrist abs encoder, degrees', 'command': None},
+        'qlcd_wrist_angle': {'widget' :self.qlcd_wrist_angle, 'nt': '/SmartDashboard/wrist relative encoder, degrees', 'command': None},
         'qlcd_intake_speed': {'widget': self.qlcd_intake_speed, 'nt': '/SmartDashboard/intake_output', 'command': None},
         'qlcd_shooter_speed': {'widget': self.qlcd_shooter_speed, 'nt': '/SmartDashboard/shooter_rpm', 'command': None},
         'qlabel_pdh_voltage_monitor': {'widget': self.qlabel_pdh_voltage_monitor, 'nt': '/SmartDashboard/_pdh_voltage', 'command': None},
