@@ -32,6 +32,7 @@ from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 #
 from commands.go_to_position import GoToPosition
+from commands.follow_trajectory import FollowTrajectory
 from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
 # from commands.score import Score
@@ -216,6 +217,7 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
+        wpilib.SmartDashboard.putData('FollowTrajectory', FollowTrajectory(container=self, current_trajectory=None, wait_to_finish=True))
 
         # COMMANDS FOR GUI (ROBOT DEBUGGING) - 20250224 CJH
         wpilib.SmartDashboard.putData('MoveElevatorUp', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=0.1 ))
