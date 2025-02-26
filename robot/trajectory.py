@@ -194,9 +194,9 @@ class CustomTrajectory:
 waypoints = {
     0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
     0.25: {'elevator': 0.3, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
-    0.5: {'elevator':0.5, 'pivot': 70, 'wrist': 0, 'intake': 2},  # get to safe wrist
-    1: {'elevator': 1.6, 'pivot': 45, 'wrist': 90, 'intake': 2},  # get to scoring wrist
-    1.5: {'elevator': 1.65, 'pivot': 30, 'wrist': 90, 'intake': -3},  # move pivot while scoring
+    0.5: {'elevator': 0.5, 'pivot': 70, 'wrist': 0, 'intake': 2},  # get to safe wrist
+    1: {'elevator': 1.2, 'pivot': 50, 'wrist': 90, 'intake': 2},  # get to scoring wrist while raising elevator
+    1.5: {'elevator': 1.17, 'pivot': 40, 'wrist': 90, 'intake': -3},  # move pivot while scoring
     2.5: {'elevator': 0.2, 'pivot': 70, 'wrist': 0, 'intake': 0},  # return home with wrist safe
     3.0: {'elevator': 0.2, 'pivot': 90, 'wrist': 0, 'intake': 0},  # come down to bottom
 }

@@ -8,6 +8,7 @@ from subsystems.pivot import Pivot
 from subsystems.wrist import Wrist
 from subsystems.intake import Intake
 import trajectory
+from trajectory import CustomTrajectory
 from subsystems.robot_state import RobotState
 
 class FollowTrajectory(commands2.Command):  # change the name for your command
@@ -27,13 +28,15 @@ class FollowTrajectory(commands2.Command):  # change the name for your command
         self.start_time = None
         self.command_time = 0
         if current_trajectory is None:
-            self.trajectory = trajectory.trajectory_L3
+            self.trajectory: CustomTrajectory = trajectory.trajectory_L3
         else:
-            self.trajectory = current_trajectory
+            self.trajectory: CustomTrajectory = current_trajectory
+        self.waypoint_counter = 0
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = self.container.get_enabled_time()
+        self.waypoint_counter = 0
 
         print(f"{self.indent * '    '}** Started {self.getName()}  at {self.start_time:.1f} s **", flush=True)
 
@@ -47,6 +50,12 @@ class FollowTrajectory(commands2.Command):  # change the name for your command
         self.pivot.set_goal(degreesToRadians(targets['pivot']))
         self.wrist.set_position(degreesToRadians(targets['wrist']))
         self.intake.set_reference(targets['intake'])
+
+        # report progress
+        waypoint_list = list(self.trajectory.waypoints.keys())  # make this part of the class
+        if self.command_time > waypoint_list[self.waypoint_counter]:
+            print(f'{"  " + " " * self.indent}starting waypoint {self.waypoint_counter}: {self.trajectory.waypoints[waypoint_list[self.waypoint_counter]]} at {self.container.get_enabled_time():.1f}')
+            self.waypoint_counter += 1
 
     def isFinished(self) -> bool:
         if self.wait_to_finish:
