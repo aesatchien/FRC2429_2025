@@ -102,6 +102,27 @@ class Swerve (Subsystem):
             this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
             self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
 
+        # -----------     CJH apriltags  ------------
+        # get poses from NT
+        self.use_CJH_apriltags = True
+        self.inst = ntcore.NetworkTableInstance.getDefault()
+        # TODO - make this a loop with just the names
+        self.arducam_back_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamBack/poses/tag1").subscribe([0] * 8)
+        self.arducam_back_count_subscriber = self.inst.getDoubleTopic("/Cameras/ArducamBack/tags/targets").subscribe(0)
+
+        self.arducam_reef_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamReef/poses/tag1").subscribe([0] * 8)
+        self.arducam_reef_count_subscriber = self.inst.getDoubleTopic("/Cameras/ArducamReef/tags/targets").subscribe(0)
+
+        self.logitech_high_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechHigh/poses/tag1").subscribe([0] * 8)
+        self.logitech_high_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechHigh/tags/targets").subscribe(0)
+
+        self.logitech_tags_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechTags/poses/tag1").subscribe([0] * 8)
+        self.logitech_tags_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechTags/tags/targets").subscribe(0)
+
+        # set myself up for a zip later on
+        self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_reef_pose_subscriber, self.logitech_high_pose_subscriber, self.logitech_tags_pose_subscriber]
+        self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_reef_count_subscriber, self.logitech_high_count_subscriber, self.logitech_tags_count_subscriber]
+
 
         robot_config = RobotConfig.fromGUISettings()
 
@@ -394,46 +415,58 @@ class Swerve (Subsystem):
 
         # send our current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
-        # update pose based on apriltags
-        if constants.k_use_apriltag_odometry:
 
-            # iterate over the lists of poses supplied by each pi
-            for pi_subscriber_dict in self.pi_subscriber_dicts:
+        if self.use_CJH_apriltags:  # loop through all of our subscribers above
+            for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
+                if count_subscriber.get() > 0:  # use front camera
+                    # update pose from apriltags
+                    tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                    tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
+                    rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
+                    tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
+                    self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
 
-                # this list has 4*n floats (n is an integer), 
-                # where each 4-float chunk represents the robot pose as computed from one tag. 
-                # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
-                robot_pose_info_list_from_this_pi: list[float] = pi_subscriber_dict["robot_pose_info_subscriber"].get()
 
-                # iterate over each chunk using its start idx
-                for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
-                    print("Adding apriltag measurement!")
+        else:  # Leo's experiment
+            # update pose based on apriltags
+            if constants.k_use_apriltag_odometry:
+                # iterate over the lists of poses supplied by each pi
+                for pi_subscriber_dict in self.pi_subscriber_dicts:
 
-                    this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
+                    # this list has 4*n floats (n is an integer),
+                    # where each 4-float chunk represents the robot pose as computed from one tag.
+                    # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
+                    robot_pose_info_list_from_this_pi: list[float] = pi_subscriber_dict["robot_pose_info_subscriber"].get()
 
-                    our_now = wpilib.Timer.getFPGATimestamp()
-                    this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
+                    # iterate over each chunk using its start idx
+                    for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
+                        print("Adding apriltag measurement!")
 
-                    print(f"this pis now: {this_pis_now}")
+                        this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
 
-                    # supposing our now is 5, and
-                    # this pi's now is 8.
-                    # we must add -3 to this pi's now.
-                    # -3 = ournow - thispisnow
+                        our_now = wpilib.Timer.getFPGATimestamp()
+                        this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
 
-                    delta = our_now - this_pis_now
-                    wpilib.SmartDashboard.putNumber("delta time", delta)
+                        print(f"this pis now: {this_pis_now}")
 
-                    this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
-                    wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
+                        # supposing our now is 5, and
+                        # this pi's now is 8.
+                        # we must add -3 to this pi's now.
+                        # -3 = ournow - thispisnow
 
-                    this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
-                                                         y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
-                                                         angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+                        delta = our_now - this_pis_now
+                        wpilib.SmartDashboard.putNumber("delta time", delta)
 
-                    self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
+                        this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
+                        wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
 
-                    self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
+                        this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
+                                                             y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
+                                                             angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
+
+                        self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
+
+                        self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
         # Update the odometry in the periodic block -
         if wpilib.RobotBase.isReal():

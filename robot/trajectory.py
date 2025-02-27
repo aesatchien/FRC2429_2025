@@ -1,6 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d, CubicSpline, PchipInterpolator
+# import matplotlib.pyplot as plt
+# from scipy.interpolate import interp1d, CubicSpline, PchipInterpolator
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
 
 class CustomTrajectory:
@@ -31,6 +31,23 @@ class CustomTrajectory:
                     step_values[i] = values[np.searchsorted(times, t, side='right') - 1]
                 self.trajectory[key] = step_values.astype(float)
             else:
+                # Normal interpolation using numpy
+                if self.interpolation_type in {"linear", "cubic", "pchip"}:  # Only supporting linear with NumPy
+                    self.trajectory[key] = np.interp(self.time_steps, times, values).astype(float)
+                else:
+                    raise ValueError(f"Unsupported interpolation type: {self.interpolation_type}")
+
+    """ def generate_trajectory(self):
+        times = np.array(list(self.waypoints.keys()))
+        for key in self.keys:
+            values = np.array([self.waypoints[t][key] for t in times]).astype(float)
+            if key in self.servo_columns:
+                # Servo behavior: use stepwise constant values
+                step_values = np.zeros_like(self.time_steps)
+                for i, t in enumerate(self.time_steps):
+                    step_values[i] = values[np.searchsorted(times, t, side='right') - 1]
+                self.trajectory[key] = step_values.astype(float)
+            else:
                 # Normal interpolation
                 if self.interpolation_type == "linear":
                     interp_func = interp1d(times, values, kind='linear', fill_value='extrapolate')
@@ -41,7 +58,7 @@ class CustomTrajectory:
                 else:
                     raise ValueError(f"Unsupported interpolation type: {self.interpolation_type}")
                 self.trajectory[key] = interp_func(self.time_steps).astype(float)
-
+    """
     def set_constraints(self, velocity_constraints=None, acceleration_constraints=None):
         """ Adds constraints of the form
          velocity_constraints = {'elevator':1, 'pivot':1, 'wrist':1, 'intake'0 }
@@ -150,6 +167,7 @@ class CustomTrajectory:
         self.waypoints = dict(sorted(new_waypoints.items()))
         self.generate_trajectory()
 
+    """
     def visualize_trajectory(self):
         fig, ax = plt.subplots(figsize=(8, 6))
         colors = {'elevator': 'blue', 'pivot': 'red', 'wrist': 'green', 'intake': 'purple'}
@@ -175,7 +193,7 @@ class CustomTrajectory:
         fig.suptitle(f'Plot of trajectory "{self.name}"', y=.95)
         fig.tight_layout()
         plt.show()
-
+    """
     def sparkline(self, length=50):
         blocks = "▁▂▃▄▅▆▇█"
         colors = {'elevator': '\033[34m', 'pivot': '\033[31m', 'wrist': '\033[32m', 'intake': '\033[35m'}

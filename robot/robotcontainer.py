@@ -24,6 +24,7 @@ from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
 from subsystems.climber import Climber
+from subsystems.vision import Vision
 
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
@@ -78,6 +79,7 @@ class RobotContainer:
         self.wrist = Wrist()
         self.climber = Climber()
         self.intake = Intake()
+        self.vision = Vision()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
         self.led = Led(self)  # may want LED last because it may want to know about other systems
 

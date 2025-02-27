@@ -71,6 +71,12 @@ class Climber(Subsystem):
     def is_ready(self):
         return math.fabs(self.get_angle() - constants.ClimberConstants.k_climber_motor_ready) < self.tolerance
 
+    # def climb(self):
+    #     return (self.climber_position == constants.ClimberConstants.k_climber_motor_rotation
+    #             + constants.ClimberConstants.k_climber_motor_climber_reference_angle)
+    # def is_hanging(self):
+    #     return self.z_displacement > 0 and abs(self.x_rotation) > 0 and abs(self.y_rotation) > 0
+
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
