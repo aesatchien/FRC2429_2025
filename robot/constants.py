@@ -9,12 +9,19 @@ from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
 from subsystems.swerve_constants import DriveConstants
 
+# starting position for odometry
 k_start_x = 0
 k_start_y = 0
+# joysticks nad other input
 k_driver_controller_port = 0
 k_co_driver_controller_port = 1
+k_bbox_1_port = 2
+k_bbox_2_port = 3
+
+# robot characteristics - should be near driveconstants, not here
 k_robot_mass_kg = 56
 k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
+
 k_reset_sparks_to_default = True
 k_swerve_debugging_messages = True
 k_use_apriltag_odometry = True

@@ -83,6 +83,7 @@ class RobotContainer:
         self.configure_joysticks()
         self.bind_driver_buttons()
 
+
         self.swerve.setDefaultCommand(DriveByJoystickSwerve(
             container=self,
             swerve=self.swerve,
@@ -95,6 +96,7 @@ class RobotContainer:
             self.configure_codriver_joystick()
             self.bind_codriver_buttons()
             self.bind_keyboard_buttons()
+            self.bind_button_box()
 
         self.initialize_dashboard()
 
@@ -371,3 +373,38 @@ class RobotContainer:
     def get_autonomous_command(self):
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()
+
+    def bind_button_box(self):
+        """
+        Use this method to define your button->command mappings. Buttons can be created by
+        instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
+        and then passing it to a JoystickButton.
+        """
+        # The driver's controller
+        self.bbox_1 = commands2.button.CommandJoystick(constants.k_bbox_1_port)
+        self.bbox_2 = commands2.button.CommandJoystick(constants.k_bbox_2_port)
+
+        self.bbox_TBD1 = self.bbox_1.button(2)  # top left red 1
+        self.bbox_TBD2 = self.bbox_1.button(3)  # top left red 2
+        self.bbox_processor = self.bbox_1.button(0)
+        self.bbox_right = self.bbox_1.button(1)  # true when selected
+        self.bbox_left = self.bbox_1.button(0)  # it really is zero, and true when selected
+        self.bbox_human_left = self.bbox_1.button(4)
+        self.bbox_human_right = self.bbox_1.button(5)
+
+        # reef  stuff
+        self.bbox_AB = self.bbox_1.button(6)
+        self.bbox_CD = self.bbox_1.button(7)
+        self.bbox_EF = self.bbox_1.button(8)
+        self.bbox_GH = self.bbox_1.button(9)
+        self.bbox_IJ = self.bbox_1.button(10)
+        self.bbox_KL = self.bbox_1.button(11)
+
+        self.bbox_L1 = self.bbox_2.button(0)
+        self.bbox_L2 = self.bbox_2.button(1)
+        self.bbox_L3 = self.bbox_2.button(2)
+        self.bbox_L4 = self.bbox_2.button(3)
+
+
+
+

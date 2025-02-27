@@ -117,6 +117,7 @@ class Ui(QtWidgets.QMainWindow):
                             'ArducamBack': 'http://10.24.29.12:1187/stream.mjpg',
                             'LogitechTags': 'http://10.24.29.13:1186/stream.mjpg',
                             'ArducamReef': 'http://10.24.29.13:1187/stream.mjpg',
+
                             'Raw LogiHigh': 'http://10.24.29.12:1181/stream.mjpg',
                             'Raw ArduBack': 'http://10.24.29.12:1182/stream.mjpg',
                             'Raw LogiTags': 'http://10.24.29.13:1181/stream.mjpg',
@@ -576,12 +577,15 @@ class Ui(QtWidgets.QMainWindow):
                     self.toggle_camera_thread()
                 else:
                     pass
+                if self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+                    self.logitech_high_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_high - information only')
                 if self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
                     self.logitech_tags_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Back Tagcam - information only')
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_tags - information only')
                 if self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) > allowed_delay:  # front tagcam died
                     self.arducam_back_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Front Tagcam - information only')
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Farducam_back - information only')
 
             else:  # we started the camera but the thread is not running
                 if not self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_reef alive again
