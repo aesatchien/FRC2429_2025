@@ -5,6 +5,7 @@ import wpilib.simulation as simlib  # 2021 name for the simulation library
 import wpimath.geometry as geo
 from wpimath.kinematics._kinematics import SwerveDrive4Kinematics, SwerveModuleState, SwerveModulePosition
 from pyfrc.physics.core import PhysicsInterface
+import ntcore
 
 from robot import MyRobot
 import constants
@@ -43,6 +44,16 @@ class PhysicsEngine:
         self.initialize_shoulder()
         self.initialize_elevator()
 
+        # vision stuff - using 2024 stuff for now (CJH)
+        key = 'orange'
+        self.inst = ntcore.NetworkTableInstance.getDefault()
+        self.ringcam_table = self.inst.getTable('/Cameras/ArducamReef')   # lifecam for rings
+        self.targets_entry = self.ringcam_table.getEntry(f"{key}/targets")
+        self.distance_entry = self.ringcam_table.getEntry(f"{key}/distance")
+        self.strafe_entry = self.ringcam_table.getEntry(f"{key}/strafe")
+        self.rotation_entry = self.ringcam_table.getEntry(f"{key}/rotation")
+        self.timestamp_entry = self.ringcam_table.getEntry(f"_timestamp")
+
     def update_sim(self, now, tm_diff):
 
         # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
@@ -57,8 +68,20 @@ class PhysicsEngine:
         simlib.RoboRioSim.setVInVoltage(
                 simlib.BatterySim.calculate(amps)
         )
+        self.update_vision()
 
     # ------------------ SUBSYSTEM UPDATES --------------------
+
+    def update_vision(self):
+        # update the vision - using 2024 stuff for now (CJH)
+        ring_dist, ring_rot = 2.22, 3.22 #self.distance_to_ring()
+        wpilib.SmartDashboard.putNumber('/sim/hub_dist', round(ring_dist, 2))
+        wpilib.SmartDashboard.putNumber('/sim/hub_rot', round(ring_rot, 2))
+        self.targets_entry.setDouble(1)
+        self.distance_entry.setDouble(ring_dist)
+        self.strafe_entry.setDouble(0)
+        self.rotation_entry.setDouble(self.theta - ring_rot)
+        self.timestamp_entry.setDouble(wpilib.Timer.getFPGATimestamp())  # pretend the camera is live
 
     def update_wrist(self, tm_diff):
 
