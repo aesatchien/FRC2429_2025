@@ -35,6 +35,10 @@ class PhysicsEngine:
 
         self.mech2d_intake = self.mech2d_wrist.appendLigament("intake", length=constants.IntakeConstants.k_sim_length, 
                                                               angle=0, color=wpilib.Color8Bit(0, 0, 0))
+        
+        self.mech2d_climber = self.root.appendLigament("climber", length=constants.ClimberConstants.k_length_meters, 
+                                                       angle=constants.ClimberConstants.k_climber_motor_stowed_angle,
+                                                       color=wpilib.Color8Bit(0, 0, 0))
 
         wpilib.SmartDashboard.putData("the mech", self.mech)
 
@@ -42,6 +46,7 @@ class PhysicsEngine:
         self.initialize_wrist()
         self.initialize_shoulder()
         self.initialize_elevator()
+        self.initialize_cimber()
 
     def update_sim(self, now, tm_diff):
 
@@ -53,12 +58,25 @@ class PhysicsEngine:
 
         self.update_swerve(tm_diff)
         self.update_intake(tm_diff)
+        self.update_climber(tm_diff)
 
         simlib.RoboRioSim.setVInVoltage(
                 simlib.BatterySim.calculate(amps)
         )
 
     # ------------------ SUBSYSTEM UPDATES --------------------
+
+    def update_climber(self, tm_diff):
+        climber_sim_input = self.climber_spark_sim.getAppliedOutput() * simlib.RoboRioSim.getVInVoltage()
+        self.climber_sim.setInput(0, climber_sim_input)
+        self.climber_sim.update(tm_diff)
+        self.climber_spark_sim.setPosition(self.climber_sim.getAngle())
+        self.climber_spark_sim.iterate(velocity=self.climber_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
+                                     dt=tm_diff)
+        cimber_angle = math.degrees(self.climber_sim.getAngle())
+        self.mech2d_climber.setAngle(cimber_angle - 90)
+        sm.side_elevator.components["climber"]["ligament"].setAngle(cimber_angle - 90)
+        return self.climber_sim.getCurrentDraw()
 
     def update_wrist(self, tm_diff):
 
@@ -187,6 +205,19 @@ class PhysicsEngine:
 
         self.elevator_spark_sim = SparkMaxSim(self.robot.container.elevator.motor, constants.ElevatorConstants.k_plant)
         self.elevator_follower_spark_sim = SparkMaxSim(self.robot.container.elevator.follower, constants.ElevatorConstants.k_plant)
+
+    def initialize_cimber(self):
+        self.climber_sim = simlib.SingleJointedArmSim(gearbox=constants.ClimberConstants.k_plant,
+                                                    gearing=constants.ClimberConstants.k_gear_ratio,
+                                                    moi=constants.ClimberConstants.k_moi,
+                                                    armLength=constants.ClimberConstants.k_length_meters,
+                                                    minAngle=constants.ClimberConstants.k_climber_reverse_rotation_limit,
+                                                    maxAngle=constants.ClimberConstants.k_climber_forward_rotation_limit,
+                                                    simulateGravity=True,
+                                                    startingAngle=constants.ClimberConstants.k_climber_motor_stowed_angle)
+
+        self.climber_spark_sim = SparkMaxSim(self.robot.container.climber.sparkmax, constants.ClimberConstants.k_plant)
+
 
     def initialize_swerve(self):
         self.kinematics: SwerveDrive4Kinematics = dc.kDriveKinematics  # our swerve drive kinematics

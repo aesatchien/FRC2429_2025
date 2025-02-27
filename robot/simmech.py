@@ -110,6 +110,10 @@ elevator_bar2 = side_elevator.getRoot("elevator_bar2", elevator_offset_x + 5, el
 side_elevator.appendLigament("elevator_bar2", "elevator_bar_right", elevator_height + 5, 90, bar_width/3, wpilib.Color.kGreen)
 #side_elevator.appendLigament("elevator_bar2", "elevator_bar_bottom", 10, 180, bar_width/3, wpilib.Color.kGreen)
 
+#climber
+climber_base = side_elevator.appendLigament("chassisBase", "climber_base", 5, 90, 12, wpilib.Color.kGray)
+climber = side_elevator.appendLigament("climber_base", "climber", constants.ClimberConstants.k_length_meters * 39.3701, 90, 12, wpilib.Color.kGray)
+
 #side_bar1 = side_elevator.getRoot("side_bar1", elevator_offset_x - 6, elevator_offset_y)
 #side_elevator.appendLigament("side_bar1", "side_bar_left", elevator_height + 10, 90, bar_width/3, wpilib.Color.kGreen)
 #side_bar2 = side_elevator.getRoot("side_bar2", elevator_offset_x + 6, elevator_offset_y)
@@ -117,7 +121,7 @@ side_elevator.appendLigament("elevator_bar2", "elevator_bar_right", elevator_hei
 
 
 
-#side_elevator.appendLigament("elevator_side", "shoulder", shoulder_length, constants.k_positions["l1"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
+# side_elevator.appendLigament("elevator_side", "shoulder", shoulder_length, constants.k_positions["l1"]["shoulder_pivot"], bar_width/3, wpilib.Color.kYellow)
 
 side_elevator.appendLigament("shoulder", "coral_left", 6, 90, bar_width, wpilib.Color.kWhite)  # CJH added 20250218
 side_elevator.appendLigament("shoulder", "coral_right", 6, -90, bar_width, wpilib.Color.kWhite)

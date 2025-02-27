@@ -23,6 +23,7 @@ from subsystems.pivot import Pivot
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
+from subsystems.climber import Climber
 
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
@@ -30,6 +31,7 @@ from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
+from commands.move_climber import MoveClimber
 #
 from commands.go_to_position import GoToPosition
 from commands.follow_trajectory import FollowTrajectory
@@ -74,6 +76,7 @@ class RobotContainer:
         self.elevator = Elevator()
         self.pivot = Pivot()
         self.wrist = Wrist()
+        self.climber = Climber()
         self.intake = Intake()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
         self.led = Led(self)  # may want LED last because it may want to know about other systems
@@ -305,6 +308,8 @@ class RobotContainer:
         self.co_trigger_l_stick_positive_y.whileTrue(MoveWrist(container=self, radians=math.radians(-90), timeout=4))  # this seems backwards but is not because y-axis is inverted
 
         self.co_trigger_l_stick_negative_y.whileTrue(MoveWrist(container=self, radians=math.radians(90), timeout=4))
+
+        # self.co_trigger_a.onTrue(MoveClimber(container=self, climber=self.climber, mode='climbing', wait_to_finish=True))
 
         # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
         #         commands2.ConditionalCommand(
