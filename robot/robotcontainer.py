@@ -279,7 +279,7 @@ class RobotContainer:
 
         # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
-        self.co_trigger_a.whileTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
+        # self.co_trigger_a.whileTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
         
         self.co_trigger_b.whileTrue(GoToPosition(container=self, position="l2"))
 
