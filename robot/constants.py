@@ -15,6 +15,7 @@ k_start_y = 0
 # joysticks nad other input
 k_driver_controller_port = 0
 k_co_driver_controller_port = 1
+k_use_bbox = False  # set to true for actual use
 k_bbox_1_port = 2
 k_bbox_2_port = 3
 

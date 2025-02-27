@@ -99,7 +99,8 @@ class RobotContainer:
             self.configure_codriver_joystick()
             self.bind_codriver_buttons()
             self.bind_keyboard_buttons()
-            self.bind_button_box()
+            if constants.k_use_bbox:
+                self.bind_button_box()
 
         self.initialize_dashboard()
 
@@ -381,34 +382,61 @@ class RobotContainer:
 
     def bind_button_box(self):
         """
-        Use this method to define your button->command mappings. Buttons can be created by
-        instantiating a :GenericHID or one of its subclasses (Joystick or XboxController),
-        and then passing it to a JoystickButton.
+        Remember - buttons arre 1-indexed, no zero
         """
         # The driver's controller
         self.bbox_1 = commands2.button.CommandJoystick(constants.k_bbox_1_port)
         self.bbox_2 = commands2.button.CommandJoystick(constants.k_bbox_2_port)
 
-        self.bbox_TBD1 = self.bbox_1.button(2)  # top left red 1
-        self.bbox_TBD2 = self.bbox_1.button(3)  # top left red 2
-        self.bbox_processor = self.bbox_1.button(0)
+        self.bbox_TBD1 = self.bbox_1.button(3)  # top left red 1
+        self.bbox_TBD2 = self.bbox_1.button(4)  # top left red 2
+
         self.bbox_right = self.bbox_1.button(1)  # true when selected
-        self.bbox_left = self.bbox_1.button(0)  # it really is zero, and true when selected
-        self.bbox_human_left = self.bbox_1.button(4)
-        self.bbox_human_right = self.bbox_1.button(5)
+        self.bbox_left = self.bbox_1.button(2)  #  and true when selected
+        self.bbox_human_left = self.bbox_1.button(5)
+        self.bbox_human_right = self.bbox_1.button(6)
 
         # reef  stuff
-        self.bbox_AB = self.bbox_1.button(6)
-        self.bbox_CD = self.bbox_1.button(7)
-        self.bbox_EF = self.bbox_1.button(8)
-        self.bbox_GH = self.bbox_1.button(9)
-        self.bbox_IJ = self.bbox_1.button(10)
-        self.bbox_KL = self.bbox_1.button(11)
+        self.bbox_AB = self.bbox_1.button(7)
+        self.bbox_CD = self.bbox_1.button(8)
+        self.bbox_EF = self.bbox_1.button(9)
+        self.bbox_GH = self.bbox_1.button(10)
+        self.bbox_IJ = self.bbox_1.button(11)
+        self.bbox_KL = self.bbox_1.button(12)
 
-        self.bbox_L1 = self.bbox_2.button(0)
-        self.bbox_L2 = self.bbox_2.button(1)
-        self.bbox_L3 = self.bbox_2.button(2)
-        self.bbox_L4 = self.bbox_2.button(3)
+        self.bbox_L1 = self.bbox_2.button(1)
+        self.bbox_L2 = self.bbox_2.button(2)
+        self.bbox_L3 = self.bbox_2.button(3)
+        self.bbox_L4 = self.bbox_2.button(4)
+        self.bbox_reef_alga_high = self.bbox_2.button(5)
+        self.bbox_reef_alga_low = self.bbox_2.button(7)
+        self.bbox_net = self.bbox_2.button(6)
+        self.bbox_processor = self.bbox_2.button(8)
+
+        # actual bindings
+
+        self.bbox_TBD1.onTrue(commands2.PrintCommand("Pushed BBox TBD1"))
+        self.bbox_TBD2.onTrue(commands2.PrintCommand("Pushed BBox TBD2"))
+        self.bbox_right.onTrue(commands2.PrintCommand("Pushed BBox Right Coral"))
+        self.bbox_left.onTrue(commands2.PrintCommand("Pushed BBox Left Coral"))
+        self.bbox_human_left.onTrue(commands2.PrintCommand("Pushed BBox Human Left"))
+        self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
+
+        self.bbox_AB.onTrue(commands2.PrintCommand("Pushed BBox AB"))
+        self.bbox_CD.onTrue(commands2.PrintCommand("Pushed BBox CD"))
+        self.bbox_EF.onTrue(commands2.PrintCommand("Pushed BBox EF"))
+        self.bbox_GH.onTrue(commands2.PrintCommand("Pushed BBox GH"))
+        self.bbox_IJ.onTrue(commands2.PrintCommand("Pushed BBox IJ"))
+        self.bbox_KL.onTrue(commands2.PrintCommand("Pushed BBox KL"))
+
+        self.bbox_L1.onTrue(commands2.PrintCommand("Pushed BBox L1"))
+        self.bbox_L2.onTrue(commands2.PrintCommand("Pushed BBox L2"))
+        self.bbox_L3.onTrue(commands2.PrintCommand("Pushed BBox L3"))
+        self.bbox_L4.onTrue(commands2.PrintCommand("Pushed BBox L4"))
+        self.bbox_reef_alga_high.onTrue(commands2.PrintCommand("Pushed BBox Alga High"))
+        self.bbox_reef_alga_low.onTrue(commands2.PrintCommand("Pushed BBox Alga Low"))
+        self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
+        self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
 
 
 
