@@ -97,7 +97,8 @@ class Vision(SubsystemBase):
                 self.camera_values[key]['strafe'] = self.camera_dict[key]['strafe_entry'].get()
 
             if wpilib.RobotBase.isReal():
-                wpilib.SmartDashboard.putBoolean('orange_targets_exist', self.target_available('orange'))
+                # orange will crash at the moment
+                # wpilib.SmartDashboard.putBoolean('orange_targets_exist', self.target_available('orange'))
                 wpilib.SmartDashboard.putBoolean('arducam_reef_targets_exist', self.target_available('ardu_reef_tags'))
                 wpilib.SmartDashboard.putBoolean('logitech_high_targets_exist', self.target_available('logi_high_tags'))
                 wpilib.SmartDashboard.putBoolean('arducam_back_targets_exist', self.target_available('ardu_back_tags'))
