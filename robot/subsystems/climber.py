@@ -29,10 +29,11 @@ class Climber(Subsystem):
         self.z_rotation = self.swerve.get_angle()
         self.x_rotation = self.swerve.get_roll()
         self.z_displacement = self.swerve.get_pose()
+        self.z_minimum = 4
         self.y_rotation = self.swerve.get_yaw()
         # PID controller (Constants will be edited later)
         self.pid_controller = wpimath.controller.PIDController(Kp=6, Ki=0, Kd=0)
-        # self.pid_controller.calculate()
+        self.output = self.pid_controller.calculate(self.z_displacement, self.z_minimum)
     # 3 Climber Positions:
     # Stowed, Ready, Climb
     # Use IMU to measure the tilt of the robot to ensure it is off the ground during climbing.
@@ -52,7 +53,7 @@ class Climber(Subsystem):
         return (self.climber_position == constants.ClimberConstants.k_climber_motor_rotation
                 + constants.ClimberConstants.k_climber_motor_climber_reference_angle)
     def is_hanging(self):
-        return self.z_displacement > 0 and abs(self.x_rotation) > 0 and abs(self.y_rotation) > 0
+        return (self.output <= 0) and abs(self.x_rotation) > 0 and abs(self.y_rotation) > 0
 
 
 
