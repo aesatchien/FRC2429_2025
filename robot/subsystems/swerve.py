@@ -7,6 +7,7 @@ import ntcore
 
 from commands2 import Subsystem
 
+from wpilib._wpilib import SmartDashboard
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation3d, Pose3d, Rotation3d
 from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics)
@@ -169,6 +170,7 @@ class Swerve (Subsystem):
         # probably can stop doing this now
         if dc.k_swerve_state_messages:
             wpilib.SmartDashboard.putNumberArray('_xyr', [xSpeedDelivered, ySpeedDelivered, rotDelivered])
+            SmartDashboard.putNumber('_swerve commanded rotation', rotDelivered)
 
         # create the swerve state array depending on if we are field relative or not
         swerveModuleStates = dc.kDriveKinematics.toSwerveModuleStates(
@@ -431,7 +433,6 @@ class Swerve (Subsystem):
                                                          y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
                                                          angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
 
-                    self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
 
                     self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 

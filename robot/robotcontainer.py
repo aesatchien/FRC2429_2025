@@ -5,19 +5,30 @@ import rev
 import wpilib
 import commands2
 from wpimath.geometry import Pose2d
+from wpimath.units import degreesToRadians
+
+import constants
 
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
 from pathplannerlib.path import PathConstraints
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.path import PathPlannerPath
-from wpimath.units import degreesToRadians
 
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
-from commands.score_on_reef import ScoreOnReef
+from commands.go_to_coral_station import GoToCoralStation
+from commands.go_to_stow import GoToStow
+from commands.go_to_reef_position import GoToReefPosition
 from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
-import constants
+from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
+from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.move_elevator import MoveElevator
+from commands.move_pivot import MovePivot
+from commands.move_wrist import MoveWrist
+from commands.run_intake import RunIntake
+from commands.set_leds import SetLEDs
+from commands.reset_field_centric import ResetFieldCentric
 
 from subsystems.robot_state import RobotState
 from subsystems.swerve import Swerve
@@ -26,19 +37,6 @@ from subsystems.pivot import Pivot
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
-
-from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
-from commands.move_elevator import MoveElevator
-from commands.move_pivot import MovePivot
-from commands.move_wrist import MoveWrist
-from commands.run_intake import RunIntake
-from commands.set_leds import SetLEDs
-#
-from commands.go_to_position import GoToPosition
-from commands.intake_sequence import IntakeSequence
-from commands.reset_field_centric import ResetFieldCentric
-# from commands.score import Score
-# from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
 from autonomous.leave_then_score_1 import LeaveThenScore
 
@@ -76,7 +74,7 @@ class RobotContainer:
         self.swerve = Swerve()
         self.elevator = Elevator()
         self.pivot = Pivot()
-        self.wrist = Wrist()
+        self.wrist = Wrist(self.pivot, self.elevator)
         self.intake = Intake()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
         self.led = Led(self)  # may want LED last because it may want to know about other systems
@@ -123,6 +121,7 @@ class RobotContainer:
         self.triggerY = self.driver_command_controller.y()
         self.triggerLB = self.driver_command_controller.leftBumper()
         self.triggerRB = self.driver_command_controller.rightBumper()
+        self.trigger_L_trigger = self.driver_command_controller.leftTrigger(0.5)
         self.triggerBack = self.driver_command_controller.back()
         self.triggerStart = self.driver_command_controller.start()
         self.triggerUp = self.driver_command_controller.povUp()
@@ -244,9 +243,11 @@ class RobotContainer:
 
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
-        self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
-        self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
-        self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
+        # self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
+        # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
+        # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
+
+        self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
         pathfinding_constraints = PathConstraints(
                 maxVelocityMps=0.5,
@@ -256,12 +257,29 @@ class RobotContainer:
                 nominalVoltage=12
         )
 
-        self.triggerY.whileTrue(
-                AutoBuilder.pathfindToPoseFlipped(
-                    pose=Pose2d(15, 4, 0),
-                    constraints=pathfinding_constraints
+        # button A for intake
+        # left trigger for outtake
+
+        self.triggerA.whileTrue(GoToCoralStation(container=self).andThen(
+            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+
+        self.triggerA.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+            GoToStow(container=self)))
+
+        self.trigger_L_trigger.onTrue(
+                GoToReefPosition(container=self, level=2, wrist_setpoint=math.radians(90)).andThen(
+                    Score(container=self)
+                    )
                 )
-        )
+        
+
+        # self.triggerY.whileTrue(
+        #         AutoBuilder.pathfindToPoseFlipped(
+        #             pose=Pose2d(15, 4, 0),
+        #             constraints=pathfinding_constraints
+        #         )
+        # )
+
 
     def bind_codriver_buttons(self):
 
@@ -280,22 +298,22 @@ class RobotContainer:
 
         self.co_trigger_a.onTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
         
-        self.co_trigger_b.onTrue(ScoreOnReef(container=self, level=2))
+        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2))
 
-        self.co_trigger_x.onTrue(ScoreOnReef(container=self, level=3))
+        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3))
 
-        self.co_trigger_y.onTrue(ScoreOnReef(container=self, level=4))
+        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4))
 
         # trigger on true: go to the position, start intake
         # trigger on false: go to stow, stop intake
 
-        self.co_trigger_d.or_(self.co_trigger_l).whileTrue(GoToPosition(container=self, position="coral station").andThen(
+        self.co_trigger_d.or_(self.co_trigger_l).whileTrue(GoToCoralStation(container=self).andThen(
             RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
 
         self.co_trigger_d.or_(self.co_trigger_l).onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-            GoToPosition(container=self, position="stow")))
+            GoToStow(container=self)))
 
-        self.co_trigger_u.or_(self.co_trigger_r).whileTrue(GoToPosition(container=self, position="stow"))
+        self.co_trigger_u.or_(self.co_trigger_r).whileTrue(GoToStow(container=self))
 
 
         self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))

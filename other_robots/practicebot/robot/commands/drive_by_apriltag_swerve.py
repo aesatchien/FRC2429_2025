@@ -17,13 +17,12 @@ class DriveByApriltagSwerve(commands2.Command):  # change the name for your comm
         self.indent = indent
         self.container = container
         self.id = id
-        self.heading_pid = PIDController(0.6, 0, 0)
+        self.heading_pid = PIDController(0.3, 0, 0)
         self.distance_pid = PIDController(0.1, 0, 0)
         self.inst = ntcore.NetworkTableInstance.getDefault()
         self.swerve = swerve
 
-        self.tag_heading_subscriber = self.inst.getDoubleTopic("vision/top_pi/tag_vectors/id 4 angle").subscribe(0)
-        self.magnitude_subscriber = self.inst.getDoubleTopic("vision/top_pi/tag_vectors/id 4 magnitude").subscribe(0)
+        self.tag_vector_subscriber = self.inst.getDoubleArrayTopic("vision/top_pi/tag_vectors").subscribe([])
         # while running:
             # get bearing, distance
             # run pid on bearing, distance
@@ -44,25 +43,35 @@ class DriveByApriltagSwerve(commands2.Command):  # change the name for your comm
 
     def execute(self) -> None:
         
-        tag_heading = self.tag_heading_subscriber.get()
-        tag_distance = self.magnitude_subscriber.get()
+        tag_vectors = self.tag_vector_subscriber.get()
+
+        tag_distance = tag_heading = 0
+
+        for idx, tag_info_bit in enumerate(tag_vectors):
+            if idx == 2:
+                 tag_distance = tag_info_bit
+            elif idx == 3:
+                tag_heading = tag_info_bit
+
 
         wpilib.SmartDashboard.putNumber("_atag heading", tag_heading)
         wpilib.SmartDashboard.putNumber("_atag distance", tag_distance)
 
-        heading_out = self.heading_pid.calculate(tag_heading)
+        heading_out = -self.heading_pid.calculate(tag_heading)
         distance_out = self.distance_pid.calculate(tag_distance)
+
+        heading_out += math.copysign(0.015, heading_out)
 
         wpilib.SmartDashboard.putNumber("_aheading out", heading_out)
         wpilib.SmartDashboard.putNumber("_adistance out", distance_out)
 
-        if abs(tag_heading) < math.radians(2):
+        if abs(tag_heading) < math.radians(0.5):
             self.done_strafing = True
 
-        if self.done_strafing:
-            self.swerve.drive(xSpeed=-0.1, ySpeed=0, rot=0, fieldRelative=False, rate_limited=False, keep_angle=False)
-        else:
-            self.swerve.drive(xSpeed=0, ySpeed=heading_out, rot=0, fieldRelative=False, rate_limited=False, keep_angle=False)
+        # if self.done_strafing:
+        #     self.swerve.drive(xSpeed=-0.1, ySpeed=0, rot=0, fieldRelative=False, rate_limited=False, keep_angle=False)
+        # else:
+        self.swerve.drive(xSpeed=heading_out, ySpeed=0, rot=0, fieldRelative=False, rate_limited=False, keep_angle=False)
 
 
     def isFinished(self) -> bool:

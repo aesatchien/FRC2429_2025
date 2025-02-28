@@ -17,7 +17,7 @@ k_robot_mass_kg = 56
 k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
 k_reset_sparks_to_default = True
 k_swerve_debugging_messages = True
-k_use_apriltag_odometry = True
+k_use_apriltag_odometry = False
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
@@ -62,7 +62,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.41,
+        "elevator": 1.40,
         "shoulder_pivot": math.radians(60), 
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -76,7 +76,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "coral station": {
-        "elevator": 0.5,
+        "elevator": 0.37,
         "shoulder_pivot": math.radians(70),
         "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -178,7 +178,8 @@ class WristConstants:
     
     k_config.absoluteEncoder.zeroOffset(0.45)
 
-    k_config.closedLoop.pid(p=0.5, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
         

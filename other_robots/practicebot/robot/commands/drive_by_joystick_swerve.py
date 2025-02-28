@@ -102,7 +102,7 @@ class DriveByJoystickSwerve(commands2.Command):
                           fieldRelative= self.field_oriented, rate_limited=self.rate_limited)
 
         else:
-            self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
+            self.swerve.drive(xSpeed=desired_fwd,ySpeed=0, rot=desired_rot, # TODO: BUG: this is only for testing the yspeed=0 and it will screw shit up
                               fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
 
 

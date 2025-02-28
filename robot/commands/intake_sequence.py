@@ -9,6 +9,10 @@ from commands.move_wrist import MoveWrist
 
 class IntakeSequence(commands2.SequentialCommandGroup):
     def __init__(self, container, position: str, indent=0) -> None:
+        """
+        TODO: replace these gotopositions with their appropriate split commands
+        also btw this doesn't work cuz we don't have the sensors on the maniuplator
+        """
         super().__init__()
 
         if position not in ["ground", "coral station", "algae low", "algae high"]:
@@ -23,7 +27,7 @@ class IntakeSequence(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} to {position} **"))
 
         self.addCommands(GoToPosition(container=self.container, position=position, indent=indent+1))
-        self.addCommands(RunIntake(container=container, intake=container.intake, value=-4, control_type=SparkMax.ControlType.kVoltage, stop_on_end=True, indent=indent+1))
+        self.addCommands(SmartIntake(container=container, intake=container.intake, game_piece=gamepiece_being_intaked, wait_to_finish=True, indent=indent+1))
         self.addCommands(GoToPosition(container=self.container, position="stow", indent=indent+1))
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} to {position} **"))

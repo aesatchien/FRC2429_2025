@@ -66,6 +66,7 @@ class DriveByJoystickSwerve(commands2.Command):
         joystick_fwd = -self.controller.getLeftY()
         joystick_strafe = -self.controller.getLeftX()
         joystick_rot = self.controller.getRightX() # TODO: find why this had to be negated this year (2025)
+        if abs(joystick_rot) < dc.k_inner_deadband: joystick_rot = 0
 
         desired_vector = Translation2d(joystick_fwd, joystick_strafe) # duty cycle, not meters per second
 

@@ -8,7 +8,7 @@ from subsystems.wrist import Wrist
 
 class MoveWrist(commands2.Command):
 
-    def __init__(self, container, radians: float, timeout, incremental=False, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, container, radians: float, timeout, incremental=False, wait_to_finish=False, closed_loop_slot=0, indent=0) -> None:
         """
         :param wait_to_finish=False: will not make this command instantaneously execute.
         It will make this command end immediately after either the timeout has elapsed,
@@ -29,6 +29,7 @@ class MoveWrist(commands2.Command):
         self.incremental = incremental
         self.timeout = timeout
         self.wait_to_finish = wait_to_finish
+        self.slot = closed_loop_slot
         self.timer = Timer()
         self.addRequirements(self.wrist)
 
@@ -49,14 +50,14 @@ class MoveWrist(commands2.Command):
 
     # NOTE 20250225 - why is this in execute and not initialize?  seems like it will get called many times
     def execute(self) -> None:
-        if self.pivot.get_angle() > WristConstants.k_min_arm_angle_where_spinning_dangerous and self.pivot.get_angle() < WristConstants.k_max_arm_angle_where_spinning_dangerous:
-            return
-        else:
+        if self.wrist.is_safe_to_move():
             if self.incremental:  # CJH added for GUI debugging
                 self.wrist.increment_position(delta_radians=self.radians, control_type=SparkMax.ControlType.kPosition)
             else:
                 self.wrist.set_position(radians=self.radians, control_type=SparkMax.ControlType.kPosition)
             self.moved_wrist = True
+        else:
+            return
 
     def isFinished(self) -> bool:
 

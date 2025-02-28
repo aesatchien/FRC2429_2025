@@ -61,14 +61,12 @@ class MoveWristByJoystick(commands2.Command):
         elif self.controller.getRightX() < -0.5:
             self.setpoint = math.radians(90)
 
-        if ((self.pivot.get_angle() > WristConstants.k_min_arm_angle_where_spinning_dangerous and self.pivot.get_angle() < WristConstants.k_max_arm_angle_where_spinning_dangerous)
-            and self.elevator.get_height() < WristConstants.k_max_elevator_height_where_spinning_dangerous):
-            # it's dangerous to move, don't
-            return
-
-        else:
+        if self.wrist.is_safe_to_move():
             self.wrist.set_position(radians=self.setpoint, control_type=SparkMax.ControlType.kPosition)
             self.moved_wrist = True
+        else:
+            # it's dangerous to move, don't
+            return
 
     def isFinished(self) -> bool:
 
