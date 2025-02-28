@@ -121,7 +121,7 @@ class Ui(QtWidgets.QMainWindow):
                             'Raw LogiHigh': 'http://10.24.29.12:1181/stream.mjpg',
                             'Raw ArduBack': 'http://10.24.29.12:1182/stream.mjpg',
                             'Raw LogiTags': 'http://10.24.29.13:1181/stream.mjpg',
-                            'Raw ArduReef': 'http://10.24.29.13:1181/stream.mjpg',}
+                            'Raw ArduReef': 'http://10.24.29.13:1182/stream.mjpg',}
 
         # --------------  CAMERA STATUS INDICATORS  ---------------
         self.robot_timestamp_entry = self.ntinst.getEntry('/SmartDashboard/_timestamp')
@@ -235,11 +235,14 @@ class Ui(QtWidgets.QMainWindow):
     def check_url(self, url):
         try:
             code = urllib.request.urlopen(url, timeout=0.2).getcode()
-            print(f'return code is {code}')
+
             if code == 200:
+                print(f'Successfully checked {url} ... return code is {code}')
                 return True
+            else:
+                print(f'Unsuccessful check of {url} ... return code is {code}')
         except Exception as e:
-            print(f'Failed: {e}')
+            print(f'Failure: attempted to check {url} with exception {e}')
         return False
 
     def update_selected_key(self):

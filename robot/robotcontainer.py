@@ -417,8 +417,8 @@ class RobotContainer:
 
         self.bbox_TBD1.onTrue(commands2.PrintCommand("Pushed BBox TBD1"))
         self.bbox_TBD2.onTrue(commands2.PrintCommand("Pushed BBox TBD2"))
-        self.bbox_right.onTrue(commands2.PrintCommand("Pushed BBox Right Coral"))
-        self.bbox_left.onTrue(commands2.PrintCommand("Pushed BBox Left Coral"))
+        self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
         self.bbox_human_left.onTrue(commands2.PrintCommand("Pushed BBox Human Left"))
         self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
 
@@ -429,12 +429,12 @@ class RobotContainer:
         self.bbox_IJ.onTrue(commands2.PrintCommand("Pushed BBox IJ"))
         self.bbox_KL.onTrue(commands2.PrintCommand("Pushed BBox KL"))
 
-        self.bbox_L1.onTrue(commands2.PrintCommand("Pushed BBox L1"))
-        self.bbox_L2.onTrue(commands2.PrintCommand("Pushed BBox L2"))
-        self.bbox_L3.onTrue(commands2.PrintCommand("Pushed BBox L3"))
-        self.bbox_L4.onTrue(commands2.PrintCommand("Pushed BBox L4"))
-        self.bbox_reef_alga_high.onTrue(commands2.PrintCommand("Pushed BBox Alga High"))
-        self.bbox_reef_alga_low.onTrue(commands2.PrintCommand("Pushed BBox Alga Low"))
+        self.bbox_L1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L1)).ignoringDisable(True))
+        self.bbox_L2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L2)).ignoringDisable(True))
+        self.bbox_L3.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L3)).ignoringDisable(True))
+        self.bbox_L4.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L4)).ignoringDisable(True))
+        self.bbox_reef_alga_high.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_HIGH)).ignoringDisable(True))
+        self.bbox_reef_alga_low.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_LOW)).ignoringDisable(True))
         self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
         self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
 
