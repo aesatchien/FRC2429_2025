@@ -68,7 +68,6 @@ class MyRobot(commands2.TimedCommandRobot):
     def teleopInit(self) -> None:
 
         self.container.set_start_time()  # putting this after the scheduler is bad
-
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to
         # continue until interrupted by another command, remove

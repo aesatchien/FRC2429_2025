@@ -1,18 +1,16 @@
-import math
 import commands2
-from commands2.button import CommandXboxController
 from rev import SparkMax
 from wpilib import SmartDashboard, Timer
 from constants import WristConstants
-from subsystems.elevator import Elevator
+import constants
 from subsystems.pivot import Pivot
-from subsystems.robot_state import RobotState
+from subsystems.swerve import Swerve
 from subsystems.wrist import Wrist
 
 
-class MoveWristByJoystick(commands2.Command):
+class StowWristAfterPositionDelta(commands2.Command):
 
-    def __init__(self, container,  timeout, side_decider: CommandXboxController | RobotState, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, container, wait_to_finish=False, indent=0) -> None:
         """
         :param wait_to_finish=False: will not make this command instantaneously execute.
         It will make this command end immediately after either the timeout has elapsed,
@@ -24,17 +22,13 @@ class MoveWristByJoystick(commands2.Command):
         move the wrist unless the arm is pretty much already at a safe position.
         """
         super().__init__()
-        self.setName('Move wrist by joystick')
+        self.setName('Stow wrist after position delta')
         self.indent = indent
         self.container = container
         self.wrist: Wrist = self.container.wrist
-        self.pivot: Pivot = self.container.pivot
-        self.elevator: Elevator = self.container.elevator
-        self.side_decider = side_decider
-        self.timeout = timeout
+        self.swerve: Swerve = self.container.swerve
         self.wait_to_finish = wait_to_finish
         self.timer = Timer()
-        self.setpoint = 0
         self.addRequirements(self.wrist)
 
         # initializes
@@ -49,40 +43,23 @@ class MoveWristByJoystick(commands2.Command):
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
 
-        self.setpoint = 0
+        self.initial_translation = self.swerve.get_pose().translation()
+
         self.moved_wrist = False
         self.timer.reset()
 
     # NOTE 20250225 - why is this in execute and not initialize?  seems like it will get called many times
     def execute(self) -> None:
-
-        if type(self.side_decider) == CommandXboxController:
-            print(f"controller right X: {self.side_decider.getRightX()}")
-            if self.side_decider.getRightX() > 0.5:
-                self.setpoint = math.radians(-90)
-            elif self.side_decider.getRightX() < -0.5:
-                self.setpoint = math.radians(90)
-
-        elif type(self.side_decider) == RobotState:
-            if self.side_decider.is_left():
-                self.setpoint = math.radians(90)
-            else:
-                self.setpoint = math.radians(-90)
-
-        if self.wrist.is_safe_to_move():
-            self.wrist.set_position(radians=self.setpoint, control_type=SparkMax.ControlType.kPosition)
+        delta_translation = self.swerve.get_pose().translation() - self.initial_translation
+        if delta_translation.norm() > 0.5: # we've moved that much since calling this command, so we should be safe to move the wrist
+            self.wrist.set_position(constants.k_positions["stow"]["wrist_pivot"])
             self.moved_wrist = True
-        else:
-            print("not moving too dangerous")
-            # it's dangerous to move, don't
-            return
+        
 
     def isFinished(self) -> bool:
 
-        if self.timer.get() > self.timeout: return True
-
         if self.wait_to_finish:
-            return self.wrist.get_at_setpoint() and self.setpoint != 0
+            return self.wrist.get_at_setpoint() and self.moved_wrist
         else:
             return self.moved_wrist
 

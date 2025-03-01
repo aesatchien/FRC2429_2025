@@ -37,7 +37,7 @@ class Intake(Subsystem):
         # self.TOFSensorCoral.setRangeOfInterest(1, 1, 1, 1)
         wpilib.SmartDashboard.putNumber("SET intake volts", 0)
 
-    def set_reference(self, value: float, control_type: SparkMax.ControlType):
+    def set_reference(self, value: float, control_type: SparkMax.ControlType = rev.SparkBase.ControlType.kVoltage):
         self.controller.setReference(value, control_type)
 
     # Use TOF

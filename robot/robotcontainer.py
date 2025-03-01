@@ -1,9 +1,11 @@
 from enum import Enum
 import math
 import time
+from commands2.printcommand import PrintCommand
 import rev
 import wpilib
 import commands2
+from wpimath import controller
 from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 
@@ -37,8 +39,24 @@ from subsystems.pivot import Pivot
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
+from subsystems.climber import Climber
+from subsystems.vision import Vision
 
 from autonomous.leave_then_score_1 import LeaveThenScore
+from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.move_elevator import MoveElevator
+from commands.move_pivot import MovePivot
+from commands.move_wrist import MoveWrist
+from commands.run_intake import RunIntake
+from commands.set_leds import SetLEDs
+from commands.move_climber import MoveClimber
+#
+from commands.go_to_position import GoToPosition
+from commands.follow_trajectory import FollowTrajectory
+from commands.intake_sequence import IntakeSequence
+from commands.reset_field_centric import ResetFieldCentric
+# from commands.score import Score
+# from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
 class RobotContainer:
     """
@@ -75,12 +93,15 @@ class RobotContainer:
         self.elevator = Elevator()
         self.pivot = Pivot()
         self.wrist = Wrist(self.pivot, self.elevator)
+        self.climber = Climber()
         self.intake = Intake()
+        self.vision = Vision()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
         self.led = Led(self)  # may want LED last because it may want to know about other systems
 
         self.configure_joysticks()
         self.bind_driver_buttons()
+
 
         self.swerve.setDefaultCommand(DriveByJoystickSwerve(
             container=self,
@@ -94,6 +115,8 @@ class RobotContainer:
             self.configure_codriver_joystick()
             self.bind_codriver_buttons()
             self.bind_keyboard_buttons()
+            if constants.k_use_bbox:
+                self.bind_button_box()
 
         self.initialize_dashboard()
 
@@ -219,6 +242,7 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
+        wpilib.SmartDashboard.putData('FollowTrajectory', FollowTrajectory(container=self, current_trajectory=None, wait_to_finish=True))
 
         # COMMANDS FOR GUI (ROBOT DEBUGGING) - 20250224 CJH
         wpilib.SmartDashboard.putData('MoveElevatorUp', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=0.1 ))
@@ -243,9 +267,9 @@ class RobotContainer:
 
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
-        # self.triggerX.whileTrue(AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")))
-        # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
-        # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
+        self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
+        self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
+        self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
         self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
@@ -267,7 +291,7 @@ class RobotContainer:
             GoToStow(container=self)))
 
         self.trigger_L_trigger.onTrue(
-                GoToReefPosition(container=self, level=2, wrist_setpoint=math.radians(90)).andThen(
+                GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
                     Score(container=self)
                     )
                 )
@@ -298,11 +322,11 @@ class RobotContainer:
 
         self.co_trigger_a.onTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
         
-        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2))
+        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.co_pilot_command_controller))
 
-        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3))
+        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3, wrist_setpoint_decider=self.co_pilot_command_controller))
 
-        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4))
+        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4, wrist_setpoint_decider=self.co_pilot_command_controller))
 
         # trigger on true: go to the position, start intake
         # trigger on false: go to stow, stop intake
@@ -325,6 +349,8 @@ class RobotContainer:
         self.co_trigger_l_stick_positive_y.whileTrue(MoveWrist(container=self, radians=math.radians(-90), timeout=4))  # this seems backwards but is not because y-axis is inverted
 
         self.co_trigger_l_stick_negative_y.whileTrue(MoveWrist(container=self, radians=math.radians(90), timeout=4))
+
+        # self.co_trigger_a.onTrue(MoveClimber(container=self, climber=self.climber, mode='climbing', wait_to_finish=True))
 
         # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
         #         commands2.ConditionalCommand(
@@ -390,3 +416,79 @@ class RobotContainer:
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")).andThen(DriveByVelocitySwerve(container=self, swerve=self.swerve, velocity=Pose2d(1, 1, 1), timeout=2).andThen(LeaveThenScore(container=self)))
         # return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()
+
+    def bind_button_box(self):
+        """
+        Remember - buttons arre 1-indexed, no zero
+        """
+        # The driver's controller
+        self.bbox_1 = commands2.button.CommandJoystick(constants.k_bbox_1_port)
+        self.bbox_2 = commands2.button.CommandJoystick(constants.k_bbox_2_port)
+
+        self.bbox_TBD1 = self.bbox_1.button(3)  # top left red 1
+        self.bbox_TBD2 = self.bbox_1.button(4)  # top left red 2
+
+        self.bbox_right = self.bbox_1.button(1)  # true when selected
+        self.bbox_left = self.bbox_1.button(2)  #  and true when selected
+        self.bbox_human_left = self.bbox_1.button(5)
+        self.bbox_human_right = self.bbox_1.button(6)
+
+        # reef  stuff
+        self.bbox_AB = self.bbox_1.button(7)
+        self.bbox_CD = self.bbox_1.button(8)
+        self.bbox_EF = self.bbox_1.button(9)
+        self.bbox_GH = self.bbox_1.button(10)
+        self.bbox_IJ = self.bbox_1.button(11)
+        self.bbox_KL = self.bbox_1.button(12)
+
+        self.bbox_L1 = self.bbox_2.button(1)
+        self.bbox_L2 = self.bbox_2.button(2)
+        self.bbox_L3 = self.bbox_2.button(3)
+        self.bbox_L4 = self.bbox_2.button(4)
+        self.bbox_reef_alga_high = self.bbox_2.button(5)
+        self.bbox_reef_alga_low = self.bbox_2.button(7)
+        self.bbox_net = self.bbox_2.button(6)
+        self.bbox_processor = self.bbox_2.button(8)
+
+        # actual bindings
+
+        self.bbox_TBD1.onTrue(Score(self))
+        self.bbox_TBD2.onTrue(GoToStow(self))
+        self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+
+        self.bbox_human_right.whileTrue(GoToCoralStation(container=self).andThen(
+            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+        self.bbox_human_right.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+            GoToStow(container=self)))
+
+        self.bbox_human_left.onTrue(RunIntake(self, self.intake, 3, stop_on_end=True))
+
+        self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
+
+        # score
+        # note position
+        # once delta position is high enough, move wrist out of way
+        # go to stow
+
+        self.bbox_AB.onTrue(commands2.PrintCommand("Pushed BBox AB"))
+        self.bbox_CD.onTrue(commands2.PrintCommand("Pushed BBox CD"))
+        self.bbox_EF.onTrue(commands2.PrintCommand("Pushed BBox EF"))
+        self.bbox_GH.onTrue(commands2.PrintCommand("Pushed BBox GH"))
+        self.bbox_IJ.onTrue(commands2.PrintCommand("Pushed BBox IJ"))
+        self.bbox_KL.onTrue(commands2.PrintCommand("Pushed BBox KL"))
+
+        self.bbox_L1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True))
+        self.bbox_L2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
+        self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
+        self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+
+        self.bbox_reef_alga_high.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_HIGH)).ignoringDisable(True))
+        self.bbox_reef_alga_low.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_LOW)).ignoringDisable(True))
+
+        self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
+        self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
+
+
+
+

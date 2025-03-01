@@ -3,6 +3,7 @@ from rev import SparkMax
 from commands.go_to_stow import GoToStow
 import constants
 from commands.run_intake import RunIntake
+from commands.move_wrist_by_pose import StowWristAfterPositionDelta
 
 class Score(commands2.SequentialCommandGroup):
     def __init__(self, container, indent=0) -> None:
@@ -24,6 +25,7 @@ class Score(commands2.SequentialCommandGroup):
 
         self.addCommands(RunIntake(container=self.container, intake=self.container.intake, value=0, control_type=SparkMax.ControlType.kVoltage, indent=indent+1))
 
+        self.addCommands(StowWristAfterPositionDelta(container, wait_to_finish=True, indent=indent+1))
         self.addCommands(GoToStow(container=self.container, indent=indent+1))
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 

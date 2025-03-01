@@ -14,7 +14,7 @@ class ScoreOnReef(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
         self.addCommands(GoToPosition(container=container, position="wrist_clearing"))
-        self.addCommands(MoveWristByJoystick(container=container, controller=container.co_pilot_command_controller, timeout=10, wait_to_finish=True, indent=indent+1))
+        self.addCommands(MoveWristByJoystick(container=container, side_decider=container.co_pilot_command_controller, timeout=10, wait_to_finish=True, indent=indent+1))
         self.addCommands(GoToPosition(container=container, position=f"l{level}", indent=indent+1))
         self.addCommands(Score(container=container, indent=indent+1))
 

@@ -33,6 +33,7 @@ class DriveConstants:
     # this should be left as the convention, so match the above.  Then take care of turning issues with the
     # INVERSION OF THE TURN OR DRIVE MOTORS, GYRO and ABSOLUTE ENCODERS
     swerve_orientation = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # MAKE SURE ANGLE ENCODERS ARE CCW +
+    swerve_orientation = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # MAKE SURE ANGLE ENCODERS ARE CCW +
     kModulePositions = [
         Translation2d(swerve_orientation[0][0]*kWheelBase / 2, swerve_orientation[0][1]*kTrackWidth / 2),
         Translation2d(swerve_orientation[1][0]*kWheelBase / 2, swerve_orientation[1][1]*kTrackWidth / 2),
@@ -172,7 +173,7 @@ class AutoConstants:
     kPThetaController = 1
 
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
-    k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0)
+    k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0)
 
 
     # Constraint for the motion profiled robot angle controller
