@@ -117,10 +117,11 @@ class Ui(QtWidgets.QMainWindow):
                             'ArducamBack': 'http://10.24.29.12:1187/stream.mjpg',
                             'LogitechTags': 'http://10.24.29.13:1186/stream.mjpg',
                             'ArducamReef': 'http://10.24.29.13:1187/stream.mjpg',
+
                             'Raw LogiHigh': 'http://10.24.29.12:1181/stream.mjpg',
                             'Raw ArduBack': 'http://10.24.29.12:1182/stream.mjpg',
                             'Raw LogiTags': 'http://10.24.29.13:1181/stream.mjpg',
-                            'Raw ArduReef': 'http://10.24.29.13:1181/stream.mjpg',}
+                            'Raw ArduReef': 'http://10.24.29.13:1182/stream.mjpg',}
 
         # --------------  CAMERA STATUS INDICATORS  ---------------
         self.robot_timestamp_entry = self.ntinst.getEntry('/SmartDashboard/_timestamp')
@@ -234,11 +235,14 @@ class Ui(QtWidgets.QMainWindow):
     def check_url(self, url):
         try:
             code = urllib.request.urlopen(url, timeout=0.2).getcode()
-            print(f'return code is {code}')
+
             if code == 200:
+                print(f'Successfully checked {url} ... return code is {code}')
                 return True
+            else:
+                print(f'Unsuccessful check of {url} ... return code is {code}')
         except Exception as e:
-            print(f'Failed: {e}')
+            print(f'Failure: attempted to check {url} with exception {e}')
         return False
 
     def update_selected_key(self):
@@ -251,7 +255,8 @@ class Ui(QtWidgets.QMainWindow):
         rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         bytes_per_line = ch * w
-        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
+
         p = convert_to_Qt_format.scaled(qlabel.width(), qlabel.height(), Qt.AspectRatioMode.KeepAspectRatio)
         return QtGui.QPixmap.fromImage(p)
 
@@ -576,12 +581,15 @@ class Ui(QtWidgets.QMainWindow):
                     self.toggle_camera_thread()
                 else:
                     pass
+                if self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+                    self.logitech_high_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_high - information only')
                 if self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
                     self.logitech_tags_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Back Tagcam - information only')
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_tags - information only')
                 if self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) > allowed_delay:  # front tagcam died
                     self.arducam_back_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Front Tagcam - information only')
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Farducam_back - information only')
 
             else:  # we started the camera but the thread is not running
                 if not self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_reef alive again

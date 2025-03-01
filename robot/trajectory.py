@@ -1,7 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.interpolate import interp1d, CubicSpline, PchipInterpolator
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
+
 
 class CustomTrajectory:
     def __init__(self, waypoints, duration, interpolation_type="linear", velocity_constraints=None,
@@ -18,29 +17,102 @@ class CustomTrajectory:
         self.acceleration_constraints = acceleration_constraints if acceleration_constraints else {key: 0 for key in
                                                                                                    self.keys}
         self.generate_trajectory()  # Generate the initial trajectory
-        self.check_constraints()
+        # self.check_constraints()
+
+    def _smooth_trajectory_simple(self, data, window_size=9):
+        """Apply a moving average filter while keeping the array size unchanged."""
+        if window_size < 2:
+            return data  # No smoothing if the window is too small
+
+        # Pad edges symmetrically to prevent boundary distortion
+        pad_size = window_size // 2
+        padded = np.pad(data, (pad_size, pad_size), mode='edge')
+
+        # Compute the moving average
+        smoothed = np.convolve(padded, np.ones(window_size) / window_size, mode='same')
+
+        # Properly unpad symmetrically
+        return smoothed[pad_size:-pad_size]
+
+    def _smooth_trajectory_gaussian(self, data, window_size=15, sigma=1.5):
+        """Apply Gaussian smoothing while keeping the array size unchanged."""
+        if window_size < 2:
+            return data  # No smoothing if the window is too small
+
+        # Create Gaussian kernel
+        x = np.linspace(-1, 1, window_size)
+        kernel = np.exp(-0.5 * (x / sigma) ** 2)
+        kernel /= kernel.sum()  # Normalize
+
+        # Pad the data symmetrically
+        pad_size = window_size // 2
+        padded = np.pad(data, (pad_size, pad_size), mode='edge')
+
+        # Apply convolution
+        smoothed = np.convolve(padded, kernel, mode='same')
+
+        # Properly unpad symmetrically
+        return smoothed[pad_size:-pad_size]
+
+    def _cubic_hermite_interp(self, x, y, x_new):  # no scipy on the rio, but this is a crappy cubic
+        """
+        Approximate PCHIP behavior using NumPy.
+        Computes derivatives using finite differences and performs interpolation.
+        """
+        # Compute finite differences
+        dydx = np.zeros_like(y)
+        dydx[1:-1] = (y[2:] - y[:-2]) / (x[2:] - x[:-2])  # Central differences
+        dydx[0] = (y[1] - y[0]) / (x[1] - x[0])  # Forward diff
+        dydx[-1] = (y[-1] - y[-2]) / (x[-1] - x[-2])  # Backward diff
+
+        # Interpolation step
+        x_new = np.asarray(x_new)
+        y_new = np.zeros_like(x_new)
+
+        for i in range(len(x) - 1):
+            mask = (x_new >= x[i]) & (x_new < x[i+1])
+            h = x[i+1] - x[i]
+            t = (x_new[mask] - x[i]) / h
+
+            # Hermite basis functions
+            h00 = (1 + 2 * t) * (1 - t) ** 2
+            h10 = t * (1 - t) ** 2
+            h01 = t ** 2 * (3 - 2 * t)
+            h11 = t ** 2 * (t - 1)
+
+            y_new[mask] = (h00 * y[i] + h10 * h * dydx[i] +
+                           h01 * y[i+1] + h11 * h * dydx[i+1])
+
+        return y_new
 
     def generate_trajectory(self):
         times = np.array(list(self.waypoints.keys()))
         for key in self.keys:
             values = np.array([self.waypoints[t][key] for t in times]).astype(float)
+
             if key in self.servo_columns:
-                # Servo behavior: use stepwise constant values
+                # Servo behavior: stepwise constant values
                 step_values = np.zeros_like(self.time_steps)
                 for i, t in enumerate(self.time_steps):
                     step_values[i] = values[np.searchsorted(times, t, side='right') - 1]
                 self.trajectory[key] = step_values.astype(float)
             else:
-                # Normal interpolation
+                # Normal interpolation using numpy
                 if self.interpolation_type == "linear":
-                    interp_func = interp1d(times, values, kind='linear', fill_value='extrapolate')
+                    self.trajectory[key] = np.interp(self.time_steps, times, values).astype(float)
+                elif self.interpolation_type == "smoothed":
+                    self.trajectory[key] = np.interp(self.time_steps, times, values).astype(float)
+                    # Apply smoothing filter
+                    self.trajectory[key] = self._smooth_trajectory_simple(self.trajectory[key])
+                elif self.interpolation_type == "gaussian":
+                    self.trajectory[key] = np.interp(self.time_steps, times, values).astype(float)
+                    # Apply smoothing filter
+                    self.trajectory[key] = self._smooth_trajectory_gaussian(self.trajectory[key])
                 elif self.interpolation_type == "cubic":
-                    interp_func = CubicSpline(times, values, bc_type='natural')
-                elif self.interpolation_type == "pchip":
-                    interp_func = PchipInterpolator(times, values)
+                    self.trajectory[key] = self._cubic_hermite_interp(times, values, self.time_steps)
                 else:
                     raise ValueError(f"Unsupported interpolation type: {self.interpolation_type}")
-                self.trajectory[key] = interp_func(self.time_steps).astype(float)
+
 
     def set_constraints(self, velocity_constraints=None, acceleration_constraints=None):
         """ Adds constraints of the form
@@ -150,46 +222,6 @@ class CustomTrajectory:
         self.waypoints = dict(sorted(new_waypoints.items()))
         self.generate_trajectory()
 
-    def visualize_trajectory(self):
-        fig, ax = plt.subplots(figsize=(8, 6))
-        colors = {'elevator': 'blue', 'pivot': 'red', 'wrist': 'green', 'intake': 'purple'}
-        limits = {'elevator': (0, 2), 'pivot': (-45, 135), 'wrist': (-90, 180), 'intake': (-5, 5)}
-
-        twins = [ax.twinx(), ax.twinx(), ax.twinx()]
-        for idx in range(4):
-            if idx == 0:
-                axis = ax
-                ax.set_xlabel('Time (s)')
-            else:
-                axis = twins[idx - 1]
-            if idx > 1:
-                axis.spines['right'].set_position(('outward', 60 * (idx - 1)))
-            key = list(colors.keys())[idx]
-            axis.set_ylabel(key, color=colors[key])
-            axis.plot(self.time_steps, self.trajectory[key], color=colors[key], label=key)
-            axis.scatter(list(self.waypoints.keys()), [self.waypoints[k][key] for k in self.waypoints.keys()],
-                         color=colors[key], s=10, edgecolors='black', zorder=3)
-            axis.set_ylim(limits[key])
-            axis.tick_params(axis='y', labelcolor=colors[key])
-
-        fig.suptitle(f'Plot of trajectory "{self.name}"', y=.95)
-        fig.tight_layout()
-        plt.show()
-
-    def sparkline(self, length=50):
-        blocks = "▁▂▃▄▅▆▇█"
-        colors = {'elevator': '\033[34m', 'pivot': '\033[31m', 'wrist': '\033[32m', 'intake': '\033[35m'}
-        limits = {'elevator': (0, 2), 'pivot': (-45, 135), 'wrist': (-90, 180), 'intake': (-5, 5)}
-
-        spark_lines = []
-        for key in self.keys:
-            min_val, max_val = limits[key]
-            normalized = np.interp(self.trajectory[key], [min_val, max_val], [0, 7]).astype(int)
-            line = ''.join(blocks[val] for val in normalized[::len(normalized) // length])
-            spark_lines.append(f"{colors[key]}{line}\033[0m")
-
-        return '\n'.join(spark_lines)
-
 # make a test trajectory, call it L3
 waypoints = {
     0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
@@ -203,5 +235,5 @@ waypoints = {
 velocity_constraints = {'elevator':1.5, 'pivot':1000, 'wrist':90, 'intake':0 }
 acceleration_constraints = {'elevator': 20, 'pivot':1000, 'wrist':180, 'intake':0 }
 # linear, pchip, cubic
-trajectory_L3 = CustomTrajectory(waypoints, duration=3, interpolation_type="pchip",
+trajectory_L3 = CustomTrajectory(waypoints, duration=3, interpolation_type="smoothed",
                               velocity_constraints=velocity_constraints, acceleration_constraints=acceleration_constraints)

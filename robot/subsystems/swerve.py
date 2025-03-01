@@ -4,6 +4,7 @@ import typing
 
 import navx
 import ntcore
+import wpimath.filter
 
 from commands2 import Subsystem
 
@@ -102,9 +103,9 @@ class Swerve (Subsystem):
             this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
             self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
 
-        # -----------     CJH apriltags  ------------
+        # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = True
+        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names
         self.arducam_back_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamBack/poses/tag1").subscribe([0] * 8)
@@ -122,6 +123,12 @@ class Swerve (Subsystem):
         # set myself up for a zip later on
         self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_reef_pose_subscriber, self.logitech_high_pose_subscriber, self.logitech_tags_pose_subscriber]
         self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_reef_count_subscriber, self.logitech_high_count_subscriber, self.logitech_tags_count_subscriber]
+
+        # TODO - give me a list of six filters for the apriltags - smooth if we are not moving, else use reset each measurement
+        # def tag_filter(window):
+        #     return [wpimath.filter.LinearFilter.movingAverage(window) for _ in range(6) ]
+        # window = 5
+        # self.tag_motion_filters = [tag_filter(window) for _ in self.pose_subscribers]
 
 
         robot_config = RobotConfig.fromGUISettings()

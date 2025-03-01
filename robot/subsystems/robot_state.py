@@ -77,7 +77,7 @@ class RobotState(commands2.Subsystem):
         self.prev_target = self.target
         self.target = target
         self._notify_callbacks()  # Call all registered callbacks
-
+        print(f'Target set to {target.value["name"]} at {self.container.get_enabled_time():.1f}')
         SmartDashboard.putString('_target', self.target.value['name'])
 
     def get_target(self):
@@ -86,7 +86,7 @@ class RobotState(commands2.Subsystem):
     def set_side(self, side: Side) -> None:
         self.side = side
         self._notify_callbacks()  # Call all registered callbacks
-
+        print(f'Side set to {side.value["name"]} at {self.container.get_enabled_time():.1f}')
         SmartDashboard.putString('_side', self.side.value['name'])
 
     def get_side(self):

@@ -9,12 +9,20 @@ from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
 from subsystems.swerve_constants import DriveConstants
 
+# starting position for odometry
 k_start_x = 0
 k_start_y = 0
+# joysticks nad other input
 k_driver_controller_port = 0
 k_co_driver_controller_port = 1
+k_use_bbox = True  # set to true for actual use
+k_bbox_1_port = 2
+k_bbox_2_port = 3
+
+# robot characteristics - should be near driveconstants, not here
 k_robot_mass_kg = 56
 k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
+
 k_reset_sparks_to_default = True
 k_swerve_debugging_messages = True
 k_use_apriltag_odometry = True
@@ -129,16 +137,47 @@ class IntakeConstants:
 
 class ClimberConstants:
     k_CAN_id = 2
-    k_climber_motor_rotation = math.radians((math.pi / 2))
+    k_gear_ratio = 164
+    # 25:1
+    # 26:64
+    # 30:80
+    k_climber_motor_ready = math.radians(30)
     k_climber_motor_stowed_angle = 0
-    k_climber_motor_climber_reference_angle = 10
-    k_climber_forward_rotation_limit = 90
+    k_climber_motor_climb_angle = math.radians(60)
+    k_climber_motor_climber_reference_angle = math.radians(10)
+    k_climber_forward_rotation_limit = math.radians(90)
     k_climber_reverse_rotation_limit = 0
+    k_length_meters = 0.1209
+    k_moi = 0.0173 #kg m^2
+    k_plant = DCMotor.NEO(1)
     # The PID constants will be changed later on.
-    kP = 0
-    kI = 1
-    kD = 1
+    kP = 0.75
+    kI = 0
+    kD = 0
     k_climber_motor_voltage = 12
+    k_tolerance = math.radians(5)
+
+    k_config = SparkMaxConfig()
+    k_config.inverted(False)
+    k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
+    # k_config.smartCurrentLimit(40)
+
+    k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
+    k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
+
+    k_config.closedLoop.pid(p=kP, i=kI, d=kD, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.outputRange(-1, 1)
+    # k_config.closedLoop.maxMotion.maxAcceleration(1)
+    # k_config.closedLoop.maxMotion.maxVelocity(1000)
+        
+    k_config.softLimit.forwardSoftLimit(k_climber_forward_rotation_limit)
+    k_config.softLimit.reverseSoftLimit(k_climber_reverse_rotation_limit)
+
+    k_config.softLimit.forwardSoftLimitEnabled(True)
+    k_config.softLimit.reverseSoftLimitEnabled(True)
+
 
 class WristConstants:
 

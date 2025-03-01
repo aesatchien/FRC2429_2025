@@ -23,6 +23,7 @@ from subsystems.pivot import Pivot
 from subsystems.intake import Intake
 from subsystems.led import Led
 from subsystems.wrist import Wrist
+from subsystems.climber import Climber
 from subsystems.vision import Vision
 
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
@@ -31,6 +32,7 @@ from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
+from commands.move_climber import MoveClimber
 #
 from commands.go_to_position import GoToPosition
 from commands.follow_trajectory import FollowTrajectory
@@ -75,6 +77,7 @@ class RobotContainer:
         self.elevator = Elevator()
         self.pivot = Pivot()
         self.wrist = Wrist()
+        self.climber = Climber()
         self.intake = Intake()
         self.vision = Vision()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
@@ -82,6 +85,7 @@ class RobotContainer:
 
         self.configure_joysticks()
         self.bind_driver_buttons()
+
 
         self.swerve.setDefaultCommand(DriveByJoystickSwerve(
             container=self,
@@ -95,6 +99,8 @@ class RobotContainer:
             self.configure_codriver_joystick()
             self.bind_codriver_buttons()
             self.bind_keyboard_buttons()
+            if constants.k_use_bbox:
+                self.bind_button_box()
 
         self.initialize_dashboard()
 
@@ -278,7 +284,7 @@ class RobotContainer:
 
         # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
-        self.co_trigger_a.whileTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
+        # self.co_trigger_a.whileTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
         
         self.co_trigger_b.whileTrue(GoToPosition(container=self, position="l2"))
 
@@ -307,6 +313,8 @@ class RobotContainer:
         self.co_trigger_l_stick_positive_y.whileTrue(MoveWrist(container=self, radians=math.radians(-90), timeout=4))  # this seems backwards but is not because y-axis is inverted
 
         self.co_trigger_l_stick_negative_y.whileTrue(MoveWrist(container=self, radians=math.radians(90), timeout=4))
+
+        # self.co_trigger_a.onTrue(MoveClimber(container=self, climber=self.climber, mode='climbing', wait_to_finish=True))
 
         # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
         #         commands2.ConditionalCommand(
@@ -371,3 +379,65 @@ class RobotContainer:
     def get_autonomous_command(self):
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()
+
+    def bind_button_box(self):
+        """
+        Remember - buttons arre 1-indexed, no zero
+        """
+        # The driver's controller
+        self.bbox_1 = commands2.button.CommandJoystick(constants.k_bbox_1_port)
+        self.bbox_2 = commands2.button.CommandJoystick(constants.k_bbox_2_port)
+
+        self.bbox_TBD1 = self.bbox_1.button(3)  # top left red 1
+        self.bbox_TBD2 = self.bbox_1.button(4)  # top left red 2
+
+        self.bbox_right = self.bbox_1.button(1)  # true when selected
+        self.bbox_left = self.bbox_1.button(2)  #  and true when selected
+        self.bbox_human_left = self.bbox_1.button(5)
+        self.bbox_human_right = self.bbox_1.button(6)
+
+        # reef  stuff
+        self.bbox_AB = self.bbox_1.button(7)
+        self.bbox_CD = self.bbox_1.button(8)
+        self.bbox_EF = self.bbox_1.button(9)
+        self.bbox_GH = self.bbox_1.button(10)
+        self.bbox_IJ = self.bbox_1.button(11)
+        self.bbox_KL = self.bbox_1.button(12)
+
+        self.bbox_L1 = self.bbox_2.button(1)
+        self.bbox_L2 = self.bbox_2.button(2)
+        self.bbox_L3 = self.bbox_2.button(3)
+        self.bbox_L4 = self.bbox_2.button(4)
+        self.bbox_reef_alga_high = self.bbox_2.button(5)
+        self.bbox_reef_alga_low = self.bbox_2.button(7)
+        self.bbox_net = self.bbox_2.button(6)
+        self.bbox_processor = self.bbox_2.button(8)
+
+        # actual bindings
+
+        self.bbox_TBD1.onTrue(commands2.PrintCommand("Pushed BBox TBD1"))
+        self.bbox_TBD2.onTrue(commands2.PrintCommand("Pushed BBox TBD2"))
+        self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+        self.bbox_human_left.onTrue(commands2.PrintCommand("Pushed BBox Human Left"))
+        self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
+
+        self.bbox_AB.onTrue(commands2.PrintCommand("Pushed BBox AB"))
+        self.bbox_CD.onTrue(commands2.PrintCommand("Pushed BBox CD"))
+        self.bbox_EF.onTrue(commands2.PrintCommand("Pushed BBox EF"))
+        self.bbox_GH.onTrue(commands2.PrintCommand("Pushed BBox GH"))
+        self.bbox_IJ.onTrue(commands2.PrintCommand("Pushed BBox IJ"))
+        self.bbox_KL.onTrue(commands2.PrintCommand("Pushed BBox KL"))
+
+        self.bbox_L1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L1)).ignoringDisable(True))
+        self.bbox_L2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L2)).ignoringDisable(True))
+        self.bbox_L3.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L3)).ignoringDisable(True))
+        self.bbox_L4.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.L4)).ignoringDisable(True))
+        self.bbox_reef_alga_high.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_HIGH)).ignoringDisable(True))
+        self.bbox_reef_alga_low.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_LOW)).ignoringDisable(True))
+        self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
+        self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
+
+
+
+
