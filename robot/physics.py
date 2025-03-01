@@ -47,7 +47,7 @@ class PhysicsEngine:
         self.initialize_wrist()
         self.initialize_shoulder()
         self.initialize_elevator()
-        self.initialize_cimber()
+        self.initialize_climber()
 
         # vision stuff - using 2024 stuff for now (CJH)
         key = 'orange'
@@ -229,7 +229,7 @@ class PhysicsEngine:
         self.elevator_spark_sim = SparkMaxSim(self.robot.container.elevator.motor, constants.ElevatorConstants.k_plant)
         self.elevator_follower_spark_sim = SparkMaxSim(self.robot.container.elevator.follower, constants.ElevatorConstants.k_plant)
 
-    def initialize_cimber(self):
+    def initialize_climber(self):
         self.climber_sim = simlib.SingleJointedArmSim(gearbox=constants.ClimberConstants.k_plant,
                                                     gearing=constants.ClimberConstants.k_gear_ratio,
                                                     moi=constants.ClimberConstants.k_moi,

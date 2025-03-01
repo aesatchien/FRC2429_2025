@@ -4,6 +4,7 @@ import rev
 import wpilib
 
 from rev import ClosedLoopSlot, SparkFlexConfig, SparkMax, SparkMaxConfig
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.units import inchesToMeters, lbsToKilograms
 from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
@@ -134,6 +135,46 @@ k_positions = {
     },
 }
 
+k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
+k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
+k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(math.radians(180)))
+k_reef_center_to_face_translation = Translation2d(inchesToMeters(65.5 / 2), 0)
+
+# made from this:
+ # k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
+ # k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
+ # k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(math.radians(180)))
+ # k_reef_center_to_face_translation = Translation2d(-inchesToMeters(65.5 / 2 + 14), 0)
+ #
+ # # rotate the center to face by 60 degrees
+ # # add that to the thing
+ # k_useful_robot_poses = {}
+ # for idx, letter in enumerate(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]):
+ #
+ #     center_to_this_face = k_reef_center_to_face_translation.rotateBy(Rotation2d(math.radians((idx // 2) * 60)))
+ #     pose = Pose2d(center_to_this_face + k_blue_reef_center, Rotation2d(math.radians((idx // 2) * 60) ))
+ #     k_useful_robot_poses.update({letter : pose})
+# stored in this format for easier tuning
+ 
+k_useful_robot_poses_blue = {
+    'a': Pose2d(Translation2d(x=3.302000, y=4.020820), Rotation2d(0.000000)),
+    'b': Pose2d(Translation2d(x=3.302000, y=4.020820), Rotation2d(0.000000)),
+    'c': Pose2d(Translation2d(x=3.895725, y=2.992458), Rotation2d(1.047198)),
+    'd': Pose2d(Translation2d(x=3.895725, y=2.992458), Rotation2d(1.047198)),
+    'e': Pose2d(Translation2d(x=5.083175, y=2.992458), Rotation2d(2.094395)),
+    'f': Pose2d(Translation2d(x=5.083175, y=2.992458), Rotation2d(2.094395)),
+    'g': Pose2d(Translation2d(x=5.676900, y=4.020820), Rotation2d(3.141593)),
+    'h': Pose2d(Translation2d(x=5.676900, y=4.020820), Rotation2d(3.141593)),
+    'i': Pose2d(Translation2d(x=5.083175, y=5.049182), Rotation2d(4.188790)),
+    'j': Pose2d(Translation2d(x=5.083175, y=5.049182), Rotation2d(4.188790)),
+    'k': Pose2d(Translation2d(x=3.895725, y=5.049182), Rotation2d(5.235988)),
+    'l': Pose2d(Translation2d(x=3.895725, y=5.049182), Rotation2d(5.235988)),
+    'left_coral_station': Pose2d(Translation2d(x=1.060193, y=7.108810), Rotation2d(-0.942478)),
+    'right_coral_station': Pose2d(Translation2d(x=1.060193, y=0.932830), Rotation2d(0.942478)), # from Pose2d(Translation2d(x=1.060193, y=-7.108810 + 2 * k_field_center.y), Rotation2d(-0.942478)),
+}
+
+# made from this:
+k_useful_robot_poses_red = {key: pose.rotateAround(k_field_center, Rotation2d(math.radians(180))) for key, pose in k_useful_robot_poses_blue.items()}
 
 class GamePiece(Enum):
     ALGAE = 1
@@ -205,7 +246,7 @@ class ClimberConstants:
 class WristConstants:
 
     k_CAN_id = 10
-    k_gear_ratio = 88
+    k_gear_ratio = 16 * 64 / 26
     k_abs_encoder_offset = 0
     k_sim_length_meters = 0.4
     k_center_of_mass_to_axis_of_rotation_dist_meters = 0.164

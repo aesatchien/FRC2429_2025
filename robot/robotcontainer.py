@@ -8,6 +8,7 @@ import commands2
 from wpimath import controller
 from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
+from ntcore import NetworkTableInstance
 
 import constants
 
@@ -255,6 +256,9 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('IntakeOff', RunIntake(container=self, intake=self.intake, value=0, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-3, stop_on_end=False))
 
+        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
+        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
+
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
         [self.score_test_chooser.addOption(key, value) for key, value in self.robot_state.targets_dict.items()]  # add all the indicators
@@ -350,6 +354,8 @@ class RobotContainer:
 
         self.co_trigger_l_stick_negative_y.whileTrue(MoveWrist(container=self, radians=math.radians(90), timeout=4))
 
+        self.co_trigger_r_trigger.whileTrue(MoveClimber(self, self.climber, ""))
+
         # self.co_trigger_a.onTrue(MoveClimber(container=self, climber=self.climber, mode='climbing', wait_to_finish=True))
 
         # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
@@ -410,7 +416,54 @@ class RobotContainer:
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down
-        pass
+
+        # a, b, c ... k, l: reserved for driving to respective positions
+        # w: wrist go left (korean left is wen chok, also position on the keyboard)
+        # o: wrist go right (korean right is orin chok, also position on the keyboard)
+        # see https://digitalwerk.gitlab.io/solutions/adtf_content/adtf_base/adtf_core/page_qt_key_event_runner.html for the codes for each key
+        
+
+        self.keys_pressed_entry = NetworkTableInstance.getDefault().getEntry("SmartDashboard/keys_pressed")  # for operator control via keyboard
+
+        self.keyboard_trigger_p = commands2.button.Trigger(lambda: 80 in self.keys_pressed_entry.getIntegerArray([]))
+
+        self.keyboard_trigger_1 = commands2.button.Trigger(lambda: 49 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_2 = commands2.button.Trigger(lambda: 50 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_3 = commands2.button.Trigger(lambda: 51 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_4 = commands2.button.Trigger(lambda: 52 in self.keys_pressed_entry.getIntegerArray([]))
+
+        self.keyboard_trigger_s = commands2.button.Trigger(lambda: 83 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_t = commands2.button.Trigger(lambda: 84 in self.keys_pressed_entry.getIntegerArray([]))
+
+        self.keyboard_trigger_v = commands2.button.Trigger(lambda: 86 in self.keys_pressed_entry.getIntegerArray([]))
+
+        self.keyboard_trigger_w = commands2.button.Trigger(lambda: 87 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_o = commands2.button.Trigger(lambda: 79 in self.keys_pressed_entry.getIntegerArray([]))
+
+        # p: place (score)
+        self.keyboard_trigger_p.onTrue(Score(self))
+
+        self.keyboard_trigger_1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True))
+        self.keyboard_trigger_2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
+        self.keyboard_trigger_3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
+        self.keyboard_trigger_4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+
+        self.keyboard_trigger_s.onTrue(GoToStow(self))
+
+        # t: human player (mnemonic: celeste Tarula, sean Toda, Take a piece)
+        self.keyboard_trigger_t.whileTrue(GoToCoralStation(container=self).andThen(
+            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+        self.keyboard_trigger_t.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+            GoToStow(container=self)))
+
+        # v: intake on (mnemonic: vacuum up the piece)
+        self.keyboard_trigger_v.whileTrue(RunIntake(self, self.intake, -3, stop_on_end=True))
+
+        # w: wrist go left (korean left is wen chok, also position on the keyboard)
+        self.keyboard_trigger_o.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+
+        # o: wrist go right (korean right is orin chok, also position on the keyboard)
+        self.keyboard_trigger_w.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
     def get_autonomous_command(self):
         return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")).andThen(DriveByVelocitySwerve(container=self, swerve=self.swerve, velocity=Pose2d(1, 1, 1), timeout=2).andThen(LeaveThenScore(container=self)))
