@@ -31,6 +31,7 @@ k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
 k_led_count = 42  # todo: update this to actual number
+k_led_count_ignore = 4  # flat ones not for the height indicator
 k_led_pwm_port = 0  # todo: update this to actual number
 
 k_positions = { 
