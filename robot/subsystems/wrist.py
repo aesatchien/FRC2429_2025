@@ -1,8 +1,11 @@
+from os import WIFCONTINUED
+from sys import get_asyncgen_hooks
 from commands2.subsystem import Subsystem
 import math
 import wpilib
 from rev import ClosedLoopSlot, SparkMax
 from constants import WristConstants
+import constants
 from subsystems.elevator import Elevator
 from subsystems.pivot import Pivot
 
@@ -72,6 +75,10 @@ class Wrist(Subsystem):
     def periodic(self) -> None:
 
         self.counter += 1
+        # if (not self.is_safe_to_move() and 
+        #     (self.get_angle() > WristConstants.k_stowed_max_angle or self.get_angle() < WristConstants.k_stowed_min_angle)):
+        #     # the wrist is currently in a bad position, so retract it!
+        #     self.set_position(constants.k_positions["stow"]["wrist_pivot"])
 
         if self.counter % 10 == 0:
 

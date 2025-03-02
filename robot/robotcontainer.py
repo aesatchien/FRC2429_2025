@@ -1,7 +1,9 @@
 from enum import Enum
 import math
+from threading import Condition
 import time
 from commands2.printcommand import PrintCommand
+from pathplannerlib.commands import PathfindingCommand
 import rev
 import wpilib
 import commands2
@@ -33,6 +35,7 @@ from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 from commands.reset_field_centric import ResetFieldCentric
 
+from subsystems import swerve_constants
 from subsystems.robot_state import RobotState
 from subsystems.swerve import Swerve
 from subsystems.elevator import Elevator
@@ -56,6 +59,8 @@ from commands.go_to_position import GoToPosition
 from commands.follow_trajectory import FollowTrajectory
 from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
+
+from trajectory import CustomTrajectory
 # from commands.score import Score
 # from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
@@ -225,6 +230,7 @@ class RobotContainer:
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
         # lots of putdatas for testing on the dash
+        # COMMANDS FOR GUI (ROBOT DEBUGGING) - 20250224 CJH
         self.led_mode_chooser = wpilib.SendableChooser()
         [self.led_mode_chooser.addOption(key, value) for key, value in self.led.modes_dict.items()]  # add all the indicators
         self.led_mode_chooser.onChange(listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
@@ -243,9 +249,26 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
         wpilib.SmartDashboard.putData('move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
-        wpilib.SmartDashboard.putData('FollowTrajectory', FollowTrajectory(container=self, current_trajectory=None, wait_to_finish=True))
 
-        # COMMANDS FOR GUI (ROBOT DEBUGGING) - 20250224 CJH
+        waypoints = {
+            0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 0},  # start 
+            1: {'elevator': 1.1, 'pivot': 90, 'wrist': 0, 'intake': 0},  # get to scoring wrist
+            2: {'elevator': 0.8, 'pivot': 50, 'wrist': 90, 'intake': 3},  # return home with wrist safe
+        }
+
+        # waypoints = {
+        #     0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
+        #     0.25: {'elevator': 0.3, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
+        #     0.5: {'elevator': 0.5, 'pivot': 70, 'wrist': 0, 'intake': 2},  # get to safe wrist
+        #     1: {'elevator': 1.2, 'pivot': 50, 'wrist': 90, 'intake': 2},  # get to scoring wrist while raising elevator
+        #     1.5: {'elevator': 1.17, 'pivot': 40, 'wrist': 90, 'intake': -3},  # move pivot while scoring
+        #     2.5: {'elevator': 0.2, 'pivot': 70, 'wrist': 0, 'intake': 0},  # return home with wrist safe
+        #     3.0: {'elevator': 0.2, 'pivot': 90, 'wrist': 0, 'intake': 0},  # come down to bottom
+        # }
+        #
+        l3_trajectory = CustomTrajectory(waypoints, 2)
+        wpilib.SmartDashboard.putData('l3 trajectory', FollowTrajectory(container=self, current_trajectory=l3_trajectory, wait_to_finish=True))
+
         wpilib.SmartDashboard.putData('MoveElevatorUp', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=0.1 ))
         wpilib.SmartDashboard.putData('MoveElevatorDown', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=-0.1))
         wpilib.SmartDashboard.putData('MovePivotUp', MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
@@ -277,14 +300,6 @@ class RobotContainer:
 
         self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
-        pathfinding_constraints = PathConstraints(
-                maxVelocityMps=0.5,
-                maxAccelerationMpsSq=3,
-                maxAngularVelocityRps=math.radians(90),
-                maxAngularAccelerationRpsSq=math.degrees(720),
-                nominalVoltage=12
-        )
-
         # button A for intake
         # left trigger for outtake
 
@@ -300,14 +315,6 @@ class RobotContainer:
                     )
                 )
         
-
-        # self.triggerY.whileTrue(
-        #         AutoBuilder.pathfindToPoseFlipped(
-        #             pose=Pose2d(15, 4, 0),
-        #             constraints=pathfinding_constraints
-        #         )
-        # )
-
 
     def bind_codriver_buttons(self):
 
@@ -519,17 +526,64 @@ class RobotContainer:
 
         self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
 
-        # score
-        # note position
-        # once delta position is high enough, move wrist out of way
-        # go to stow
+        # while held:
+            # if we're being told to go left:
+                # if we're going to a far side:
+                    # go to our right
+                # else:
+                    # go to our left
+        # the issue is communicating this to the wrist.
+        # we want MoveWristByJoystick to go left if our target-- wait but not really,
+        # i think we only care about whether the bot is pointing there or no
 
-        self.bbox_AB.onTrue(commands2.PrintCommand("Pushed BBox AB"))
-        self.bbox_CD.onTrue(commands2.PrintCommand("Pushed BBox CD"))
-        self.bbox_EF.onTrue(commands2.PrintCommand("Pushed BBox EF"))
-        self.bbox_GH.onTrue(commands2.PrintCommand("Pushed BBox GH"))
-        self.bbox_IJ.onTrue(commands2.PrintCommand("Pushed BBox IJ"))
-        self.bbox_KL.onTrue(commands2.PrintCommand("Pushed BBox KL"))
+        self.bbox_AB.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    condition=self.robot_state.is_left
+                )
+        )
+
+        self.bbox_CD.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    condition=self.robot_state.is_left
+                )
+        )
+
+        # we swap the condition because for these ones, the driver's left is the robot's right
+        self.bbox_EF.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    condition=self.robot_state.is_right
+                )
+        )
+
+        self.bbox_GH.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    condition=self.robot_state.is_right
+                )
+        )
+
+        self.bbox_IJ.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    condition=self.robot_state.is_right
+                )
+        )
+
+        self.bbox_KL.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+                    condition=self.robot_state.is_left
+                )
+        )
 
         self.bbox_L1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True))
         self.bbox_L2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))

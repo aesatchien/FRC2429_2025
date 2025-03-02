@@ -2,17 +2,19 @@ import math
 import commands2
 from commands2.button import CommandXboxController
 from rev import SparkMax
-from wpilib import SmartDashboard, Timer
+from wpilib import DriverStation, SmartDashboard, Timer
+import wpilib
 from constants import WristConstants
 from subsystems.elevator import Elevator
 from subsystems.pivot import Pivot
 from subsystems.robot_state import RobotState
+from subsystems.swerve import Swerve
 from subsystems.wrist import Wrist
 
 
 class MoveWristByJoystick(commands2.Command):
 
-    def __init__(self, container,  timeout, side_decider: CommandXboxController | RobotState, wait_to_finish=False, indent=0) -> None:
+    def __init__(self, container,  timeout, side_decider: CommandXboxController | RobotState, swerve_for_field_centric: Swerve | None =None, wait_to_finish=False, indent=0) -> None:
         """
         :param wait_to_finish=False: will not make this command instantaneously execute.
         It will make this command end immediately after either the timeout has elapsed,
@@ -22,6 +24,10 @@ class MoveWristByJoystick(commands2.Command):
 
         To make it act kinda instantaneous, set a very small timeout. Then, it will not 
         move the wrist unless the arm is pretty much already at a safe position.
+
+        if you pass :param swerve_for_field_centric:, it will be field centric (ie if the robot 
+        is pointing at the drivers, the command will invert the driver's request because
+        the driver's left is the robot's right
         """
         super().__init__()
         self.setName('Move wrist by joystick')
@@ -31,6 +37,7 @@ class MoveWristByJoystick(commands2.Command):
         self.pivot: Pivot = self.container.pivot
         self.elevator: Elevator = self.container.elevator
         self.side_decider = side_decider
+        self.swerve = swerve_for_field_centric
         self.timeout = timeout
         self.wait_to_finish = wait_to_finish
         self.timer = Timer()
@@ -57,7 +64,6 @@ class MoveWristByJoystick(commands2.Command):
     def execute(self) -> None:
 
         if type(self.side_decider) == CommandXboxController:
-            print(f"controller right X: {self.side_decider.getRightX()}")
             if self.side_decider.getRightX() > 0.5:
                 self.setpoint = math.radians(-90)
             elif self.side_decider.getRightX() < -0.5:
@@ -69,9 +75,26 @@ class MoveWristByJoystick(commands2.Command):
             else:
                 self.setpoint = math.radians(-90)
 
+        if self.swerve:
+            if -90 < self.swerve.get_angle() <= 90:
+                if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+                    # we are facing away from the driver so don't invert
+                    pass
+                else:
+                    # we are facing towards the driver so invert
+                    self.setpoint *= -1
+
+            else:
+                if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+                    # we are facing towards the driver so invert
+                    self.setpoint *= -1
+                else:
+                    pass
+
         if self.wrist.is_safe_to_move():
             self.wrist.set_position(radians=self.setpoint, control_type=SparkMax.ControlType.kPosition)
             self.moved_wrist = True
+
         else:
             print("not moving too dangerous")
             # it's dangerous to move, don't

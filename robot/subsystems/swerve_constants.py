@@ -1,4 +1,5 @@
 import math
+from pathplannerlib.auto import PathConstraints
 from wpimath import units
 from wpimath.geometry import Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
@@ -174,6 +175,14 @@ class AutoConstants:
 
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
     k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0)
+
+    pathfinding_constraints = PathConstraints(
+            maxVelocityMps=0.5,
+            maxAccelerationMpsSq=3,
+            maxAngularVelocityRps=math.radians(90),
+            maxAngularAccelerationRpsSq=math.degrees(720),
+            nominalVoltage=12
+    )
 
 
     # Constraint for the motion profiled robot angle controller

@@ -11,7 +11,6 @@ from subsystems.robot_state import RobotState
 class GoToReefPosition(commands2.SequentialCommandGroup):
     def __init__(self, container, level: int, wrist_setpoint_decider: float | CommandXboxController | RobotState, indent=0) -> None:
         """
-        note: cannot use this in teleop, as it waits for joystick input
         :param wrist_setpoint: the setpoint for the wrist. leave it as none for driver to decide.
         """
         super().__init__()
@@ -35,7 +34,7 @@ class GoToReefPosition(commands2.SequentialCommandGroup):
         if type(wrist_setpoint_decider) == float:
             self.addCommands(MoveWrist(container=container, radians=wrist_setpoint_decider, timeout=5, wait_to_finish=True, indent=indent+1))
         else:
-            self.addCommands(MoveWristByJoystick(container=container, side_decider=wrist_setpoint_decider, timeout=10, wait_to_finish=True, indent=indent+1))
+            self.addCommands(MoveWristByJoystick(container=container, side_decider=wrist_setpoint_decider, swerve_for_field_centric=container.swerve, timeout=10, wait_to_finish=True, indent=indent+1))
 
         # go to final position
         self.addCommands(commands2.ParallelCommandGroup(

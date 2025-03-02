@@ -5,6 +5,9 @@ from commands.score import Score
 
 class ScoreOnReef(commands2.SequentialCommandGroup):
     def __init__(self, container, level: int, indent=0) -> None:
+        """
+        don't use deprecated
+        """
         super().__init__()
 
         self.setName(f'Score on reef')

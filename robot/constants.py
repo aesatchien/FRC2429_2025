@@ -30,7 +30,7 @@ k_use_apriltag_odometry = False
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
-k_led_count = 36  # todo: update this to actual number
+k_led_count = 42  # todo: update this to actual number
 k_led_pwm_port = 0  # todo: update this to actual number
 
 k_positions = { 
@@ -141,20 +141,19 @@ k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(m
 k_reef_center_to_face_translation = Translation2d(inchesToMeters(65.5 / 2), 0)
 
 # made from this:
- # k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
- # k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
- # k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(math.radians(180)))
- # k_reef_center_to_face_translation = Translation2d(-inchesToMeters(65.5 / 2 + 14), 0)
- #
- # # rotate the center to face by 60 degrees
- # # add that to the thing
- # k_useful_robot_poses = {}
- # for idx, letter in enumerate(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]):
- #
- #     center_to_this_face = k_reef_center_to_face_translation.rotateBy(Rotation2d(math.radians((idx // 2) * 60)))
- #     pose = Pose2d(center_to_this_face + k_blue_reef_center, Rotation2d(math.radians((idx // 2) * 60) ))
- #     k_useful_robot_poses.update({letter : pose})
-# stored in this format for easier tuning
+# k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
+# k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
+# k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(math.radians(180)))
+# k_reef_center_to_face_translation = Translation2d(-inchesToMeters(65.5 / 2 + 14), 0)
+#
+# k_useful_robot_poses = {}
+# for idx, letter in enumerate(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]):
+#
+#     center_to_this_face = k_reef_center_to_face_translation.rotateBy(Rotation2d(math.radians((idx // 2) * 60)))
+#     pose = Pose2d(center_to_this_face + k_blue_reef_center, Rotation2d(math.radians((idx // 2) * 60) ))
+#     k_useful_robot_poses.update({letter : pose})
+
+# we can define in the above format or the below format depending on how we want to tune
  
 k_useful_robot_poses_blue = {
     'a': Pose2d(Translation2d(x=3.302000, y=4.020820), Rotation2d(0.000000)),
@@ -173,7 +172,6 @@ k_useful_robot_poses_blue = {
     'right_coral_station': Pose2d(Translation2d(x=1.060193, y=0.932830), Rotation2d(0.942478)), # from Pose2d(Translation2d(x=1.060193, y=-7.108810 + 2 * k_field_center.y), Rotation2d(-0.942478)),
 }
 
-# made from this:
 k_useful_robot_poses_red = {key: pose.rotateAround(k_field_center, Rotation2d(math.radians(180))) for key, pose in k_useful_robot_poses_blue.items()}
 
 class GamePiece(Enum):
@@ -187,8 +185,8 @@ class IntakeConstants:
     k_intake_config.closedLoop.pid(1, 0, 0)
     k_intake_config.smartCurrentLimit(5)
 
-    k_tof_algae_port = 2
     k_tof_coral_port = 2
+    k_max_tof_distance_where_we_have_coral = 2
 
     k_sim_length = 0.25
 

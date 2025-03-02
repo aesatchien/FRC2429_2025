@@ -48,7 +48,6 @@ class MoveWrist(commands2.Command):
         self.moved_wrist = False
         self.timer.reset()
 
-    # NOTE 20250225 - why is this in execute and not initialize?  seems like it will get called many times
     def execute(self) -> None:
         if self.wrist.is_safe_to_move():
             if self.incremental:  # CJH added for GUI debugging
