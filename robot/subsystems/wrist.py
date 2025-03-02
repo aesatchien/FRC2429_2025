@@ -1,5 +1,3 @@
-from os import WIFCONTINUED
-from sys import get_asyncgen_hooks
 from commands2.subsystem import Subsystem
 import math
 import wpilib
@@ -70,7 +68,8 @@ class Wrist(Subsystem):
 
         elevator_in_safe_position = self.elevator.get_height() > WristConstants.k_max_elevator_height_where_spinning_dangerous
 
-        return pivot_in_safe_position or elevator_in_safe_position
+        # return pivot_in_safe_position or elevator_in_safe_position
+        return True  # CJH 20250302  - always True now
 
     def periodic(self) -> None:
 

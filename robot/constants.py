@@ -65,14 +65,14 @@ k_positions = {
     },
     "l3": {
         "elevator": 0.85,
-        "shoulder_pivot": math.radians(50),
+        "shoulder_pivot": math.radians(52),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.43,
-        "shoulder_pivot": math.radians(55), 
+        "elevator": 1.40,
+        "shoulder_pivot": math.radians(60),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -99,8 +99,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "coral station": {
-        "elevator": 0.37,
-        "shoulder_pivot": math.radians(70),
+        "elevator": 0.45,
+        "shoulder_pivot": math.radians(58),
         "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -181,9 +181,10 @@ class GamePiece(Enum):
 class IntakeConstants:
     k_CAN_id = 12
     k_intake_config = SparkMaxConfig()
-    k_intake_config.inverted(True)
+    k_intake_config.inverted(False)
     k_intake_config.closedLoop.pid(1, 0, 0)
     k_intake_config.smartCurrentLimit(5)
+    k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 2
     k_max_tof_distance_where_we_have_coral = 2
@@ -223,6 +224,7 @@ class ClimberConstants:
     k_config.inverted(False)
     k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
     # k_config.smartCurrentLimit(40)
+    k_config.voltageCompensation(12)
 
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
@@ -258,7 +260,7 @@ class WristConstants:
     k_starting_angle = 0 # sim mechanism2d takes degrees
 
     k_config = SparkMaxConfig()
-
+    k_config.voltageCompensation(12)
     k_config.inverted(True)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
@@ -323,7 +325,7 @@ class ShoulderConstants:
     k_starting_angle = math.radians(90) # until we have an abs encoder this is where we expect it to start
 
     k_config = SparkFlexConfig()
-
+    k_config.voltageCompensation(12)
     k_config.inverted(False)
     k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
     k_config.smartCurrentLimit(40)
@@ -336,7 +338,7 @@ class ShoulderConstants:
     
     k_config.absoluteEncoder.zeroOffset(0.45)
 
-    k_config.closedLoop.pid(p=0.75, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.85, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.outputRange(-1, 1)
@@ -387,14 +389,14 @@ class ElevatorConstants:
     k_sim_starting_height = 2
 
     k_config = SparkMaxConfig()
-
+    k_config.voltageCompensation(12)
     k_config.inverted(True)
 
     k_config.encoder.positionConversionFactor(k_meters_per_revolution)
     k_config.encoder.velocityConversionFactor(k_meters_per_revolution / 60)
 
     # k_config.closedLoop.setFeedbackSensor(rev.ClosedLoopConfig.)
-    k_config.closedLoop.pid(p=1.2, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=1.4, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.outputRange(-1, 1)
