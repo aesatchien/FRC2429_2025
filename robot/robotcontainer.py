@@ -275,9 +275,9 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('MovePivotDown', MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
         wpilib.SmartDashboard.putData('MoveWristUp', MoveWrist(container=self, incremental=True, radians=degreesToRadians(10), timeout=0.2))
         wpilib.SmartDashboard.putData('MoveWristDown', MoveWrist(container=self, incremental=True, radians=degreesToRadians(-10), timeout=0.2))
-        wpilib.SmartDashboard.putData('IntakeOn', RunIntake(container=self, intake=self.intake, value=3, stop_on_end=False))
+        wpilib.SmartDashboard.putData('IntakeOn', RunIntake(container=self, intake=self.intake, value=6, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeOff', RunIntake(container=self, intake=self.intake, value=0, stop_on_end=False))
-        wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-3, stop_on_end=False))
+        wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-6, stop_on_end=False))
 
         wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
         wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
@@ -298,7 +298,8 @@ class RobotContainer:
         self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
-        self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
+        # this is for field centric
+        #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
         # button A for intake
         # left trigger for outtake

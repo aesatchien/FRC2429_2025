@@ -197,7 +197,7 @@ class IntakeConstants:
 
     k_coral_scoring_voltage = 10
 
-    k_seconds_to_stay_on_while_scoring = 1
+    k_seconds_to_stay_on_while_scoring = 0.5
 
 class ClimberConstants:
     k_CAN_id = 2

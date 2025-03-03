@@ -32,11 +32,11 @@ class DriveByJoystickSwerve(commands2.Command):
         self.controller = controller
         # self.slow_mode_trigger = self.controller.rightBumper()
         self.robot_oriented_trigger = self.controller.leftBumper()
-        self.robot_oriented_trigger = self.controller.povUp().or_(
-                                      self.controller.povDown().or_(
-                                      self.controller.povLeft().or_(
-                                      self.controller.povRight()
-                                      )))
+        # self.robot_oriented_trigger = self.controller.povUp().or_(
+        #                               self.controller.povDown().or_(
+        #                               self.controller.povLeft().or_(
+        #                               self.controller.povRight()
+        #                               )))
         self.debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
         self.robot_oriented_debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
 
