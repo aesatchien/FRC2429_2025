@@ -6,7 +6,7 @@ from wpimath.system.plant import DCMotor
 from commands2 import Subsystem
 from wpilib import SmartDashboard
 from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig, SparkMaxSim, SparkMax
-#from playingwithfusion import TimeOfFlight
+from playingwithfusion import TimeOfFlight
 import constants
 
 class Intake(Subsystem):
@@ -27,8 +27,8 @@ class Intake(Subsystem):
         if wpilib.RobotBase.isSimulation():
             self.sparkmax_sim = SparkMaxSim(self.sparkmax, DCMotor.NEO550(1))
 
-        #self.TOFSensorCoral = TimeOfFlight(constants.IntakeConstants.k_tof_coral_port)
-        #self.TOFSensorCoral.setRangingMode(mode=TimeOfFlight.RangingMode.kShort, sampleTime=10)
+        self.TOFSensorCoral = TimeOfFlight(constants.IntakeConstants.k_tof_coral_port)
+        self.TOFSensorCoral.setRangingMode(mode=TimeOfFlight.RangingMode.kShort, sampleTime=10)
 
         wpilib.SmartDashboard.putNumber("SET intake volts", 0)
 
