@@ -108,5 +108,6 @@ class Vision(SubsystemBase):
                 wpilib.SmartDashboard.putBoolean('logitech_high_targets_exist', 100 < self.counter % 600 < 210)
                 wpilib.SmartDashboard.putBoolean('arducam_back_targets_exist', 200 < self.counter % 600 < 310)
                 wpilib.SmartDashboard.putBoolean('logitech_tags_targets_exist', 300 < self.counter % 600 < 410)
+                wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', 400 < self.counter % 600 < 510)
             # wpilib.SmartDashboard.putNumber('tag_strafe', self.camera_dict['tags']['strafe_entry'].get())
 

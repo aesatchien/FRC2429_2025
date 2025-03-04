@@ -36,13 +36,20 @@ class Intake(Subsystem):
         self.controller.setReference(value, control_type)
 
     def has_coral(self) -> bool:
-        #average_coral_distance = self.TOFSensorCoral.getRange()
-        average_coral_distance = 100
+        average_coral_distance = self.TOFSensorCoral.getRange()
+        # average_coral_distance = 100
         return average_coral_distance <= constants.IntakeConstants.k_max_tof_distance_where_we_have_coral
 
     def periodic(self) -> None:
         # print(f"setting reserefsersf to {wpilib.SmartDashboard.getNumber('SET intake volts', 0)}")
         # self.controller.setReference(wpilib.SmartDashboard.getNumber("SET intake volts", 0), SparkMax.ControlType.kVoltage)
 
+        if self.counter % 10 == 0:
+            if wpilib.RobotBase.isReal():
+                wpilib.SmartDashboard.putBoolean('gamepiece_present', self.has_coral())
+            else:
+                wpilib.SmartDashboard.putBoolean('gamepiece_present', self.counter % 200 < 100)
+
+        self.counter += 1
         return super().periodic()
 

@@ -433,7 +433,11 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_arducam_back_target_indicator': {'widget': self.qlabel_arducam_back_target_indicator, 'nt': '/SmartDashboard/arducam_back_targets_exist', 'command': None},
         'qlabel_logitech_tags_target_indicator': {'widget': self.qlabel_logitech_tags_target_indicator, 'nt': '/SmartDashboard/logitech_tags_targets_exist', 'command': None},
         'qlabel_logitech_high_target_indicator': {'widget': self.qlabel_logitech_high_target_indicator, 'nt': '/SmartDashboard/logitech_high_targets_exist', 'command': None},
-
+        'qlabel_photoncam_target_indicator': {'widget': self.qlabel_photoncam_target_indicator, 'nt': '/SmartDashboard/photoncam_targets_exist', 'command': None},
+        'qlabel_note_captured_indicator': {'widget': self.qlabel_note_captured_indicator, 'nt': '/SmartDashboard/gamepiece_present', 'command': None,},
+        'qlabel_game_piece_indicator': {'widget': self.qlabel_game_piece_indicator, 'nt': '/SmartDashboard/gamepiece_present', 'command': '/SmartDashboard/LedToggle/running',
+                                        'style_on': "border: 7px; border-radius: 7px; background-color:rgb(0, 220, 220); color:rgb(250, 250, 250);",
+                                        'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
             # UNFINISHED for 2025
         'qlabel_navx_reset_indicator': {'widget': self.qlabel_navx_reset_indicator, 'nt': '/SmartDashboard/GyroReset/running', 'command': '/SmartDashboard/GyroReset/running'},
         'qlabel_shooter_indicator': {'widget': self.qlabel_shooter_indicator,'nt': '/SmartDashboard/shooter_on', 'command': None, 'flash': True},
@@ -443,9 +447,7 @@ class Ui(QtWidgets.QMainWindow):
         # 'qlabel_orange_target_indicator': {'widget': self.qlabel_orange_target_indicator, 'nt': '/SmartDashboard/orange_targets_exist', 'command': None},
 
         'qlabel_position_indicator': {'widget': self.qlabel_position_indicator, 'nt': '/SmartDashboard/arm_config', 'command': None},
-        'qlabel_note_captured_indicator': {'widget': self.qlabel_note_captured_indicator, 'nt': '/SmartDashboard/shooter_has_ring', 'command': None,},
         'qlabel_reset_gyro_from_pose_indicator': {'widget': self.qlabel_reset_gyro_from_pose_indicator, 'nt': '/SmartDashboard/GyroFromPose/running', 'command': '/SmartDashboard/GyroFromPose/running'},
-
         'qlabel_drive_to_speaker_indicator': {'widget': self.qlabel_drive_to_speaker_indicator, 'nt': '/SmartDashboard/ToSpeaker/running', 'command': '/SmartDashboard/ToSpeaker/running'},
         'qlabel_drive_to_amp_indicator': {'widget': self.qlabel_drive_to_amp_indicator, 'nt': '/SmartDashboard/ToAmp/running', 'command': '/SmartDashboard/ToAmp/running'},
         'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
@@ -463,9 +465,6 @@ class Ui(QtWidgets.QMainWindow):
             # LEFTOVER TO SORT FROM 2023
         #'qlabel_align_to_target_indicator': {'widget': self.qlabel_align_to_target_indicator, 'nt': '/SmartDashboard/AutoSetupScore/running', 'command': '/SmartDashboard/AutoSetupScore/running'},
         #'qlabel_arm_calibration_indicator': {'widget': self.qlabel_arm_calibration_indicator, 'nt': '/SmartDashboard/ArmCalibration/running', 'command': '/SmartDashboard/ArmCalibration/running'},
-        'qlabel_game_piece_indicator': {'widget': self.qlabel_game_piece_indicator, 'nt': '/SmartDashboard/shooter_has_ring', 'command': '/SmartDashboard/LedToggle/running',
-                                        'style_on': "border: 7px; border-radius: 7px; background-color:rgb(245, 120, 0); color:rgb(240, 240, 240);",
-                                        'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
         # 'qlabel_upper_pickup_indicator': {'widget': self.qlabel_upper_pickup_indicator, 'nt': '/SmartDashboard/UpperSubstationPickup/running', 'command': '/SmartDashboard/UpperSubstationPickup/running'},
         'hub_targets': {'widget': None, 'nt': '/arducam_reef//orange/targets', 'command': None},
         'hub_rotation': {'widget': None, 'nt': '/arducam_reef//orange/rotation', 'command': None},
