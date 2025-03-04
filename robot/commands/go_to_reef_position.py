@@ -25,10 +25,10 @@ class GoToReefPosition(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
         
         # go to safe position
-        self.addCommands(commands2.ParallelCommandGroup(
-            MovePivot(container=container, pivot=container.pivot, mode="specified", angle=constants.k_positions[f"l{level}_wrist_clearing"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
-            MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}_wrist_clearing"]["elevator"], wait_to_finish=True, indent=indent + 1).withTimeout(5)
-        ))
+        # self.addCommands(commands2.ParallelCommandGroup(
+        #     MovePivot(container=container, pivot=container.pivot, mode="specified", angle=constants.k_positions[f"l{level}_wrist_clearing"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
+        #     MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}_wrist_clearing"]["elevator"], wait_to_finish=True, indent=indent + 1).withTimeout(5)
+        # ))
 
         # have wrist do its thing
         if type(wrist_setpoint_decider) == float:

@@ -59,28 +59,28 @@ k_positions = {
     },
     "l2": {
         "elevator": 0.45,
-        "shoulder_pivot": math.radians(50),
+        "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.85,
-        "shoulder_pivot": math.radians(52),
+        "elevator": 0.9,
+        "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.40,
-        "shoulder_pivot": math.radians(60),
+        "elevator": 1.45,
+        "shoulder_pivot": math.radians(120),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2_wrist_clearing": { # intermediate position in which we spin the wrist before scoring
         "elevator": inchesToMeters(23),
-        "shoulder_pivot": math.radians(50), 
+        "shoulder_pivot": math.radians(130), 
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -100,8 +100,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "coral station": {
-        "elevator": 0.45,
-        "shoulder_pivot": math.radians(58),
+        "elevator": 0.40,
+        "shoulder_pivot": math.radians(61),
         "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -121,18 +121,18 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae low": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": inchesToMeters(8),
-        "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(0),
-        "wrist_color_for_ligament": wpilib.Color.kBlue,
-        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+        "elevator": 0.45,
+        "shoulder_pivot": math.radians(130),
+        "wrist_pivot": math.radians(90),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "algae high": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": inchesToMeters(8),
-        "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(0),
-        "wrist_color_for_ligament": wpilib.Color.kBlue,
-        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+        "elevator": 0.9,
+        "shoulder_pivot": math.radians(132),
+        "wrist_pivot": math.radians(90),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
 }
 
@@ -182,7 +182,7 @@ class GamePiece(Enum):
 class IntakeConstants:
     k_CAN_id = 12
     k_intake_config = SparkMaxConfig()
-    k_intake_config.inverted(False)
+    k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
     k_intake_config.smartCurrentLimit(5)
     k_intake_config.voltageCompensation(12)
@@ -192,8 +192,8 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = -3
-    k_algae_intaking_voltage = 2
+    k_coral_intaking_voltage = -6
+    k_algae_intaking_voltage = -6
 
     k_coral_scoring_voltage = 10
 
@@ -201,14 +201,13 @@ class IntakeConstants:
 
 class ClimberConstants:
     k_CAN_id = 2
-    k_gear_ratio = 164
+    k_gear_ratio = 167
     # 25:1
     # 26:64
     # 30:80
     k_climber_motor_ready = math.radians(30)
     k_climber_motor_stowed_angle = 0
     k_climber_motor_climb_angle = math.radians(60)
-    k_climber_motor_climber_reference_angle = math.radians(10)
     k_climber_forward_rotation_limit = math.radians(90)
     k_climber_reverse_rotation_limit = 0
     k_length_meters = 0.1209
@@ -222,7 +221,7 @@ class ClimberConstants:
     k_tolerance = math.radians(5)
 
     k_config = SparkMaxConfig()
-    k_config.inverted(False)
+    k_config.inverted(True) # makes more sense LHACK 3/3/25
     k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
     # k_config.smartCurrentLimit(40)
     k_config.voltageCompensation(12)
@@ -240,8 +239,8 @@ class ClimberConstants:
     k_config.softLimit.forwardSoftLimit(k_climber_forward_rotation_limit)
     k_config.softLimit.reverseSoftLimit(k_climber_reverse_rotation_limit)
 
-    k_config.softLimit.forwardSoftLimitEnabled(True)
-    k_config.softLimit.reverseSoftLimitEnabled(True)
+    k_config.softLimit.forwardSoftLimitEnabled(False)
+    k_config.softLimit.reverseSoftLimitEnabled(False)
 
 
 class WristConstants:
@@ -358,6 +357,7 @@ class ShoulderConstants:
     k_min_angle_to_elevate_in_front_of_reef = 80
 
 
+
 class ElevatorConstants:
     # all in meters
     # although the tof uses mm, wpilib uses m, and we're using radians according to the wpilib standard
@@ -369,8 +369,8 @@ class ElevatorConstants:
     k_CAN_id = 4
     k_follower_CAN_id = 5
 
-    k_max_velocity_meter_per_second = 1.5
-    k_max_acceleration_meter_per_sec_squared = 2.5
+    k_max_velocity_meter_per_second = 2
+    k_max_acceleration_meter_per_sec_squared = 5
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
     k_kG_volts = 0.88 / 2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
     k_kV_volt_second_per_radian = 12.05  # stays the same with one or two motors, based on the NEO itself and gear ratio

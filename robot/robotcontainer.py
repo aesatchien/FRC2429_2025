@@ -352,7 +352,7 @@ class RobotContainer:
         self.co_trigger_u.or_(self.co_trigger_r).whileTrue(GoToStow(container=self))
 
 
-        self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))
+        self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-6, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))
         
         self.co_trigger_rb.onTrue(Score(container=self))
 
@@ -519,11 +519,11 @@ class RobotContainer:
         self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
         self.bbox_human_right.whileTrue(GoToCoralStation(container=self).andThen(
-            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+            RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
         self.bbox_human_right.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
 
-        self.bbox_human_left.onTrue(RunIntake(self, self.intake, 3, stop_on_end=True))
+        self.bbox_human_left.onTrue(RunIntake(self, self.intake, constants.IntakeConstants.k_coral_scoring_voltage, stop_on_end=True)) # TODO: make these all use the one in intakeconstants
 
         self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
 
@@ -591,8 +591,16 @@ class RobotContainer:
         self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
-        self.bbox_reef_alga_high.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_HIGH)).ignoringDisable(True))
-        self.bbox_reef_alga_low.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=RobotState.Target.ALGAE_LOW)).ignoringDisable(True))
+        self.bbox_reef_alga_high.onTrue(GoToPosition(self, "algae high").andThen(RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+        self.bbox_reef_alga_high.onFalse(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "stow")))
+
+        self.bbox_reef_alga_low.onTrue(GoToPosition(self, "algae low").andThen(RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+        self.bbox_reef_alga_low.onFalse(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "stow")))
+
+        self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.1), self.climber))
+        self.bbox_net.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.bbox_processor.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.1), self.climber))
+        self.bbox_processor.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
         self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
         self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))

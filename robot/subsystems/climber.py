@@ -71,6 +71,9 @@ class Climber(Subsystem):
     def is_ready(self):
         return math.fabs(self.get_angle() - constants.ClimberConstants.k_climber_motor_ready) < self.tolerance
 
+    def set_duty_cycle(self, duty_cycle):
+        self.sparkmax.set(duty_cycle)
+
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
