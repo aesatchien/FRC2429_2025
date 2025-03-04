@@ -187,8 +187,8 @@ class IntakeConstants:
     k_intake_config.smartCurrentLimit(5)
     k_intake_config.voltageCompensation(12)
 
-    k_tof_coral_port = 2
-    k_max_tof_distance_where_we_have_coral = 2
+    k_tof_coral_port = 13
+    k_max_tof_distance_where_we_have_coral = 70  # millimeters  engages at 60 and bottoms out at 26
 
     k_sim_length = 0.25
 
