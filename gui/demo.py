@@ -1,4 +1,4 @@
-import sys
+import sys, os
 from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
 from PyQt6 import QtCore
 from PyQt6.QtWebEngineWidgets import QWebEngineView
@@ -17,7 +17,9 @@ class VideoDashboard(QMainWindow):
 
         # Set initial content (fallback image)
         self.fallback_image = "./png/blockhead_camera.png"  # Change to your image path
-        self.mjpeg_stream = QtCore.QUrl("http://127.0.0.1:1186/stream.mjpg")
+        if not os.path.exists(self.fallback_image):
+            print(f"Error: Image not found at {self.fallback_image}")
+        self.mjpeg_stream = QtCore.QUrl("http://127.0.0.1:1186/stream.mjpg")  # QtCore.QUrl(
         self.browser.setHtml(f'<img src="{self.fallback_image}" width="100%" height="100%">')
 
         # Button to toggle camera

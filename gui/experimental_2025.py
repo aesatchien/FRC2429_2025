@@ -3,12 +3,10 @@
 
 # print(f'Loading Modules ...', flush=True)'
 import os
-os.environ["OPENCV_LOG_LEVEL"] = "DEBUG"  # Options: INFO, WARNING, ERROR, DEBUG
 
+os.environ["OPENCV_LOG_LEVEL"] = "DEBUG"  # Options: INFO, WARNING, ERROR, DEBUG
 import cv2
 print("[DEBUG] OpenCV version:", cv2.__version__)
-cv2.setNumThreads(1)  # Disable multithreading
-cv2.ocl.setUseOpenCL(False)
 
 import time
 from datetime import datetime
@@ -30,73 +28,45 @@ import wpimath.geometry as geo
 
 #print(f'Initializing GUI ...', flush=True)
 
-# Worker class for the video thread
-class CameraWorker(QObject):
-    finished = pyqtSignal()
-    progress = pyqtSignal(int)
 
-    def __init__(self, qtgui):
-        super().__init__()
-        self.qtgui = qtgui
-        self.frames = 0
-        self.previous_read_time = 0
-        self.max_fps = 60
-        self.error_count = 0
-        self.cv_backend = cv2.CAP_FFMPEG  # cv2.CAP_FFMPEG or cv2.CAP_DSHOW
+class VideoDashboard(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
-    def stop(self):
-        self.running = False
+        # Create a web view for video streaming
+        self.browser = QWebEngineView()
 
-    def run(self):
-        """Blocking task that may take a long time to run"""
-        self.running = True
-        old_url = ''  # need to see if we switch cameras
-        try:
-            while self.running:
-                if self.qtgui.qradiobutton_autoswitch.isChecked():  # auto determine which camera to show
-                    # pass
-                    # shooter_on = self.qtgui.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
-                    #elevator_low = self.qtgui.widget_dict['qlcd_elevator_height']['entry'].getDouble(100) < 100
-                    url = self.qtgui.camera_dict['Ringcam'] if True else self.qtgui.camera_dict['Tagcam']
-                else:
-                    url = self.qtgui.camera_dict[self.qtgui.qcombobox_cameras.currentText()]  # figure out which url we want
+        # Define URLs
+        self.fallback_image = "./png/blockhead_camera.ong"  # Change to your fallback image path
+        self.mjpeg_stream = QtCore.QUrl("http://127.0.0.1:1186/stream.mjpg")
 
-                # stream = urllib.request.urlopen('http://10.24.29.12:1187/stream.mjpg')
-                # get and display image
-                if url != old_url:  # try to only do this if we switch streams - seems to cause a lot of errors / increases bandwidth
-                    cap = cv2.VideoCapture(url)
-                    if not cap.isOpened():
-                        print("Cannot open stream")
-                        return
-                old_url = url
+        # Initially, show the fallback image
+        self.browser.setHtml(f'<img src="{self.fallback_image}" width="100%" height="100%">')
 
-                now = time.time()
-                if now - self.previous_read_time >  1.0 / self.max_fps:
-                    try:
-                        ret, frame = cap.read()
-                        if not ret:
-                            print("[ERROR] OpenCV stopped receiving frames. Retrying...")
-                            time.sleep(1)  # Wait before retrying
-                            cap.release()
-                            cap = cv2.VideoCapture(url)  # Reinitialize
-                            continue
+        # Button to toggle camera stream
+        self.toggle_button = QtWidgets.QPushButton("Enable Camera Stream")
+        self.toggle_button.clicked.connect(self.toggle_stream)
 
-                        self.frames += 1
-                        pixmap = self.qtgui.convert_cv_qt(frame, self.qtgui.qlabel_camera_view)
-                        self.qtgui.qlabel_camera_view.setPixmap(pixmap)
-                        self.qtgui.qlabel_camera_view: QtWidgets.QLabel
-                        #self.qtgui.qlabel_camera_view.repaint()  # do not repaint in the thread.  the main loop takes care of that.
-                        # self.progress.emit(1)
-                        self.previous_read_time = now
-                    except Exception as e:
-                        self.error_count += 1
-                        self.previous_read_time = now
-                        if self.error_count % 100 == 0:
-                            print(f'{datetime.today().strftime("%H%M%S")} error count:{self.error_count}: cv read error: {e}')
-                        # should I stop the thread here? or just let the user fix it by restarting manually?
-        except Exception as e:
-            print(f'{datetime.today().strftime("%H%M%S")} Camera worker crashed: {e}')
-        self.finished.emit()
+        # Layout setup
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.browser)
+        layout.addWidget(self.toggle_button)
+        self.setLayout(layout)
+
+        self.camera_enabled = False  # Track camera state
+        self.browser.show()
+        self.toggle_stream()
+
+    def toggle_stream(self):
+        """Toggles between the MJPEG stream and fallback image."""
+        if self.camera_enabled:
+            self.browser.setHtml(f'<img src="{self.fallback_image}" width="100%" height="100%">')
+            self.toggle_button.setText("Enable Camera Stream")
+        else:
+            self.browser.setUrl(self.mjpeg_stream)
+            self.toggle_button.setText("Disable Camera Stream")
+        self.camera_enabled = not self.camera_enabled
+
 
 class Ui(QtWidgets.QMainWindow):
     # set the root dir for the project, knowing we're one deep
@@ -109,6 +79,24 @@ class Ui(QtWidgets.QMainWindow):
         super(Ui, self).__init__()
         # trick to inherit all the UI elements from the design file  - DO NOT CODE THE LAYOUT!
         uic.loadUi('layout_2025.ui', self)  # if this isn't in the directory, you got no program
+
+        # Find the placeholder widget in the UI for the browser window
+        placeholder = self.findChild(QtWidgets.QWidget, 'qlabel_camera_view')  # Replace with your actual widget name
+        if not placeholder:
+            print("[ERROR] Placeholder widget 'video_placeholder' not found!")
+            return  # Exit if not found
+        # Ensure the parent has a layout
+        parent = placeholder.parentWidget()
+        layout = parent.layout()
+        if layout is None:
+            print("[WARNING] Parent has no layout. Creating a new layout.")
+            layout = QtWidgets.QVBoxLayout(parent)
+            parent.setLayout(layout)
+        # Replace the placeholder with VideoDashboard
+        self.video_widget = VideoDashboard(self)
+        layout.replaceWidget(placeholder, self.video_widget)
+        placeholder.deleteLater()  # Remove old placeholder
+        self.video_widget.show()
 
         # set up network tables - TODO need to really see which of these is necessary
         self.ntinst = NetworkTableInstance.getDefault()
@@ -270,80 +258,16 @@ class Ui(QtWidgets.QMainWindow):
         if x is not None:
             self.qt_text_current_value.setPlainText(str(x.value()))
 
-    def convert_cv_qt(self, cv_img, qlabel):
-        """Convert from an opencv image to QPixmap"""
-        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-        h, w, ch = rgb_image.shape
-        bytes_per_line = ch * w
-        convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
-
-        p = convert_to_Qt_format.scaled(qlabel.width(), qlabel.height(), Qt.AspectRatioMode.KeepAspectRatio)
-        return QtGui.QPixmap.fromImage(p)
-
     def toggle_camera_thread(self):
-        # ToDo: check to see if the thread is running, then start again
 
-        live_cams = []
-        servers = []
-        # check if server is running - at the moment we are focusing on logitech_high
-        for key, url in self.camera_dict.items():
-            status = self.check_url(url)
-            live_cams.append(status)
-            if status:
-                pass
+        self.video_widget.toggle_stream()
 
-        if any(live_cams):
-        # if self.check_url(self.camera_dict['LogitechTags']) or self.check_url(self.camera_dict['ArducamReef']) or self.check_url(self.camera_dict['Debug']):
-            if self.thread is None:  # first time through we need to make the thread
-                self.thread = QThread()  # create a QThread object
-                self.worker = CameraWorker(qtgui=self)  # create a CameraWorker object, pass it the main gui
-                self.worker.moveToThread(self.thread)  # move the worker to the thread
-                # connect signals and slots
-                self.thread.started.connect(self.worker.run)
-                self.worker.finished.connect(self.thread.quit)
-                #self.worker.finished.connect(self.worker.deleteLater)
-                #self.thread.finished.connect(self.thread.deleteLater)
-                # self.worker.progress.connect(self.reportProgress)
-                self.thread.start()  # start the thread
-                self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Starting camera thread')
-            elif self.thread.isRunning():
-                self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Interrupting existing running camera thread')
-                self.worker.stop()
+        self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Starting camera thread')
+        self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Interrupting existing running camera thread')
+        self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Restarting existing stopped camera thread')
+        self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Terminating camera thread: no valid camera servers')
+        self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: No valid camera servers, unable to start thread')
 
-                # quit or exit?  neither seems to do anything  TODO: add signals so this works correctly
-               # self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Restarting existing running camera thread')
-                self.thread.quit()
-                self.thread.exit()
-                # ToDo: figure out why we can't restart here but we can on the next iteration
-                #self.thread.start()
-            else:  # thread died for some reason
-                self.thread.start()
-                self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Restarting existing stopped camera thread')
-
-        else:  # no valid servers
-            if self.thread is not None:
-                self.worker.stop()
-                self.thread.quit()
-                self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Terminating camera thread: no valid camera servers')
-            else:
-                self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: No valid camera servers, unable to start thread')
-
-        """        if self.camera_enabled:
-            if self.qradiobutton_autoswitch.isChecked():  # auto determine which camera to show
-                shooter_on = self.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
-                url = self.camera_dict['ShooterCam'] if shooter_on else self.camera_dict['BallCam']
-            else:
-                url = self.camera_dict[self.qcombobox_cameras.currentText()]  # figure out which url we want
-            # stream = urllib.request.urlopen('http://10.24.29.12:1187/stream.mjpg')
-            # get and display image
-            cap = cv2.VideoCapture(url)
-            if not cap.isOpened():
-                print("Cannot open stream")
-                return
-            ret, frame = cap.read()
-            pixmap = self.convert_cv_qt(frame, self.qlabel_camera_view)
-            self.qlabel_camera_view.setPixmap(pixmap)
-            self.qlabel_camera_view.repaint()"""
 
     def test(self):  # test function for checking new signals
         print('Test was called', flush=True)
@@ -601,38 +525,38 @@ class Ui(QtWidgets.QMainWindow):
         timestamp = self.robot_timestamp_entry.getDouble(1)
 
         # look for a disconnect - just in arducam_reef for now since that's the one we watch
-        if self.thread is not None:  # camera stream view has been started
-            if self.thread.isRunning():  # camera is on
-                if self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) > allowed_delay:  # arducam_reef died
-                    self.arducam_reef_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_reef - KILLING camera thread')
-                    self.toggle_camera_thread()
-                else:
-                    pass
-                if self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
-                    self.logitech_high_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_high - information only')
-                if self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
-                    self.logitech_tags_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_tags - information only')
-                if self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) > allowed_delay:  # front tagcam died
-                    self.arducam_back_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Farducam_back - information only')
-
-            else:  # we started the camera but the thread is not running
-                if not self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_reef alive again
-                    self.arducam_reef_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_reef - RESTARTING camera thread')
-                    self.toggle_camera_thread()
-                if not self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
-                    self.logitech_tags_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_tags - information only')
-                if not self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
-                    self.logitech_high_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_high - information only')
-                if not self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) < allowed_delay:  # front tagcam alive again
-                    self.arducam_back_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_back - information only')
+        # if self.thread is not None:  # camera stream view has been started
+        #     if self.thread.isRunning():  # camera is on
+        #         if self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) > allowed_delay:  # arducam_reef died
+        #             self.arducam_reef_alive = False
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_reef - KILLING camera thread')
+        #             self.toggle_camera_thread()
+        #         else:
+        #             pass
+        #         if self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+        #             self.logitech_high_alive = False
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_high - information only')
+        #         if self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+        #             self.logitech_tags_alive = False
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_tags - information only')
+        #         if self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) > allowed_delay:  # front tagcam died
+        #             self.arducam_back_alive = False
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Farducam_back - information only')
+        #
+        #     else:  # we started the camera but the thread is not running
+        #         if not self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_reef alive again
+        #             self.arducam_reef_alive = True
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_reef - RESTARTING camera thread')
+        #             self.toggle_camera_thread()
+        #         if not self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
+        #             self.logitech_tags_alive = True
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_tags - information only')
+        #         if not self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
+        #             self.logitech_high_alive = True
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_high - information only')
+        #         if not self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) < allowed_delay:  # front tagcam alive again
+        #             self.arducam_back_alive = True
+        #             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_back - information only')
 
         # really seems like i should be able to do this with a loop ...
         self.arducam_reef_alive = timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay

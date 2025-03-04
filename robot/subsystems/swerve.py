@@ -18,6 +18,8 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
 from pathplannerlib.config import ModuleConfig, RobotConfig
 
+from photonlibpy import PhotonCamera, PhotonPoseEstimator, PoseStrategy  #  2025 is first time for us
+
 import robotpy_apriltag as ra
 import wpimath.geometry as geo
 
@@ -103,6 +105,21 @@ class Swerve (Subsystem):
             this_pi_subscriber_dict.update({"robot_pose_info_subscriber": self.inst.getDoubleArrayTopic(f"vision/{pi_name}/robot_pose_info").subscribe([])})
             this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
             self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
+
+
+        # photonvision camera setup
+        self.use_photoncam = True  # decide down below in periodic
+        self.photoncam_arducam_a = PhotonCamera("ArducamA")
+        # example is cam mounted facing forward, half a meter forward of center, half a meter up from center
+        # robot_to_cam_example = wpimath.geometry.Transform3d(wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
+        #     wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
+        robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
+            wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
+            wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
+
+        self.photoncam_pose_est = PhotonPoseEstimator(
+            ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded),
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, self.photoncam_arducam_a, robot_to_cam_arducam_a)
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
@@ -426,6 +443,17 @@ class Swerve (Subsystem):
         # send our current time to the dashboard
         wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
 
+        if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
+            cam_est_pose = self.photoncam_pose_est.update()
+            # how do we get the time offset and standard deviation?
+            if cam_est_pose:
+                self.pose_estimator.addVisionMeasurement(cam_est_pose)
+                has_photontag = True
+            else:
+                has_photontag = False
+            if self.counter % 10 == 0:
+                wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', has_photontag)
+
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
                 if count_subscriber.get() > 0:  # use front camera
@@ -434,6 +462,7 @@ class Swerve (Subsystem):
                     tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
+                    # do i have a fatal lag issue?  am i better without the time estimate?
                     self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
 
 
