@@ -950,9 +950,9 @@ BACK</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_note_captured_indicator">
+      <widget class="QLabel2" name="qlabel_pose_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -964,8 +964,8 @@ BACK</string>
        </property>
        <property name="font">
         <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>14</pointsize>
+         <family>Segoe UI</family>
+         <pointsize>12</pointsize>
          <bold>true</bold>
         </font>
        </property>
@@ -975,8 +975,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>GAME
-PIECE</string>
+        <string>POSE</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1343,9 +1342,9 @@ background-color:rgb(127, 127, 127);</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>260</y>
+         <y>270</y>
          <width>161</width>
-         <height>31</height>
+         <height>21</height>
         </rect>
        </property>
        <property name="font">

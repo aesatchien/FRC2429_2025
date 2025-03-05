@@ -434,7 +434,7 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_logitech_tags_target_indicator': {'widget': self.qlabel_logitech_tags_target_indicator, 'nt': '/SmartDashboard/logitech_tags_targets_exist', 'command': None},
         'qlabel_logitech_high_target_indicator': {'widget': self.qlabel_logitech_high_target_indicator, 'nt': '/SmartDashboard/logitech_high_targets_exist', 'command': None},
         'qlabel_photoncam_target_indicator': {'widget': self.qlabel_photoncam_target_indicator, 'nt': '/SmartDashboard/photoncam_targets_exist', 'command': None},
-        'qlabel_note_captured_indicator': {'widget': self.qlabel_note_captured_indicator, 'nt': '/SmartDashboard/gamepiece_present', 'command': None,},
+        'qlabel_pose_indicator': {'widget': self.qlabel_pose_indicator, 'nt': None, 'command': None,},
         'qlabel_game_piece_indicator': {'widget': self.qlabel_game_piece_indicator, 'nt': '/SmartDashboard/gamepiece_present', 'command': '/SmartDashboard/LedToggle/running',
                                         'style_on': "border: 7px; border-radius: 7px; background-color:rgb(0, 220, 220); color:rgb(250, 250, 250);",
                                         'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
@@ -446,7 +446,7 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_intake_indicator': {'widget': self.qlabel_intake_indicator, 'nt': '/SmartDashboard/intake_enabled', 'command': None, 'flash': True},
         # 'qlabel_orange_target_indicator': {'widget': self.qlabel_orange_target_indicator, 'nt': '/SmartDashboard/orange_targets_exist', 'command': None},
 
-        'qlabel_position_indicator': {'widget': self.qlabel_position_indicator, 'nt': '/SmartDashboard/arm_config', 'command': None},
+        'qlabel_position_indicator': {'widget': self.qlabel_position_indicator, 'nt': '/SmartDashboard/_target', 'command': None},
         'qlabel_reset_gyro_from_pose_indicator': {'widget': self.qlabel_reset_gyro_from_pose_indicator, 'nt': '/SmartDashboard/GyroFromPose/running', 'command': '/SmartDashboard/GyroFromPose/running'},
         'qlabel_drive_to_speaker_indicator': {'widget': self.qlabel_drive_to_speaker_indicator, 'nt': '/SmartDashboard/ToSpeaker/running', 'command': '/SmartDashboard/ToSpeaker/running'},
         'qlabel_drive_to_amp_indicator': {'widget': self.qlabel_drive_to_amp_indicator, 'nt': '/SmartDashboard/ToAmp/running', 'command': '/SmartDashboard/ToAmp/running'},
@@ -588,6 +588,15 @@ class Ui(QtWidgets.QMainWindow):
         bot_width, bot_height = 41, 41 # self.qlabel_robot.width(), self.qlabel_robot.height()
         x_lim, y_lim = 17.6, 8.2  # 16.4, 8.2
         drive_pose = self.widget_dict['drive_pose']['entry'].getDoubleArray([0, 0, 0])
+        # not sure how to get labels to justify strings properly - not true to total string length somehow
+        x_pad = 1 if drive_pose[0] < 10 else 0
+        theta_pad = 0  # must be a quicker way to do this
+        theta_pad = theta_pad + 1 if drive_pose[2] < 0 else theta_pad
+        theta_pad = theta_pad + 1 if abs(drive_pose[2]) < 100 else theta_pad
+        theta_pad = theta_pad + 1 if abs(drive_pose[2]) < 10 else theta_pad
+        pose_msg = f'POSE\n{" " * x_pad}{drive_pose[0]:>4.1f}m {drive_pose[1]:>3.1f}m {" " * theta_pad}{drive_pose[2]:>4.0f}°'
+        self.qlabel_pose_indicator.setText(pose_msg)
+
         pixmap_rotated = self.robot_pixmap.transformed(QtGui.QTransform().rotate(90-drive_pose[2]), QtCore.Qt.TransformationMode.SmoothTransformation)
         new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * drive_pose[2] * np.pi / 180.0))))
         self.qlabel_robot.resize(new_size, new_size)  # take account of rotation shrinkage
@@ -660,6 +669,7 @@ class Ui(QtWidgets.QMainWindow):
         self.qlabel_arducam_back_indicator.setText(f'ARDU BACK: {self.arducam_back_connections:2d}')
         self.qlabel_arducam_back_indicator.setStyleSheet(arducam_back_style)
 
+
         # --------------  SPEAKER POSITION CALCULATIONS  ---------------
         k_blue_speaker = [0, 5.55, 180]  # (x, y, rotation)
         k_red_speaker = [16.5, 5.555, 0]  # (x, y, rotation)
@@ -729,8 +739,9 @@ class Ui(QtWidgets.QMainWindow):
         # update the 2024 arm configuration indicator
         config = self.widget_dict['qlabel_position_indicator']['entry'].getString('?')
         if config.upper() not in ['LOW_SHOOT', 'INTAKE']:  # these two positions drive under the stage
-            text_color = '(0,0,0)' if self.counter % 30 < 15 else '(255,255,255)'  # make it blink
-            postion_style = f"border: 7px; border-radius: 7px; background-color:rgb(220, 0, 0); color:rgb{text_color};"
+            # text_color = '(0,0,0)' if self.counter % 30 < 15 else '(255,255,255)'  # make it blink
+            # postion_style = f"border: 7px; border-radius: 7px; background-color:rgb(220, 0, 0); color:rgb{text_color};"
+            postion_style = style_on
         else:
             postion_style = style_on
         self.qlabel_position_indicator.setText(f'POS: {config.upper()}')
