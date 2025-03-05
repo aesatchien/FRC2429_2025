@@ -34,7 +34,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
         self.disabled_counter = 0
-        self.container.swerve.use_photoncam = True
+        # self.container.swerve.use_photoncam = True
 
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""

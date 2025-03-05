@@ -109,7 +109,7 @@ class Swerve (Subsystem):
 
 
         # photonvision camera setup
-        self.use_photoncam = False  # decide down below in periodic
+        self.use_photoncam = True  # decide down below in periodic
         self.photon_name = "Arducam_OV9281_USB_Camera"
         self.photoncam_arducam_a = PhotonCamera(self.photon_name)
         self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
@@ -130,7 +130,7 @@ class Swerve (Subsystem):
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = False  # dowm below we decide which one to use in the periodic method
+        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
         # lhack turned off 15:48 2/28/25 to test pathplanner wo tags first
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names
@@ -458,7 +458,7 @@ class Swerve (Subsystem):
             if has_photontag:
                 cam_est_pose = self.photoncam_pose_est.update(self.photoncam_arducam_a.getLatestResult())
                 latency = self.photoncam_latency_subscriber.get()
-                self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency)
+                # self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency)
             else:
                 pass
             if self.counter % 10 == 0:
@@ -474,7 +474,7 @@ class Swerve (Subsystem):
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
                     # do i have a fatal lag issue?  am i better without the time estimate?
-                    self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+                    # self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
 
 
         else:  # Leo's experiment
@@ -516,7 +516,7 @@ class Swerve (Subsystem):
 
                         self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
 
-                        self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
+                        # self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
         # Update the odometry in the periodic block -
         if wpilib.RobotBase.isReal():

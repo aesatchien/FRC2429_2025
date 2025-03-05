@@ -25,12 +25,6 @@
         {
           "type": "named",
           "data": {
-            "name": "move wrist by robot state"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
             "name": "score"
           }
         }

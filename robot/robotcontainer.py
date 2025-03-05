@@ -18,7 +18,7 @@ import constants
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
 from pathplannerlib.path import PathConstraints
-from pathplannerlib.auto import AutoBuilder
+from pathplannerlib.auto import AutoBuilder, NamedCommands
 from pathplannerlib.path import PathPlannerPath
 
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
@@ -125,6 +125,8 @@ class RobotContainer:
             self.bind_keyboard_buttons()
             if constants.k_use_bbox:
                 self.bind_button_box()
+
+        self.register_commands()
 
         self.initialize_dashboard()
 
@@ -477,8 +479,16 @@ class RobotContainer:
         # o: wrist go right (korean right is orin chok, also position on the keyboard)
         self.keyboard_trigger_w.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
+    def register_commands(self):
+
+        NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
+        NamedCommands.registerCommand('score', Score(self))
+
+
     def get_autonomous_command(self):
-        return DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)
+        # return DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)
+        return AutoBuilder.buildAuto('1+0')
         # return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()
 
