@@ -34,7 +34,7 @@ class Wrist(Subsystem):
         self.encoder.setPosition(WristConstants.k_starting_angle)
         self.controller = self.sparkmax.getClosedLoopController()
         self.setpoint = self.encoder.getPosition()
-        self.counter = 0
+        self.counter = constants.WristConstants.k_counter_offset
 
     def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition, closed_loop_slot=0) -> None:
 
@@ -85,5 +85,8 @@ class Wrist(Subsystem):
             wpilib.SmartDashboard.putNumber("wrist relative encoder, rad", self.encoder.getPosition())
             wpilib.SmartDashboard.putNumber("wrist abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
             wpilib.SmartDashboard.putNumber("wrist relative encoder, degrees", math.degrees(self.encoder.getPosition()))
+
+            if constants.WristConstants.k_nt_debugging:  # extra debugging info for NT
+                pass
 
         return super().periodic()

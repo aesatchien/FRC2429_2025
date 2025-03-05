@@ -52,7 +52,7 @@ class Led(commands2.Subsystem):
         self.container.robot_state.register_callback(self.update_from_robot_state)
 
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
-        self.counter = 1
+        self.counter = constants.LedConstants.k_counter_offset
         self.animation_counter = 0
         # this should auto-update the lists for the dashboard.  you can iterate over enums
         self.indicators_dict = {indicator.value["name"]: indicator for indicator in self.Indicator}
@@ -169,5 +169,8 @@ class Led(commands2.Subsystem):
                     _ = [ self.led_data[i].setRGB(*self.mode.value["on_color"]) for i in range(constants.k_led_count-1, constants.k_led_count-lit_leds-1, -1) ]
 
             self.led_strip.setData(self.led_data)  # Send LED updates
+
+            if constants.LedConstants.k_nt_debugging:  # extra debugging info for NT
+                pass
 
         self.counter += 1  # Increment the main counter

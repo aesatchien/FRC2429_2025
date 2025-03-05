@@ -33,7 +33,7 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
 
 # ------------   2429 Additions to the template's __init__  ------------
         self.setName(ElevatorConstants.k_name)
-        self.counter = 4
+        self.counter = ElevatorConstants.k_counter_offset
         self.is_moving = False  # may want to keep track of if we are in motion
         self.tolerance = 0.03  # meters - then we will be "at goal"
         self.goal = ElevatorConstants.k_min_height
@@ -108,13 +108,12 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
         self.counter += 1
-        if self.counter % 5 == 0:
+        if self.counter % 10 == 0:
             self.position = self.encoder.getPosition()
             self.at_goal = math.fabs(self.position - self.goal) < self.tolerance  # maybe we want to call this an error
             self.error = self.position - self.goal
 
-            debug = False
-            if debug:
+            if ElevatorConstants.k_nt_debugging:  # add additional info to NT for debugging
                 wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', self.error)
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', self.goal)

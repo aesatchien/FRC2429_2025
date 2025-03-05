@@ -1,7 +1,5 @@
 from enum import Enum
 import math
-from os import confstr
-from threading import Condition
 import time
 from commands2.printcommand import PrintCommand
 from pathplannerlib.commands import PathfindingCommand

@@ -13,7 +13,7 @@ class Intake(Subsystem):
     def __init__(self):
         super().__init__()
         self.setName('Intake')
-        self.counter = 3
+        self.counter = constants.IntakeConstants.k_counter_offset
 
         self.sparkmax = rev.SparkMax(constants.IntakeConstants.k_CAN_id, rev.SparkMax.MotorType.kBrushless)
 
@@ -54,6 +54,9 @@ class Intake(Subsystem):
                 wpilib.SmartDashboard.putBoolean('gamepiece_present', self.counter % 200 < 100)
 
             wpilib.SmartDashboard.putNumber('intake_tof', self.TOFSensorCoral.getRange())
+
+            if constants.IntakeConstants.k_nt_debugging:  # extra debugging info for NT
+                pass
 
         self.counter += 1
         return super().periodic()

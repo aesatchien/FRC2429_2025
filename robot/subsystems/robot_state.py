@@ -48,7 +48,7 @@ class RobotState(commands2.Subsystem):
         self.setName('Mode')
         self.container = container  # at the moment LED may want to query other subsystems, but this is not clean
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
-        self.counter = 1
+        self.counter = constants.RobotStateConstants.k_counter_offset
 
         self._callbacks = []  # Store functions to notify
 
@@ -107,6 +107,6 @@ class RobotState(commands2.Subsystem):
         return constants.k_positions[self.target.value['name']]['shoulder_pivot']
 
     def periodic(self):
-        if self.counter % 5 == 0:  # Execute every 5 cycles (10Hz update rate)
+        if self.counter % 10 == 0:  # Execute every 5 cycles (10Hz update rate)
             pass
         self.counter += 1  # Increment the main counter

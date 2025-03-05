@@ -10,7 +10,7 @@ class Vision(SubsystemBase):
     def __init__(self) -> None:
         super().__init__()
         self.setName('Vision')
-        self.counter = 8
+        self.counter = constants.VisionConstants.k_counter_offset
         self.ntinst = NetworkTableInstance.getDefault()
 
         # set up a dictionary of cams to go through
@@ -111,3 +111,5 @@ class Vision(SubsystemBase):
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', 400 < self.counter % 600 < 510)
             # wpilib.SmartDashboard.putNumber('tag_strafe', self.camera_dict['tags']['strafe_entry'].get())
 
+            if constants.VisionConstants.k_nt_debugging:  # extra debugging info for NT
+                pass

@@ -13,7 +13,7 @@ class Climber(Subsystem):
     def __init__(self):
         super().__init__()
         self.setName('climber')
-        self.counter = 3
+        self.counter = constants.ClimberConstants.k_counter_offset
 
         self.sparkmax = rev.SparkMax(constants.ClimberConstants.k_CAN_id, rev.SparkMax.MotorType.kBrushless)
 
@@ -78,13 +78,12 @@ class Climber(Subsystem):
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
         self.counter += 1
-        if self.counter % 5 == 0:
+        if self.counter % 10 == 0:
             self.angle = self.encoder.getPosition()
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance
             self.error = self.angle - self.goal
 
-            debug = True
-            if debug:
+            if constants.IntakeConstants.k_nt_debugging: # print only necessary messages for competition
                 wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', radiansToDegrees(self.error))
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', radiansToDegrees(self.goal))

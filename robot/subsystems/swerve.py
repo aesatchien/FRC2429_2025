@@ -529,7 +529,7 @@ class Swerve (Subsystem):
 
         if self.counter % 10 == 0:
             pose = self.get_pose()  # self.odometry.getPose()
-            if True: # wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
+            if True:  # wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
                 wpilib.SmartDashboard.putNumberArray('drive_pose', [pose.X(), pose.Y(), pose.rotation().degrees()])
                 wpilib.SmartDashboard.putNumber('drive_x', pose.X())
                 wpilib.SmartDashboard.putNumber('drive_y', pose.Y())

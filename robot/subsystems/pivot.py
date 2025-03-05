@@ -52,7 +52,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
 
 # ------------   2429 Additions to the template's __init__  ------------
         self.setName(constants.ShoulderConstants.k_name)
-        self.counter = 5
+        self.counter = constants.ShoulderConstants.k_counter_offset
         self.is_moving = False  # may want to keep track of if we are in motion
         self.tolerance = 0.087  # rads equal to five degrees - then we will be "at goal"
         self.goal = constants.ShoulderConstants.k_starting_angle
@@ -106,13 +106,12 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
         self.counter += 1
-        if self.counter % 5 == 0:
+        if self.counter % 10 == 0:
             self.angle = self.encoder.getPosition()
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance  # maybe we want to call this an error
             self.error = self.angle - self.goal
 
-            debug = False
-            if debug:
+            if constants.ShoulderConstants.k_nt_debugging:  # extra debugging info for NT
                 wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', self.error)
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', self.goal)

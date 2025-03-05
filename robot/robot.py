@@ -85,8 +85,8 @@ class MyRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def robotPeriodic(self) -> None:
-
-        wpilib.SmartDashboard.putNumber("ajs turn commanded", self.container.driver_command_controller.getRightX())
+        # commented out 2025 0305 CJH - this should never have been in here
+        # wpilib.SmartDashboard.putNumber("ajs turn commanded", self.container.driver_command_controller.getRightX())
         return super().robotPeriodic()
 
 

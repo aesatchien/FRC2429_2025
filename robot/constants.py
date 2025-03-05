@@ -30,9 +30,9 @@ k_use_apriltag_odometry = False
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
-k_led_count = 42  # todo: update this to actual number
+k_led_count = 42  # correct as of 2025 0305
 k_led_count_ignore = 4  # flat ones not for the height indicator
-k_led_pwm_port = 0  # todo: update this to actual number
+k_led_pwm_port = 0  # correct as of 2025 0305
 
 k_positions = { 
     "stow": {
@@ -177,11 +177,16 @@ k_useful_robot_poses_blue = {
 
 k_useful_robot_poses_red = {key: pose.rotateAround(k_field_center, Rotation2d(math.radians(180))) for key, pose in k_useful_robot_poses_blue.items()}
 
+
 class GamePiece(Enum):
     ALGAE = 1
     CORAL = 2
 
+
 class IntakeConstants:
+
+    k_counter_offset = 1
+    k_nt_debugging = False  # print extra values to NT for debugging
     k_CAN_id = 12
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
@@ -201,7 +206,11 @@ class IntakeConstants:
 
     k_seconds_to_stay_on_while_scoring = 0.5
 
+
 class ClimberConstants:
+
+    k_counter_offset = 2
+    k_nt_debugging = False  # print extra values to NT for debugging
     k_CAN_id = 2
     k_gear_ratio = 167
     # 25:1
@@ -247,6 +256,8 @@ class ClimberConstants:
 
 class WristConstants:
 
+    k_counter_offset = 3
+    k_nt_debugging = False  # print extra values to NT for debugging
     k_CAN_id = 10
     k_gear_ratio = 16 * 64 / 26
     k_abs_encoder_offset = 0
@@ -295,12 +306,15 @@ class WristConstants:
     k_stowed_min_angle = math.radians(-15)
     k_stowed_max_angle = math.radians(15)
 
+
 class ShoulderConstants:
 
     # angle is 0 when the shoulder is flat pointing forwards. 
     # it increases as the shoulder goes clockwise from the perspective of the right side of the robot
     # i.e. when it starts flat and goes up, the angle increases
-    
+
+    k_counter_offset = 4
+    k_nt_debugging = False  # print extra values to NT for debugging
     k_name = "profiled_pivot"
 
     k_CAN_id = 6
@@ -366,6 +380,8 @@ class ElevatorConstants:
     # therefore, according to the wpilib standard, we will use m
     # 24 tooth sprocket, no. 25 chain
 
+    k_counter_offset = 5
+    k_nt_debugging = False  # print extra values to NT for debugging
     k_name = "elevator"
 
     k_CAN_id = 4
@@ -435,5 +451,25 @@ class ElevatorConstants:
     k_coral_outtake_coordinates = [(5,5,0)]
     k_robot_radius_sim = 0.5
 
+
 class VisionConstants:
+
+    k_counter_offset = 6
+    k_nt_debugging = False  # print extra values to NT for debugging
     k_pi_names = ["top_pi"]
+
+
+class LedConstants:
+
+    k_counter_offset = 7
+    k_nt_debugging = False  # print extra values to NT for debugging
+
+class RobotStateConstants:
+
+    k_counter_offset = 8
+    k_nt_debugging = False  # print extra values to NT for debugging
+
+class DrivetrainConstants:
+
+    k_counter_offset = 9
+    k_nt_debugging = False  # print extra values to NT for debugging
