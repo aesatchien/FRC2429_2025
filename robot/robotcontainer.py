@@ -617,6 +617,3 @@ class RobotContainer:
         self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
         self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
 
-
-
-

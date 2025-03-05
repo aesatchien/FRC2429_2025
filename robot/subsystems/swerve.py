@@ -124,9 +124,13 @@ class Swerve (Subsystem):
 
         self.photoncam_arducam_a.getLatestResult()
 
+        # todo - see if we can update the PoseStrategy based on if disabled, and use closest to current odometry when enabled
+        # but MULTI_TAG_PNP_ON_COPROCESSOR probably does not help at all since we only see one tag at a time
         self.photoncam_pose_est = PhotonPoseEstimator(
             ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, self.photoncam_arducam_a, robot_to_cam_arducam_a)
+        # default is above PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, but maybe PoseStrategy.LOWEST_AMBIGUITY is better
+        self.photoncam_pose_est.primaryStrategy = PoseStrategy.LOWEST_AMBIGUITY
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
@@ -455,15 +459,45 @@ class Swerve (Subsystem):
             has_photontag = self.photoncam_target_subscriber.get()
             # how do we get the time offset and standard deviation?
 
-            if has_photontag:
-                cam_est_pose = self.photoncam_pose_est.update(self.photoncam_arducam_a.getLatestResult())
+            if has_photontag:  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
+
+                result = self.photoncam_arducam_a.getLatestResult()
+                cam_est_pose = self.photoncam_pose_est.update(result)
+                # can also use result.hasTargets() instead of nt
+                target = result.getBestTarget()
+                # get id with target.fiducialId
+                # get % of camera with target.getArea() to get a sense of distance
+                ambiguity = target.getPoseAmbiguity()
+
                 latency = self.photoncam_latency_subscriber.get()
-                # self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency)
+                # if statements to test if we want to update using a tag
+                use_tag = constants.k_use_photontags  # can disable this in constants
+                # do not allow large jumps when enabled
+                delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), cam_est_pose.estimatedPose.translation().toTranslation2d())
+                use_tag = False if (delta_pos > 1 and wpilib.RobotBase.isEnabled()) else use_tag  # no big movements in odometry from tags
+                # limit a pose rotation to less than x degrees
+                delta_rot = math.fabs(self.get_pose().rotation().degrees() - cam_est_pose.estimatedPose.rotation().angle_degrees)
+                use_tag = False if delta_rot > 10 and wpilib.RobotBase.isEnabled() else use_tag
+                # TODO - ignore tags if we are moving too fast
+                use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
+                use_tag = False if latency > 100 else use_tag  # ignore stale tags
+
+                # TODO - filter out tags that are too far away from camera (different from pose itself too far away from robot)
+                # TODO - filter out tags with too much ambiguity - where ratio > 0.2 per docs
+                use_tag = False if ambiguity > 0.2 else use_tag
+
+                if use_tag:
+                    self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency)
+
             else:
                 pass
-            if self.counter % 10 == 0:
-                #print(cam_est_pose.estimatedPose.toPose2d())
+            if self.counter % 10 == 0:  # get diagnostics on photontags
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', has_photontag)
+                if has_photontag:
+                    ambiguity = self.photoncam_arducam_a.getLatestResult().getBestTarget().getPoseAmbiguity()
+                    wpilib.SmartDashboard.putNumber('photoncam_ambiguity', ambiguity)
+                else:
+                    wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 0)
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
