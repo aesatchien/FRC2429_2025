@@ -109,13 +109,19 @@ class Swerve (Subsystem):
 
         # photonvision camera setup
         self.use_photoncam = True  # decide down below in periodic
-        self.photoncam_arducam_a = PhotonCamera("ArducamA")
+        self.photon_name = "Arducam_OV9281_USB_Camera"
+        self.photoncam_arducam_a = PhotonCamera(self.photon_name)
+        self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
+        self.photoncam_latency_subscriber = self.inst.getDoubleTopic(f'/photonvision/{self.photon_name}/LatencyMillis').subscribe(0)
+
         # example is cam mounted facing forward, half a meter forward of center, half a meter up from center
         # robot_to_cam_example = wpimath.geometry.Transform3d(wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
         #     wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
         robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
             wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
             wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
+
+        self.photoncam_arducam_a.getLatestResult()
 
         self.photoncam_pose_est = PhotonPoseEstimator(
             ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded),
@@ -441,17 +447,21 @@ class Swerve (Subsystem):
         self.counter += 1
 
         # send our current time to the dashboard
-        wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
+        ts = wpilib.Timer.getFPGATimestamp()
+        wpilib.SmartDashboard.putNumber('_timestamp', ts)
 
         if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
-            cam_est_pose = self.photoncam_pose_est.update()
+            has_photontag = self.photoncam_target_subscriber.get()
             # how do we get the time offset and standard deviation?
-            if cam_est_pose:
-                self.pose_estimator.addVisionMeasurement(cam_est_pose)
-                has_photontag = True
+
+            if has_photontag:
+                cam_est_pose = self.photoncam_pose_est.update(self.photoncam_arducam_a.getLatestResult())
+                latency = self.photoncam_latency_subscriber.get()
+                self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency)
             else:
-                has_photontag = False
+                pass
             if self.counter % 10 == 0:
+                #print(cam_est_pose.estimatedPose.toPose2d())
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', has_photontag)
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
