@@ -29,6 +29,7 @@ class MoveWristByJoystick(commands2.Command):
         is pointing at the drivers, the command will invert the driver's request because
         the driver's left is the robot's right
         """
+
         super().__init__()
         self.setName('Move wrist by joystick')
         self.indent = indent

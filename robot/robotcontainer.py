@@ -1,5 +1,6 @@
 from enum import Enum
 import math
+from os import confstr
 from threading import Condition
 import time
 from commands2.printcommand import PrintCommand
@@ -54,11 +55,12 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 from commands.move_climber import MoveClimber
-#
+
 from commands.go_to_position import GoToPosition
 from commands.follow_trajectory import FollowTrajectory
 from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
+from commands.move_wrist_swap import MoveWristSwap
 
 from trajectory import CustomTrajectory
 # from commands.score import Score
@@ -222,10 +224,10 @@ class RobotContainer:
         self.co_trigger_start = self.co_pilot_command_controller.start()
         self.co_trigger_back = self.co_pilot_command_controller.back()
 
-        self.co_trigger_l_stick_positive_x = self.co_pilot_command_controller.axisGreaterThan(0, 0.5)
-        self.co_trigger_l_stick_negative_x = self.co_pilot_command_controller.axisLessThan(0, -0.5)
-        self.co_trigger_l_stick_positive_y = self.co_pilot_command_controller.axisGreaterThan(1, 0.5)
-        self.co_trigger_l_stick_negative_y = self.co_pilot_command_controller.axisLessThan(1, -0.5)
+        self.co_trigger_r_stick_positive_x = self.co_pilot_command_controller.axisGreaterThan(4, 0.5)
+        self.co_trigger_r_stick_negative_x = self.co_pilot_command_controller.axisLessThan(4, -0.5)
+        self.co_trigger_r_stick_positive_y = self.co_pilot_command_controller.axisGreaterThan(5, 0.5)
+        self.co_trigger_r_stick_negative_y = self.co_pilot_command_controller.axisLessThan(5, -0.5)
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -336,17 +338,17 @@ class RobotContainer:
 
         self.co_trigger_a.onTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
         
-        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.co_pilot_command_controller))
+        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.robot_state))
 
-        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3, wrist_setpoint_decider=self.co_pilot_command_controller))
+        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3, wrist_setpoint_decider=self.robot_state))
 
-        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4, wrist_setpoint_decider=self.co_pilot_command_controller))
+        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4, wrist_setpoint_decider=self.robot_state))
 
         # trigger on true: go to the position, start intake
         # trigger on false: go to stow, stop intake
 
         self.co_trigger_d.or_(self.co_trigger_l).whileTrue(GoToCoralStation(container=self).andThen(
-            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+            RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
 
         self.co_trigger_d.or_(self.co_trigger_l).onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
@@ -358,11 +360,11 @@ class RobotContainer:
         
         self.co_trigger_rb.onTrue(Score(container=self))
 
-        self.co_trigger_l_stick_positive_x.whileTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
+        self.co_trigger_r_stick_negative_y.onTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
 
-        self.co_trigger_l_stick_positive_y.whileTrue(MoveWrist(container=self, radians=math.radians(-90), timeout=4))  # this seems backwards but is not because y-axis is inverted
+        self.co_trigger_r_stick_positive_x.onTrue(MoveWristSwap(self, self.wrist))  # this seems backwards but is not because y-axis is inverted
 
-        self.co_trigger_l_stick_negative_y.whileTrue(MoveWrist(container=self, radians=math.radians(90), timeout=4))
+        self.co_trigger_r_stick_negative_x.onTrue(MoveWristSwap(self, self.wrist))
 
         self.co_trigger_r_trigger.whileTrue(MoveClimber(self, self.climber, ""))
 
@@ -435,30 +437,30 @@ class RobotContainer:
 
         self.keys_pressed_entry = NetworkTableInstance.getDefault().getEntry("SmartDashboard/keys_pressed")  # for operator control via keyboard
 
-        self.keyboard_trigger_p = commands2.button.Trigger(lambda: 80 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_p = commands2.button.Trigger(lambda: 80 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
 
-        self.keyboard_trigger_1 = commands2.button.Trigger(lambda: 49 in self.keys_pressed_entry.getIntegerArray([]))
-        self.keyboard_trigger_2 = commands2.button.Trigger(lambda: 50 in self.keys_pressed_entry.getIntegerArray([]))
-        self.keyboard_trigger_3 = commands2.button.Trigger(lambda: 51 in self.keys_pressed_entry.getIntegerArray([]))
-        self.keyboard_trigger_4 = commands2.button.Trigger(lambda: 52 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_1 = commands2.button.Trigger(lambda: 49 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+        self.keyboard_trigger_2 = commands2.button.Trigger(lambda: 50 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+        self.keyboard_trigger_3 = commands2.button.Trigger(lambda: 51 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+        self.keyboard_trigger_4 = commands2.button.Trigger(lambda: 52 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
 
-        self.keyboard_trigger_s = commands2.button.Trigger(lambda: 83 in self.keys_pressed_entry.getIntegerArray([]))
-        self.keyboard_trigger_t = commands2.button.Trigger(lambda: 84 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_s = commands2.button.Trigger(lambda: 83 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+        self.keyboard_trigger_t = commands2.button.Trigger(lambda: 84 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
 
-        self.keyboard_trigger_v = commands2.button.Trigger(lambda: 86 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_v = commands2.button.Trigger(lambda: 86 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
 
-        self.keyboard_trigger_w = commands2.button.Trigger(lambda: 87 in self.keys_pressed_entry.getIntegerArray([]))
-        self.keyboard_trigger_o = commands2.button.Trigger(lambda: 79 in self.keys_pressed_entry.getIntegerArray([]))
+        self.keyboard_trigger_w = commands2.button.Trigger(lambda: 87 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+        self.keyboard_trigger_o = commands2.button.Trigger(lambda: 79 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
 
         # p: place (score)
-        self.keyboard_trigger_p.onTrue(Score(self))
+        self.keyboard_trigger_p.onTrue(GoToStow(self))
 
         self.keyboard_trigger_1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True))
         self.keyboard_trigger_2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
         self.keyboard_trigger_3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.keyboard_trigger_4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
-        self.keyboard_trigger_s.onTrue(GoToStow(self))
+        self.keyboard_trigger_s.onTrue(Score(self))
 
         # t: human player (mnemonic: celeste Tarula, sean Toda, Take a piece)
         self.keyboard_trigger_t.whileTrue(GoToCoralStation(container=self).andThen(
@@ -476,7 +478,7 @@ class RobotContainer:
         self.keyboard_trigger_w.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
     def get_autonomous_command(self):
-        return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth")).andThen(DriveByVelocitySwerve(container=self, swerve=self.swerve, velocity=Pose2d(1, 1, 1), timeout=2).andThen(LeaveThenScore(container=self)))
+        return DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)
         # return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
         # return self.autonomous_chooser.getSelected()
 

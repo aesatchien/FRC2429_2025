@@ -1,3 +1,4 @@
+import math
 import commands2
 from commands2.button import CommandXboxController
 
@@ -36,11 +37,14 @@ class GoToReefPosition(commands2.SequentialCommandGroup):
         else:
             self.addCommands(MoveWristByJoystick(container=container, side_decider=wrist_setpoint_decider, swerve_for_field_centric=container.swerve, timeout=10, wait_to_finish=True, indent=indent+1))
 
+
         # go to final position
         self.addCommands(commands2.ParallelCommandGroup(
             MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}"]["elevator"], wait_to_finish=True, indent=indent+1).withTimeout(5),
-            MovePivot(container=container, pivot=self.container.pivot, mode="specified", angle=constants.k_positions[f"l{level}"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5)
+            MovePivot(container=container, pivot=self.container.pivot, mode="specified", angle=constants.k_positions[f"l{level}"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
+            # commands2.WaitCommand(0.2).andThen(MoveWrist(container, math.radians(90), timeout=5, indent=indent+1))
         ))
+        # self.addCommands(MoveWrist(container, math.radians(90), timeout=5, indent=indent+1))
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 

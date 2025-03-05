@@ -22,6 +22,7 @@ from photonlibpy import PhotonCamera, PhotonPoseEstimator, PoseStrategy  #  2025
 
 import robotpy_apriltag as ra
 import wpimath.geometry as geo
+from wpimath.units import inchesToMeters
 
 import constants
 from .swervemodule_2429 import SwerveModule
@@ -108,7 +109,7 @@ class Swerve (Subsystem):
 
 
         # photonvision camera setup
-        self.use_photoncam = True  # decide down below in periodic
+        self.use_photoncam = False  # decide down below in periodic
         self.photon_name = "Arducam_OV9281_USB_Camera"
         self.photoncam_arducam_a = PhotonCamera(self.photon_name)
         self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
@@ -118,8 +119,8 @@ class Swerve (Subsystem):
         # robot_to_cam_example = wpimath.geometry.Transform3d(wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
         #     wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
         robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
-            wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
-            wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
+            wpimath.geometry.Translation3d(inchesToMeters(10), inchesToMeters(7.75), 0.45),
+            wpimath.geometry.Rotation3d.fromDegrees(0.0, 0.0, math.radians(270)))
 
         self.photoncam_arducam_a.getLatestResult()
 
@@ -129,7 +130,7 @@ class Swerve (Subsystem):
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
+        self.use_CJH_apriltags = False  # dowm below we decide which one to use in the periodic method
         # lhack turned off 15:48 2/28/25 to test pathplanner wo tags first
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names

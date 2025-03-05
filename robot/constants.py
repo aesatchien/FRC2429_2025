@@ -100,8 +100,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "coral station": {
-        "elevator": 0.40,
-        "shoulder_pivot": math.radians(61),
+        "elevator": 0.42, # HACK :was .40 at clark
+        "shoulder_pivot": math.radians(57), # HACK: was 61 at clark
         "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -135,6 +135,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
 }
+
+print("\nWARNING! NOT USING COMP SETPOINTS!!" * 40)
 
 k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
 k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
