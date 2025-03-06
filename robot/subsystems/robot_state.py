@@ -2,6 +2,7 @@ from enum import Enum
 import commands2
 from wpilib import SmartDashboard
 import constants
+from constants import LedConstants
 
 # TODO - do something better than putting a callback in LED
 
@@ -21,21 +22,20 @@ class RobotState(commands2.Subsystem):
     class Target(Enum):
         """ Target class is for showing current goal """
         # can I generate this programmatically from the constants file's list of positions? Some of it.
-        STOW = {'name': 'stow', 'lit_leds': constants.k_led_count, 'mode': 'keep'}
-        GROUND = {'name': 'ground', 'lit_leds': constants.k_led_count, 'mode': 'keep'}
+        STOW = {'name': 'stow', 'lit_leds': LedConstants.k_led_count, 'mode': 'keep'}
+        GROUND = {'name': 'ground', 'lit_leds': LedConstants.k_led_count, 'mode': 'keep'}
         # coral modes
-        L1 = {'name': 'l1', 'lit_leds': -1 + constants.k_led_count // 8, 'mode': 'coral'}
-        L2 = {'name': 'l2', 'lit_leds': -2+ constants.k_led_count // 4, 'mode': 'coral'}
-        L3 = {'name': 'l3', 'lit_leds': -3 + 3 * constants.k_led_count // 8, 'mode': 'coral'}
-        L4 = {'name': 'l4', 'lit_leds': -4 + constants.k_led_count // 2, 'mode': 'coral'}
-        CORAL_STATION = {'name': 'coral station', 'lit_leds': constants.k_led_count, 'mode': 'coral'}
+        L1 = {'name': 'l1', 'lit_leds': -1 + LedConstants.k_led_count // 8, 'mode': 'coral'}
+        L3 = {'name': 'l3', 'lit_leds': -3 + 3 * LedConstants.k_led_count // 8, 'mode': 'coral'}
+        L4 = {'name': 'l4', 'lit_leds': -4 + LedConstants.k_led_count // 2, 'mode': 'coral'}
+        CORAL_STATION = {'name': 'coral station', 'lit_leds': LedConstants.k_led_count, 'mode': 'coral'}
         # algae modes
-        PROCESSOR = {'name': 'processor', 'lit_leds': -1 + constants.k_led_count // 8, 'mode': 'algae'}
-        BARGE = {'name': 'barge', 'lit_leds': -2 + constants.k_led_count // 2, 'mode': 'algae'}
-        ALGAE_LOW = {'name': 'algae low', 'lit_leds': -3 + constants.k_led_count // 4, 'mode': 'algae'}
-        ALGAE_HIGH = {'name': 'algae high', 'lit_leds': 3 * constants.k_led_count // 8, 'mode': 'algae'}
+        PROCESSOR = {'name': 'processor', 'lit_leds': -1 + LedConstants.k_led_count // 8, 'mode': 'algae'}
+        BARGE = {'name': 'barge', 'lit_leds': -2 + LedConstants.k_led_count // 2, 'mode': 'algae'}
+        ALGAE_LOW = {'name': 'algae low', 'lit_leds': -3 + LedConstants.k_led_count // 4, 'mode': 'algae'}
+        ALGAE_HIGH = {'name': 'algae high', 'lit_leds': 3 * LedConstants.k_led_count // 8, 'mode': 'algae'}
 
-        NONE = {'name': 'NONE', 'lit_leds': constants.k_led_count, 'mode': 'none'}
+        NONE = {'name': 'NONE', 'lit_leds': LedConstants.k_led_count, 'mode': 'none'}
 
     class Side(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """

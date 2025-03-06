@@ -396,8 +396,8 @@ class Swerve (Subsystem):
     # figure out the nearest stage - or any tag, I suppose if we pass in a list
     def get_nearest_tag(self, destination='stage'):
         # get a field so we can query the tags
-        field = ra.AprilTagField.k2024Crescendo
-        layout = ra.loadAprilTagLayoutField(field)
+        field = ra.AprilTagField.k2025ReefscapeWelded
+        layout = ra.AprilTagFieldLayout.loadField(field)
         current_pose = self.get_pose()
 
         if destination == 'stage':
@@ -459,42 +459,48 @@ class Swerve (Subsystem):
             has_photontag = self.photoncam_target_subscriber.get()
             # how do we get the time offset and standard deviation?
 
-            if has_photontag:  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
-
+            if has_photontag  :  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
                 result = self.photoncam_arducam_a.getLatestResult()
                 cam_est_pose = self.photoncam_pose_est.update(result)
                 # can also use result.hasTargets() instead of nt
                 target = result.getBestTarget()
-                # get id with target.fiducialId
-                # get % of camera with target.getArea() to get a sense of distance
-                ambiguity = target.getPoseAmbiguity()
+                if target is not None:  # not sure why it returns None sometimes when we have tags
+                    # get id with target.fiducialId
+                    # get % of camera with target.getArea() to get a sense of distance
+                    try:
+                        ambiguity = target.getPoseAmbiguity()
+                    except AttributeError as e:
+                        ambiguity = 999
 
-                latency = self.photoncam_latency_subscriber.get()
-                # if statements to test if we want to update using a tag
-                use_tag = constants.k_use_photontags  # can disable this in constants
-                # do not allow large jumps when enabled
-                delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), cam_est_pose.estimatedPose.translation().toTranslation2d())
-                use_tag = False if (delta_pos > 1 and wpilib.RobotBase.isEnabled()) else use_tag  # no big movements in odometry from tags
-                # limit a pose rotation to less than x degrees
-                delta_rot = math.fabs(self.get_pose().rotation().degrees() - cam_est_pose.estimatedPose.rotation().angle_degrees)
-                use_tag = False if delta_rot > 10 and wpilib.RobotBase.isEnabled() else use_tag
-                # TODO - ignore tags if we are moving too fast
-                use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
-                use_tag = False if latency > 100 else use_tag  # ignore stale tags
+                    latency = self.photoncam_latency_subscriber.get()
+                    # if statements to test if we want to update using a tag
+                    use_tag = constants.k_use_photontags  # can disable this in constants
+                    # do not allow large jumps when enabled
+                    delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), cam_est_pose.estimatedPose.translation().toTranslation2d())
+                    use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled() ) else use_tag  # no big movements in odometry from tags
+                    # limit a pose rotation to less than x degrees
+                    delta_rot = math.fabs(self.get_pose().rotation().degrees() - cam_est_pose.estimatedPose.rotation().angle_degrees)
+                    use_tag = False if delta_rot > 10 and wpilib.DriverStation.isEnabled() else use_tag
+                    # TODO - ignore tags if we are moving too fast
+                    use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
+                    use_tag = False if latency > 100 else use_tag  # ignore stale tags
 
-                # TODO - filter out tags that are too far away from camera (different from pose itself too far away from robot)
-                # TODO - filter out tags with too much ambiguity - where ratio > 0.2 per docs
-                use_tag = False if ambiguity > 0.2 else use_tag
+                    # TODO - filter out tags that are too far away from camera (different from pose itself too far away from robot)
+                    # TODO - filter out tags with too much ambiguity - where ratio > 0.2 per docs
+                    use_tag = False if ambiguity > 0.2 else use_tag
 
-                if use_tag:
-                    self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency)
-
+                    if use_tag:
+                        self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency, constants.DrivetrainConstants.k_pose_stdevs_large)
             else:
                 pass
+
             if self.counter % 10 == 0:  # get diagnostics on photontags
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', has_photontag)
                 if has_photontag:
-                    ambiguity = self.photoncam_arducam_a.getLatestResult().getBestTarget().getPoseAmbiguity()
+                    try:
+                        ambiguity = self.photoncam_arducam_a.getLatestResult().getBestTarget().getPoseAmbiguity()
+                    except AttributeError as e:
+                        ambiguity = 999
                     wpilib.SmartDashboard.putNumber('photoncam_ambiguity', ambiguity)
                 else:
                     wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 0)
@@ -507,8 +513,18 @@ class Swerve (Subsystem):
                     tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
+
+                    use_tag = constants.k_use_CJH_tags # can disable this in constants
+                    # do not allow large jumps when enabled
+                    delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), tag_pose.translation())
+                    use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
+                    use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
+                    # TODO - figure out ambiguity (maybe pass to NT from the pi)
                     # do i have a fatal lag issue?  am i better without the time estimate?
-                    # self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
+                    # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
+                    # I gave a fairly high x and y, and a very high theta
+                    if use_tag:
+                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], constants.DrivetrainConstants.k_pose_stdevs_large)
 
 
         else:  # Leo's experiment
