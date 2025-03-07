@@ -4,7 +4,6 @@ import rev
 import wpilib
 from wpimath.system.plant import DCMotor
 from commands2 import Subsystem
-from wpilib import SmartDashboard
 from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig, SparkMaxSim, SparkMax
 from wpimath.units import inchesToMeters, radiansToDegrees, degreesToRadians
 import constants
@@ -23,6 +22,9 @@ class Climber(Subsystem):
         
         #configure PID controller
         self.controller = self.sparkmax.getClosedLoopController()
+
+        self.follower = SparkMax(constants.ClimberConstants.k_follower_CAN_id, SparkMax.MotorType.kBrushless)
+        self.follower.configure(constants.ClimberConstants.k_follower_config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters)
 
         #get encoder
         self.encoder = self.sparkmax.getEncoder()

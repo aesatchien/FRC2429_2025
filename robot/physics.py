@@ -85,6 +85,8 @@ class PhysicsEngine:
         self.climber_spark_sim.setPosition(self.climber_sim.getAngle())
         self.climber_spark_sim.iterate(velocity=self.climber_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
+        self.climber_follower_spark_sim.setPosition(self.climber_sim.getAngle())
+        self.climber_follower_spark_sim.iterate(self.climber_sim.getVelocity(), 12, tm_diff)
         cimber_angle = math.degrees(self.climber_sim.getAngle())
         self.mech2d_climber.setAngle(cimber_angle - 90)
         sm.side_elevator.components["climber"]["ligament"].setAngle(cimber_angle - 90)
@@ -240,6 +242,7 @@ class PhysicsEngine:
                                                     startingAngle=constants.ClimberConstants.k_climber_motor_stowed_angle)
 
         self.climber_spark_sim = SparkMaxSim(self.robot.container.climber.sparkmax, constants.ClimberConstants.k_plant)
+        self.climber_follower_spark_sim = SparkMaxSim(self.robot.container.climber.follower, constants.ClimberConstants.k_plant)
 
 
     def initialize_swerve(self):
