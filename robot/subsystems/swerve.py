@@ -111,6 +111,7 @@ class Swerve (Subsystem):
         # photonvision camera setup
         self.use_photoncam = True  # decide down below in periodic
         self.photon_name = "Arducam_OV9281_USB_Camera"
+        # self.photon_name = "HD_Pro_Webcam_C920"
         self.photoncam_arducam_a = PhotonCamera(self.photon_name)
         self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
         self.photoncam_latency_subscriber = self.inst.getDoubleTopic(f'/photonvision/{self.photon_name}/LatencyMillis').subscribe(0)
@@ -122,7 +123,9 @@ class Swerve (Subsystem):
             wpimath.geometry.Translation3d(inchesToMeters(10), inchesToMeters(7.75), 0.45),
             wpimath.geometry.Rotation3d.fromDegrees(0.0, 0.0, math.radians(270)))
 
-        self.photoncam_arducam_a.getLatestResult()
+        robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
+            wpimath.geometry.Translation3d(inchesToMeters(0), inchesToMeters(0), 0.),
+            wpimath.geometry.Rotation3d.fromDegrees(0.0, -20, math.radians(0)))
 
         # todo - see if we can update the PoseStrategy based on if disabled, and use closest to current odometry when enabled
         # but MULTI_TAG_PNP_ON_COPROCESSOR probably does not help at all since we only see one tag at a time
@@ -457,6 +460,7 @@ class Swerve (Subsystem):
 
         if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
             has_photontag = self.photoncam_target_subscriber.get()
+            #has_photontag = self.photoncam_target_subscriber.get()
             # how do we get the time offset and standard deviation?
 
             if has_photontag  :  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
@@ -486,11 +490,12 @@ class Swerve (Subsystem):
                     use_tag = False if latency > 100 else use_tag  # ignore stale tags
 
                     # TODO - filter out tags that are too far away from camera (different from pose itself too far away from robot)
-                    # TODO - filter out tags with too much ambiguity - where ratio > 0.2 per docs
+                    # filter out tags with too much ambiguity - where ratio > 0.2 per docs
                     use_tag = False if ambiguity > 0.2 else use_tag
 
                     if use_tag:
                         self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency, constants.DrivetrainConstants.k_pose_stdevs_large)
+                # _ = self.photoncam_arducam_a.getAllUnreadResults()
             else:
                 pass
 
@@ -500,10 +505,10 @@ class Swerve (Subsystem):
                     try:
                         ambiguity = self.photoncam_arducam_a.getLatestResult().getBestTarget().getPoseAmbiguity()
                     except AttributeError as e:
-                        ambiguity = 999
+                        ambiguity = 998
                     wpilib.SmartDashboard.putNumber('photoncam_ambiguity', ambiguity)
                 else:
-                    wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 0)
+                    wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 997)
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
