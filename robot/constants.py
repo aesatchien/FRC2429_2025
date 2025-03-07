@@ -29,7 +29,7 @@ k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False
 k_use_photontags = False
-k_use_CJH_tags = True
+k_use_CJH_tags = False
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
@@ -52,7 +52,7 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 0.65, # this is the l2 angles. TODO: find actual angles
+        "elevator": 0.65,
         "shoulder_pivot": math.radians(180),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -122,16 +122,16 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae low": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0.45,
-        "shoulder_pivot": math.radians(130),
-        "wrist_pivot": math.radians(90),
+        "elevator": 0.65,
+        "shoulder_pivot": math.radians(180),
+        "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "algae high": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0.9,
-        "shoulder_pivot": math.radians(132),
-        "wrist_pivot": math.radians(90),
+        "elevator": 1.1,
+        "shoulder_pivot": math.radians(180),
+        "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -201,7 +201,7 @@ class IntakeConstants:
     k_sim_length = 0.25
 
     k_coral_intaking_voltage = -6
-    k_algae_intaking_voltage = -6
+    k_algae_intaking_voltage = 6
 
     k_coral_scoring_voltage = 10
 

@@ -294,8 +294,8 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
 
         self.auto_chooser = AutoBuilder.buildAutoChooser()
-        self.auto_chooser.setDefaultOption('Wait', commands2.WaitCommand(15))
-        self.auto_chooser.addOption('Drive by velocity leave', DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2))
+        self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
+        self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
 
     def bind_driver_buttons(self):
@@ -367,8 +367,10 @@ class RobotContainer:
         self.co_trigger_r_stick_negative_y.onTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
 
         self.co_trigger_r_stick_positive_x.onTrue(MoveWristSwap(self, self.wrist))  # this seems backwards but is not because y-axis is inverted
+        self.co_trigger_r_stick_positive_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))  # this seems backwards but is not because y-axis is inverted
 
         self.co_trigger_r_stick_negative_x.onTrue(MoveWristSwap(self, self.wrist))
+        self.co_trigger_r_stick_negative_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
         self.co_trigger_r_trigger.whileTrue(MoveClimber(self, self.climber, ""))
 
@@ -542,11 +544,15 @@ class RobotContainer:
         self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
-        self.bbox_reef_alga_high.onTrue(GoToPosition(self, "algae high").andThen(RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
-        self.bbox_reef_alga_high.onFalse(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "stow")))
+        self.bbox_reef_alga_high.whileTrue(commands2.ParallelCommandGroup(GoToPosition(self, "algae high"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
 
-        self.bbox_reef_alga_low.onTrue(GoToPosition(self, "algae low").andThen(RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
-        self.bbox_reef_alga_low.onFalse(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "stow")))
+        self.bbox_reef_alga_high.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+            GoToStow(container=self)))
+
+        self.bbox_reef_alga_high.whileTrue(commands2.ParallelCommandGroup(GoToPosition(self, "algae high"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+
+        self.bbox_reef_alga_low.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+            GoToStow(container=self)))
 
         self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.1), self.climber))
         self.bbox_net.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
