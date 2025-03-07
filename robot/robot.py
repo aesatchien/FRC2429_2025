@@ -68,7 +68,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopInit(self) -> None:
 
-        self.container.swerve.use_photoncam = False
+        # self.container.swerve.use_photoncam = False
         self.container.set_start_time()  # putting this after the scheduler is bad
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to

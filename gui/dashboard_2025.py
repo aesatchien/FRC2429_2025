@@ -594,7 +594,7 @@ class Ui(QtWidgets.QMainWindow):
         theta_pad = theta_pad + 1 if drive_pose[2] < 0 else theta_pad
         theta_pad = theta_pad + 1 if abs(drive_pose[2]) < 100 else theta_pad
         theta_pad = theta_pad + 1 if abs(drive_pose[2]) < 10 else theta_pad
-        pose_msg = f'POSE\n{" " * x_pad}{drive_pose[0]:>4.1f}m {drive_pose[1]:>3.1f}m {" " * theta_pad}{drive_pose[2]:>4.0f}°'
+        pose_msg = f'POSE\n{" " * x_pad}{drive_pose[0]:>5.2f}m {drive_pose[1]:>4.2f}m {" " * theta_pad}{drive_pose[2]:>4.0f}°'
         self.qlabel_pose_indicator.setText(pose_msg)
 
         pixmap_rotated = self.robot_pixmap.transformed(QtGui.QTransform().rotate(90-drive_pose[2]), QtCore.Qt.TransformationMode.SmoothTransformation)
