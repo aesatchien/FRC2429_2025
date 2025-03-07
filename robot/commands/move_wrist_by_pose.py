@@ -22,7 +22,7 @@ class StowWristAfterPositionDelta(commands2.Command):
         move the wrist unless the arm is pretty much already at a safe position.
         """
         super().__init__()
-        self.setName('Stow wrist after position delta')
+        self.setName('Stow wrist because position delta')
         self.indent = indent
         self.container = container
         self.wrist: Wrist = self.container.wrist

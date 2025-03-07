@@ -40,7 +40,7 @@ class SetLEDs(commands2.Command):
 
         self.start_time = round(self.container.get_enabled_time(), 2)
         msg = f"** Started {self.getName()} at {self.start_time} s with mode {msg_mode} and indicator {msg_indicator} **"
-        print("\n" + msg, flush=True)
+        print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
 
     def execute(self) -> None:

@@ -52,8 +52,8 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 0.45, # this is the l2 angles. TODO: find actual angles
-        "shoulder_pivot": math.radians(130),
+        "elevator": 0.65, # this is the l2 angles. TODO: find actual angles
+        "shoulder_pivot": math.radians(180),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)

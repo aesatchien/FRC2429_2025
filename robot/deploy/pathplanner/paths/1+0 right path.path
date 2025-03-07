@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.2645491803278714,
-        "y": 4.870133196721312
+        "x": 7.130497903483549,
+        "y": 4.016854002551184
       },
       "isLocked": false,
       "linkedName": "start point near middle of barge"
     },
     {
       "anchor": {
-        "x": 5.694159836065573,
-        "y": 4.534477459016394
+        "x": 5.238627049180328,
+        "y": 3.14390368852459
       },
       "prevControl": {
-        "x": 5.933913934426229,
-        "y": 4.6064036885245905
+        "x": 6.112314664537192,
+        "y": 3.892177494255295
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,7 +42,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 31.50426671920421
   },
   "reversed": false,
   "folder": null,

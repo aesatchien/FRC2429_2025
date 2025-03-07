@@ -294,6 +294,11 @@ class RobotContainer:
                 commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=selected_value))))
         wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
 
+        self.auto_chooser = AutoBuilder.buildAutoChooser()
+        self.auto_chooser.setDefaultOption('Wait', commands2.WaitCommand(15))
+        self.auto_chooser.addOption('Drive by velocity leave', DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2))
+        wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
+
     def bind_driver_buttons(self):
 
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
@@ -368,63 +373,10 @@ class RobotContainer:
 
         self.co_trigger_r_trigger.whileTrue(MoveClimber(self, self.climber, ""))
 
-        # self.co_trigger_a.onTrue(MoveClimber(container=self, climber=self.climber, mode='climbing', wait_to_finish=True))
-
-        # self.co_trigger_a.onTrue( # when trigger A is pressed, if we have coral, go to l1; else if we have algae, go to processor; else go to ground
-        #         commands2.ConditionalCommand(
-        #             onTrue=GoToPosition(container=self, position="l1"),
-        #
-        #             onFalse=commands2.ConditionalCommand(
-        #                 onTrue=GoToPosition(container=self, position="processor"),
-        #                 onFalse=IntakeSequence(container=self, position="ground"),
-        #                 condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
-        #             ),
-        #
-        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-        #         )
-        # )
-        #
-        # self.co_trigger_b.onTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=GoToPosition(container=self, position="l2"),
-        #             onFalse=IntakeSequence(container=self, position="ground"), # can make either a or b into a different position if needed for algae and coral
-        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-        #         )
-        # )
-        #
-        # self.co_trigger_x.onTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=GoToPosition(container=self, position="l3"),
-        #             onFalse=IntakeSequence(container=self, position="algae low"),
-        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-        #         )
-        # )
-        #
-        # self.co_trigger_y.onTrue( # when trigger Y is pressed, if we have coral, go to l4; else if we have algae, go to net; else go to intake algae high
-        #         commands2.ConditionalCommand(
-        #             onTrue=GoToPosition(container=self, position="l4"),
-        #
-        #             onFalse=commands2.ConditionalCommand(
-        #                 onTrue=GoToPosition(container=self, position="barge"),
-        #                 onFalse=IntakeSequence(container=self, position="algae high"),
-        #
-        #                 condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_ALGAE
-        #             ),
-        #
-        #             condition=lambda: self.get_robot_mode() == self.RobotMode.HAS_CORAL
-        #         )
-        # )
-        #
-        # self.co_trigger_lb.onTrue(commands2.PrintCommand("** Setting robot mode to empty **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.EMPTY))))
-        #
-        # self.co_trigger_rb.onTrue(Score(container=self))
-        # self.co_trigger_rb.whileTrue(DriveByJoystickSubsystem(container=self, controller=self.co_pilot_command_controller, subsystem=self.intake, duty_cycle_coef=0.01))
-        #
-        # self.co_trigger_r_trigger.onTrue(commands2.PrintCommand("** Setting robot mode to has algae **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_ALGAE))))
-        #
-        # self.co_trigger_u.or_(self.co_trigger_r).onTrue(commands2.PrintCommand("** Setting robot mode to has coral **").andThen(commands2.InstantCommand(lambda: self.set_robot_mode(self.RobotMode.HAS_CORAL))))
-
-        # self.co_trigger_d.or_(self.co_trigger_l).onTrue(IntakeSequence(container=self, position="coral station"))
+        self.co_trigger_start.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.1), self.climber))
+        self.co_trigger_start.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.co_trigger_back.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.1), self.climber))
+        self.co_trigger_back.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down
@@ -486,9 +438,7 @@ class RobotContainer:
 
     def get_autonomous_command(self):
         # return DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)
-        return AutoBuilder.buildAuto('1+0')
-        # return AutoBuilder.followPath(PathPlannerPath.fromPathFile("new patth"))
-        # return self.autonomous_chooser.getSelected()
+        return self.auto_chooser.getSelected()
 
     def bind_button_box(self):
         """
@@ -538,16 +488,6 @@ class RobotContainer:
         self.bbox_human_left.onTrue(RunIntake(self, self.intake, constants.IntakeConstants.k_coral_scoring_voltage, stop_on_end=True)) # TODO: make these all use the one in intakeconstants
 
         self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
-
-        # while held:
-            # if we're being told to go left:
-                # if we're going to a far side:
-                    # go to our right
-                # else:
-                    # go to our left
-        # the issue is communicating this to the wrist.
-        # we want MoveWristByJoystick to go left if our target-- wait but not really,
-        # i think we only care about whether the bot is pointing there or no
 
         self.bbox_AB.whileTrue(
                 commands2.ConditionalCommand(

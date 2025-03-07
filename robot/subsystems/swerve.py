@@ -109,7 +109,7 @@ class Swerve (Subsystem):
 
 
         # photonvision camera setup
-        self.use_photoncam = True  # decide down below in periodic
+        self.use_photoncam = False  # decide down below in periodic
         self.photon_name = "Arducam_OV9281_USB_Camera"
         self.photoncam_arducam_a = PhotonCamera(self.photon_name)
         self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
@@ -134,7 +134,7 @@ class Swerve (Subsystem):
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
+        self.use_CJH_apriltags = False  # dowm below we decide which one to use in the periodic method
         # lhack turned off 15:48 2/28/25 to test pathplanner wo tags first
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names
