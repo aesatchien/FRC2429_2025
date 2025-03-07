@@ -3,7 +3,7 @@ import math
 import rev
 import wpilib
 
-from rev import ClosedLoopSlot, SparkFlexConfig, SparkMax, SparkMaxConfig
+from rev import ClosedLoopSlot, SparkClosedLoopController, SparkFlexConfig, SparkMax, SparkMaxConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.units import inchesToMeters, lbsToKilograms
 from wpimath.system.plant import DCMotor
@@ -52,11 +52,11 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": inchesToMeters(8),
-        "shoulder_pivot": math.radians(60), #angle between the vertical and the shoulder ligament
-        "wrist_pivot": math.radians(90), #angle between the horizontal and the wrist ligament
+        "elevator": 0.45, # this is the l2 angles. TODO: find actual angles
+        "shoulder_pivot": math.radians(130),
+        "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
-        "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
         "elevator": 0.45,
@@ -213,6 +213,7 @@ class ClimberConstants:
     k_counter_offset = 2
     k_nt_debugging = False  # print extra values to NT for debugging
     k_CAN_id = 2
+    k_follower_CAN_id = 3
     k_gear_ratio = 167
     # 25:1
     # 26:64
@@ -224,7 +225,7 @@ class ClimberConstants:
     k_climber_reverse_rotation_limit = 0
     k_length_meters = 0.1209
     k_moi = 0.0173 #kg m^2
-    k_plant = DCMotor.NEO(1)
+    k_plant = DCMotor.NEO(2)
     # The PID constants will be changed later on.
     kP = 0.75
     kI = 0
@@ -253,6 +254,9 @@ class ClimberConstants:
 
     k_config.softLimit.forwardSoftLimitEnabled(False)
     k_config.softLimit.reverseSoftLimitEnabled(False)
+
+    k_follower_config = SparkMaxConfig()
+    k_follower_config.follow(k_CAN_id, True)
 
 
 class WristConstants:

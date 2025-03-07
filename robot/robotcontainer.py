@@ -336,7 +336,7 @@ class RobotContainer:
 
         # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
-        self.co_trigger_a.onTrue(commands2.PrintCommand("we don't hvae a good l1 position yet"))
+        self.co_trigger_a.onTrue(GoToReefPosition(container=self, level=1, wrist_setpoint_decider=self.robot_state))
         
         self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.robot_state))
 
@@ -455,8 +455,8 @@ class RobotContainer:
         # p: place (score)
         self.keyboard_trigger_p.onTrue(GoToStow(self))
 
-        self.keyboard_trigger_1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True))
-        self.keyboard_trigger_2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
+        self.keyboard_trigger_1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
+        self.keyboard_trigger_2.onTrue(GoToReefPosition(self, 2, self.robot_state))
         self.keyboard_trigger_3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.keyboard_trigger_4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
@@ -598,8 +598,8 @@ class RobotContainer:
                 )
         )
 
-        self.bbox_L1.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True))
-        self.bbox_L2.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
+        self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
+        self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
         self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
