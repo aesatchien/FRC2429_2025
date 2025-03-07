@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.5282786885245905,
-        "y": 5.013985655737705
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 7.2645491803278714,
-        "y": 4.870133196721312
-      },
-      "isLocked": false,
-      "linkedName": "start point near middle of barge"
-    },
-    {
-      "anchor": {
         "x": 5.9818647540983605,
         "y": 3.971055327868852
       },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.346767751123933,
+        "y": 3.975479462432691
+      },
+      "isLocked": false,
+      "linkedName": "1+0 trough end point"
+    },
+    {
+      "anchor": {
+        "x": 6.737090163934426,
+        "y": 3.9950307377049183
+      },
       "prevControl": {
-        "x": 6.221618852459017,
-        "y": 4.042981557377049
+        "x": 6.175421123107324,
+        "y": 3.9889755465806482
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "1+0 trough end point"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],

@@ -434,6 +434,8 @@ class RobotContainer:
 
         NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
         NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
+        NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state))
+        NamedCommands.registerCommand('stow', GoToStow(self))
         NamedCommands.registerCommand('score', Score(self))
 
 
