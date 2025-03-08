@@ -557,8 +557,11 @@ class RobotContainer:
             GoToStow(container=self)))
 
         self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.1), self.climber))
+        self.bbox_net.onTrue(GoToPosition(self, "climb"))
         self.bbox_net.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+
         self.bbox_processor.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.1), self.climber))
+        self.bbox_processor.onTrue(GoToPosition(self, "climb"))
         self.bbox_processor.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
         self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))

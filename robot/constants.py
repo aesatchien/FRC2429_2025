@@ -59,7 +59,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.45,
+        "elevator": 0.52,
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -101,8 +101,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "coral station": {
-        "elevator": 0.42, # HACK :was .40 at clark
-        "shoulder_pivot": math.radians(57), # HACK: was 61 at clark
+        "elevator": 0.40, # HACK :was .40 at clark, .42 at LCEC
+        "shoulder_pivot": math.radians(61), # HACK: was 61 at clark, 57 at LCEC
         "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -121,16 +121,23 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
-    "algae low": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 0.65,
+    "algae low": {
+        "elevator": 0.75,
         "shoulder_pivot": math.radians(180),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
-    "algae high": { # TODO: find real values- this is a placeholder using stow's values
+    "algae high": {
         "elevator": 1.2,
         "shoulder_pivot": math.radians(180),
+        "wrist_pivot": math.radians(0),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    },
+    "climb": {
+        "elevator": inchesToMeters(14),
+        "shoulder_pivot": math.radians(0),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -255,8 +262,11 @@ class ClimberConstants:
     k_config.softLimit.forwardSoftLimitEnabled(False)
     k_config.softLimit.reverseSoftLimitEnabled(False)
 
+    k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+
     k_follower_config = SparkMaxConfig()
     k_follower_config.follow(k_CAN_id, True)
+    k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
 
 class WristConstants:
