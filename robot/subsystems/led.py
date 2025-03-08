@@ -33,6 +33,7 @@ class Led(commands2.Subsystem):
         # non-animated indicators
         kSUCCESS = {'name': "SUCCESS", "on_color": [0, 255, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
         kSUCCESSFLASH = {'name': "SUCCESS + MODE", "on_color": [0, 255, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
+        kWHITEFLASH = {'name': "SUCCESS + MODE", "on_color": [255, 255, 255], "off_color": [0, 0, 0], "animated": False, "frequency": 10, "duty_cycle": 0.5, 'use_mode': False}
         kFAILURE = {'name': "FAILURE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],             "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}
         kFAILUREFLASH = {'name': "FAILURE + MODE", "on_color": [255, 0, 0], "off_color": [0, 0, 0], "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': True}
         kNONE = {'name': "NONE", "on_color": [255, 0, 0], "off_color": [0, 0, 0],                   "animated": False, "frequency": 3, "duty_cycle": 0.5, 'use_mode': False}

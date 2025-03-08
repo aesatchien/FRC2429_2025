@@ -302,9 +302,9 @@ class RobotContainer:
 
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
-        self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
-        self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
-        self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
+        # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
+        # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
+        # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
         # this is for field centric
         #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
@@ -312,11 +312,9 @@ class RobotContainer:
         # button A for intake
         # left trigger for outtake
 
-        self.triggerA.whileTrue(GoToCoralStation(container=self).andThen(
-            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+        self.triggerA.onTrue(Score(self))
 
-        self.triggerA.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-            GoToStow(container=self)))
+        self.triggerRB.onTrue(self.led.set_indicator_with_timeout(Led.Indicator.kWHITEFLASH, 3))
 
         self.trigger_L_trigger.onTrue(
                 GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
@@ -372,11 +370,9 @@ class RobotContainer:
         self.co_trigger_r_stick_negative_x.onTrue(MoveWristSwap(self, self.wrist))
         self.co_trigger_r_stick_negative_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
-        self.co_trigger_r_trigger.whileTrue(MoveClimber(self, self.climber, ""))
-
-        self.co_trigger_start.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.1), self.climber))
+        self.co_trigger_start.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
         self.co_trigger_start.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
-        self.co_trigger_back.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.1), self.climber))
+        self.co_trigger_back.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
         self.co_trigger_back.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
     def bind_keyboard_buttons(self):
@@ -480,8 +476,12 @@ class RobotContainer:
 
         self.bbox_TBD1.onTrue(Score(self))
         self.bbox_TBD2.onTrue(GoToStow(self))
+
         self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        self.bbox_right.onFalse(MoveWristSwap(self, self.wrist))
+
         self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+        self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
 
         self.bbox_human_right.whileTrue(GoToCoralStation(container=self).andThen(
             RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
@@ -551,7 +551,7 @@ class RobotContainer:
         self.bbox_reef_alga_high.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
 
-        self.bbox_reef_alga_high.whileTrue(commands2.ParallelCommandGroup(GoToPosition(self, "algae high"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+        self.bbox_reef_alga_low.whileTrue(commands2.ParallelCommandGroup(GoToPosition(self, "algae low"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
 
         self.bbox_reef_alga_low.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))

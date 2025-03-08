@@ -39,7 +39,7 @@ k_positions = {
     "stow": {
         "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(0),
+        "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
@@ -129,7 +129,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "algae high": { # TODO: find real values- this is a placeholder using stow's values
-        "elevator": 1.1,
+        "elevator": 1.2,
         "shoulder_pivot": math.radians(180),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -294,6 +294,7 @@ class WristConstants:
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.outputRange(-0.5, 0.5)
         
     k_config.softLimit.forwardSoftLimit(k_max_angle)
     k_config.softLimit.reverseSoftLimit(k_min_angle)

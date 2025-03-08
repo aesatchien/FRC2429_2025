@@ -1,6 +1,7 @@
 import math
 import commands2
 from commands2.button import CommandXboxController
+from commands2.waitcommand import WaitCommand
 
 from commands.move_pivot import MovePivot
 from commands.move_elevator import MoveElevator
@@ -25,18 +26,19 @@ class GoToReefPosition(commands2.SequentialCommandGroup):
             raise ValueError("there is no such level!")
 
         # have wrist do its thing
-        if level != 1:
-            if type(wrist_setpoint_decider) == float:
-                self.addCommands(MoveWrist(container=container, radians=wrist_setpoint_decider, timeout=5, wait_to_finish=True, indent=indent+1))
-            else:
-                self.addCommands(MoveWristByJoystick(container=container, side_decider=wrist_setpoint_decider, swerve_for_field_centric=container.swerve, timeout=10, wait_to_finish=True, indent=indent+1))
-
-        else:
-            self.addCommands(MoveWrist(container, constants.k_positions["l1"]["wrist_pivot"], 5, False, True, indent=indent+1))
+        # if level != 1:
+        #     if type(wrist_setpoint_decider) == float:
+        #         self.addCommands(MoveWrist(container=container, radians=wrist_setpoint_decider, timeout=5, wait_to_finish=True, indent=indent+1))
+        #     else:
+        #         self.addCommands(MoveWristByJoystick(container=container, side_decider=wrist_setpoint_decider, swerve_for_field_centric=container.swerve, timeout=10, wait_to_finish=True, indent=indent+1))
+        #
+        # else:
+        #     self.addCommands(MoveWrist(container, constants.k_positions["l1"]["wrist_pivot"], 5, False, True, indent=indent+1))
 
         # go to final position
         self.addCommands(commands2.ParallelCommandGroup(
-            MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}"]["elevator"], wait_to_finish=True, indent=indent+1).withTimeout(5),
+            MoveWrist(container, math.radians(90), 5, False, False, indent=indent+1),
+            WaitCommand(min(0, level - 2) * 0.5).andThen(MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}"]["elevator"], wait_to_finish=True, indent=indent+1)).withTimeout(5),
             MovePivot(container=container, pivot=self.container.pivot, mode="specified", angle=constants.k_positions[f"l{level}"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
             # commands2.WaitCommand(0.2).andThen(MoveWrist(container, math.radians(90), timeout=5, indent=indent+1))
         ))
