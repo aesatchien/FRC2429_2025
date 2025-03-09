@@ -50,6 +50,11 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.encoder = self.motor.getEncoder()
         self.encoder.setPosition(constants.ShoulderConstants.k_starting_angle)
 
+        wpilib.SmartDashboard.putNumber("profiled_pivot velocity setpoint", 0)
+        wpilib.SmartDashboard.putNumber("profiled_pivot position setpoint", 0)
+        wpilib.SmartDashboard.putNumber("profiled_pivot applied output", 0)
+        wpilib.SmartDashboard.putNumber("profiled_pivot follower applied output", 0)
+
 # ------------   2429 Additions to the template's __init__  ------------
         self.setName(constants.ShoulderConstants.k_name)
         self.counter = constants.ShoulderConstants.k_counter_offset
@@ -69,6 +74,10 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         # Add the feedforward to the PID output to get the motor output
         # TODO - check if the feedforward is correct in units for the sparkmax - documentation says 32, not 12
         self.controller.setReference(setpoint.position, rev.SparkFlex.ControlType.kPosition, rev.ClosedLoopSlot.kSlot0, arbFeedforward=feedforward)
+        wpilib.SmartDashboard.putNumber("profiled_pivot velocity setpoint", setpoint.velocity)
+        wpilib.SmartDashboard.putNumber("profiled_pivot position setpoint", setpoint.position)
+        wpilib.SmartDashboard.putNumber("profiled_pivot applied output", self.motor.getAppliedOutput())
+        wpilib.SmartDashboard.putNumber("profiled_pivot follower applied output", self.follower.getAppliedOutput())
         # self.goal = setpoint.position  # don't want this - unless we want to plot the trapezoid
 
     def set_brake_mode(self, mode='brake'):

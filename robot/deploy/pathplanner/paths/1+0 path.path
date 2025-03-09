@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 7.5282786885245905,
-        "y": 5.013985655737705
+        "y": 3.0
       },
       "prevControl": null,
       "nextControl": {
         "x": 7.2645491803278714,
-        "y": 4.870133196721312
+        "y": 2.8561475409836072
       },
       "isLocked": false,
       "linkedName": "start point near middle of barge"
