@@ -556,11 +556,11 @@ class RobotContainer:
         self.bbox_reef_alga_low.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
 
-        self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.1), self.climber))
+        self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
         self.bbox_net.onTrue(GoToPosition(self, "climb"))
         self.bbox_net.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
-        self.bbox_processor.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.1), self.climber))
+        self.bbox_processor.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
         self.bbox_processor.onTrue(GoToPosition(self, "climb"))
         self.bbox_processor.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 

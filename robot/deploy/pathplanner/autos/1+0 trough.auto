@@ -5,15 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "1+0 trough path"
-          }
-        },
-        {
           "type": "named",
           "data": {
             "name": "go to l1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "1+0 trough path"
           }
         },
         {
