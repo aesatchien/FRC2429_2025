@@ -137,7 +137,7 @@ class Swerve (Subsystem):
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = False  # dowm below we decide which one to use in the periodic method
+        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
         # lhack turned off 15:48 2/28/25 to test pathplanner wo tags first
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names
@@ -528,7 +528,8 @@ class Swerve (Subsystem):
                     # do i have a fatal lag issue?  am i better without the time estimate?
                     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
                     # I gave a fairly high x and y, and a very high theta
-                    if use_tag:
+                    if True:
+                        #print(f'adding vision measurement at {wpilib.getTime()}')
                         self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], constants.DrivetrainConstants.k_pose_stdevs_large)
 
 

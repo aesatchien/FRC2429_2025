@@ -29,7 +29,7 @@ k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False
 k_use_photontags = False
-k_use_CJH_tags = False
+k_use_CJH_tags = True
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
