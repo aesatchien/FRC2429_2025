@@ -10,8 +10,9 @@ from subsystems.swerve import Swerve  # allows us to access the definitions
 from wpilib import SmartDashboard
 from commands2.button import CommandXboxController
 from wpimath.geometry import Rotation2d, Transform2d, Translation2d
-from wpimath.filter import Debouncer
+from wpimath.filter import Debouncer, SlewRateLimiter
 from subsystems.swerve_constants import DriveConstants as dc
+
 
 class DriveByJoystickSwerve(commands2.Command):
     def __init__(self, container, swerve: Swerve, controller: CommandXboxController, rate_limited=False) -> None:
@@ -40,6 +41,12 @@ class DriveByJoystickSwerve(commands2.Command):
         self.debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
         self.robot_oriented_debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
 
+        # CJH added a slew rate limiter 20250311 - but there already is one in Swerve, so is this redundant?
+        # make sure you put it on the joystick (not calculations), otherwise it doesn't help much on slow-mode
+        stick_max_units_per_second = 5  # can't be too low or you get lag - probably should be between 3 and 5
+        self.drive_limiter = SlewRateLimiter(stick_max_units_per_second)
+        self.strafe_limiter = SlewRateLimiter(stick_max_units_per_second)
+
         self.prev_commanded_vector = Translation2d(0, 0) # we should start stationary so this should be valid
 
     def initialize(self) -> None:
@@ -63,12 +70,21 @@ class DriveByJoystickSwerve(commands2.Command):
         # SO IF IT DOES NOT DRIVE CORRECTLY THAT WAY, CHECK KINEMATICS, THEN INVERSION OF DRIVE/ TURNING MOTORS
         # not all swerves are the same - some require inversion of drive and or turn motors
 
-        joystick_fwd = -self.controller.getLeftY()
-        joystick_strafe = -self.controller.getLeftX()
+        # CJH added a rate limiter on the joystick - my help with jitter at low end 20250311
+        joystick_fwd = -(self.controller.getLeftY() - self.swerve.thrust_calibration_offset)
+        joystick_fwd = self.drive_limiter.calculate(joystick_fwd)
+        joystick_strafe = -(self.controller.getLeftX() - self.swerve.strafe_calibration_offset)
+        joystick_strafe = self.strafe_limiter.calculate(joystick_strafe)
+
         joystick_rot = self.controller.getRightX() # TODO: find why this had to be negated this year (2025)
         if abs(joystick_rot) < dc.k_inner_deadband: joystick_rot = 0
 
-        desired_vector = Translation2d(joystick_fwd, joystick_strafe) # duty cycle, not meters per second
+        desired_vector = Translation2d(joystick_fwd, joystick_strafe)  # duty cycle, not meters per second
+
+        trace = True  # CJH watching the joystick values so we can plot them - need to get AJ better low end control
+        if trace:
+            wpilib.SmartDashboard.putNumber('_js_dv1_x', math.fabs(desired_vector.X()))
+            wpilib.SmartDashboard.putNumber('_js_dv1_y', math.fabs(desired_vector.Y()))
 
         # clipping should happen first (the below if statement is clipping)
         if desired_vector.norm() > dc.k_outer_deadband:
@@ -77,10 +93,19 @@ class DriveByJoystickSwerve(commands2.Command):
             desired_vector = Translation2d(0, 0)
 
         # squaring
-        desired_vector *= desired_vector.norm()
+        # desired_vector *= desired_vector.norm()
+        # CJH added a 1.5 instead of 2.0 - may help with stuttering at low end 20250311
+        desired_vector *= math.sqrt(desired_vector.norm())
 
         desired_vector *= slowmode_multiplier # must happen after clipping since we only want to clip the joystick values, not the robot speed
         desired_rot = joystick_rot * angular_slowmode_multiplier
+
+        desired_fwd = desired_vector.X()
+        desired_strafe = desired_vector.Y()
+
+        if trace:
+            wpilib.SmartDashboard.putNumber('_js_dv_norm_x', math.fabs(desired_fwd))
+            wpilib.SmartDashboard.putNumber('_js_dv_norm_y', math.fabs(desired_strafe))
 
         # linear_mapping = True  # two ways to make sure diagonal is at "full speed"
         #                        # TODO: find why our transforms are weird at low speed- they don't act right
@@ -104,9 +129,6 @@ class DriveByJoystickSwerve(commands2.Command):
         #     desired_fwd = -self.input_transform(1.0 * fwd) * slowmode_multiplier
         #     desired_strafe = -self.input_transform(1.0 * strafe) * slowmode_multiplier
         #     desired_rot = -self.input_transform(1.0 * self.controller.getRightX()) * angular_slowmode_multiplier
-
-        desired_fwd = desired_vector.X()
-        desired_strafe = desired_vector.Y()
 
         SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
 

@@ -26,6 +26,7 @@ from commands.go_to_stow import GoToStow
 from commands.go_to_reef_position import GoToReefPosition
 from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
+from commands.calibrate_joystick import CalibrateJoystick
 from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
@@ -47,7 +48,6 @@ from subsystems.climber import Climber
 from subsystems.vision import Vision
 
 from autonomous.leave_then_score_1 import LeaveThenScore
-from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
 from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
@@ -282,9 +282,10 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('IntakeOff', RunIntake(container=self, intake=self.intake, value=0, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-6, stop_on_end=False))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
+        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(10)))
+        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-10)))
+        wpilib.SmartDashboard.putData('CalibrateJoystick', CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
-        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
-        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
 
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
@@ -301,7 +302,9 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
+        self.triggerA.onTrue(Score(self))
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
+        self.triggerX.onTrue(CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
         # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
         # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
@@ -310,10 +313,7 @@ class RobotContainer:
         # this is for field centric
         #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
-        # button A for intake
-        # left trigger for outtake
 
-        self.triggerA.onTrue(Score(self))
 
         self.triggerRB.onTrue(self.led.set_indicator_with_timeout(Led.Indicator.kWHITEFLASH, 3))
 

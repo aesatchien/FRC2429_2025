@@ -85,6 +85,11 @@ class Swerve (Subsystem):
         self.strafe_magLimiter = SlewRateLimiter(dc.kMagnitudeSlewRate)
         self.rotLimiter = SlewRateLimiter(dc.kRotationalSlewRate)
 
+        # see if the asymmetry in the controllers is an issue for AJ  - 20250311 CJH
+        # update this in calibrate_joystick, and use in drive_by_joystick
+        self.thrust_calibration_offset = 0
+        self.strafe_calibration_offset = 0
+
         # Odometry class for tracking robot pose
         # when we boot should we always be at zero angle?
         # self.odometry = SwerveDrive4Odometry(
