@@ -82,7 +82,7 @@ class DriveByJoystickSwerve(commands2.Command):
         desired_vector = Translation2d(joystick_fwd, joystick_strafe)  # duty cycle, not meters per second
 
         trace = True  # CJH watching the joystick values so we can plot them - need to get AJ better low end control
-        if trace:
+        if trace and wpilib.RobotBase.isSimulation():
             wpilib.SmartDashboard.putNumber('_js_dv1_x', math.fabs(desired_vector.X()))
             wpilib.SmartDashboard.putNumber('_js_dv1_y', math.fabs(desired_vector.Y()))
 
@@ -103,9 +103,10 @@ class DriveByJoystickSwerve(commands2.Command):
         desired_fwd = desired_vector.X()
         desired_strafe = desired_vector.Y()
 
-        if trace:
+        if trace and wpilib.RobotBase.isSimulation():
             wpilib.SmartDashboard.putNumber('_js_dv_norm_x', math.fabs(desired_fwd))
             wpilib.SmartDashboard.putNumber('_js_dv_norm_y', math.fabs(desired_strafe))
+            SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
 
         # linear_mapping = True  # two ways to make sure diagonal is at "full speed"
         #                        # TODO: find why our transforms are weird at low speed- they don't act right
@@ -130,8 +131,6 @@ class DriveByJoystickSwerve(commands2.Command):
         #     desired_strafe = -self.input_transform(1.0 * strafe) * slowmode_multiplier
         #     desired_rot = -self.input_transform(1.0 * self.controller.getRightX()) * angular_slowmode_multiplier
 
-        SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
-
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed and self.field_oriented:
             # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
             # print("inverting forward and strafe because we're in field-centric mode and on red alliance!")
@@ -139,7 +138,6 @@ class DriveByJoystickSwerve(commands2.Command):
             desired_strafe *= -1
 
         # desired_fwd, desired_strafe = self.calculate_rate_limited_velocity(desired_fwd, desired_strafe, 0.02, 0.5)
-
 
         self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
                               fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
