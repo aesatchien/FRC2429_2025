@@ -7,8 +7,8 @@ os.environ["OPENCV_LOG_LEVEL"] = "DEBUG"  # Options: INFO, WARNING, ERROR, DEBUG
 
 import cv2
 print("[DEBUG] OpenCV version:", cv2.__version__)
-cv2.setNumThreads(1)  # Disable multithreading
-cv2.ocl.setUseOpenCL(False)
+cv2.setNumThreads(4)  # Disable multithreading
+cv2.ocl.setUseOpenCL(True)
 
 import time
 from datetime import datetime
@@ -39,7 +39,7 @@ class CameraWorker(QObject):
         self.qtgui = qtgui
         self.frames = 0
         self.previous_read_time = 0
-        self.max_fps = 60
+        self.max_fps = 20
         self.error_count = 0
         self.cv_backend = cv2.CAP_FFMPEG  # cv2.CAP_FFMPEG or cv2.CAP_DSHOW
 
@@ -56,43 +56,49 @@ class CameraWorker(QObject):
                     # pass
                     # shooter_on = self.qtgui.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
                     #elevator_low = self.qtgui.widget_dict['qlcd_elevator_height']['entry'].getDouble(100) < 100
-                    url = self.qtgui.camera_dict['Ringcam'] if True else self.qtgui.camera_dict['Tagcam']
+                    url = self.qtgui.camera_dict['ArducamReef'] if True else self.qtgui.camera_dict['LogitechTags']
                 else:
                     url = self.qtgui.camera_dict[self.qtgui.qcombobox_cameras.currentText()]  # figure out which url we want
 
                 # stream = urllib.request.urlopen('http://10.24.29.12:1187/stream.mjpg')
                 # get and display image
                 if url != old_url:  # try to only do this if we switch streams - seems to cause a lot of errors / increases bandwidth
-                    cap = cv2.VideoCapture(url)
+                    cap = cv2.VideoCapture(url, self.cv_backend)
                     if not cap.isOpened():
                         print("Cannot open stream")
                         return
                 old_url = url
 
                 now = time.time()
-                if now - self.previous_read_time >  1.0 / self.max_fps:
+                if now - self.previous_read_time > 1.0 / self.max_fps:
                     try:
                         ret, frame = cap.read()
                         if not ret:
                             print("[ERROR] OpenCV stopped receiving frames. Retrying...")
-                            time.sleep(1)  # Wait before retrying
+                            time.sleep(0.5)  # Wait before retrying
                             cap.release()
-                            cap = cv2.VideoCapture(url)  # Reinitialize
+                            cap = cv2.VideoCapture(url, self.cv_backend)  # Reinitialize
                             continue
 
                         self.frames += 1
                         pixmap = self.qtgui.convert_cv_qt(frame, self.qtgui.qlabel_camera_view)
                         self.qtgui.qlabel_camera_view.setPixmap(pixmap)
-                        self.qtgui.qlabel_camera_view: QtWidgets.QLabel
-                        #self.qtgui.qlabel_camera_view.repaint()  # do not repaint in the thread.  the main loop takes care of that.
+                        # self.qtgui.qlabel_camera_view: QtWidgets.QLabel
+                        # self.qtgui.qlabel_camera_view.repaint()  # do not repaint in the thread.  the main loop takes care of that.
                         # self.progress.emit(1)
                         self.previous_read_time = now
+                        if self.frames % 1000 == 0:
+                            print(f'{datetime.today().strftime("%H%M%S")}: frames received: {self.frames}')
                     except Exception as e:
                         self.error_count += 1
                         self.previous_read_time = now
                         if self.error_count % 100 == 0:
                             print(f'{datetime.today().strftime("%H%M%S")} error count:{self.error_count}: cv read error: {e}')
-                        # should I stop the thread here? or just let the user fix it by restarting manually?
+                        # should I stop the thread here? or just let the user fix it by restarting manually
+                else:
+                    # what should this else be?  a grab to flush the camera?  it seems to bulke a buffer of frames if we don't flush
+                    cap.grab()
+
         except Exception as e:
             print(f'{datetime.today().strftime("%H%M%S")} Camera worker crashed: {e}')
         self.finished.emit()

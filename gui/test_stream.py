@@ -9,14 +9,15 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS to allow access from other devices
 
 # Video capture settings
-cap = cv2.VideoCapture(1)  # Use the nth webcam
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
-cap.set(cv2.CAP_PROP_FPS, 20)
+cap = cv2.VideoCapture(0)  # Use the nth webcam
+#ap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+#cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
+# cap.set(cv2.CAP_PROP_FPS, 30)
 
 # Global variables
 frame = None
 lock = threading.Lock()
+fps = 20
 
 
 def capture_frames():
@@ -27,7 +28,7 @@ def capture_frames():
         if ret:
             with lock:
                 frame = img
-        time.sleep(1 / 30)  # Maintain 30 FPS
+        time.sleep(1 / fps)  # Maintain 30 FPS
 
 
 @app.route('/stream.mjpg')
