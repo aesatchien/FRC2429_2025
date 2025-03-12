@@ -1,6 +1,8 @@
 from enum import Enum
 import math
+from typing import Dict
 import rev
+import robotpy_apriltag
 import wpilib
 
 from rev import ClosedLoopSlot, SparkClosedLoopController, SparkFlexConfig, SparkMax, SparkMaxConfig
@@ -146,44 +148,51 @@ k_positions = {
 
 print("\nWARNING! NOT USING COMP SETPOINTS!!" * 40)
 
-k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
-k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
-k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(math.radians(180)))
-k_reef_center_to_face_translation = Translation2d(inchesToMeters(65.5 / 2), 0)
 
-# made from this:
-# k_blue_reef_center = Translation2d(inchesToMeters(176.75), inchesToMeters(158.3))
-# k_field_center = Translation2d(inchesToMeters(690.876 / 2), inchesToMeters(158.3))
-# k_red_reef_center = k_blue_reef_center.rotateAround(k_field_center, Rotation2d(math.radians(180)))
-# k_reef_center_to_face_translation = Translation2d(-inchesToMeters(65.5 / 2 + 14), 0)
-#
-# k_useful_robot_poses = {}
-# for idx, letter in enumerate(["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l"]):
-#
-#     center_to_this_face = k_reef_center_to_face_translation.rotateBy(Rotation2d(math.radians((idx // 2) * 60)))
-#     pose = Pose2d(center_to_this_face + k_blue_reef_center, Rotation2d(math.radians((idx // 2) * 60) ))
-#     k_useful_robot_poses.update({letter : pose})
+# Load the AprilTag field layout
+layout = robotpy_apriltag.AprilTagFieldLayout.loadField(robotpy_apriltag.AprilTagField.k2025ReefscapeWelded)
 
-# we can define in the above format or the below format depending on how we want to tune
- 
-k_useful_robot_poses_blue = {
-    'a': Pose2d(Translation2d(x=3.302000, y=4.020820), Rotation2d(0.000000)),
-    'b': Pose2d(Translation2d(x=3.302000, y=4.020820), Rotation2d(0.000000)),
-    'c': Pose2d(Translation2d(x=3.895725, y=2.992458), Rotation2d(1.047198)),
-    'd': Pose2d(Translation2d(x=3.895725, y=2.992458), Rotation2d(1.047198)),
-    'e': Pose2d(Translation2d(x=5.083175, y=2.992458), Rotation2d(2.094395)),
-    'f': Pose2d(Translation2d(x=5.083175, y=2.992458), Rotation2d(2.094395)),
-    'g': Pose2d(Translation2d(x=5.676900, y=4.020820), Rotation2d(3.141593)),
-    'h': Pose2d(Translation2d(x=5.676900, y=4.020820), Rotation2d(3.141593)),
-    'i': Pose2d(Translation2d(x=5.083175, y=5.049182), Rotation2d(4.188790)),
-    'j': Pose2d(Translation2d(x=5.083175, y=5.049182), Rotation2d(4.188790)),
-    'k': Pose2d(Translation2d(x=3.895725, y=5.049182), Rotation2d(5.235988)),
-    'l': Pose2d(Translation2d(x=3.895725, y=5.049182), Rotation2d(5.235988)),
-    'left_coral_station': Pose2d(Translation2d(x=1.060193, y=7.108810), Rotation2d(-0.942478)),
-    'right_coral_station': Pose2d(Translation2d(x=1.060193, y=0.932830), Rotation2d(0.942478)), # from Pose2d(Translation2d(x=1.060193, y=-7.108810 + 2 * k_field_center.y), Rotation2d(-0.942478)),
-}
+# Dictionary to store robot poses
+k_useful_robot_poses_blue = {}
 
-k_useful_robot_poses_red = {key: pose.rotateAround(k_field_center, Rotation2d(math.radians(180))) for key, pose in k_useful_robot_poses_blue.items()}
+# Tag-to-branch name mapping
+branch_names = ["cd", "ab", "kl", "ij", "gh", "ef"]
+
+# Store tag positions for plotting
+tag_positions = {}
+
+# Compute useful robot poses
+for tag_id in range(17, 23):
+    branch_name_idx = tag_id - 17
+
+    this_face_tag_pose = layout.getTagPose(tag_id)
+
+    if this_face_tag_pose:
+        # Get the tag's position and rotation
+        tag_translation = this_face_tag_pose.translation().toTranslation2d()
+        tag_yaw = Rotation2d(this_face_tag_pose.rotation().Z())
+
+        # Store the tag position for plotting
+        tag_positions[tag_id] = (tag_translation.X(), tag_translation.Y())
+
+        # Compute robot rotation and offsets
+        robot_rotation = tag_yaw + Rotation2d(math.radians(90))
+        # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
+        # see ../resources/plots/useful_robot_locations.ipynb
+        robot_offset_left = Translation2d(1, -.5).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(1, .5).rotateBy(tag_yaw)
+
+        # Compute robot positions
+        left_branch_position = tag_translation + robot_offset_left
+        right_branch_position = tag_translation + robot_offset_right
+
+        # Get branch names
+        left_branch_name = branch_names[branch_name_idx][0]
+        right_branch_name = branch_names[branch_name_idx][1]
+
+        # Store poses
+        k_useful_robot_poses_blue[left_branch_name] = Pose2d(left_branch_position, robot_rotation)
+        k_useful_robot_poses_blue[right_branch_name] = Pose2d(right_branch_position, robot_rotation)
 
 
 class GamePiece(Enum):

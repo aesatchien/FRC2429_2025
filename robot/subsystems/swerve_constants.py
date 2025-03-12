@@ -1,6 +1,7 @@
 import math
 from pathplannerlib.auto import PathConstraints
 from pathplannerlib.controller import PPHolonomicDriveController
+import wpilib
 from wpimath import units
 from wpimath.geometry import Rotation2d, Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
@@ -167,7 +168,10 @@ class ModuleConstants:
 class AutoConstants:
 
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
-    k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0) # HACK: kp should not be negative lmao
+    if wpilib.RobotBase.isReal():
+        k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0) # HACK: kp should not be negative lmao
+    else:
+        k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0)
 
     k_pathplanner_holonomic_controller = PPHolonomicDriveController(
             translation_constants=k_pathplanner_translation_pid_constants,
