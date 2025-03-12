@@ -11,6 +11,7 @@ from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
+from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
 
@@ -310,6 +311,7 @@ class RobotContainer:
     def bind_driver_buttons(self):
 
         self.triggerA.onTrue(Score(self))
+        self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue['a']))
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
         self.triggerX.onTrue(CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
@@ -500,8 +502,8 @@ class RobotContainer:
 
         # self.bbox_AB.whileTrue(
         #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.k_pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.k_pathfinding_constraints),
         #             condition=self.robot_state.is_left
         #         )
         # )

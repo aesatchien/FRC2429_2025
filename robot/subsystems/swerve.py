@@ -134,6 +134,7 @@ class Swerve (Subsystem):
 
         # todo - see if we can update the PoseStrategy based on if disabled, and use closest to current odometry when enabled
         # but MULTI_TAG_PNP_ON_COPROCESSOR probably does not help at all since we only see one tag at a time
+        # TODO: we can set a fallback for multi_tag_pnp_on_coprocessor, we can make that lowest ambiguity or cloest to current odo
         self.photoncam_pose_est = PhotonPoseEstimator(
             ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded),
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, self.photoncam_arducam_a, robot_to_cam_arducam_a)
@@ -171,18 +172,12 @@ class Swerve (Subsystem):
 
         robot_config = RobotConfig.fromGUISettings()
 
-        holonomic_controller = PPHolonomicDriveController(
-                translation_constants=ac.k_pathplanner_translation_pid_constants,
-                rotation_constants=ac.k_pathplanner_rotation_pid_constants,
-        )
-
-
         AutoBuilder.configure(
                 pose_supplier=self.get_pose,
                 reset_pose=self.resetOdometry,
                 robot_relative_speeds_supplier=self.get_relative_speeds,
                 output=self.drive_robot_relative,
-                controller=holonomic_controller,
+                controller=ac.k_pathplanner_holonomic_controller,
                 robot_config=robot_config,
                 should_flip_path=self.flip_path,
                 drive_subsystem=self
@@ -254,6 +249,9 @@ class Swerve (Subsystem):
         return dc.kDriveKinematics.toChassisSpeeds(self.get_module_states())
 
     def drive_robot_relative(self, chassis_speeds: ChassisSpeeds, feedforwards):
+        """
+        feedforwards isn't used at all so pass it whatever
+        """
         # required for the pathplanner lib's pathfollowing based on chassis speeds
         # idk if we need the feedforwards
         swerveModuleStates = dc.kDriveKinematics.toSwerveModuleStates(chassis_speeds)

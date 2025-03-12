@@ -1,7 +1,8 @@
 import math
 from pathplannerlib.auto import PathConstraints
+from pathplannerlib.controller import PPHolonomicDriveController
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Rotation2d, Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfileRadians
 from rev import SparkMax, SparkFlex, SparkFlexConfig, SparkMaxConfig
@@ -164,19 +165,16 @@ class ModuleConstants:
     kTurningMotorCurrentLimit = 40  # amp
 
 class AutoConstants:
-    kMaxSpeedMetersPerSecond = 3
-    kMaxAccelerationMetersPerSecondSquared = 3
-    kMaxAngularSpeedRadiansPerSecond = math.pi
-    kMaxAngularSpeedRadiansPerSecondSquared = math.pi
-
-    kPXController = 1
-    kPYController = 1
-    kPThetaController = 1
 
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
-    k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0)
+    k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0) # HACK: kp should not be negative lmao
 
-    pathfinding_constraints = PathConstraints(
+    k_pathplanner_holonomic_controller = PPHolonomicDriveController(
+            translation_constants=k_pathplanner_translation_pid_constants,
+            rotation_constants=k_pathplanner_rotation_pid_constants,
+    )
+
+    k_pathfinding_constraints = PathConstraints(
             maxVelocityMps=0.5,
             maxAccelerationMpsSq=3,
             maxAngularVelocityRps=math.radians(90),
@@ -184,9 +182,6 @@ class AutoConstants:
             nominalVoltage=12
     )
 
-
-    # Constraint for the motion profiled robot angle controller
-    kThetaControllerConstraints = TrapezoidProfileRadians.Constraints(
-        kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared
-    )
+    k_rotation_tolerance = Rotation2d(math.radians(2))
+    k_translation_tolerance_meters = 5 / 100
 
