@@ -428,6 +428,13 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_climber_up_indicator': {'widget': self.qlabel_climber_up_indicator, 'nt': '/SmartDashboard/Move climber up/running', 'command': '/SmartDashboard/Move climber up/running'},
 
         'qlabel_stow_indicator': {'widget': self.qlabel_stow_indicator, 'nt': '/SmartDashboard/GoToStow/running', 'command': '/SmartDashboard/GoToStow/running'},
+        'qlabel_score_indicator': {'widget': self.qlabel_score_indicator, 'nt': '/SmartDashboard/Score/running', 'command': '/SmartDashboard/Score/running', 'flash':True},
+        'qlabel_l1_indicator': {'widget': self.qlabel_l1_indicator, 'nt': '/SmartDashboard/GoToL1/running', 'command': '/SmartDashboard/GoToL1/running'},
+        'qlabel_l2_indicator': {'widget': self.qlabel_l2_indicator, 'nt': '/SmartDashboard/GoToL2/running', 'command': '/SmartDashboard/GoToL2/running'},
+        'qlabel_l3_indicator': {'widget': self.qlabel_l3_indicator, 'nt': '/SmartDashboard/GoToL3/running', 'command': '/SmartDashboard/GoToL3/running'},
+        'qlabel_l4_indicator': {'widget': self.qlabel_l4_indicator, 'nt': '/SmartDashboard/GoToL4/running', 'command': '/SmartDashboard/GoToL4/running'},
+        'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
+
 
         'qlabel_arducam_reef_target_indicator': {'widget': self.qlabel_arducam_reef_target_indicator, 'nt': '/SmartDashboard/arducam_reef_targets_exist', 'command': None},
         'qlabel_arducam_back_target_indicator': {'widget': self.qlabel_arducam_back_target_indicator, 'nt': '/SmartDashboard/arducam_back_targets_exist', 'command': None},
@@ -440,17 +447,9 @@ class Ui(QtWidgets.QMainWindow):
                                         'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
             # UNFINISHED for 2025
         'qlabel_navx_reset_indicator': {'widget': self.qlabel_navx_reset_indicator, 'nt': '/SmartDashboard/GyroReset/running', 'command': '/SmartDashboard/GyroReset/running'},
-        'qlabel_shooter_indicator': {'widget': self.qlabel_shooter_indicator,'nt': '/SmartDashboard/shooter_on', 'command': None, 'flash': True},
-        'qlabel_shoot_cycle_indicator': {'widget': self.qlabel_shoot_cycle_indicator, 'nt': '/SmartDashboard/AutoShootCycle/running', 'command': '/SmartDashboard/AutoShootCycle/running'},
-        'qlabel_indexer_indicator': {'widget': self.qlabel_indexer_indicator, 'nt': '/SmartDashboard/indexer_enabled', 'command': None, 'flash': True},
-        'qlabel_intake_indicator': {'widget': self.qlabel_intake_indicator, 'nt': '/SmartDashboard/intake_enabled', 'command': None, 'flash': True},
         # 'qlabel_orange_target_indicator': {'widget': self.qlabel_orange_target_indicator, 'nt': '/SmartDashboard/orange_targets_exist', 'command': None},
 
         'qlabel_position_indicator': {'widget': self.qlabel_position_indicator, 'nt': '/SmartDashboard/_target', 'command': None},
-        'qlabel_reset_gyro_from_pose_indicator': {'widget': self.qlabel_reset_gyro_from_pose_indicator, 'nt': '/SmartDashboard/GyroFromPose/running', 'command': '/SmartDashboard/GyroFromPose/running'},
-        'qlabel_drive_to_speaker_indicator': {'widget': self.qlabel_drive_to_speaker_indicator, 'nt': '/SmartDashboard/ToSpeaker/running', 'command': '/SmartDashboard/ToSpeaker/running'},
-        'qlabel_drive_to_amp_indicator': {'widget': self.qlabel_drive_to_amp_indicator, 'nt': '/SmartDashboard/ToAmp/running', 'command': '/SmartDashboard/ToAmp/running'},
-        'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
 
             # NUMERIC INDICATORS - LCDS should be phased out since they are a legacy item (and not particularly cool anyway)
         'qlcd_navx_heading': {'widget': self.qlcd_navx_heading, 'nt': '/SmartDashboard/_navx', 'command': None},

@@ -26,6 +26,7 @@ class RobotState(commands2.Subsystem):
         GROUND = {'name': 'ground', 'lit_leds': LedConstants.k_led_count, 'mode': 'keep'}
         # coral modes
         L1 = {'name': 'l1', 'lit_leds': -1 + LedConstants.k_led_count // 8, 'mode': 'coral'}
+        L2 = {'name': 'l2', 'lit_leds': -2 + 1 * LedConstants.k_led_count // 4, 'mode': 'coral'}
         L3 = {'name': 'l3', 'lit_leds': -3 + 3 * LedConstants.k_led_count // 8, 'mode': 'coral'}
         L4 = {'name': 'l4', 'lit_leds': -4 + LedConstants.k_led_count // 2, 'mode': 'coral'}
         CORAL_STATION = {'name': 'coral station', 'lit_leds': LedConstants.k_led_count, 'mode': 'coral'}

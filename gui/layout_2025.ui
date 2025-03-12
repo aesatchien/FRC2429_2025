@@ -67,9 +67,9 @@
       <property name="title">
        <string>Climber</string>
       </property>
-      <widget class="QLabel" name="qlabel_shooter_indicator">
+      <widget class="QLabel2" name="qlabel_l2_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -93,7 +93,7 @@ background-color:rgb(80, 235, 0);
 color:rgb(0, 0, 0);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>L2</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -102,9 +102,9 @@ color:rgb(0, 0, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_shoot_cycle_indicator">
+      <widget class="QLabel2" name="qlabel_l1_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -127,7 +127,7 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>L1</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -136,9 +136,9 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_indexer_indicator">
+      <widget class="QLabel2" name="qlabel_l3_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -161,7 +161,7 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>L3</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -269,9 +269,9 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_intake_indicator">
+      <widget class="QLabel2" name="qlabel_l4_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -294,7 +294,7 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>L4</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1101,7 +1101,7 @@ background-color:rgb(80, 235, 0);</string>
       <property name="title">
        <string>Autonomous Commands</string>
       </property>
-      <widget class="QLabel2" name="qlabel_reset_gyro_from_pose_indicator">
+      <widget class="QLabel2" name="qlabel_can_report_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1125,7 +1125,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>CAN REPORT</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1134,9 +1134,9 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_drive_to_speaker_indicator">
+      <widget class="QLabel2" name="qlabel_score_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1158,7 +1158,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>SCORE</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1200,7 +1200,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_drive_to_amp_indicator">
+      <widget class="QLabel2" name="qlabel_TBD1_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1233,7 +1233,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_get_ring_indicator">
+      <widget class="QLabel2" name="qlabel_TBD3_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1258,7 +1258,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>TBD3</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1267,7 +1267,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_can_report_indicator">
+      <widget class="QLabel2" name="qlabel_TBD2_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1293,7 +1293,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>TBD</string>
+        <string>TBD2</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -2229,41 +2229,6 @@ color:rgb(230,230,230);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="qlabel_TBD">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>1080</x>
-      <y>109</y>
-      <width>371</width>
-      <height>151</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>MS Shell Dlg 2</family>
-      <pointsize>14</pointsize>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border: 7px;
-border-radius: 7px;
-background-color:rgba(0, 0, 0,85);
-color:rgb(230,230,230);</string>
-    </property>
-    <property name="text">
-     <string>TBD</string>
-    </property>
-    <property name="textFormat">
-     <enum>Qt::AutoText</enum>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
    <zorder>tabWidget</zorder>
    <zorder>qt_text_status</zorder>
    <zorder>tabWidget_2</zorder>
@@ -2277,7 +2242,6 @@ color:rgb(230,230,230);</string>
    <zorder>qt_button_swap_sim</zorder>
    <zorder>qlabel_camera_view</zorder>
    <zorder>qlabel_alliance_indicator</zorder>
-   <zorder>qlabel_TBD</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
