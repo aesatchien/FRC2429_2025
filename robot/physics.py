@@ -52,7 +52,7 @@ class PhysicsEngine:
         # vision stuff - using 2024 stuff for now (CJH)
         key = 'orange'
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        self.ringcam_table = self.inst.getTable('/Cameras/ArducamReef')   # lifecam for rings
+        self.ringcam_table = self.inst.getTable('/Cameras/ArducamHigh')   # test cam for sim
         self.targets_entry = self.ringcam_table.getEntry(f"{key}/targets")
         self.distance_entry = self.ringcam_table.getEntry(f"{key}/distance")
         self.strafe_entry = self.ringcam_table.getEntry(f"{key}/strafe")

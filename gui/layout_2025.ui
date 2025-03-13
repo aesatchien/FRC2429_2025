@@ -305,7 +305,7 @@ background-color:rgb(80, 235, 0);</string>
       </widget>
       <widget class="QLabel2" name="qlabel_game_piece_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -317,7 +317,7 @@ background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="font">
         <font>
-         <pointsize>12</pointsize>
+         <pointsize>14</pointsize>
          <bold>true</bold>
         </font>
        </property>
@@ -880,7 +880,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_arducam_reef_target_indicator">
+      <widget class="QLabel2" name="qlabel_arducam_high_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -906,42 +906,7 @@ background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
         <string>ARDU
-REEF</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::AutoText</enum>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel2" name="qlabel_arducam_back_target_indicator">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>80</y>
-         <width>75</width>
-         <height>50</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>11</pointsize>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 7px;
-border-radius: 7px;
-background-color:rgb(80, 235, 0);</string>
-       </property>
-       <property name="text">
-        <string>ARDU
-BACK</string>
+HIGH</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1010,7 +975,7 @@ background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
         <string>LOGI
-HIGH</string>
+TBD</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1019,14 +984,14 @@ HIGH</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_logitech_tags_target_indicator">
+      <widget class="QLabel2" name="qlabel_logitech_reef_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>135</y>
+         <y>80</y>
          <width>75</width>
          <height>50</height>
         </rect>
@@ -1045,7 +1010,7 @@ background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
         <string>LOGI
-TAGS</string>
+ HI REEF</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1080,6 +1045,41 @@ background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
         <string>PHOTON TAGS</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::AutoText</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel2" name="qlabel_arducam_back_target_indicator">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>136</y>
+         <width>75</width>
+         <height>50</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>11</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgb(80, 235, 0);</string>
+       </property>
+       <property name="text">
+        <string>ARDU
+TBD</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1521,7 +1521,7 @@ background-color:rgb(127, 127, 127);
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_arducam_reef_indicator">
+     <widget class="QLabel2" name="qlabel_arducam_high_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1546,7 +1546,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>ARDU REEF: 0</string>
+       <string>ARDU HIGH: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -1562,7 +1562,7 @@ background-color:rgb(180,180,180);</string>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>352</y>
+        <y>396</y>
         <width>100</width>
         <height>20</height>
        </rect>
@@ -1623,14 +1623,14 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_logitech_tags_indicator">
+     <widget class="QLabel2" name="qlabel_logitech_reef_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>397</y>
+        <y>352</y>
         <width>100</width>
         <height>20</height>
        </rect>
@@ -1648,7 +1648,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>LOGI TAGS: 0</string>
+       <string>LOGI REEF: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>

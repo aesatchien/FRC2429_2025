@@ -14,17 +14,17 @@ class Vision(SubsystemBase):
         self.ntinst = NetworkTableInstance.getDefault()
 
         # set up a dictionary of cams to go through
-        self.camera_dict = {'ardu_reef_tags': {}, 'ardu_back_tags': {}, 'logi_high_tags': {}, 'logi_tags_tags': {}}
+        self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, 'logi_high_tags': {}, 'logi_reef_tags': {}}
         self.camera_values = {}
 
 
         self.arducam_back_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamBack')  # arducam for tags
-        self.arducam_reef_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamReef')  # arducam for tags
+        self.arducam_high_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamHigh')  # arducam for high tags
         # TODO - figure out how to have two tag cameras play nice
         self.logitech_high_table = NetworkTableInstance.getDefault().getTable('/Cameras/LogitechHigh')  # logitech for tags
-        self.logitech_tags_table = NetworkTableInstance.getDefault().getTable('/Cameras/LogitechTags')  # logitech for tags
+        self.logitech_reef_table = NetworkTableInstance.getDefault().getTable('/Cameras/LogitechReef')  # logitech for reef
 
-        self.tables = [self.arducam_reef_table, self.arducam_back_table, self.logitech_high_table,  self.logitech_tags_table]
+        self.tables = [self.arducam_high_table, self.arducam_back_table, self.logitech_high_table,  self.logitech_reef_table]
 
         for ix, key in enumerate(self.camera_dict.keys()):  # colors on top
             table = self.tables[ix]
@@ -39,12 +39,12 @@ class Vision(SubsystemBase):
             self.camera_values[key].update({'id': 0, 'targets': 0, 'distance': 0, 'rotation': 0, 'strafe': 0})
 
 
-    def target_available(self, target='ardu_reef_tags'):
+    def target_available(self, target='ardu_high_tags'):
         target_available = self.camera_dict[target]['targets_entry'].get() > 0
         time_stamp_good = wpilib.Timer.getFPGATimestamp() - self.camera_dict[target]['timestamp_entry'].get() < 1
         return target_available and time_stamp_good
 
-    def get_tag_strafe(self, target='ardu_reef_tags'):
+    def get_tag_strafe(self, target='ardu_high_tags'):
         tag_available = self.target_available(target)
         if tag_available > 0:
             return self.camera_dict[target]['strafe_entry'].get()
@@ -58,7 +58,7 @@ class Vision(SubsystemBase):
         else:
             return 0  # it would do this anyway because it defaults to zero
         
-    def get_tag_dist(self, target='ardu_reef_tags'):
+    def get_tag_dist(self, target='ardu_high_tags'):
         tag_available = self.target_available(target)
         if tag_available > 0:
             return self.camera_dict[target]['distance_entry'].get()
@@ -99,15 +99,15 @@ class Vision(SubsystemBase):
             if wpilib.RobotBase.isReal():
                 # orange will crash at the moment
                 # wpilib.SmartDashboard.putBoolean('orange_targets_exist', self.target_available('orange'))
-                wpilib.SmartDashboard.putBoolean('arducam_reef_targets_exist', self.target_available('ardu_reef_tags'))
+                wpilib.SmartDashboard.putBoolean('arducam_high_targets_exist', self.target_available('ardu_high_tags'))
                 wpilib.SmartDashboard.putBoolean('logitech_high_targets_exist', self.target_available('logi_high_tags'))
                 wpilib.SmartDashboard.putBoolean('arducam_back_targets_exist', self.target_available('ardu_back_tags'))
-                wpilib.SmartDashboard.putBoolean('logitech_tags_targets_exist', self.target_available('logi_tags_tags'))
+                wpilib.SmartDashboard.putBoolean('logitech_reef_targets_exist', self.target_available('logi_reef_tags'))
             else:  # test the keys
-                wpilib.SmartDashboard.putBoolean('arducam_reef_targets_exist', 0 < self.counter % 600 < 110 )
+                wpilib.SmartDashboard.putBoolean('arducam_high_targets_exist', 0 < self.counter % 600 < 110 )
                 wpilib.SmartDashboard.putBoolean('logitech_high_targets_exist', 100 < self.counter % 600 < 210)
                 wpilib.SmartDashboard.putBoolean('arducam_back_targets_exist', 200 < self.counter % 600 < 310)
-                wpilib.SmartDashboard.putBoolean('logitech_tags_targets_exist', 300 < self.counter % 600 < 410)
+                wpilib.SmartDashboard.putBoolean('logitech_reef_targets_exist', 300 < self.counter % 600 < 410)
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', 400 < self.counter % 600 < 510)
             # wpilib.SmartDashboard.putNumber('tag_strafe', self.camera_dict['tags']['strafe_entry'].get())
 

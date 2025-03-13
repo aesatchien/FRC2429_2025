@@ -56,7 +56,7 @@ class CameraWorker(QObject):
                     # pass
                     # shooter_on = self.qtgui.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
                     #elevator_low = self.qtgui.widget_dict['qlcd_elevator_height']['entry'].getDouble(100) < 100
-                    url = self.qtgui.camera_dict['ArducamReef'] if True else self.qtgui.camera_dict['LogitechTags']
+                    url = self.qtgui.camera_dict['ArducamHigh'] if True else self.qtgui.camera_dict['LogitechReef']
                 else:
                     url = self.qtgui.camera_dict[self.qtgui.qcombobox_cameras.currentText()]  # figure out which url we want
 
@@ -138,13 +138,13 @@ class Ui(QtWidgets.QMainWindow):
         self.thread = None
         self.camera_dict = {'LogitechHigh': 'http://10.24.29.12:1186/stream.mjpg',
                             'ArducamBack': 'http://10.24.29.12:1187/stream.mjpg',
-                            'LogitechTags': 'http://10.24.29.13:1186/stream.mjpg',
-                            'ArducamReef': 'http://10.24.29.13:1187/stream.mjpg',
+                            'LogitechReef': 'http://10.24.29.13:1186/stream.mjpg',
+                            'ArducamHigh': 'http://10.24.29.13:1187/stream.mjpg',
 
                             'Raw LogiHigh': 'http://10.24.29.12:1181/stream.mjpg',
                             'Raw ArduBack': 'http://10.24.29.12:1182/stream.mjpg',
-                            'Raw LogiTags': 'http://10.24.29.13:1181/stream.mjpg',
-                            'Raw ArduReef': 'http://10.24.29.13:1182/stream.mjpg',
+                            'Raw LogiReef': 'http://10.24.29.13:1181/stream.mjpg',
+                            'Raw ArduHigh': 'http://10.24.29.13:1182/stream.mjpg',
                             'Debug': 'http://127.0.0.1:1186/stream.mjpg',
                             }
 
@@ -152,22 +152,22 @@ class Ui(QtWidgets.QMainWindow):
         self.robot_timestamp_entry = self.ntinst.getEntry('/SmartDashboard/_timestamp')
         self.logitech_high_timestamp_entry = self.ntinst.getEntry('/Cameras/LogitechHigh/_timestamp')
         self.logitech_high_connections_entry = self.ntinst.getEntry('/Cameras/LogitechHigh/_connections')
-        self.logitech_tags_timestamp_entry = self.ntinst.getEntry('/Cameras/LogitechTags/_timestamp')
-        self.logitech_tags_connections_entry = self.ntinst.getEntry('/Cameras/LogitechTags/_connections')
+        self.logitech_reef_timestamp_entry = self.ntinst.getEntry('/Cameras/LogitechReef/_timestamp')
+        self.logitech_reef_connections_entry = self.ntinst.getEntry('/Cameras/LogitechReef/_connections')
         self.arducam_back_timestamp_entry = self.ntinst.getEntry('/Cameras/ArducamBack/_timestamp')
         self.arducam_back_connections_entry = self.ntinst.getEntry('/Cameras/ArducamBack/_connections')
-        self.arducam_reef_timestamp_entry = self.ntinst.getEntry('/Cameras/ArducamReef/_timestamp')
-        self.arducam_reef_connections_entry = self.ntinst.getEntry('/Cameras/ArducamReef/_connections')
+        self.arducam_high_timestamp_entry = self.ntinst.getEntry('/Cameras/ArducamHigh/_timestamp')
+        self.arducam_high_connections_entry = self.ntinst.getEntry('/Cameras/ArducamHigh/_connections')
 
         self.logitech_high_connections = 0
-        self.logitech_tags_connections = 0
+        self.logitech_reef_connections = 0
         self.arducam_back_connections = 0
-        self.arducam_reef_connections = 0
+        self.arducam_high_connections = 0
 
         self.logitech_high_alive = False
-        self.logitech_tags_alive = False
+        self.logitech_reef_alive = False
         self.arducam_back_alive = False
-        self.arducam_reef_alive = False
+        self.arducam_high_alive = False
 
         # --------------  ROBOT VOLTAGE AND CURRENT  ---------------
         # set up the warning labels - much of the formatting is handled in the widget class itself
@@ -298,7 +298,7 @@ class Ui(QtWidgets.QMainWindow):
                 pass
 
         if any(live_cams):
-        # if self.check_url(self.camera_dict['LogitechTags']) or self.check_url(self.camera_dict['ArducamReef']) or self.check_url(self.camera_dict['Debug']):
+        # if self.check_url(self.camera_dict['LogitechReef']) or self.check_url(self.camera_dict['ArducamHigh']) or self.check_url(self.camera_dict['Debug']):
             if self.thread is None:  # first time through we need to make the thread
                 self.thread = QThread()  # create a QThread object
                 self.worker = CameraWorker(qtgui=self)  # create a CameraWorker object, pass it the main gui
@@ -414,8 +414,8 @@ class Ui(QtWidgets.QMainWindow):
                                             'style_on': "border: 7px; border-radius: 7px; background-color:rgb(225, 0, 0); color:rgb(200, 200, 200);",
                                             'style_off': "border: 7px; border-radius: 7px; background-color:rgb(0, 0, 225); color:rgb(200, 200, 200);"},
         'qlabel_camera_view': {'widget': self.qlabel_camera_view, 'nt': None, 'command': None},  # does this do anything? - can't remember
-        'qlabel_arducam_reef_indicator': {'widget': self.qlabel_arducam_reef_indicator, 'nt': None, 'command': None},
-        'qlabel_logitech_tags_indicator': {'widget': self.qlabel_logitech_tags_indicator, 'nt': None, 'command': None},
+        'qlabel_arducam_high_indicator': {'widget': self.qlabel_arducam_high_indicator, 'nt': None, 'command': None},
+        'qlabel_logitech_reef_indicator': {'widget': self.qlabel_logitech_reef_indicator, 'nt': None, 'command': None},
         'qlabel_logitech_high_indicator': {'widget': self.qlabel_logitech_high_indicator, 'nt': None, 'command': None},
         'qlabel_arducam_back_indicator': {'widget': self.qlabel_arducam_back_indicator, 'nt': None, 'command': None},
 
@@ -442,9 +442,9 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
 
 
-        'qlabel_arducam_reef_target_indicator': {'widget': self.qlabel_arducam_reef_target_indicator, 'nt': '/SmartDashboard/arducam_reef_targets_exist', 'command': None},
+        'qlabel_arducam_high_target_indicator': {'widget': self.qlabel_arducam_high_target_indicator, 'nt': '/SmartDashboard/arducam_high_targets_exist', 'command': None},
         'qlabel_arducam_back_target_indicator': {'widget': self.qlabel_arducam_back_target_indicator, 'nt': '/SmartDashboard/arducam_back_targets_exist', 'command': None},
-        'qlabel_logitech_tags_target_indicator': {'widget': self.qlabel_logitech_tags_target_indicator, 'nt': '/SmartDashboard/logitech_tags_targets_exist', 'command': None},
+        'qlabel_logitech_reef_target_indicator': {'widget': self.qlabel_logitech_reef_target_indicator, 'nt': '/SmartDashboard/logitech_reef_targets_exist', 'command': None},
         'qlabel_logitech_high_target_indicator': {'widget': self.qlabel_logitech_high_target_indicator, 'nt': '/SmartDashboard/logitech_high_targets_exist', 'command': None},
         'qlabel_photoncam_target_indicator': {'widget': self.qlabel_photoncam_target_indicator, 'nt': '/SmartDashboard/photoncam_targets_exist', 'command': None},
         'qlabel_pose_indicator': {'widget': self.qlabel_pose_indicator, 'nt': None, 'command': None,},
@@ -471,9 +471,9 @@ class Ui(QtWidgets.QMainWindow):
         #'qlabel_align_to_target_indicator': {'widget': self.qlabel_align_to_target_indicator, 'nt': '/SmartDashboard/AutoSetupScore/running', 'command': '/SmartDashboard/AutoSetupScore/running'},
         #'qlabel_arm_calibration_indicator': {'widget': self.qlabel_arm_calibration_indicator, 'nt': '/SmartDashboard/ArmCalibration/running', 'command': '/SmartDashboard/ArmCalibration/running'},
         # 'qlabel_upper_pickup_indicator': {'widget': self.qlabel_upper_pickup_indicator, 'nt': '/SmartDashboard/UpperSubstationPickup/running', 'command': '/SmartDashboard/UpperSubstationPickup/running'},
-        'hub_targets': {'widget': None, 'nt': '/arducam_reef//orange/targets', 'command': None},
-        'hub_rotation': {'widget': None, 'nt': '/arducam_reef//orange/rotation', 'command': None},
-        'hub_distance': {'widget': None, 'nt': '/arducam_reef//orange/distance', 'command': None},
+        'hub_targets': {'widget': None, 'nt': '/arducam_high//orange/targets', 'command': None},
+        'hub_rotation': {'widget': None, 'nt': '/arducam_high//orange/rotation', 'command': None},
+        'hub_distance': {'widget': None, 'nt': '/arducam_high//orange/distance', 'command': None},
 
         }
 
@@ -615,33 +615,33 @@ class Ui(QtWidgets.QMainWindow):
         allowed_delay = 0.5  # how long before we call a camera dead
         timestamp = self.robot_timestamp_entry.getDouble(1)
 
-        # look for a disconnect - just in arducam_reef for now since that's the one we watch
+        # look for a disconnect - just in arducam_high for now since that's the one we watch
         if self.thread is not None:  # camera stream view has been started
             if self.thread.isRunning():  # camera is on
-                if self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) > allowed_delay:  # arducam_reef died
-                    self.arducam_reef_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_reef - KILLING camera thread')
+                if self.arducam_high_alive and timestamp - self.arducam_high_timestamp_entry.getDouble(-1) > allowed_delay:  # arducam_high died
+                    self.arducam_high_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_high - KILLING camera thread')
                     self.toggle_camera_thread()
                 else:
                     pass
                 if self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
                     self.logitech_high_alive = False
                     self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_high - information only')
-                if self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
-                    self.logitech_tags_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_tags - information only')
+                if self.logitech_reef_alive and timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+                    self.logitech_reef_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_reef - information only')
                 if self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) > allowed_delay:  # front tagcam died
                     self.arducam_back_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Farducam_back - information only')
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_back - information only')
 
             else:  # we started the camera but the thread is not running
-                if not self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_reef alive again
-                    self.arducam_reef_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_reef - RESTARTING camera thread')
+                if not self.arducam_high_alive and timestamp - self.arducam_high_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_high alive again
+                    self.arducam_high_alive = True
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_high - RESTARTING camera thread')
                     self.toggle_camera_thread()
-                if not self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
-                    self.logitech_tags_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_tags - information only')
+                if not self.logitech_reef_alive and timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
+                    self.logitech_reef_alive = True
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_reef - information only')
                 if not self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
                     self.logitech_high_alive = True
                     self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_high - information only')
@@ -650,17 +650,17 @@ class Ui(QtWidgets.QMainWindow):
                     self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_back - information only')
 
         # really seems like i should be able to do this with a loop ...
-        self.arducam_reef_alive = timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay
-        arducam_reef_style = style_on if self.arducam_reef_alive else style_off
-        self.arducam_reef_connections = int(self.arducam_reef_connections_entry.getDouble(0))
-        self.qlabel_arducam_reef_indicator.setText(f'ARDU REEF: {self.logitech_high_connections:2d}')
-        self.qlabel_arducam_reef_indicator.setStyleSheet(arducam_reef_style)
+        self.arducam_high_alive = timestamp - self.arducam_high_timestamp_entry.getDouble(-1) < allowed_delay
+        arducam_high_style = style_on if self.arducam_high_alive else style_off
+        self.arducam_high_connections = int(self.arducam_high_connections_entry.getDouble(0))
+        self.qlabel_arducam_high_indicator.setText(f'ARDU HIGH: {self.arducam_high_connections:2d}')
+        self.qlabel_arducam_high_indicator.setStyleSheet(arducam_high_style)
 
-        self.logitech_tags_alive = timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) < allowed_delay
-        logitech_tags_style = style_on if self.logitech_tags_alive else style_off
-        self.logitech_tags_connections = int(self.logitech_tags_connections_entry.getDouble(0))
-        self.qlabel_logitech_tags_indicator.setText(f'LOGI TAGS: {self.logitech_tags_connections:2d}')
-        self.qlabel_logitech_tags_indicator.setStyleSheet(logitech_tags_style)
+        self.logitech_reef_alive = timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) < allowed_delay
+        logitech_reef_style = style_on if self.logitech_reef_alive else style_off
+        self.logitech_reef_connections = int(self.logitech_reef_connections_entry.getDouble(0))
+        self.qlabel_logitech_reef_indicator.setText(f'LOGI TAGS: {self.logitech_reef_connections:2d}')
+        self.qlabel_logitech_reef_indicator.setStyleSheet(logitech_reef_style)
 
         self.logitech_high_alive = timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay
         logitech_high_style = style_on if self.logitech_high_alive else style_off
