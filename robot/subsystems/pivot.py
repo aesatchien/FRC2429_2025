@@ -50,6 +50,8 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.encoder = self.motor.getEncoder()
         self.encoder.setPosition(constants.ShoulderConstants.k_starting_angle)
 
+        self.abs_encoder = self.motor.getAbsoluteEncoder()
+
         wpilib.SmartDashboard.putNumber("profiled_pivot velocity setpoint", 0)
         wpilib.SmartDashboard.putNumber("profiled_pivot position setpoint", 0)
         wpilib.SmartDashboard.putNumber("profiled_pivot applied output", 0)
@@ -92,7 +94,8 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.follower.configure(constants.ShoulderConstants.k_follower_config, self.rev_resets, self.rev_persists)
 
     def get_angle(self):
-        return self.encoder.getPosition()
+        return self.abs_encoder.getPosition()
+        # return self.encoder.getPosition()
 
     def set_goal(self, goal):
         # make our own sanity-check on the subsystem's setGoal function
@@ -117,6 +120,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.counter += 1
         if self.counter % 10 == 0:
             self.angle = self.encoder.getPosition()
+            self.abs_angle = self.abs_encoder.getPosition()
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance  # maybe we want to call this an error
             self.error = self.angle - self.goal
 
@@ -129,3 +133,5 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
             self.is_moving = abs(self.encoder.getVelocity()) > 0.001  # m per second
             wpilib.SmartDashboard.putBoolean(f'{self.getName()}_is_moving', self.is_moving)
             wpilib.SmartDashboard.putNumber(f'{self.getName()}_spark_angle', radiansToDegrees(self.angle))
+            wpilib.SmartDashboard.putNumber(f'{self.getName()}_abs_spark_angle', radiansToDegrees(self.abs_angle))
+

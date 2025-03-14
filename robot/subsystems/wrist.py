@@ -56,8 +56,8 @@ class Wrist(Subsystem):
         self.encoder.setPosition(radians)
 
     def get_angle(self) -> float:
-        return self.encoder.getPosition()
-        # return self.abs_encoder.getPosition()
+        # return self.encoder.getPosition()
+        return self.abs_encoder.getPosition()
 
     def get_at_setpoint(self) -> bool:
         return abs(self.encoder.getPosition() - self.setpoint) < WristConstants.k_tolerance
