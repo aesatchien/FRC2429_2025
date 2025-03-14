@@ -50,6 +50,8 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.encoder = self.motor.getEncoder()
         self.encoder.setPosition(constants.ShoulderConstants.k_starting_angle)
 
+        self.abs_encoder = self.motor.getAbsoluteEncoder()
+
         wpilib.SmartDashboard.putNumber("profiled_pivot velocity setpoint", 0)
         wpilib.SmartDashboard.putNumber("profiled_pivot position setpoint", 0)
         wpilib.SmartDashboard.putNumber("profiled_pivot applied output", 0)
@@ -63,6 +65,8 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.goal = constants.ShoulderConstants.k_starting_angle
         self.at_goal = True
 
+        self.use_trapezoidal_motion = True
+
         self.enable()
         # self.disable()
 
@@ -73,12 +77,14 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
 
         # Add the feedforward to the PID output to get the motor output
         # TODO - check if the feedforward is correct in units for the sparkmax - documentation says 32, not 12
+
         self.controller.setReference(setpoint.position, rev.SparkFlex.ControlType.kPosition, rev.ClosedLoopSlot.kSlot0, arbFeedforward=feedforward)
         wpilib.SmartDashboard.putNumber("profiled_pivot velocity setpoint", setpoint.velocity)
         wpilib.SmartDashboard.putNumber("profiled_pivot position setpoint", setpoint.position)
         wpilib.SmartDashboard.putNumber("profiled_pivot applied output", self.motor.getAppliedOutput())
         wpilib.SmartDashboard.putNumber("profiled_pivot follower applied output", self.follower.getAppliedOutput())
         # self.goal = setpoint.position  # don't want this - unless we want to plot the trapezoid
+
 
     def set_brake_mode(self, mode='brake'):
         if mode == 'brake':
@@ -92,16 +98,28 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.follower.configure(constants.ShoulderConstants.k_follower_config, self.rev_resets, self.rev_persists)
 
     def get_angle(self):
-        return self.encoder.getPosition()
+        return self.abs_encoder.getPosition()
+        # return self.encoder.getPosition()
 
-    def set_goal(self, goal):
+    def set_goal(self, goal, use_trapezoidal_motion=True):
         # make our own sanity-check on the subsystem's setGoal function
         goal = goal if goal < constants.ShoulderConstants.k_max_angle else constants.ShoulderConstants.k_max_angle
         goal = goal if goal > constants.ShoulderConstants.k_min_angle else constants.ShoulderConstants.k_min_angle
         self.goal = goal
-        # print(f'setting goal to {self.goal}')
-        self.setGoal(self.goal)
         self.at_goal = False
+
+        if use_trapezoidal_motion:
+            if self.use_trapezoidal_motion == False: self.set_use_trapezoidal_motion(True)
+            self.setGoal(self.goal)
+        else:
+            if self.use_trapezoidal_motion == True: self.set_use_trapezoidal_motion(False)
+            self.controller.setReference(self.goal, rev.SparkFlex.ControlType.kPosition, rev.ClosedLoopSlot.kSlot1)
+
+    def set_use_trapezoidal_motion(self, use_trapezoidal_motion: True):
+        self.use_trapezoidal_motion = use_trapezoidal_motion
+        
+        if self.use_trapezoidal_motion: self.enable()
+        else: self.disable()
 
     def move_degrees(self, delta_degrees: float, silent=True) -> None:  # way to bump up and down for testing
         current_angle = self.get_angle()
@@ -117,6 +135,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.counter += 1
         if self.counter % 10 == 0:
             self.angle = self.encoder.getPosition()
+            self.abs_angle = self.abs_encoder.getPosition()
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance  # maybe we want to call this an error
             self.error = self.angle - self.goal
 
@@ -129,3 +148,5 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
             self.is_moving = abs(self.encoder.getVelocity()) > 0.001  # m per second
             wpilib.SmartDashboard.putBoolean(f'{self.getName()}_is_moving', self.is_moving)
             wpilib.SmartDashboard.putNumber(f'{self.getName()}_spark_angle', radiansToDegrees(self.angle))
+            wpilib.SmartDashboard.putNumber(f'{self.getName()}_abs_spark_angle', radiansToDegrees(self.abs_angle))
+
