@@ -487,11 +487,11 @@ class RobotContainer:
         self.bbox_TBD1.onTrue(Score(self))
         self.bbox_TBD2.onTrue(GoToStow(self))
 
-        self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
-        self.bbox_right.onFalse(MoveWristSwap(self, self.wrist))
-
-        self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
-        self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
+        # self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        # self.bbox_right.onFalse(MoveWristSwap(self, self.wrist))
+        #
+        # self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+        # self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
 
         self.bbox_human_right.whileTrue(GoToCoralStation(container=self).andThen(
             RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
@@ -500,6 +500,7 @@ class RobotContainer:
 
         self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
 
+        self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
         self.bbox_AB.whileTrue(
                 commands2.ConditionalCommand(
@@ -549,6 +550,12 @@ class RobotContainer:
                     condition=self.robot_state.is_left
                 )
         )
+
+        # dict of {a: PIDToPoint(a)
+        #          b: PIDToPoint(b)...}
+
+        # we need a lambda that returns a letter, a thru l, depending on what robotstate says
+
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))

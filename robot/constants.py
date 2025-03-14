@@ -208,7 +208,7 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
-    k_intake_config.smartCurrentLimit(5)
+    k_intake_config.smartCurrentLimit(10)
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
@@ -216,10 +216,10 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = -6
+    k_coral_intaking_voltage = -12
     k_algae_intaking_voltage = 6
 
-    k_coral_scoring_voltage = 10
+    k_coral_scoring_voltage = 12
 
     k_seconds_to_stay_on_while_scoring = 0.5
 
