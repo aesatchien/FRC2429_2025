@@ -20,7 +20,7 @@ class DriveConstants:
     # set the acceleration limits used in driving using the SlewRateLimiter tool
     kMagnitudeSlewRate = 5  # hundred percent per second (1 = 100%)
     kRotationalSlewRate = 5  # hundred percent per second (1 = 100%)
-    k_inner_deadband = 0.08  # use deadbands for joystick transformations and keepangle calculations
+    k_inner_deadband = 0.10  # use deadbands for joystick transformations and keepangle calculations
     k_outer_deadband = 0.95  # above this you just set it to 1 - makes going diagonal easier
     # k_minimum_rotation = kMaxAngularSpeed * k_inner_deadband
 

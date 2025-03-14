@@ -5,6 +5,7 @@ import constants
 from commands.run_intake import RunIntake
 from commands.move_wrist_by_pose import StowWristAfterPositionDelta
 from commands.set_leds import SetLEDs
+from commands.rumble_command import RumbleCommand
 from subsystems.led import Led
 
 class Score(commands2.SequentialCommandGroup):
@@ -22,7 +23,13 @@ class Score(commands2.SequentialCommandGroup):
         self.addCommands(RunIntake(container=self.container, intake=self.container.intake, 
                                  value=constants.IntakeConstants.k_coral_scoring_voltage, 
                                  control_type=SparkMax.ControlType.kVoltage, indent=indent+1))
-        self.addCommands( SetLEDs(container=self.container, led=self.container.led, indicator=Led.Indicator.kSUCCESSFLASH))
+        self.addCommands(SetLEDs(container=self.container, led=self.container.led, indicator=Led.Indicator.kSUCCESSFLASH))
+        self.addCommands(
+                commands2.ParallelRaceGroup(
+                        commands2.WaitCommand(constants.IntakeConstants.k_seconds_to_stay_on_while_scoring),
+                        RumbleCommand(container, 0.3, True, True, 0.2, indent+1)        
+                )
+        )
         self.addCommands(commands2.WaitCommand(constants.IntakeConstants.k_seconds_to_stay_on_while_scoring))
 
         self.addCommands(StowWristAfterPositionDelta(container, wait_to_finish=True, indent=indent+1))
