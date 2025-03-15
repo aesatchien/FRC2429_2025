@@ -28,6 +28,10 @@ jobs:
           echo "Activating existing venv..."
           .\.build_env\bin\Activate.ps1
 
+      - name: Install PyInstaller
+        run: |
+          pip install pyinstaller  # Ensure pyinstaller is installed
+
       - name: Build EXE
         run: |
           # Build the .exe using PyInstaller
