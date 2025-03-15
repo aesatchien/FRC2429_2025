@@ -1,3 +1,4 @@
+from time import sleep
 from commands2.subsystem import Subsystem
 import math
 import wpilib
@@ -31,7 +32,13 @@ class Wrist(Subsystem):
         self.pivot = pivot
         self.elevator = elevator
 
-        self.encoder.setPosition(WristConstants.k_starting_angle)
+        sleep(0.5)
+        print(f"wrist abs encoder reads {self.abs_encoder.getPosition()}")
+        print(f"In radians, it reads {self.abs_encoder.getPosition() * math.tau}")
+        print(f"therefore, I will subtract {WristConstants.k_abs_encoder_readout_when_at_zero_position} which gives me {self.abs_encoder.getPosition() - WristConstants.k_abs_encoder_readout_when_at_zero_position} radians")
+        print(f"or, {(self.abs_encoder.getPosition() - WristConstants.k_abs_encoder_readout_when_at_zero_position) / math.tau} rotations.")
+
+        # self.encoder.setPosition(self.abs_encoder.getPosition() - WristConstants.k_abs_encoder_readout_when_at_zero_position)
         self.controller = self.sparkmax.getClosedLoopController()
         self.setpoint = self.encoder.getPosition()
         self.counter = constants.WristConstants.k_counter_offset
@@ -56,8 +63,8 @@ class Wrist(Subsystem):
         self.encoder.setPosition(radians)
 
     def get_angle(self) -> float:
-        # return self.encoder.getPosition()
-        return self.abs_encoder.getPosition()
+        return self.encoder.getPosition()
+        # return self.abs_encoder.getPosition()
 
     def get_at_setpoint(self) -> bool:
         return abs(self.encoder.getPosition() - self.setpoint) < WristConstants.k_tolerance

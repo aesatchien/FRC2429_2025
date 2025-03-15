@@ -17,7 +17,7 @@ k_start_x = 0
 k_start_y = 0
 # joysticks nad other input
 k_driver_controller_port = 0
-k_co_driver_controller_port = 1
+k_spare_driver_controller_port = 1
 k_use_bbox = True  # set to true for actual use
 k_bbox_1_port = 2
 k_bbox_2_port = 3
@@ -61,7 +61,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.52,
+        "elevator": 0.47, # 0.52 at ventura
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -208,7 +208,7 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
-    k_intake_config.smartCurrentLimit(5)
+    k_intake_config.smartCurrentLimit(10)
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
@@ -216,10 +216,10 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = -6
+    k_coral_intaking_voltage = -12
     k_algae_intaking_voltage = 6
 
-    k_coral_scoring_voltage = 10
+    k_coral_scoring_voltage = 12
 
     k_seconds_to_stay_on_while_scoring = 0.5
 
@@ -298,16 +298,18 @@ class WristConstants:
 
     k_config = SparkMaxConfig()
     k_config.voltageCompensation(12)
-    k_config.inverted(True)
+    k_config.inverted(False)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
 
-    k_config.absoluteEncoder.positionConversionFactor(math.tau / k_gear_ratio)
-    k_config.absoluteEncoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
-    
-    k_config.absoluteEncoder.zeroOffset(0.45)
+    k_config.absoluteEncoder.positionConversionFactor(math.tau)
+    k_config.absoluteEncoder.velocityConversionFactor(math.tau / 60)
+    k_config.absoluteEncoder.inverted(True)
+    # print("setting zero offset!")
+    # k_config.absoluteEncoder.zeroOffset(3.52) this doesn't work that well LHACK 3/14/2025
+    k_abs_encoder_readout_when_at_zero_position = 3.52
 
     k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))

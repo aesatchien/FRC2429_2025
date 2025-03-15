@@ -522,6 +522,7 @@ class Swerve (Subsystem):
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
+                # print(f"count subscriber says it has {count_subscriber.get()} tags")
                 if count_subscriber.get() > 0:  # use front camera
                     # update pose from apriltags
                     tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
@@ -539,8 +540,8 @@ class Swerve (Subsystem):
                     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
                     # I gave a fairly high x and y, and a very high theta
                     if True:
-                        #print(f'adding vision measurement at {wpilib.getTime()}')
-                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], constants.DrivetrainConstants.k_pose_stdevs_large)
+                        # print(f'adding vision measurement at {wpilib.getTime()}')
+                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0]) # , constants.DrivetrainConstants.k_pose_stdevs_large)
 
 
         else:  # Leo's experiment
