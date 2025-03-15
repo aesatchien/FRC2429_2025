@@ -35,7 +35,7 @@ class GoToReefPosition(commands2.SequentialCommandGroup):
 
         else:
             self.addCommands(commands2.ParallelCommandGroup(
-                MoveWrist(container, math.radians(90), 5, False, False, indent=indent+1),
+                # MoveWrist(container, math.radians(90), 5, False, False, indent=indent+1), got rid of this LHACK 3/15/25 because we want to run with whatever we stowd with so we can swap in stow
                 WaitCommand(min(0, level - 2) * 0.5).andThen(MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}"]["elevator"], wait_to_finish=True, indent=indent+1)).withTimeout(5),
                 MovePivot(container=container, pivot=self.container.pivot, mode="specified", angle=constants.k_positions[f"l{level}"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
             ))
