@@ -46,6 +46,6 @@ jobs:
           # Commit the .exe to the repo
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
-          git add your_script.exe
+          git add dashboard_2025.exe
           git commit -m "Update built EXE"
           git push
