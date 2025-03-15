@@ -468,6 +468,13 @@ class Swerve (Subsystem):
         ts = wpilib.Timer.getFPGATimestamp()
         wpilib.SmartDashboard.putNumber('_timestamp', ts)
 
+        # test with the sim
+        # if wpilib.RobotBase.isSimulation():
+        #     has_photontag = True
+        #     test_pose = Pose2d(x=1, y=1, rotation=Rotation2d(3.1415 / 2))
+        #     self.pose_estimator.addVisionMeasurement(test_pose, ts, constants.DrivetrainConstants.k_pose_stdevs_large)
+        #     self.resetOdometry(test_pose)
+
         if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
             has_photontag = self.photoncam_target_subscriber.get()
             #has_photontag = self.photoncam_target_subscriber.get()
@@ -539,9 +546,9 @@ class Swerve (Subsystem):
                     # do i have a fatal lag issue?  am i better without the time estimate?
                     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
                     # I gave a fairly high x and y, and a very high theta
-                    if True:
+                    if use_tag:
                         # print(f'adding vision measurement at {wpilib.getTime()}')
-                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0]) # , constants.DrivetrainConstants.k_pose_stdevs_large)
+                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], constants.DrivetrainConstants.k_pose_stdevs_large)
 
 
         else:  # Leo's experiment
