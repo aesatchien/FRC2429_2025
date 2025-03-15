@@ -114,9 +114,11 @@ class Swerve (Subsystem):
 
 
         # photonvision camera setup
-        self.use_photoncam = False  # decide down below in periodic
-        self.photon_name = "Arducam_OV9281_USB_Camera"
+        self.use_photoncam = constants.k_use_photontags  # decide down below in periodic
+        # self.photon_name = "Arducam_OV9281_USB_Camera"
         # self.photon_name = "HD_Pro_Webcam_C920"
+        self.photon_name = "Geniuscam"
+
         self.photoncam_arducam_a = PhotonCamera(self.photon_name)
         self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
         self.photoncam_latency_subscriber = self.inst.getDoubleTopic(f'/photonvision/{self.photon_name}/LatencyMillis').subscribe(0)
@@ -132,6 +134,11 @@ class Swerve (Subsystem):
             wpimath.geometry.Translation3d(inchesToMeters(0), inchesToMeters(0), 0.),
             wpimath.geometry.Rotation3d.fromDegrees(0.0, -20, math.radians(0)))
 
+        # geniuscam with standard convention - 10.5in x, -8in y, -111 degrees yaw
+        robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
+            wpimath.geometry.Translation3d(inchesToMeters(0), inchesToMeters(0), 0.),
+            wpimath.geometry.Rotation3d.fromDegrees(0.0, 0, math.radians(0)))  # -111 from front if ccw +
+
         # todo - see if we can update the PoseStrategy based on if disabled, and use closest to current odometry when enabled
         # but MULTI_TAG_PNP_ON_COPROCESSOR probably does not help at all since we only see one tag at a time
         # TODO: we can set a fallback for multi_tag_pnp_on_coprocessor, we can make that lowest ambiguity or cloest to current odo
@@ -143,7 +150,7 @@ class Swerve (Subsystem):
 
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
+        self.use_CJH_apriltags = constants.k_use_CJH_tags  # dowm below we decide which one to use in the periodic method
         # lhack turned off 15:48 2/28/25 to test pathplanner wo tags first
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names
