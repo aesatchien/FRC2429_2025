@@ -37,7 +37,7 @@ jobs:
       - name: Commit Built EXE to Repository
         run: |
           # Copy the EXE to the repo folder
-          copy dist\dashboard_2025.exe
+          copy dist\dashboard_2025.exe .
 
           # Commit the .exe to the repo
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
