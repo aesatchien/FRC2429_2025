@@ -25,7 +25,6 @@ jobs:
       - name: Activate Existing Virtual Environment
         run: |
           # Activate the existing venv folder in the repo
-          echo 
           echo "Activating existing venv..."
           .\.build_env\bin\Activate.ps1
 
