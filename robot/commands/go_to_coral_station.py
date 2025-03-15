@@ -14,7 +14,7 @@ class GoToCoralStation(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
         
         self.addCommands(commands2.ParallelCommandGroup(
-            RunIntake(container=container, intake=container.intake, value=-3, stop_on_end=False),
+            # RunIntake(container=container, intake=container.intake, value=-3, stop_on_end=False),
             commands2.WaitCommand(0.25).andThen(MoveWrist(container=container, radians=constants.k_positions["coral station"]["wrist_pivot"], timeout=5, wait_to_finish=True, indent=indent+1).withTimeout(5)),
             MovePivot(container=container, pivot=container.pivot, mode='specified', angle=constants.k_positions["coral station"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
             MoveElevator(container=container, elevator=self.container.elevator, mode="specified", height=constants.k_positions["coral station"]["elevator"], wait_to_finish=True, indent=indent + 1).withTimeout(5)

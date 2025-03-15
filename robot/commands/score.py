@@ -25,9 +25,9 @@ class Score(commands2.SequentialCommandGroup):
                                  control_type=SparkMax.ControlType.kVoltage, indent=indent+1))
         self.addCommands(SetLEDs(container=self.container, led=self.container.led, indicator=Led.Indicator.kSUCCESSFLASH))
         self.addCommands(
-                commands2.ParallelRaceGroup(
+                commands2.ParallelDeadlineGroup(
                         commands2.WaitCommand(constants.IntakeConstants.k_seconds_to_stay_on_while_scoring),
-                        RumbleCommand(container, 0.3, True, True, 0.2, indent+1)        
+                        RumbleCommand(container, 1, True, True, 0.2, indent+1)        
                 )
         )
         self.addCommands(commands2.WaitCommand(constants.IntakeConstants.k_seconds_to_stay_on_while_scoring))

@@ -533,7 +533,7 @@ class Swerve (Subsystem):
                     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
                     # I gave a fairly high x and y, and a very high theta
                     if True:
-                        print(f'adding vision measurement at {wpilib.getTime()}')
+                        # print(f'adding vision measurement at {wpilib.getTime()}')
                         self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0]) # , constants.DrivetrainConstants.k_pose_stdevs_large)
 
 
