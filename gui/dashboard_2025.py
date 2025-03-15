@@ -659,7 +659,7 @@ class Ui(QtWidgets.QMainWindow):
         self.logitech_reef_alive = timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) < allowed_delay
         logitech_reef_style = style_on if self.logitech_reef_alive else style_off
         self.logitech_reef_connections = int(self.logitech_reef_connections_entry.getDouble(0))
-        self.qlabel_logitech_reef_indicator.setText(f'LOGI TAGS: {self.logitech_reef_connections:2d}')
+        self.qlabel_logitech_reef_indicator.setText(f'LOGI REEF: {self.logitech_reef_connections:2d}')
         self.qlabel_logitech_reef_indicator.setStyleSheet(logitech_reef_style)
 
         self.logitech_high_alive = timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay
