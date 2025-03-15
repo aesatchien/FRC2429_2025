@@ -31,7 +31,7 @@ jobs:
       - name: Build EXE
         run: |
           # Build the .exe using PyInstaller
-          .\venv\bin\Activate.ps1
+          .\.build_env\bin\Activate.ps1
           pyinstaller --onefile --paths .\.build_env\lib\site-packages gui\dashboard_2025.py
 
       - name: Commit Built EXE to Repository
