@@ -1,3 +1,4 @@
+from time import sleep
 from commands2.subsystem import Subsystem
 import math
 import wpilib
@@ -20,7 +21,7 @@ class Wrist(Subsystem):
         print(f"Configured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
 
         self.encoder = self.sparkmax.getEncoder()
-        # self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
+        self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
 
         # if wpilib.RobotBase.isReal():
         #     self.encoder.setPosition(self.abs_encoder.getPosition()) # may have to set offset here if the zeroOffset kParamInvalid error isn't fixed
@@ -31,10 +32,34 @@ class Wrist(Subsystem):
         self.pivot = pivot
         self.elevator = elevator
 
-        self.encoder.setPosition(WristConstants.k_starting_angle)
         self.controller = self.sparkmax.getClosedLoopController()
-        self.setpoint = self.encoder.getPosition()
         self.counter = constants.WristConstants.k_counter_offset
+
+        faults = self.sparkmax.getFaults()
+        if faults.sensor:
+            print("WARNING! faults.sensor is true!")
+
+        abs_raw = self.abs_encoder.getPosition()
+        abs_raws = []
+        for reading in range(50):
+            abs_raws.append(self.abs_encoder.getPosition())
+            sleep(0.01)
+
+        print(f"abs raws: {abs_raws}")
+        abs_raw = sum(abs_raws) / 50
+
+        print(f"abs encoder reports position {abs_raw}")
+        print(f"subtracting {WristConstants.k_abs_encoder_readout_when_at_zero_position}")
+
+        abs_offset = abs_raw - WristConstants.k_abs_encoder_readout_when_at_zero_position
+        print(f"this gives us, in rotations, {abs_offset}")
+
+        abs_offset_rad = abs_offset * math.tau
+        print(f"in radians, this gives us {abs_offset_rad}")
+
+        self.encoder.setPosition(abs_offset_rad)
+
+        self.setpoint = self.encoder.getPosition()
 
     def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition, closed_loop_slot=0) -> None:
 
@@ -81,9 +106,9 @@ class Wrist(Subsystem):
 
         if self.counter % 10 == 0:
 
-            # wpilib.SmartDashboard.putNumber("wrist abs encoder, rad", self.abs_encoder.getPosition())
+            wpilib.SmartDashboard.putNumber("wrist abs encoder, rad", self.abs_encoder.getPosition())
             wpilib.SmartDashboard.putNumber("wrist relative encoder, rad", self.encoder.getPosition())
-            # wpilib.SmartDashboard.putNumber("wrist abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
+            wpilib.SmartDashboard.putNumber("wrist abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
             wpilib.SmartDashboard.putNumber("wrist relative encoder, degrees", math.degrees(self.encoder.getPosition()))
 
             if constants.WristConstants.k_nt_debugging:  # extra debugging info for NT

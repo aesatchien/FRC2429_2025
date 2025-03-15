@@ -11,6 +11,7 @@ from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
+from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
 
@@ -517,13 +518,10 @@ class RobotContainer:
         #         )
         # )
         #
-        # self.bbox_GH.whileTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             condition=self.robot_state.is_right
-        #         )
-        # )
+        self.bbox_GH.whileTrue(
+                    PrintCommand(f"Going to branch H at {constants.k_useful_robot_poses_blue['h']}").andThen(
+                    AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["h"], swerve_constants.AutoConstants.k_pathfinding_constraints)
+        ))
         #
         # self.bbox_IJ.whileTrue(
         #         commands2.ConditionalCommand(
@@ -541,8 +539,8 @@ class RobotContainer:
         #         )
         # )
 
-        self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
-        self.bbox_GH.onTrue(GoToStow(self))
+        # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
+        # self.bbox_GH.onTrue(GoToStow(self))
 
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
         self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))

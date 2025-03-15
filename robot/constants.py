@@ -216,7 +216,7 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = -12
+    k_coral_intaking_voltage = -7 # TODO: increase again to -12 once we have gears that dont break nonstop
     k_algae_intaking_voltage = 6
 
     k_coral_scoring_voltage = 12
@@ -304,12 +304,12 @@ class WristConstants:
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
 
-    k_config.absoluteEncoder.positionConversionFactor(math.tau)
-    k_config.absoluteEncoder.velocityConversionFactor(math.tau / 60)
+    # k_config.absoluteEncoder.positionConversionFactor(math.tau)
+    # k_config.absoluteEncoder.velocityConversionFactor(math.tau / 60)
     k_config.absoluteEncoder.inverted(True)
     # print("setting zero offset!")
     # k_config.absoluteEncoder.zeroOffset(3.52) this doesn't work that well LHACK 3/14/2025
-    k_abs_encoder_readout_when_at_zero_position = 3.52
+    k_abs_encoder_readout_when_at_zero_position = 0.456
 
     k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))

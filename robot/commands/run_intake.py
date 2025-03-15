@@ -26,7 +26,7 @@ class RunIntake(commands2.Command):  # change the name for your command
         SmartDashboard.putString("alert", msg)
 
         if self.value < 0:
-            constants.IntakeConstants.k_intake_config.smartCurrentLimit(7)
+            constants.IntakeConstants.k_intake_config.smartCurrentLimit(5)
         else:
             constants.IntakeConstants.k_intake_config.smartCurrentLimit(10)
 

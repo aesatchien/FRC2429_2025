@@ -2,6 +2,7 @@ import commands2
 from pathplannerlib.trajectory import PathPlannerTrajectoryState
 from pathplannerlib.util import DriveFeedforwards
 from wpilib import SmartDashboard
+from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
 
 from subsystems.swerve_constants import AutoConstants as ac
@@ -21,6 +22,9 @@ class PIDToPoint(commands2.Command):  # change the name for your command
         self.swerve = swerve
 
         self.target_pose = target_pose
+
+        self.translation_pid = PIDController(1, 0, 0)
+
         self.target_state = PathPlannerTrajectoryState()
         self.target_state.pose = self.target_pose  # set the pose of the target state
         self.target_state.heading = self.target_pose.rotation()
