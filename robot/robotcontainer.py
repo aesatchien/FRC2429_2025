@@ -1,19 +1,16 @@
 from enum import Enum
 import math
 import time
-from commands2.button import CommandXboxController
 from commands2.printcommand import PrintCommand
 from pathplannerlib.commands import PathfindingCommand
 import rev
 import wpilib
 import commands2
-from wpilib.interfaces import GenericHID
 from wpimath import controller
 from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
-from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
 
@@ -29,7 +26,6 @@ from commands.go_to_stow import GoToStow
 from commands.go_to_reef_position import GoToReefPosition
 from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
-from commands.calibrate_joystick import CalibrateJoystick
 from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
@@ -51,6 +47,7 @@ from subsystems.climber import Climber
 from subsystems.vision import Vision
 
 from autonomous.leave_then_score_1 import LeaveThenScore
+from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
 from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
@@ -136,41 +133,6 @@ class RobotContainer:
 
         self.robot_mode = self.RobotMode.EMPTY
 
-        self.keybinds = {
-
-                "score" : Score(self),
-
-                "intake_while_true" :  commands2.ParallelCommandGroup(
-                                RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, 
-                                    control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False),
-                                GoToCoralStation(self)
-
-                            ),
-
-                "intake_on_false" : RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-                                        GoToStow(container=self)),
-
-                "l1" : commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)),
-
-                "l2" : GoToReefPosition(self, 2, self.robot_state),
-
-                "l3" : commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)),
-
-                "l4" : commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)),
-
-                "algae_low_while_true" : commands2.ParallelCommandGroup(GoToPosition(self, "algae low"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)),
-
-                "algae_high_while_true" : commands2.ParallelCommandGroup(GoToPosition(self, "algae high"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)),
-
-                "algae_on_false" : RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-                    GoToStow(container=self)),
-
-                "go_to_stow" : GoToStow(self),
-
-                "swap" : MoveWristSwap(self, self.wrist)
-
-        }
-
     def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
         self.start_time = time.time()
 
@@ -185,16 +147,6 @@ class RobotContainer:
         """
         # The driver's controller
         self.driver_command_controller = commands2.button.CommandXboxController(constants.k_driver_controller_port)
-        self.spare_driver_command_controller = commands2.button.CommandXboxController(constants.k_spare_driver_controller_port)  # 2024 way
-        self.driver_controllers = [self.driver_command_controller, self.spare_driver_command_controller]
-
-        trigger_dicts = {}
-        for controller in self.driver_controllers:
-            pass
-
-        # we have a dict/enum. this dict has keys which are types of commands, and values which are the commands themselves.
-        # we have another dict of triggers. each trigger has the key above.
-
         self.triggerA = self.driver_command_controller.a()
         self.triggerB = self.driver_command_controller.b()
         self.triggerX = self.driver_command_controller.x()
@@ -208,6 +160,9 @@ class RobotContainer:
         self.triggerDown = self.driver_command_controller.povDown()
         self.triggerLeft = self.driver_command_controller.povLeft()
         self.triggerRight = self.driver_command_controller.povRight()
+
+        self.copilot_controller = commands2.button.CommandXboxController(1)
+        self.copilot_controller = commands2.button.CommandXboxController(1) 
 
     def configure_codriver_joystick(self):
 
@@ -228,52 +183,52 @@ class RobotContainer:
 
             return (angle_a <= stick_angle and stick_angle < angle_b)
 
-        self.spare_driver_command_controller = commands2.button.CommandXboxController(constants.k_spare_driver_controller_port)  # 2024 way
+        self.co_pilot_command_controller = commands2.button.CommandXboxController(constants.k_co_driver_controller_port)  # 2024 way
         
-        self.spare_trigger_right_stick_between_0_60_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(0, 60,
-                                                                            self.spare_driver_command_controller.getRightX(),
-                                                                            self.spare_driver_command_controller.getRightY()))
+        self.co_trigger_right_stick_between_0_60_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(0, 60,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
 
-        self.spare_trigger_right_stick_between_60_120_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(60, 120,
-                                                                            self.spare_driver_command_controller.getRightX(),
-                                                                            self.spare_driver_command_controller.getRightY()))
+        self.co_trigger_right_stick_between_60_120_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(60, 120,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
 
-        self.spare_trigger_right_stick_between_120_180_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(120, 180,
-                                                                            self.spare_driver_command_controller.getRightX(),
-                                                                            self.spare_driver_command_controller.getRightY()))
+        self.co_trigger_right_stick_between_120_180_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(120, 180,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
 
-        self.spare_trigger_right_stick_between_180_240_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(180, 240,
-                                                                            self.spare_driver_command_controller.getRightX(),
-                                                                            self.spare_driver_command_controller.getRightY()))
+        self.co_trigger_right_stick_between_180_240_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(180, 240,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
 
-        self.spare_trigger_right_stick_between_240_300_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(240, 300,
-                                                                            self.spare_driver_command_controller.getRightX(),
-                                                                            self.spare_driver_command_controller.getRightY()))
+        self.co_trigger_right_stick_between_240_300_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(240, 300,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
 
-        self.spare_trigger_right_stick_between_300_360_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(300, 360,
-                                                                            self.spare_driver_command_controller.getRightX(),
-                                                                            self.spare_driver_command_controller.getRightY()))
+        self.co_trigger_right_stick_between_300_360_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(300, 360,
+                                                                            self.co_pilot_command_controller.getRightX(),
+                                                                            self.co_pilot_command_controller.getRightY()))
 
-        self.spare_trigger_a = self.spare_driver_command_controller.a()  # 2024 way
-        self.spare_trigger_b = self.spare_driver_command_controller.b()
-        self.spare_trigger_y = self.spare_driver_command_controller.y()
-        self.spare_trigger_x = self.spare_driver_command_controller.x()
-        self.spare_trigger_rb = self.spare_driver_command_controller.rightBumper()
-        self.spare_trigger_lb = self.spare_driver_command_controller.leftBumper()
-        self.spare_trigger_r = self.spare_driver_command_controller.povRight()
-        self.spare_trigger_l = self.spare_driver_command_controller.povLeft()
-        self.spare_trigger_u = self.spare_driver_command_controller.povUp()
-        self.spare_trigger_d = self.spare_driver_command_controller.povDown()
+        self.co_trigger_a = self.co_pilot_command_controller.a()  # 2024 way
+        self.co_trigger_b = self.co_pilot_command_controller.b()
+        self.co_trigger_y = self.co_pilot_command_controller.y()
+        self.co_trigger_x = self.co_pilot_command_controller.x()
+        self.co_trigger_rb = self.co_pilot_command_controller.rightBumper()
+        self.co_trigger_lb = self.co_pilot_command_controller.leftBumper()
+        self.co_trigger_r = self.co_pilot_command_controller.povRight()
+        self.co_trigger_l = self.co_pilot_command_controller.povLeft()
+        self.co_trigger_u = self.co_pilot_command_controller.povUp()
+        self.co_trigger_d = self.co_pilot_command_controller.povDown()
 
-        self.spare_trigger_l_trigger = self.spare_driver_command_controller.leftTrigger(0.2)
-        self.spare_trigger_r_trigger = self.spare_driver_command_controller.rightTrigger(0.2)
-        self.spare_trigger_start = self.spare_driver_command_controller.start()
-        self.spare_trigger_back = self.spare_driver_command_controller.back()
+        self.co_trigger_l_trigger = self.co_pilot_command_controller.leftTrigger(0.2)
+        self.co_trigger_r_trigger = self.co_pilot_command_controller.rightTrigger(0.2)
+        self.co_trigger_start = self.co_pilot_command_controller.start()
+        self.co_trigger_back = self.co_pilot_command_controller.back()
 
-        self.spare_trigger_r_stick_positive_x = self.spare_driver_command_controller.axisGreaterThan(4, 0.5)
-        self.spare_trigger_r_stick_negative_x = self.spare_driver_command_controller.axisLessThan(4, -0.5)
-        self.spare_trigger_r_stick_positive_y = self.spare_driver_command_controller.axisGreaterThan(5, 0.5)
-        self.spare_trigger_r_stick_negative_y = self.spare_driver_command_controller.axisLessThan(5, -0.5)
+        self.co_trigger_r_stick_positive_x = self.co_pilot_command_controller.axisGreaterThan(4, 0.5)
+        self.co_trigger_r_stick_negative_x = self.co_pilot_command_controller.axisLessThan(4, -0.5)
+        self.co_trigger_r_stick_positive_y = self.co_pilot_command_controller.axisGreaterThan(5, 0.5)
+        self.co_trigger_r_stick_negative_y = self.co_pilot_command_controller.axisLessThan(5, -0.5)
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -326,18 +281,10 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('IntakeOn', RunIntake(container=self, intake=self.intake, value=6, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeOff', RunIntake(container=self, intake=self.intake, value=0, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-6, stop_on_end=False))
-
-        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(10)))
-        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-10)))
-        wpilib.SmartDashboard.putData('CalibrateJoystick', CalibrateJoystick(container=self, controller=self.driver_command_controller))
-
-        wpilib.SmartDashboard.putData('GoToStow', Score(container=self))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
-        wpilib.SmartDashboard.putData('GoToL1', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).andThen(GoToReefPosition(self, 1, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).andThen(GoToReefPosition(self, 2, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).andThen(GoToReefPosition(self, 3, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
+        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
+        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
 
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
@@ -354,10 +301,7 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
-        self.triggerA.onTrue(Score(self))
-        self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue['a']))
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
-        self.triggerX.onTrue(CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
         # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
         # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
@@ -366,7 +310,10 @@ class RobotContainer:
         # this is for field centric
         #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
+        # button A for intake
+        # left trigger for outtake
 
+        self.triggerA.onTrue(Score(self))
 
         self.triggerRB.onTrue(self.led.set_indicator_with_timeout(Led.Indicator.kWHITEFLASH, 3))
 
@@ -376,33 +323,12 @@ class RobotContainer:
                     )
                 )
         
-        self.triggerA.onTrue(Score(self))
-        self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue['a']))
-        self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
-        self.triggerX.onTrue(CalibrateJoystick(container=self, controller=self.driver_command_controller))
-
-        # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
-        # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
-        # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
-
-        # this is for field centric
-        #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
-
-
-
-        self.triggerRB.onTrue(self.led.set_indicator_with_timeout(Led.Indicator.kWHITEFLASH, 3))
-
-        self.trigger_L_trigger.onTrue(
-                GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
-                    Score(container=self)
-                    )
-                )
 
     def bind_codriver_buttons(self):
 
         print("Binding codriver buttons")
 
-        self.spare_trigger_a()
+        self.co_trigger_a()
 
         #  leo's way: make a command that goes to any position. specify the position in command construction.
             # => a command object for each position
@@ -411,44 +337,44 @@ class RobotContainer:
             # now we need a command object for each position to tell that subsystem where to go
             # but we can change setpoints outside of construct-time
 
-        # self.spare_trigger_a.whileTrue(SequentialScoring(container=self))
+        # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
 
-        self.spare_trigger_a.onTrue(GoToReefPosition(container=self, level=1, wrist_setpoint_decider=self.robot_state))
+        self.co_trigger_a.onTrue(GoToReefPosition(container=self, level=1, wrist_setpoint_decider=self.robot_state))
         
-        self.spare_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.robot_state))
+        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.robot_state))
 
-        self.spare_trigger_x.onTrue(GoToReefPosition(container=self, level=3, wrist_setpoint_decider=self.robot_state))
+        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3, wrist_setpoint_decider=self.robot_state))
 
-        self.spare_trigger_y.onTrue(GoToReefPosition(container=self, level=4, wrist_setpoint_decider=self.robot_state))
+        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4, wrist_setpoint_decider=self.robot_state))
 
         # trigger on true: go to the position, start intake
         # trigger on false: go to stow, stop intake
 
-        self.spare_trigger_d.or_(self.spare_trigger_l).whileTrue(GoToCoralStation(container=self).andThen(
+        self.co_trigger_d.or_(self.co_trigger_l).whileTrue(GoToCoralStation(container=self).andThen(
             RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
 
-        self.spare_trigger_d.or_(self.spare_trigger_l).onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+        self.co_trigger_d.or_(self.co_trigger_l).onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
 
-        self.spare_trigger_u.or_(self.spare_trigger_r).whileTrue(GoToStow(container=self))
+        self.co_trigger_u.or_(self.co_trigger_r).whileTrue(GoToStow(container=self))
 
 
-        self.spare_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-6, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))
+        self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-6, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))
         
-        self.spare_trigger_rb.onTrue(Score(container=self))
+        self.co_trigger_rb.onTrue(Score(container=self))
 
-        self.spare_trigger_r_stick_negative_y.onTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
+        self.co_trigger_r_stick_negative_y.onTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
 
-        self.spare_trigger_r_stick_positive_x.onTrue(MoveWristSwap(self, self.wrist))  # this seems backwards but is not because y-axis is inverted
-        self.spare_trigger_r_stick_positive_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))  # this seems backwards but is not because y-axis is inverted
+        self.co_trigger_r_stick_positive_x.onTrue(MoveWristSwap(self, self.wrist))  # this seems backwards but is not because y-axis is inverted
+        self.co_trigger_r_stick_positive_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))  # this seems backwards but is not because y-axis is inverted
 
-        self.spare_trigger_r_stick_negative_x.onTrue(MoveWristSwap(self, self.wrist))
-        self.spare_trigger_r_stick_negative_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+        self.co_trigger_r_stick_negative_x.onTrue(MoveWristSwap(self, self.wrist))
+        self.co_trigger_r_stick_negative_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
 
-        self.spare_trigger_start.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
-        self.spare_trigger_start.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
-        self.spare_trigger_back.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
-        self.spare_trigger_back.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.co_trigger_start.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
+        self.co_trigger_start.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.co_trigger_back.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
+        self.co_trigger_back.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down
@@ -558,18 +484,7 @@ class RobotContainer:
         # self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
         # self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
 
-        # self.bbox_human_right.whileTrue(GoToCoralStation(container=self).andThen(
-        #     RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
-
-        self.bbox_human_right.whileTrue(
-            commands2.ParallelCommandGroup(
-                RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, 
-                    control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False),
-                GoToCoralStation(self)
-
-            )
-        )
-
+        self.bbox_human_right.whileTrue(GoToCoralStation(container=self))
         self.bbox_human_right.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
 
@@ -577,63 +492,57 @@ class RobotContainer:
 
         self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
-        self.bbox_AB.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["b"]),
-                    condition=self.robot_state.is_left
-                )
-        )
+        # self.bbox_AB.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
+        #
+        # self.bbox_CD.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
+        #
+        # # we swap the condition because for these ones, the driver's left is the robot's right
+        # self.bbox_EF.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
+        # self.bbox_GH.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
+        # self.bbox_IJ.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
+        # self.bbox_KL.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
 
-        self.bbox_CD.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["c"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["d"]),
-                    condition=self.robot_state.is_left
-                )
-        )
-
-        # we swap the condition because for these ones, the driver's left is the robot's right
-        self.bbox_EF.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["e"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["f"]),
-                    condition=self.robot_state.is_right
-                )
-        )
-
-        self.bbox_GH.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["h"]),
-                    condition=self.robot_state.is_right
-                )
-        )
-
-        self.bbox_IJ.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["i"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["j"]),
-                    condition=self.robot_state.is_right
-                )
-        )
-
-        self.bbox_KL.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["k"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["l"]),
-                    condition=self.robot_state.is_left
-                )
-        )
-
-        # dict of {a: PIDToPoint(a)
-        #          b: PIDToPoint(b)...}
-
-        # we need a lambda that returns a letter, a thru l, depending on what robotstate says
-
-
-        # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
-        # self.bbox_GH.onTrue(GoToStow(self))
+        self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
+        self.bbox_GH.onTrue(GoToStow(self))
 
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
         self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
