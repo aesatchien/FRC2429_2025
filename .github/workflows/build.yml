@@ -25,13 +25,14 @@ jobs:
       - name: Activate Existing Virtual Environment
         run: |
           # Activate the existing venv folder in the repo
+          echo 
           echo "Activating existing venv..."
-          .\.build_env\scripts\Activate.ps1
+          .\.build_env\bin\Activate.ps1
 
       - name: Build EXE
         run: |
           # Build the .exe using PyInstaller
-          .\venv\scripts\Activate.ps1
+          .\venv\bin\Activate.ps1
           pyinstaller --onefile --paths .\.build_env\lib\site-packages gui\dashboard_2025.py
 
       - name: Commit Built EXE to Repository
