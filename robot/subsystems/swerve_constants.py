@@ -181,8 +181,8 @@ class AutoConstants:
     k_pathfinding_constraints = PathConstraints(
             maxVelocityMps=0.5,
             maxAccelerationMpsSq=3,
-            maxAngularVelocityRps=math.radians(90),
-            maxAngularAccelerationRpsSq=math.degrees(720),
+            maxAngularVelocityRps=math.radians(360),
+            maxAngularAccelerationRpsSq=math.degrees(360 * 4),
             nominalVoltage=12
     )
 

@@ -61,21 +61,21 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.47, # 0.52 at ventura
+        "elevator": 0.43, # 0.52 at ventura
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.9,
+        "elevator": 0.86,
         "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.45,
+        "elevator": 1.40,
         "shoulder_pivot": math.radians(120),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -217,7 +217,7 @@ class IntakeConstants:
     k_sim_length = 0.25
 
     k_coral_intaking_voltage = -7 # TODO: increase again to -12 once we have gears that dont break nonstop
-    k_algae_intaking_voltage = 6
+    k_algae_intaking_voltage = 12
 
     k_coral_scoring_voltage = 12
 
@@ -384,7 +384,12 @@ class ShoulderConstants:
     k_config.closedLoop.pid(p=0.85, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
-    k_config.closedLoop.outputRange(-1, 1)
+    k_config.closedLoop.outputRange(-1, 1, ClosedLoopSlot(0))
+
+    k_config.closedLoop.pid(p=0.85, i=0, d=0, slot=ClosedLoopSlot(2))
+    k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(2))
+    k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(2))
+    k_config.closedLoop.outputRange(-1, 1, ClosedLoopSlot(2))
     # k_config.closedLoop.maxMotion.maxAcceleration(1)
     # k_config.closedLoop.maxMotion.maxVelocity(1000)
         

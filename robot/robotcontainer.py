@@ -6,6 +6,7 @@ from pathplannerlib.commands import PathfindingCommand
 import rev
 import wpilib
 import commands2
+from wpilib._wpilib import SmartDashboard
 from wpimath import controller
 from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
@@ -287,6 +288,9 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
         wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
 
+        SmartDashboard.putData("Go to 60 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(60), False), self.pivot))
+        SmartDashboard.putData("Go to 90 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(90), False), self.pivot))
+
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
         [self.score_test_chooser.addOption(key, value) for key, value in self.robot_state.targets_dict.items()]  # add all the indicators
@@ -316,7 +320,7 @@ class RobotContainer:
 
         self.triggerA.onTrue(Score(self))
 
-        self.triggerRB.onTrue(self.led.set_indicator_with_timeout(Led.Indicator.kWHITEFLASH, 3))
+        self.triggerRB.onTrue(Score(self))
 
         self.trigger_L_trigger.onTrue(
                 GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
@@ -518,10 +522,10 @@ class RobotContainer:
         #         )
         # )
         #
-        self.bbox_GH.whileTrue(
-                    PrintCommand(f"Going to branch H at {constants.k_useful_robot_poses_blue['h']}").andThen(
-                    AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["h"], swerve_constants.AutoConstants.k_pathfinding_constraints)
-        ))
+        # self.bbox_GH.whileTrue(
+        #             PrintCommand(f"Going to branch H at {constants.k_useful_robot_poses_blue['h']}").andThen(
+        #             AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["h"], swerve_constants.AutoConstants.k_pathfinding_constraints)
+        # ))
         #
         # self.bbox_IJ.whileTrue(
         #         commands2.ConditionalCommand(
@@ -539,8 +543,8 @@ class RobotContainer:
         #         )
         # )
 
-        # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
-        # self.bbox_GH.onTrue(GoToStow(self))
+        self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
+        self.bbox_GH.onTrue(GoToStow(self))
 
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
         self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
