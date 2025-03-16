@@ -475,6 +475,7 @@ class Swerve (Subsystem):
         #     self.pose_estimator.addVisionMeasurement(test_pose, ts, constants.DrivetrainConstants.k_pose_stdevs_large)
         #     self.resetOdometry(test_pose)
 
+        # use this if we have a phononvision camera - which we don't as of 20250316
         if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
             has_photontag = self.photoncam_target_subscriber.get()
             #has_photontag = self.photoncam_target_subscriber.get()
