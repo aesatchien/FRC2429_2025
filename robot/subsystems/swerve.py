@@ -160,15 +160,15 @@ class Swerve (Subsystem):
         self.arducam_high_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamHigh/poses/tag1").subscribe([0] * 8)
         self.arducam_high_count_subscriber = self.inst.getDoubleTopic("/Cameras/ArducamHigh/tags/targets").subscribe(0)
 
-        self.logitech_high_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechHigh/poses/tag1").subscribe([0] * 8)
-        self.logitech_high_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechHigh/tags/targets").subscribe(0)
+        self.genius_low_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/GeniusLow/poses/tag1").subscribe([0] * 8)
+        self.genius_low_count_subscriber = self.inst.getDoubleTopic("/Cameras/GeniusLow/tags/targets").subscribe(0)
 
         self.logitech_reef_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechReef/poses/tag1").subscribe([0] * 8)
         self.logitech_reef_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechReef/tags/targets").subscribe(0)
 
         # set myself up for a zip later on
-        self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_high_pose_subscriber, self.logitech_high_pose_subscriber, self.logitech_reef_pose_subscriber]
-        self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_high_count_subscriber, self.logitech_high_count_subscriber, self.logitech_reef_count_subscriber]
+        self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_high_pose_subscriber, self.genius_low_pose_subscriber, self.logitech_reef_pose_subscriber]
+        self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_high_count_subscriber, self.genius_low_count_subscriber, self.logitech_reef_count_subscriber]
 
         # TODO - give me a list of six filters for the apriltags - smooth if we are not moving, else use reset each measurement
         # def tag_filter(window):
@@ -548,7 +548,8 @@ class Swerve (Subsystem):
                     # I gave a fairly high x and y, and a very high theta
                     if use_tag:
                         # print(f'adding vision measurement at {wpilib.getTime()}')
-                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], constants.DrivetrainConstants.k_pose_stdevs_large)
+                        sdevs = constants.DrivetrainConstants.k_pose_stdevs_large if wpilib.DriverStation.isEnabled() else constants.DrivetrainConstants.k_pose_stdevs_disabled
+                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], sdevs)
 
 
         else:  # Leo's experiment
