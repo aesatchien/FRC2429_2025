@@ -522,10 +522,9 @@ class RobotContainer:
         #         )
         # )
         #
-        # self.bbox_GH.whileTrue(
-        #             PrintCommand(f"Going to branch H at {constants.k_useful_robot_poses_blue['h']}").andThen(
-        #             AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["h"], swerve_constants.AutoConstants.k_pathfinding_constraints)
-        # ))
+        self.bbox_GH.whileTrue(
+                    PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
+        )
         #
         # self.bbox_IJ.whileTrue(
         #         commands2.ConditionalCommand(
@@ -543,8 +542,8 @@ class RobotContainer:
         #         )
         # )
 
-        self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
-        self.bbox_GH.onTrue(GoToStow(self))
+        # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
+        # self.bbox_GH.onTrue(GoToStow(self))
 
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
         self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
