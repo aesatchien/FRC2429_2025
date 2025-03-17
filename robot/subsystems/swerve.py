@@ -474,7 +474,7 @@ class Swerve (Subsystem):
             #has_photontag = self.photoncam_target_subscriber.get()
             # how do we get the time offset and standard deviation?
 
-            if has_photontag  :  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
+            if has_photontag:  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
                 result = self.photoncam_arducam_a.getLatestResult()
                 cam_est_pose = self.photoncam_pose_est.update(result)
                 # can also use result.hasTargets() instead of nt
@@ -510,7 +510,7 @@ class Swerve (Subsystem):
             else:
                 pass
 
-            if self.counter % 10 == 0:  # get diagnostics on photontags
+            if self.counter % 10 == 0 and self.use_photoncam:  # get diagnostics on photontags
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', has_photontag)
                 if has_photontag:
                     try:
@@ -524,14 +524,14 @@ class Swerve (Subsystem):
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
                 # print(f"count subscriber says it has {count_subscriber.get()} tags")
-                if count_subscriber.get() > 0:  # use front camera
+                if count_subscriber.get() > 0:  # use this camera's tag
                     # update pose from apriltags
                     tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
                     tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
 
-                    use_tag = constants.k_use_CJH_tags # can disable this in constants
+                    use_tag = constants.k_use_CJH_tags  # can disable this in constants
                     # do not allow large jumps when enabled
                     delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), tag_pose.translation())
                     use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
@@ -604,7 +604,7 @@ class Swerve (Subsystem):
 
             wpilib.SmartDashboard.putNumber('_navx', self.get_angle())
             wpilib.SmartDashboard.putNumber('_navx_yaw', self.get_yaw())
-            wpilib.SmartDashboard.putNumber('_navx_angle', self.get_angle())
+            wpilib.SmartDashboard.putNumber('_navx_angle', self.get_gyro_angle())
 
             wpilib.SmartDashboard.putNumber('keep_angle', self.keep_angle)
                 # wpilib.SmartDashboard.putNumber('keep_angle_output', output)
