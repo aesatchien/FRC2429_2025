@@ -36,7 +36,6 @@ class DriveConstants:
     # this should be left as the convention, so match the above.  Then take care of turning issues with the
     # INVERSION OF THE TURN OR DRIVE MOTORS, GYRO and ABSOLUTE ENCODERS
     swerve_orientation = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # MAKE SURE ANGLE ENCODERS ARE CCW +
-    swerve_orientation = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # MAKE SURE ANGLE ENCODERS ARE CCW +
     kModulePositions = [
         Translation2d(swerve_orientation[0][0]*kWheelBase / 2, swerve_orientation[0][1]*kTrackWidth / 2),
         Translation2d(swerve_orientation[1][0]*kWheelBase / 2, swerve_orientation[1][1]*kTrackWidth / 2),
@@ -169,7 +168,9 @@ class AutoConstants:
 
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
     if wpilib.RobotBase.isReal():
+        # CJH - IT SHOULD BE OBVIOUS THAT THE DRIVETRAIN IS NOT SET UP CORRECTLY IF YOU HAVE TO DO THIS
         k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0) # HACK: kp should not be negative lmao
+
     else:
         k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0)
 
@@ -179,13 +180,13 @@ class AutoConstants:
     )
 
     k_pathfinding_constraints = PathConstraints(
-            maxVelocityMps=0.5,
-            maxAccelerationMpsSq=3,
+            maxVelocityMps=1.5,
+            maxAccelerationMpsSq=4,
             maxAngularVelocityRps=2*math.pi,  # radians per second
             maxAngularAccelerationRpsSq=4*math.pi,  # radians per second squared
             nominalVoltage=12
     )
 
-    k_rotation_tolerance = Rotation2d(math.radians(2))
+    k_rotation_tolerance = Rotation2d(math.radians(0))
     k_translation_tolerance_meters = 5 / 100
 

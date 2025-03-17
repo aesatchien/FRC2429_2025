@@ -194,6 +194,9 @@ for tag_id in range(17, 23):
         k_useful_robot_poses_blue[left_branch_name] = Pose2d(left_branch_position, robot_rotation)
         k_useful_robot_poses_blue[right_branch_name] = Pose2d(right_branch_position, robot_rotation)
 
+        print(f'tag:{tag_id}: Trans: {tag_translation}  Theta: {tag_yaw}')  # CJH trying to debug this stuff - this is correct
+        print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
+
 
 class GamePiece(Enum):
     ALGAE = 1
