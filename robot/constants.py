@@ -30,7 +30,7 @@ k_reset_sparks_to_default = True
 k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False
-k_use_photontags = True  # take tags from photonvision camera
+k_use_photontags = False  # take tags from photonvision camera
 k_use_CJH_tags = True  # take tags from the pis
 k_swerve_only = False
 k_swerve_rate_limited = True
@@ -193,6 +193,9 @@ for tag_id in range(17, 23):
         # Store poses
         k_useful_robot_poses_blue[left_branch_name] = Pose2d(left_branch_position, robot_rotation)
         k_useful_robot_poses_blue[right_branch_name] = Pose2d(right_branch_position, robot_rotation)
+
+        print(f'tag:{tag_id}: Trans: {tag_translation}  Theta: {tag_yaw}')  # CJH trying to debug this stuff - this is correct
+        print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
 
 
 class GamePiece(Enum):
@@ -511,4 +514,5 @@ class DrivetrainConstants:
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
     k_pose_stdevs_large = (2, 2, 20)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
+    k_pose_stdevs_disabled = (1, 1, 2)  # use when we are disabled to quickly get updates
     k_pose_stdevs_small = (0.1, 0.1, 10)  # use when you do trust the tags

@@ -14,17 +14,17 @@ class Vision(SubsystemBase):
         self.ntinst = NetworkTableInstance.getDefault()
 
         # set up a dictionary of cams to go through
-        self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, 'logi_high_tags': {}, 'logi_reef_tags': {}}
+        self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, 'genius_low_tags': {}, 'logi_reef_tags': {}}
         self.camera_values = {}
 
 
         self.arducam_back_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamBack')  # arducam for tags
         self.arducam_high_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamHigh')  # arducam for high tags
         # TODO - figure out how to have two tag cameras play nice
-        self.logitech_high_table = NetworkTableInstance.getDefault().getTable('/Cameras/LogitechHigh')  # logitech for tags
+        self.genius_low_table = NetworkTableInstance.getDefault().getTable('/Cameras/GeniusLow')  # logitech for tags
         self.logitech_reef_table = NetworkTableInstance.getDefault().getTable('/Cameras/LogitechReef')  # logitech for reef
 
-        self.tables = [self.arducam_high_table, self.arducam_back_table, self.logitech_high_table,  self.logitech_reef_table]
+        self.tables = [self.arducam_high_table, self.arducam_back_table, self.genius_low_table,  self.logitech_reef_table]
 
         for ix, key in enumerate(self.camera_dict.keys()):  # colors on top
             table = self.tables[ix]
@@ -100,12 +100,12 @@ class Vision(SubsystemBase):
                 # orange will crash at the moment
                 # wpilib.SmartDashboard.putBoolean('orange_targets_exist', self.target_available('orange'))
                 wpilib.SmartDashboard.putBoolean('arducam_high_targets_exist', self.target_available('ardu_high_tags'))
-                wpilib.SmartDashboard.putBoolean('logitech_high_targets_exist', self.target_available('logi_high_tags'))
+                wpilib.SmartDashboard.putBoolean('genius_low_targets_exist', self.target_available('genius_low_tags'))
                 wpilib.SmartDashboard.putBoolean('arducam_back_targets_exist', self.target_available('ardu_back_tags'))
                 wpilib.SmartDashboard.putBoolean('logitech_reef_targets_exist', self.target_available('logi_reef_tags'))
             else:  # test the keys
                 wpilib.SmartDashboard.putBoolean('arducam_high_targets_exist', 0 < self.counter % 600 < 110 )
-                wpilib.SmartDashboard.putBoolean('logitech_high_targets_exist', 100 < self.counter % 600 < 210)
+                wpilib.SmartDashboard.putBoolean('genius_low_targets_exist', 100 < self.counter % 600 < 210)
                 wpilib.SmartDashboard.putBoolean('arducam_back_targets_exist', 200 < self.counter % 600 < 310)
                 wpilib.SmartDashboard.putBoolean('logitech_reef_targets_exist', 300 < self.counter % 600 < 410)
                 wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', 400 < self.counter % 600 < 510)

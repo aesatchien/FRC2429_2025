@@ -319,7 +319,6 @@ class RobotContainer:
         # left trigger for outtake
 
         self.triggerA.onTrue(Score(self))
-
         self.triggerRB.onTrue(Score(self))
 
         self.trigger_L_trigger.onTrue(
@@ -483,32 +482,46 @@ class RobotContainer:
         self.bbox_TBD1.onTrue(Score(self))
         self.bbox_TBD2.onTrue(GoToStow(self))
 
-        # self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
         # self.bbox_right.onFalse(MoveWristSwap(self, self.wrist))
         #
-        # self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+        self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
         # self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
+
+        # set up all six buttons on the reef
+        button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]
+        characters = ['ab', 'cd', 'ef', 'gh', 'hi', 'jk']
+        states = [self.robot_state.is_left, self.robot_state.is_left, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_left]
+        poses_dict = constants.k_useful_robot_poses_blue
+        constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
+        for but, state, chars in zip(button_list, states, characters):
+            but.whileTrue(
+                commands2.ConditionalCommand(
+                    onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
+                    onFalse=AutoBuilder.pathfindToPoseFlipped(poses_dict[chars[1]], constraints),
+                    condition=state,
+                )
+            )
 
         self.bbox_human_right.whileTrue(GoToCoralStation(container=self))
         self.bbox_human_right.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
-
         self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
 
         self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
         # self.bbox_AB.whileTrue(
         #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.k_pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.k_pathfinding_constraints),
         #             condition=self.robot_state.is_left
         #         )
         # )
         #
         # self.bbox_CD.whileTrue(
         #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["c"], swerve_constants.AutoConstants.k_pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["d"], swerve_constants.AutoConstants.k_pathfinding_constraints),
         #             condition=self.robot_state.is_left
         #         )
         # )
@@ -516,8 +529,8 @@ class RobotContainer:
         # # we swap the condition because for these ones, the driver's left is the robot's right
         # self.bbox_EF.whileTrue(
         #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["e"], swerve_constants.AutoConstants.k_pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["f"], swerve_constants.AutoConstants.k_pathfinding_constraints),
         #             condition=self.robot_state.is_right
         #         )
         # )
@@ -529,22 +542,22 @@ class RobotContainer:
         #
         # self.bbox_IJ.whileTrue(
         #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["i"], swerve_constants.AutoConstants.k_pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["j"], swerve_constants.AutoConstants.k_pathfinding_constraints),
         #             condition=self.robot_state.is_right
         #         )
         # )
         #
         # self.bbox_KL.whileTrue(
         #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["k"], swerve_constants.AutoConstants.k_pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["l"], swerve_constants.AutoConstants.k_pathfinding_constraints),
         #             condition=self.robot_state.is_left
         #         )
         # )
 
-        self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
-        self.bbox_GH.onTrue(GoToStow(self))
+        #self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
+        #self.bbox_GH.onTrue(GoToStow(self))
 
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
         self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
