@@ -1,8 +1,10 @@
 from math import radians
+import math
 import commands2
 from pathplannerlib.trajectory import PathPlannerTrajectoryState
 from pathplannerlib.util import DriveFeedforwards
 from wpilib import SmartDashboard
+import wpilib
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
 
@@ -32,12 +34,16 @@ class PIDToPoint(commands2.Command):  # change the name for your command
         self.y_pid.setSetpoint(target_pose.Y())
         self.y_pid.setSetpoint(target_pose.rotation().radians())
 
+        SmartDashboard.putNumber("x commanded", 0)
+        SmartDashboard.putNumber("y commanded", 0)
+        SmartDashboard.putNumber("rot commanded", 0)
+
         self.addRequirements(self.swerve)
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print(f"{self.indent * '    '}** Started {self.getName()} at {self.start_time} s **", flush=True)
+        print(f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **", flush=True)
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
         self.x_pid.reset()
@@ -52,10 +58,23 @@ class PIDToPoint(commands2.Command):  # change the name for your command
         y_setpoint = self.y_pid.calculate(robot_pose.Y())
         rot_setpoint = self.rot_pid.calculate(robot_pose.rotation().radians())
 
-        print(f"xyr setpoints: {x_setpoint}, {y_setpoint}, {rot_setpoint}")
+        SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
+        SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
+        SmartDashboard.putNumber("rot setpoint", math.degrees(self.rot_pid.getSetpoint()))
+
+        SmartDashboard.putNumber("x measured", robot_pose.x)
+        SmartDashboard.putNumber("y measured", robot_pose.y)
+        SmartDashboard.putNumber("rot measured", robot_pose.rotation().degrees())
+
+        SmartDashboard.putNumber("x commanded", x_setpoint)
+        SmartDashboard.putNumber("y commanded", y_setpoint)
+        SmartDashboard.putNumber("rot commanded", rot_setpoint)
 
         # positive rot commanded here gives negative results so must negate
-        self.swerve.drive(x_setpoint, y_setpoint, -rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
+        if wpilib.RobotBase.isReal():
+            self.swerve.drive(x_setpoint, y_setpoint, -rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
+        else: # yes this is horrible
+            self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
 
     def isFinished(self) -> bool:
         diff = self.swerve.get_pose().relativeTo(self.target_pose)

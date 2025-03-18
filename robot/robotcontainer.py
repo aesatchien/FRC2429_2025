@@ -318,7 +318,9 @@ class RobotContainer:
         # button A for intake
         # left trigger for outtake
 
-        self.triggerA.onTrue(Score(self))
+        if wpilib.RobotBase.isSimulation():
+            self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])) # this one is convenient for testing
+            self.triggerB.onTrue(PIDToPoint(self, self.swerve,  Pose2d(0, 0, 0)))
 
         self.triggerRB.onTrue(Score(self))
 
@@ -497,13 +499,10 @@ class RobotContainer:
 
         self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
-        # self.bbox_AB.whileTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             condition=self.robot_state.is_left
-        #         )
-        # )
+        self.bbox_AB.whileTrue(
+                    PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
+        )
+
         #
         # self.bbox_CD.whileTrue(
         #         commands2.ConditionalCommand(
@@ -523,7 +522,7 @@ class RobotContainer:
         # )
         #
         self.bbox_GH.whileTrue(
-                    PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
+                    PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])
         )
         #
         # self.bbox_IJ.whileTrue(
