@@ -60,8 +60,6 @@ class MoveWrist(commands2.Command):
 
     def isFinished(self) -> bool:
 
-        if self.timer.get() > self.timeout: return True
-
         if self.wait_to_finish:
             return self.wrist.get_at_setpoint()
         else:

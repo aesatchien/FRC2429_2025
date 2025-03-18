@@ -324,8 +324,8 @@ class RobotContainer:
         # left trigger for outtake
 
         if wpilib.RobotBase.isSimulation():
-            self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])) # this one is convenient for testing
-            self.triggerB.onTrue(PIDToPoint(self, self.swerve,  Pose2d(0, 0, 0)))
+            self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
+            self.triggerB.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
 
         self.triggerRB.onTrue(Score(self))
 
@@ -446,6 +446,9 @@ class RobotContainer:
         NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state))
         NamedCommands.registerCommand('stow', GoToStow(self))
         NamedCommands.registerCommand('score', Score(self))
+        NamedCommands.registerCommand('move wrist to 90 deg', MoveWrist(self, math.radians(90), 2, False, True))
+        NamedCommands.registerCommand('move wrist to -90 deg', MoveWrist(self, math.radians(-90), 2, False, True))
+        NamedCommands.registerCommand('move wrist to 0 deg', MoveWrist(self, math.radians(0), 2, False, True))
 
 
     def get_autonomous_command(self):
@@ -535,10 +538,6 @@ class RobotContainer:
         # wrist swap
         self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
-<<<<<<< HEAD
-        #self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
-        #self.bbox_GH.onTrue(GoToStow(self))
-=======
         self.bbox_AB.whileTrue(
                     PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
         )
@@ -583,7 +582,6 @@ class RobotContainer:
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))
->>>>>>> ohno
 
         # L1-L4
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))

@@ -73,11 +73,7 @@ class PIDToPoint(commands2.Command):  # change the name for your command
         SmartDashboard.putNumber("y commanded", y_setpoint)
         SmartDashboard.putNumber("rot commanded", rot_setpoint)
 
-        # positive rot commanded here gives negative results so must negate
-        if wpilib.RobotBase.isReal():
-            self.swerve.drive(x_setpoint, y_setpoint, -rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
-        else: # yes this is horrible
-            self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
+        self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
 
     def isFinished(self) -> bool:
         diff = self.swerve.get_pose().relativeTo(self.target_pose)
