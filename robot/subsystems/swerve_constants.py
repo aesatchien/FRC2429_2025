@@ -181,13 +181,8 @@ class ModuleConstants:
 
 class AutoConstants:
 
-    k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
-    if wpilib.RobotBase.isReal():
-        # CJH - IT SHOULD BE OBVIOUS THAT THE DRIVETRAIN IS NOT SET UP CORRECTLY IF YOU HAVE TO DO THIS
-        k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0) # HACK: kp should not be negative lmao
-
-    else:
-        k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0)
+    k_pathplanner_translation_pid_constants = PIDConstants(kP=5, kI=0, kD=0)
+    k_pathplanner_rotation_pid_constants = PIDConstants(kP=3, kI=0, kD=0)  # no longer negative when swerve correct
 
     k_pathplanner_holonomic_controller = PPHolonomicDriveController(
             translation_constants=k_pathplanner_translation_pid_constants,
@@ -203,6 +198,6 @@ class AutoConstants:
 
     )
 
-    k_rotation_tolerance = Rotation2d(math.radians(0))
-    k_translation_tolerance_meters = 5 / 100
+    k_rotation_tolerance = Rotation2d(math.radians(1))
+    k_translation_tolerance_meters = 4 / 100
 

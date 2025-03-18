@@ -7,6 +7,7 @@ from wpimath.geometry import Pose2d
 
 from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
+from subsystems.led import Led
 
 
 class PIDToPoint(commands2.Command):  # change the name for your command
@@ -43,6 +44,8 @@ class PIDToPoint(commands2.Command):  # change the name for your command
         else:
             self.target_state_flipped = self.target_state
 
+        self.container.led.set_indicator(Led.Indicator.kPOLKA)
+
     def execute(self) -> None:
         # we could also do this with wpilib pidcontrollers
         robot_pose = self.swerve.get_pose()
@@ -59,6 +62,12 @@ class PIDToPoint(commands2.Command):  # change the name for your command
     def end(self, interrupted: bool) -> None:
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
+        if interrupted:
+            commands2.CommandScheduler.getInstance().schedule(
+                self.container.led.set_indicator_with_timeout(Led.Indicator.kFAILUREFLASH, 2))
+        else:
+            commands2.CommandScheduler.getInstance().schedule(
+                self.container.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2))
         print_end_message = True
         if print_end_message:
             print(f"{self.indent * '    '}** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")

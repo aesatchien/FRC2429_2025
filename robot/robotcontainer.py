@@ -493,22 +493,28 @@ class RobotContainer:
         # self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
 
         # CJH taking over some buttons for testing the swerve setup - have to take the joystick out of it
-        self.bbox_GH.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.2, 0, 0), timeout=2))  # go forward - shows you front
-        self.bbox_IJ.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0.2, 0), timeout=2))  # go left - shows you left
-        self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
+        #self.bbox_GH.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.2, 0, 0), timeout=2))  # go forward - shows you front
+        #self.bbox_IJ.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0.2, 0), timeout=2))  # go left - shows you left
+        #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
 
         # set up all six buttons on the reef
-        button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF]  #, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  # TODO: put back after testing
-        characters = ['ab', 'cd', 'ef', 'gh', 'hi', 'jk']
+        button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
+        characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
         states = [self.robot_state.is_left, self.robot_state.is_left, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_left]
         poses_dict = constants.k_useful_robot_poses_blue
         constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
+
+
+
         for but, state, chars in zip(button_list, states, characters):
             but.whileTrue(
                 commands2.ConditionalCommand(
-                    onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
-                    onFalse=AutoBuilder.pathfindToPoseFlipped(poses_dict[chars[1]], constraints),
+                    # onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
+                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]]),
+                    # onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints),
+                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]]),
                     condition=state,
+
                 )
             )
 

@@ -176,11 +176,11 @@ for tag_id in range(17, 23):
         tag_positions[tag_id] = (tag_translation.X(), tag_translation.Y())
 
         # Compute robot rotation and offsets
-        robot_rotation = tag_yaw + Rotation2d(math.radians(-90))
+        robot_rotation = tag_yaw + Rotation2d(math.radians(-90))  # CJH changed this to get new orientation right
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
-        robot_offset_left = Translation2d(1, -.17).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(1, .17).rotateBy(tag_yaw)
+        robot_offset_left = Translation2d(1, +0.17).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(1, -0.17).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left
@@ -195,7 +195,7 @@ for tag_id in range(17, 23):
         k_useful_robot_poses_blue[right_branch_name] = Pose2d(right_branch_position, robot_rotation)
 
         print(f'tag:{tag_id}: Trans: {tag_translation}  Theta: {tag_yaw}')  # CJH trying to debug this stuff - this is correct
-        print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
+        # print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
 
 
 class GamePiece(Enum):
