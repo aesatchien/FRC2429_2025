@@ -323,7 +323,10 @@ class RobotContainer:
         # button A for intake
         # left trigger for outtake
 
-        self.triggerA.onTrue(Score(self))
+        if wpilib.RobotBase.isSimulation():
+            self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])) # this one is convenient for testing
+            self.triggerB.onTrue(PIDToPoint(self, self.swerve,  Pose2d(0, 0, 0)))
+
         self.triggerRB.onTrue(Score(self))
 
         self.trigger_L_trigger.onTrue(
@@ -532,8 +535,55 @@ class RobotContainer:
         # wrist swap
         self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
+<<<<<<< HEAD
         #self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         #self.bbox_GH.onTrue(GoToStow(self))
+=======
+        self.bbox_AB.whileTrue(
+                    PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
+        )
+
+        #
+        # self.bbox_CD.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
+        #
+        # # we swap the condition because for these ones, the driver's left is the robot's right
+        # self.bbox_EF.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
+        self.bbox_GH.whileTrue(
+                    PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])
+        )
+        #
+        # self.bbox_IJ.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
+        # self.bbox_KL.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
+
+        # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
+        # self.bbox_GH.onTrue(GoToStow(self))
+>>>>>>> ohno
 
         # L1-L4
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))

@@ -1,7 +1,10 @@
+from math import radians
+import math
 import commands2
 from pathplannerlib.trajectory import PathPlannerTrajectoryState
 from pathplannerlib.util import DriveFeedforwards
 from wpilib import SmartDashboard
+import wpilib
 from wpimath.controller import PIDController
 from wpimath.geometry import Pose2d
 
@@ -24,34 +27,57 @@ class PIDToPoint(commands2.Command):  # change the name for your command
 
         self.target_pose = target_pose
 
-        self.translation_pid = PIDController(1, 0, 0)
+        self.x_pid = PIDController(1, 0, 0.1)
+        self.y_pid = PIDController(1, 0, 0.1)
+        self.rot_pid = PIDController(1, 0, 0)
+        self.rot_pid.enableContinuousInput(radians(-180), radians(180))
+        self.x_pid.setSetpoint(target_pose.X())
+        self.y_pid.setSetpoint(target_pose.Y())
+        self.y_pid.setSetpoint(target_pose.rotation().radians())
 
-        self.target_state = PathPlannerTrajectoryState()
-        self.target_state.pose = self.target_pose  # set the pose of the target state
-        self.target_state.heading = self.target_pose.rotation()
-        self.target_state.feedforwards = DriveFeedforwards()
-        self.target_state_flipped = self.target_state
+        SmartDashboard.putNumber("x commanded", 0)
+        SmartDashboard.putNumber("y commanded", 0)
+        SmartDashboard.putNumber("rot commanded", 0)
+
+        self.addRequirements(self.swerve)
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print(f"{self.indent * '    '}** Started {self.getName()} at {self.start_time} s **", flush=True)
+        print(f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **", flush=True)
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
-
-        if self.swerve.flip_path(): # this is in initialize, not __init__, in case FMS hasn't told us the right alliance on boot-up 
-            self.target_state_flipped = self.target_state.flip()
-        else:
-            self.target_state_flipped = self.target_state
+        self.x_pid.reset()
+        self.y_pid.reset()
+        self.rot_pid.reset()
 
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
 
     def execute(self) -> None:
         # we could also do this with wpilib pidcontrollers
         robot_pose = self.swerve.get_pose()
-        target_chassis_speeds = ac.k_pathplanner_holonomic_controller.calculateRobotRelativeSpeeds(robot_pose, self.target_state_flipped)
 
-        self.swerve.drive_robot_relative(target_chassis_speeds, "we don't use feedforwards")
+        x_setpoint = self.x_pid.calculate(robot_pose.X())
+        y_setpoint = self.y_pid.calculate(robot_pose.Y())
+        rot_setpoint = self.rot_pid.calculate(robot_pose.rotation().radians())
+
+        SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
+        SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
+        SmartDashboard.putNumber("rot setpoint", math.degrees(self.rot_pid.getSetpoint()))
+
+        SmartDashboard.putNumber("x measured", robot_pose.x)
+        SmartDashboard.putNumber("y measured", robot_pose.y)
+        SmartDashboard.putNumber("rot measured", robot_pose.rotation().degrees())
+
+        SmartDashboard.putNumber("x commanded", x_setpoint)
+        SmartDashboard.putNumber("y commanded", y_setpoint)
+        SmartDashboard.putNumber("rot commanded", rot_setpoint)
+
+        # positive rot commanded here gives negative results so must negate
+        if wpilib.RobotBase.isReal():
+            self.swerve.drive(x_setpoint, y_setpoint, -rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
+        else: # yes this is horrible
+            self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
 
     def isFinished(self) -> bool:
         diff = self.swerve.get_pose().relativeTo(self.target_pose)
