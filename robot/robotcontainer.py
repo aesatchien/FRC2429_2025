@@ -63,6 +63,8 @@ from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
 from commands.move_wrist_swap import MoveWristSwap
 
+from commands.can_status import CANStatus
+
 from trajectory import CustomTrajectory
 # from commands.score import Score
 # from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
@@ -303,6 +305,9 @@ class RobotContainer:
         self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
+
+        # CAN Status / sticky and fault error reports
+        wpilib.SmartDashboard.putData('CANStatus', CANStatus(container=self))
 
     def bind_driver_buttons(self):
 
