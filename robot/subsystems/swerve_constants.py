@@ -62,27 +62,42 @@ class DriveConstants:
 
     # absolute encoder values when wheels facing forward  - 20230322 CJH
     # NOW IN RADIANS to feed right to the AnalogPotentiometer on the module
-    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.532)  #  rad
-    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.937)  #  rad   billet gear out on rf
-    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.573)  #  rad
-    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.988)  #  rad  billet gear out on rb
+    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.988) # (0.532)  #  rad
+    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.573) # (0.937)  #  rad   billet gear out on rf
+    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.937) # (0.573)  #  rad
+    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.532) # (0.988)  #  rad  billet gear out on rb
     k_analog_encoder_offsets = {'lf':0.829, 'rf':0.783, 'lb':0.304, 'rb':0.986}  # use in sim
 
-    # SPARK MAX CAN IDs
-    kFrontLeftDrivingCanId = 21
-    kRearLeftDrivingCanId = 23
-    kFrontRightDrivingCanId = 25
-    kRearRightDrivingCanId = 27
+    # SPARK MAX CAN IDs  - checked for correctness 2025 0317
+    kFrontLeftDrivingCanId = 27
+    kRearLeftDrivingCanId = 25
+    kFrontRightDrivingCanId = 23
+    kRearRightDrivingCanId = 21
 
-    kFrontLeftTurningCanId = 20
-    kRearLeftTurningCanId = 22
-    kFrontRightTurningCanId = 24
-    kRearRightTurningCanId = 26
+    kFrontLeftTurningCanId = 26
+    kRearLeftTurningCanId = 24
+    kFrontRightTurningCanId = 22
+    kRearRightTurningCanId = 20
 
-    kFrontLeftAbsEncoderPort = 0
-    kFrontRightAbsEncoderPort = 1
-    kBackLeftAbsEncoderPort = 2
-    kBackRightAbsEncoderPort = 3
+    kFrontLeftAbsEncoderPort = 3
+    kFrontRightAbsEncoderPort = 2
+    kBackLeftAbsEncoderPort = 1
+    kBackRightAbsEncoderPort = 0
+
+    # kFrontLeftDrivingCanId = 21
+    # kRearLeftDrivingCanId = 23
+    # kFrontRightDrivingCanId = 25
+    # kRearRightDrivingCanId = 27
+    #
+    # kFrontLeftTurningCanId = 20
+    # kRearLeftTurningCanId = 22
+    # kFrontRightTurningCanId = 24
+    # kRearRightTurningCanId = 26
+
+    # kFrontLeftAbsEncoderPort = 0
+    # kFrontRightAbsEncoderPort = 1
+    # kBackLeftAbsEncoderPort = 2
+    # kBackRightAbsEncoderPort = 3
 
 class NeoMotorConstants:
     kFreeSpeedRpm = 6784  # neo is 5676, vortex is 6784
@@ -169,7 +184,7 @@ class AutoConstants:
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
     if wpilib.RobotBase.isReal():
         # CJH - IT SHOULD BE OBVIOUS THAT THE DRIVETRAIN IS NOT SET UP CORRECTLY IF YOU HAVE TO DO THIS
-        k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0) # HACK: kp should not be negative lmao
+        k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0) # HACK: kp should not be negative lmao
 
     else:
         k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0)
@@ -184,7 +199,8 @@ class AutoConstants:
             maxAccelerationMpsSq=4,
             maxAngularVelocityRps=2*math.pi,  # radians per second
             maxAngularAccelerationRpsSq=4*math.pi,  # radians per second squared
-            nominalVoltage=12
+            nominalVoltage=12,
+
     )
 
     k_rotation_tolerance = Rotation2d(math.radians(0))

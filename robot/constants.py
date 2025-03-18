@@ -176,11 +176,11 @@ for tag_id in range(17, 23):
         tag_positions[tag_id] = (tag_translation.X(), tag_translation.Y())
 
         # Compute robot rotation and offsets
-        robot_rotation = tag_yaw + Rotation2d(math.radians(90))
+        robot_rotation = tag_yaw + Rotation2d(math.radians(-90))
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
-        robot_offset_left = Translation2d(1, -.5).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(1, .5).rotateBy(tag_yaw)
+        robot_offset_left = Translation2d(1, -.17).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(1, .17).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left
