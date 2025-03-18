@@ -504,19 +504,24 @@ class RobotContainer:
         poses_dict = constants.k_useful_robot_poses_blue
         constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
 
-
-
+        use_pathplanner = False  # quick switch back and forth
         for but, state, chars in zip(button_list, states, characters):
-            but.whileTrue(
-                commands2.ConditionalCommand(
-                    # onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]]),
-                    # onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]]),
-                    condition=state,
-
+            if use_pathplanner:
+                but.whileTrue(  # todo - wrap this in LED indicators
+                    commands2.ConditionalCommand(
+                        onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
+                        onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints),
+                        condition=state,
+                    )
                 )
-            )
+            else:  # pidtopoint version
+                but.whileTrue(
+                    commands2.ConditionalCommand(
+                        onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]]),
+                        onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]]),
+                        condition=state,
+                    )
+                )
 
         # picking up coral from the human station
         self.bbox_human_right.whileTrue(GoToCoralStation(container=self))
