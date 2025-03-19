@@ -26,7 +26,10 @@ k_bbox_2_port = 3
 k_robot_mass_kg = 56
 k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
 
-k_reset_sparks_to_default = True
+k_reset_sparks_to_default = True  # So far, only used in swerve
+# only send and persist new parameters when something is new or goes wrong - addresses intermittent sparkflex CAN losses on boot
+k_burn_flash = False
+
 k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False

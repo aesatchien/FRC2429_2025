@@ -6,6 +6,7 @@ import wpilib
 from wpimath.units import inchesToMeters
 import math
 
+import constants
 from constants import ElevatorConstants
 
 
@@ -48,8 +49,10 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
         self.rev_persists = rev.SparkMax.PersistMode.kPersistParameters
 
         # this should be its own function later - we will call it whenever we change brake mode
-        self.motor.configure(ElevatorConstants.k_config, self.rev_resets, self.rev_persists)
-        self.follower.configure(ElevatorConstants.k_follower_config, self.rev_resets, self.rev_persists)
+        if constants.k_burn_flash:
+            controller_revlib_error_source = self.motor.configure(ElevatorConstants.k_config, self.rev_resets, self.rev_persists)
+            controller_revlib_error_follower = self.follower.configure(ElevatorConstants.k_follower_config, self.rev_resets, self.rev_persists)
+            print(f"Reconfigured elevator sparkmax. Controller status: \n {controller_revlib_error_source}\n{controller_revlib_error_follower}")
 
         # configure our PID controller
         self.controller = self.motor.getClosedLoopController()
@@ -78,8 +81,11 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
             ElevatorConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
             ElevatorConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
 
-        self.motor.configure(ElevatorConstants.k_config, self.rev_resets, self.rev_persists)
-        self.follower.configure(ElevatorConstants.k_follower_config, self.rev_resets, self.rev_persists)
+        # do not make the changes permanent
+        rev_resets = rev.SparkMax.ResetMode.kNoResetSafeParameters
+        rev_persists = rev.SparkMax.PersistMode.kNoPersistParameters
+        self.motor.configure(ElevatorConstants.k_config, rev_resets, rev_persists)
+        self.follower.configure(ElevatorConstants.k_follower_config, rev_resets, rev_persists)
 
     def get_height(self):
         return self.encoder.getPosition()

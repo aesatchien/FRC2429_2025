@@ -40,8 +40,10 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.rev_persists = rev.SparkFlex.PersistMode.kPersistParameters
 
         # this should be its own function later - we will call it whenever we change brake mode
-        self.motor.configure(constants.ShoulderConstants.k_config, self.rev_resets, self.rev_persists)
-        self.follower.configure(constants.ShoulderConstants.k_follower_config, self.rev_resets, self.rev_persists)
+        if constants.k_burn_flash:
+            controller_revlib_error_source = self.motor.configure(constants.ShoulderConstants.k_config, self.rev_resets, self.rev_persists)
+            controller_revlib_error_follower = self.follower.configure(constants.ShoulderConstants.k_follower_config, self.rev_resets, self.rev_persists)
+            print(f"Reconfigured pivot sparkmax. Controller status: \n {controller_revlib_error_source}\n{controller_revlib_error_follower}")
 
         # configure our PID controller
         self.controller = self.motor.getClosedLoopController()
@@ -88,8 +90,11 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
             constants.ShoulderConstants.k_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
             constants.ShoulderConstants.k_follower_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kCoast)
 
-        self.motor.configure(constants.ShoulderConstants.k_config, self.rev_resets, self.rev_persists)
-        self.follower.configure(constants.ShoulderConstants.k_follower_config, self.rev_resets, self.rev_persists)
+        # do not make the changes permanent, only change temporary brake mode
+        rev_resets = rev.SparkMax.ResetMode.kNoResetSafeParameters
+        rev_persists = rev.SparkMax.PersistMode.kNoPersistParameters
+        self.motor.configure(constants.ShoulderConstants.k_config, rev_resets, rev_persists)
+        self.follower.configure(constants.ShoulderConstants.k_follower_config, rev_resets, rev_persists)
 
     def get_angle(self):
         return self.encoder.getPosition()

@@ -63,11 +63,11 @@ class Wrist(Subsystem):
 
         self.setpoint = self.encoder.getPosition()
 
-        controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config, 
-                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kPersistParameters)
-
-        print(f"Reconfigured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
+        if constants.k_burn_flash:
+            controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config,
+                                        resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                        persistMode=SparkMax.PersistMode.kPersistParameters)
+            print(f"Reconfigured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
 
 
     def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition, closed_loop_slot=0) -> None:

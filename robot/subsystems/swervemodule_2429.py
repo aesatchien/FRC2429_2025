@@ -35,11 +35,12 @@ class SwerveModule:
 
         this_module_driving_config.apply(ModuleConstants.k_driving_config)
         this_module_driving_config.inverted(driving_inverted)
-        if constants.k_reset_sparks_to_default:         # Factory reset, so we get the SPARKS MAX to a known state before configuring them
-            # self.drivingSparkFlex.configure(config=ModuleConstants.k_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-            self.drivingSparkFlex.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-        else:
-            self.drivingSparkFlex.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+        if constants.k_burn_flash:
+            if constants.k_reset_sparks_to_default:         # Factory reset, so we get the SPARKS MAX to a known state before configuring them
+                drive_controller_revlib_error = self.drivingSparkFlex.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+            else:
+                drive_controller_revlib_error = self.drivingSparkFlex.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+            print(f"Reconfigured sparkmax {drivingCANId}. Controller status: {drive_controller_revlib_error}")
 
         # Get driving encoder from the sparkflex
         self.drivingEncoder = self.drivingSparkFlex.getEncoder()
@@ -52,15 +53,14 @@ class SwerveModule:
         this_module_turning_config.apply(ModuleConstants.k_turning_config)
         this_module_turning_config.inverted(turning_inverted)
 
-        if constants.k_reset_sparks_to_default:
-            # self.drivingSparkFlex.restoreFactoryDefaults()
-            self.turningSparkFlex.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-
-        else:
-            self.turningSparkFlex.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+        if constants.k_burn_flash:
+            if constants.k_reset_sparks_to_default:
+                turn_controller_revlib_error = self.turningSparkFlex.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+            else:
+                turn_controller_revlib_error = self.turningSparkFlex.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
+            print(f"Reconfigured sparkmax {turningCANId}. Controller status: {turn_controller_revlib_error}")
 
         # self.turningSparkFlex.setInverted(turning_inverted)
-
 
         # Setup encoders for the turning SPARKMAX - just to watch it if we need to for velocities, etc.
         # WE DO NOT USE THIS FOR ANYTHING - THE ABSOLUTE ENCODER IS USED FOR TURNING AND GOES INTO THE RIO ANALOG PORT

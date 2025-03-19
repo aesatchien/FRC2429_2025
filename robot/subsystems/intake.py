@@ -19,9 +19,13 @@ class Intake(Subsystem):
 
         self.encoder = self.sparkmax.getEncoder()
 
-        self.sparkmax.configure(config=constants.IntakeConstants.k_intake_config,
-                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kPersistParameters)
+        if constants.k_burn_flash:
+            controller_revlib_error = self.sparkmax.configure(config=constants.IntakeConstants.k_intake_config,
+                                                            resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                                            persistMode=SparkMax.PersistMode.kPersistParameters)
+            print(f"Reconfigured intake sparkmax. Wrist controller status: {controller_revlib_error}")
+
+
         self.controller = self.sparkmax.getClosedLoopController()
 
         if wpilib.RobotBase.isSimulation():

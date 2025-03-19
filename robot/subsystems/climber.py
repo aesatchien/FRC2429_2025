@@ -16,9 +16,12 @@ class Climber(Subsystem):
 
         self.sparkmax = rev.SparkMax(constants.ClimberConstants.k_CAN_id, rev.SparkMax.MotorType.kBrushless)
 
-        self.sparkmax.configure(config=constants.ClimberConstants.k_config,
-                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kPersistParameters)
+        if constants.k_burn_flash:
+            controller_revlib_error = self.sparkmax.configure(config=constants.ClimberConstants.k_config,
+                                        resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                        persistMode=SparkMax.PersistMode.kPersistParameters)
+            print(f"Reconfigured climber sparkmax. Wrist controller status: {controller_revlib_error}")
+
         
         #configure PID controller
         self.controller = self.sparkmax.getClosedLoopController()
