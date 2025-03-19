@@ -12,6 +12,7 @@ from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
+from autonomous.one_plus_one import OnePlusOne
 from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
@@ -304,6 +305,7 @@ class RobotContainer:
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
+        self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
 
         # CAN Status / sticky and fault error reports
@@ -443,8 +445,10 @@ class RobotContainer:
 
         NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
         NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
-        NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state))
+        NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state).withTimeout(2))
+        NamedCommands.registerCommand('go to coral station', GoToCoralStation(self))
         NamedCommands.registerCommand('stow', GoToStow(self))
+        NamedCommands.registerCommand('stow and turn off intake', RunIntake(self, self.intake, 0).andThen(GoToStow(self)))
         NamedCommands.registerCommand('score', Score(self))
         NamedCommands.registerCommand('move wrist to 90 deg', MoveWrist(self, math.radians(90), 2, False, True))
         NamedCommands.registerCommand('move wrist to -90 deg', MoveWrist(self, math.radians(-90), 2, False, True))

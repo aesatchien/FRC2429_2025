@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.540266393442623,
-        "y": 5.061936475409836
+        "x": 7.588217213114754,
+        "y": 4.0549692622950815
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.142485608401582,
-        "y": 4.064804822223315
+        "x": 7.017234997895928,
+        "y": 4.028092093136092
       },
       "isLocked": false,
-      "linkedName": "start point near middle of barge"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.238627049180328,
-        "y": 3.14390368852459
+        "x": 5.9818647540983605,
+        "y": 3.971055327868852
       },
       "prevControl": {
-        "x": 6.112314664537192,
-        "y": 3.892177494255295
+        "x": 7.155520379485647,
+        "y": 4.028135617808325
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "1+0 trough end point"
     }
   ],
   "rotationTargets": [],
@@ -42,10 +42,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -151.52579638992563
+    "rotation": -90.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "1+1",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -90.0
