@@ -260,6 +260,26 @@ class RobotContainer:
             2: {'elevator': 0.8, 'pivot': 50, 'wrist': 90, 'intake': 3},  # return home with wrist safe
         }
 
+        # WAYPOINTS FOR 67 SCORING STYLE FOR L2, L3, and L4 - TODO: TUNE + PUT IN CONSTANTS
+        waypoints_l2_score_67 = {
+            0: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035, 'pivot': constants.k_positions["l2"]["shoulder_pivot"], 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0},
+            0.8: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035, 'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5, 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0}
+            
+            #1.4 : {'elevator': constants.k_positions["l2"]["elevator"] + 0.1, 'pivot': constants.k_positions["l2"]["shoulder_pivot"] + math.radians(10), 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 3}, #FOR DRIVERS; PULL BACK WHEN CORAL IS CLIPPED AFTER ~0.8 SECONDS SO THAT WHEN INTAKE IS ACTIVATED ROBOT CAN BE PULLED BACK AND PIECE RELEASED
+        }
+
+        waypoints_l3_score_67 = {
+            0: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035, 'pivot': constants.k_positions["l3"]["shoulder_pivot"], 'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0},
+            0.8: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035, 'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5, 'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0}
+        }
+
+        waypoints_l4_score_67 = {
+            0: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035, 'pivot': constants.k_positions["l4"]["shoulder_pivot"], 'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0},
+            1.2: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035, 'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 7.5, 'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0}
+
+            #NOTE: DRIVERS HAVE ~1 SECOND TO MOVE ROBOT BACK WHILE PIVOT IS MOVING - THIS IS REQUIRED DUE TO GEOMETRY OF OUTTAKE + REEF!
+        }
+
         # waypoints = {
         #     0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
         #     0.25: {'elevator': 0.3, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
@@ -272,6 +292,14 @@ class RobotContainer:
         #
         l3_trajectory = CustomTrajectory(waypoints, 2)
         wpilib.SmartDashboard.putData('l3 trajectory', FollowTrajectory(container=self, current_trajectory=l3_trajectory, wait_to_finish=True))
+
+        l2_score_67 = CustomTrajectory(waypoints_l2_score_67, 0.8)
+        l3_score_67 = CustomTrajectory(waypoints_l3_score_67, 0.8)
+        l4_score_67 = CustomTrajectory(waypoints_l4_score_67, 1.2)
+
+        wpilib.SmartDashboard.putData('l2 67 score trajectory', FollowTrajectory(container=self, current_trajectory=l2_score_67, wait_to_finish=True))
+        wpilib.SmartDashboard.putData('l3 67 score trajectory', FollowTrajectory(container=self, current_trajectory=l3_score_67, wait_to_finish=True))
+        wpilib.SmartDashboard.putData('l4 67 score trajectory', FollowTrajectory(container=self, current_trajectory=l4_score_67, wait_to_finish=True))
         wpilib.SmartDashboard.putData('MoveElevatorTop', MoveElevator(container=self, elevator=self.elevator, mode='specified', height=constants.ElevatorConstants.k_max_height-0.005 ))
         wpilib.SmartDashboard.putData('MoveElevatorUp', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=0.1 ))
         wpilib.SmartDashboard.putData('MoveElevatorDown', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=-0.1))
@@ -287,7 +315,7 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-10)))
         wpilib.SmartDashboard.putData('CalibrateJoystick', CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
-        wpilib.SmartDashboard.putData('GoToStow', Score(container=self))
+        wpilib.SmartDashboard.putData('GoToScore', Score(container=self))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
         wpilib.SmartDashboard.putData('GoToL1', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).andThen(GoToReefPosition(self, 1, self.robot_state)))
         wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).andThen(GoToReefPosition(self, 2, self.robot_state)))

@@ -20,14 +20,13 @@ class Score(commands2.SequentialCommandGroup):
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
         self.addCommands(RunIntake(container=self.container, intake=self.container.intake, 
-                                 value=constants.IntakeConstants.k_coral_scoring_voltage, 
-                                 control_type=SparkMax.ControlType.kVoltage, indent=indent+1))
+                                    value=constants.IntakeConstants.k_coral_scoring_voltage, 
+                                    control_type=SparkMax.ControlType.kVoltage, indent=indent+1))
         self.addCommands( SetLEDs(container=self.container, led=self.container.led, indicator=Led.Indicator.kSUCCESSFLASH))
         self.addCommands(commands2.WaitCommand(constants.IntakeConstants.k_seconds_to_stay_on_while_scoring))
 
         self.addCommands(StowWristAfterPositionDelta(container, wait_to_finish=True, indent=indent+1))
         self.addCommands(GoToStow(container=self.container, indent=indent+1))
         self.addCommands(RunIntake(container=self.container, intake=self.container.intake, value=0,
-                                   control_type=SparkMax.ControlType.kVoltage, indent=indent + 1))
+                                    control_type=SparkMax.ControlType.kVoltage, indent=indent + 1))
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
-
