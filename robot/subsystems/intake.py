@@ -35,12 +35,16 @@ class Intake(Subsystem):
     def set_reference(self, value: float, control_type: SparkMax.ControlType = rev.SparkBase.ControlType.kVoltage):
         self.controller.setReference(value, control_type)
 
-    def has_coral(self) -> bool:
-        average_coral_distance = self.TOFSensorCoral.getRange()
+    def get_distance(self):
+        average_coral_distance = (self.TOFSensorCoral.getRange() + self.TOFSensorCoral.getRange()) / 2
         average_coral_distance = 0 if average_coral_distance > 500 else average_coral_distance  # correct for weird stuff
+        return average_coral_distance
+
+    def has_coral(self) -> bool:
+        coral_distance = self.get_distance()
         # reads 0 when no signal, so it has to be between 1 and the actual number of mm
-        corral_present = 4 < average_coral_distance <= constants.IntakeConstants.k_max_tof_distance_where_we_have_coral
-        return corral_present
+        coral_present = 4 < coral_distance <= constants.IntakeConstants.k_max_tof_distance_where_we_have_coral
+        return coral_present
 
     def periodic(self) -> None:
         # print(f"setting reserefsersf to {wpilib.SmartDashboard.getNumber('SET intake volts', 0)}")
@@ -53,7 +57,7 @@ class Intake(Subsystem):
             else:
                 wpilib.SmartDashboard.putBoolean('gamepiece_present', self.counter % 200 < 100)
 
-            wpilib.SmartDashboard.putNumber('intake_tof', self.TOFSensorCoral.getRange())
+            wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
 
             if constants.IntakeConstants.k_nt_debugging:  # extra debugging info for NT
                 pass

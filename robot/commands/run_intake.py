@@ -1,6 +1,7 @@
 import commands2
 from rev import SparkMax
 from wpilib import SmartDashboard
+import constants
 from subsystems.intake import Intake
 
 
@@ -23,6 +24,15 @@ class RunIntake(commands2.Command):  # change the name for your command
         msg = self.indent * "    " + f"** Started {self.getName()} with value {self.value} at {self.start_time} s **"
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
+
+        if self.value < 0:
+            constants.IntakeConstants.k_intake_config.smartCurrentLimit(5)
+        else:
+            constants.IntakeConstants.k_intake_config.smartCurrentLimit(10)
+
+        self.intake.sparkmax.configure(constants.IntakeConstants.k_intake_config,
+                                       SparkMax.ResetMode.kNoResetSafeParameters,
+                                       SparkMax.PersistMode.kNoPersistParameters)
 
         self.intake.set_reference(value=self.value, control_type=self.control_type)
 

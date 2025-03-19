@@ -6,11 +6,13 @@ from pathplannerlib.commands import PathfindingCommand
 import rev
 import wpilib
 import commands2
+from wpilib._wpilib import SmartDashboard
 from wpimath import controller
 from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
+from autonomous.one_plus_one import OnePlusOne
 from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
@@ -27,7 +29,6 @@ from commands.go_to_stow import GoToStow
 from commands.go_to_reef_position import GoToReefPosition
 from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
-from commands.calibrate_joystick import CalibrateJoystick
 from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
@@ -49,6 +50,7 @@ from subsystems.climber import Climber
 from subsystems.vision import Vision
 
 from autonomous.leave_then_score_1 import LeaveThenScore
+from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.move_elevator import MoveElevator
 from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
@@ -61,6 +63,8 @@ from commands.follow_trajectory import FollowTrajectory
 from commands.intake_sequence import IntakeSequence
 from commands.reset_field_centric import ResetFieldCentric
 from commands.move_wrist_swap import MoveWristSwap
+
+from commands.can_status import CANStatus
 
 from trajectory import CustomTrajectory
 # from commands.score import Score
@@ -317,11 +321,12 @@ class RobotContainer:
 
         wpilib.SmartDashboard.putData('GoToScore', Score(container=self))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
-        wpilib.SmartDashboard.putData('GoToL1', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).andThen(GoToReefPosition(self, 1, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).andThen(GoToReefPosition(self, 2, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).andThen(GoToReefPosition(self, 3, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
+        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
+        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
+
+        SmartDashboard.putData("Go to 60 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(60), False), self.pivot))
+        SmartDashboard.putData("Go to 90 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(90), False), self.pivot))
 
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
@@ -334,14 +339,15 @@ class RobotContainer:
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
+        self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
+
+        # CAN Status / sticky and fault error reports
+        wpilib.SmartDashboard.putData('CANStatus', CANStatus(container=self))
 
     def bind_driver_buttons(self):
 
-        self.triggerA.onTrue(Score(self))
-        self.triggerA.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue['a']))
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
-        self.triggerX.onTrue(CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
         # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
         # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
@@ -350,9 +356,14 @@ class RobotContainer:
         # this is for field centric
         #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
+        # button A for intake
+        # left trigger for outtake
 
+        if wpilib.RobotBase.isSimulation():
+            self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
+            self.triggerB.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
 
-        self.triggerRB.onTrue(self.led.set_indicator_with_timeout(Led.Indicator.kWHITEFLASH, 3))
+        self.triggerRB.onTrue(Score(self))
 
         self.trigger_L_trigger.onTrue(
                 GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
@@ -468,9 +479,14 @@ class RobotContainer:
 
         NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
         NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
-        NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state))
+        NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state).withTimeout(2))
+        NamedCommands.registerCommand('go to coral station', GoToCoralStation(self))
         NamedCommands.registerCommand('stow', GoToStow(self))
+        NamedCommands.registerCommand('stow and turn off intake', RunIntake(self, self.intake, 0).andThen(GoToStow(self)))
         NamedCommands.registerCommand('score', Score(self))
+        NamedCommands.registerCommand('move wrist to 90 deg', MoveWrist(self, math.radians(90), 2, False, True))
+        NamedCommands.registerCommand('move wrist to -90 deg', MoveWrist(self, math.radians(-90), 2, False, True))
+        NamedCommands.registerCommand('move wrist to 0 deg', MoveWrist(self, math.radians(0), 2, False, True))
 
 
     def get_autonomous_command(self):
@@ -479,7 +495,7 @@ class RobotContainer:
 
     def bind_button_box(self):
         """
-        Remember - buttons arre 1-indexed, no zero
+        Remember - buttons are 1-indexed, not zero
         """
         # The driver's controller
         self.bbox_1 = commands2.button.CommandJoystick(constants.k_bbox_1_port)
@@ -516,86 +532,117 @@ class RobotContainer:
         self.bbox_TBD2.onTrue(GoToStow(self))
 
         self.bbox_right.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
-        self.bbox_right.onFalse(MoveWristSwap(self, self.wrist))
-
+        # self.bbox_right.onFalse(MoveWristSwap(self, self.wrist))
         self.bbox_left.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
-        self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
+        # self.bbox_left.onFalse(MoveWristSwap(self, self.wrist))
 
-        self.bbox_human_right.whileTrue(GoToCoralStation(container=self).andThen(
-            RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+        # CJH taking over some buttons for testing the swerve setup - have to take the joystick out of it
+        #self.bbox_GH.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.2, 0, 0), timeout=2))  # go forward - shows you front
+        #self.bbox_IJ.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0.2, 0), timeout=2))  # go left - shows you left
+        #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
+
+        # set up all six buttons on the reef
+        button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
+        characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
+        states = [self.robot_state.is_left, self.robot_state.is_left, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_left]
+        poses_dict = constants.k_useful_robot_poses_blue
+        constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
+
+        use_pathplanner = False  # quick switch back and forth
+        for but, state, chars in zip(button_list, states, characters):
+            if use_pathplanner:
+                but.whileTrue(  # todo - wrap this in LED indicators
+                    commands2.ConditionalCommand(
+                        onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
+                        onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints),
+                        condition=state,
+                    )
+                )
+            else:  # pidtopoint version
+                but.whileTrue(
+                    commands2.ConditionalCommand(
+                        onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]]),
+                        onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]]),
+                        condition=state,
+                    )
+                )
+
+        # picking up coral from the human station
+        self.bbox_human_right.whileTrue(GoToCoralStation(container=self))
         self.bbox_human_right.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
+        # self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
 
-        self.bbox_human_right.onTrue(commands2.PrintCommand("Pushed BBox Human right"))
-
+        # wrist swap
+        self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
         self.bbox_AB.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["b"]),
-                    condition=self.robot_state.is_left
-                )
+                    PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
         )
 
-        self.bbox_CD.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["c"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["d"]),
-                    condition=self.robot_state.is_left
-                )
-        )
-
-        # we swap the condition because for these ones, the driver's left is the robot's right
-        self.bbox_EF.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["e"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["f"]),
-                    condition=self.robot_state.is_right
-                )
-        )
-
+        #
+        # self.bbox_CD.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
+        #
+        # # we swap the condition because for these ones, the driver's left is the robot's right
+        # self.bbox_EF.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
         self.bbox_GH.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["h"]),
-                    condition=self.robot_state.is_right
-                )
+                    PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])
         )
-
-        self.bbox_IJ.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["i"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["j"]),
-                    condition=self.robot_state.is_right
-                )
-        )
-
-        self.bbox_KL.whileTrue(
-                commands2.ConditionalCommand(
-                    onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["k"]),
-                    onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["l"]),
-                    condition=self.robot_state.is_left
-                )
-        )
+        #
+        # self.bbox_IJ.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_right
+        #         )
+        # )
+        #
+        # self.bbox_KL.whileTrue(
+        #         commands2.ConditionalCommand(
+        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
+        #             condition=self.robot_state.is_left
+        #         )
+        # )
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))
 
+        # L1-L4
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
         self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
         self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
-        self.bbox_reef_alga_high.whileTrue(commands2.ParallelCommandGroup(GoToPosition(self, "algae high"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+        # Reef actions
+        self.bbox_reef_alga_high.whileTrue(commands2.ParallelCommandGroup(
+            GoToPosition(self, "algae high"),
+            RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+        self.bbox_reef_alga_high.onFalse(
+            RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+                GoToStow(container=self)))
 
-        self.bbox_reef_alga_high.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-            GoToStow(container=self)))
+        self.bbox_reef_alga_low.whileTrue(commands2.ParallelCommandGroup(
+            GoToPosition(self, "algae low"),
+            RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+        self.bbox_reef_alga_low.onFalse(
+            RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+                GoToStow(container=self)))
 
-        self.bbox_reef_alga_low.whileTrue(commands2.ParallelCommandGroup(GoToPosition(self, "algae low"), RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
-
-        self.bbox_reef_alga_low.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-            GoToStow(container=self)))
-
+        # climber actions
         self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
         self.bbox_net.onTrue(GoToPosition(self, "climb"))
         self.bbox_net.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
@@ -604,6 +651,9 @@ class RobotContainer:
         self.bbox_processor.onTrue(GoToPosition(self, "climb"))
         self.bbox_processor.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
 
-        self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
-        self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
+
+
+        # print commands for testing
+        #self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
+        #self.bbox_processor.onTrue(commands2.PrintCommand("Pushed BBox Processor"))
 

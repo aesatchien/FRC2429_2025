@@ -1,3 +1,4 @@
+from time import sleep
 from commands2.subsystem import Subsystem
 import math
 import wpilib
@@ -15,7 +16,7 @@ class Wrist(Subsystem):
 
         controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config, 
                                 resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kPersistParameters)
+                                persistMode=SparkMax.PersistMode.kNoPersistParameters)
 
         print(f"Configured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
 
@@ -31,10 +32,43 @@ class Wrist(Subsystem):
         self.pivot = pivot
         self.elevator = elevator
 
-        self.encoder.setPosition(WristConstants.k_starting_angle)
         self.controller = self.sparkmax.getClosedLoopController()
-        self.setpoint = self.encoder.getPosition()
         self.counter = constants.WristConstants.k_counter_offset
+
+        faults = self.sparkmax.getFaults()
+        if faults.sensor:
+            print("WARNING! faults.sensor is true!")
+
+        abs_raw = self.abs_encoder.getPosition()
+        abs_raws = []
+        for reading in range(100):
+            abs_raws.append(self.abs_encoder.getPosition())
+            sleep(0.02)
+
+        print(f"abs raws: {abs_raws}")
+        abs_raws_trunc = abs_raws[75:]
+        print(f"abs raws trunc: {abs_raws_trunc}")
+        abs_raw = sum(abs_raws_trunc) / len(abs_raws_trunc)
+
+        print(f"abs encoder reports position {abs_raw}")
+        print(f"subtracting {WristConstants.k_abs_encoder_readout_when_at_zero_position}")
+
+        abs_offset = abs_raw - WristConstants.k_abs_encoder_readout_when_at_zero_position
+        print(f"this gives us, in rotations, {abs_offset}")
+
+        abs_offset_rad = abs_offset * math.tau
+        print(f"in radians, this gives us {abs_offset_rad}")
+
+        self.encoder.setPosition(abs_offset_rad)
+
+        self.setpoint = self.encoder.getPosition()
+
+        controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config, 
+                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                persistMode=SparkMax.PersistMode.kPersistParameters)
+
+        print(f"Reconfigured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
+
 
     def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition, closed_loop_slot=0) -> None:
 

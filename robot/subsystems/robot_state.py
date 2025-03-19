@@ -1,6 +1,8 @@
+import math
 from enum import Enum
 import commands2
 from wpilib import SmartDashboard
+from wpimath.geometry import Rotation2d
 import constants
 from constants import LedConstants
 
@@ -106,6 +108,72 @@ class RobotState(commands2.Subsystem):
 
     def get_pivot_goal(self):
         return constants.k_positions[self.target.value['name']]['shoulder_pivot']
+
+    def is_point_between_angles(self, x, y, a, b):
+        """
+        Determines if the point (x, y) is between angles a and b.
+        
+        Parameters:
+          x, y: Coordinates of the point relative to the origin.
+          a, b: Boundary angles in degrees (they can be in any order).
+          
+        Returns:
+          True if the point's polar angle is within the arc defined by a to b,
+          handling wrap-around at 360 degrees; otherwise, False.
+        """
+        # Compute the point's angle in degrees
+        point_angle = math.degrees(math.atan2(y, x)) % 360
+        
+        # Normalize the boundary angles
+        a = a % 360
+        b = b % 360
+    
+        if a <= b:
+            return a <= point_angle <= b
+        else:
+            # Arc spans the 0° boundary.
+            return point_angle >= a or point_angle <= b
+    
+    def closest_hex_side(self, robot_x, robot_y, center_x, center_y):
+        """
+        Determines which side ('ab', 'cd', 'ef', 'gh', 'ij', or 'kl')
+        of the hexagon the robot is closest to, based on its angle relative
+        to the hexagon's center.
+    
+        The hexagon is assumed to have its sides arranged such that:
+          - 'ab' covers 30° to 90°
+          - 'cd' covers 90° to 150°
+          - 'ef' covers 150° to 210°
+          - 'gh' covers 210° to 270°
+          - 'ij' covers 270° to 330°
+          - 'kl' covers 330° to 30° (wrap-around)
+    
+        Parameters:
+          robot_x, robot_y: The robot's coordinates.
+          center_x, center_y: The hexagon center coordinates.
+    
+        Returns:
+          The label of the hexagon side as a string.
+        """
+        # Translate the robot's position relative to the hexagon center.
+        rel_x = robot_x - center_x
+        rel_y = robot_y - center_y
+    
+        if self.is_point_between_angles(rel_x, rel_y, 30, 90):
+            return "ab"
+        elif self.is_point_between_angles(rel_x, rel_y, 90, 150):
+            return "cd"
+        elif self.is_point_between_angles(rel_x, rel_y, 150, 210):
+            return "ef"
+        elif self.is_point_between_angles(rel_x, rel_y, 210, 270):
+            return "gh"
+        elif self.is_point_between_angles(rel_x, rel_y, 270, 330):
+            return "ij"
+        elif self.is_point_between_angles(rel_x, rel_y, 330, 30):
+            return "kl"
+        else:
+            # This case should not occur if all angular sectors are covered.
+            return "unknown"
 
     def periodic(self):
         if self.counter % 10 == 0:  # Execute every 5 cycles (10Hz update rate)

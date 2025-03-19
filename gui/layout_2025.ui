@@ -949,7 +949,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_logitech_high_target_indicator">
+      <widget class="QLabel2" name="qlabel_genius_low_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -974,8 +974,8 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>LOGI
-TBD</string>
+        <string>GENIUS
+LOW</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1589,7 +1589,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_logitech_high_indicator">
+     <widget class="QLabel2" name="qlabel_genius_low_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1614,7 +1614,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>LOGI HIGH: 0</string>
+       <string>GENIUS LO: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>

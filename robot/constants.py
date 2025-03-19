@@ -4,7 +4,7 @@ from typing import Dict
 import rev
 import robotpy_apriltag
 import wpilib
-
+ 
 from rev import ClosedLoopSlot, SparkClosedLoopController, SparkFlexConfig, SparkMax, SparkMaxConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 from wpimath.units import inchesToMeters, lbsToKilograms
@@ -30,8 +30,8 @@ k_reset_sparks_to_default = True
 k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False
-k_use_photontags = False
-k_use_CJH_tags = True
+k_use_photontags = False  # take tags from photonvision camera
+k_use_CJH_tags = True  # take tags from the pis
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
@@ -61,21 +61,21 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.52,
+        "elevator": 0.43, # 0.52 at ventura
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.9,
+        "elevator": 0.86,
         "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.45,
+        "elevator": 1.40,
         "shoulder_pivot": math.radians(120),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -176,11 +176,11 @@ for tag_id in range(17, 23):
         tag_positions[tag_id] = (tag_translation.X(), tag_translation.Y())
 
         # Compute robot rotation and offsets
-        robot_rotation = tag_yaw + Rotation2d(math.radians(90))
+        robot_rotation = tag_yaw + Rotation2d(math.radians(-90))  # CJH changed this to get new orientation right
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
-        robot_offset_left = Translation2d(1, -.5).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(1, .5).rotateBy(tag_yaw)
+        robot_offset_left = Translation2d(1, +0.17).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(1, -0.17).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left
@@ -193,6 +193,9 @@ for tag_id in range(17, 23):
         # Store poses
         k_useful_robot_poses_blue[left_branch_name] = Pose2d(left_branch_position, robot_rotation)
         k_useful_robot_poses_blue[right_branch_name] = Pose2d(right_branch_position, robot_rotation)
+
+        print(f'tag:{tag_id}: Trans: {tag_translation}  Theta: {tag_yaw}')  # CJH trying to debug this stuff - this is correct
+        # print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
 
 
 class GamePiece(Enum):
@@ -208,7 +211,7 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
-    k_intake_config.smartCurrentLimit(5)
+    k_intake_config.smartCurrentLimit(10)
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
@@ -216,10 +219,10 @@ class IntakeConstants:
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = -6
-    k_algae_intaking_voltage = 6
+    k_coral_intaking_voltage = -7 # TODO: increase again to -12 once we have gears that dont break nonstop
+    k_algae_intaking_voltage = 12
 
-    k_coral_scoring_voltage = 10
+    k_coral_scoring_voltage = 12
 
     k_seconds_to_stay_on_while_scoring = 0.5
 
@@ -298,16 +301,18 @@ class WristConstants:
 
     k_config = SparkMaxConfig()
     k_config.voltageCompensation(12)
-    k_config.inverted(True)
+    k_config.inverted(False)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
 
-    k_config.absoluteEncoder.positionConversionFactor(math.tau / k_gear_ratio)
-    k_config.absoluteEncoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
-    
-    k_config.absoluteEncoder.zeroOffset(0.45)
+    # k_config.absoluteEncoder.positionConversionFactor(math.tau)
+    # k_config.absoluteEncoder.velocityConversionFactor(math.tau / 60)
+    k_config.absoluteEncoder.inverted(True)
+    # print("setting zero offset!")
+    # k_config.absoluteEncoder.zeroOffset(3.52) this doesn't work that well LHACK 3/14/2025
+    k_abs_encoder_readout_when_at_zero_position = 0.456
 
     k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))
@@ -353,7 +358,7 @@ class ShoulderConstants:
     k_moi = 0.5914
     k_plant = DCMotor.neoVortex(2)
 
-    k_max_velocity_rad_per_second = 1.5
+    k_max_velocity_rad_per_second = 4 * math.pi
     k_max_acceleration_rad_per_sec_squared = 2.5
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
     k_kG_volts = 1.4/2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
@@ -382,7 +387,12 @@ class ShoulderConstants:
     k_config.closedLoop.pid(p=0.85, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
-    k_config.closedLoop.outputRange(-1, 1)
+    k_config.closedLoop.outputRange(-1, 1, ClosedLoopSlot(0))
+
+    k_config.closedLoop.pid(p=0.85, i=0, d=0, slot=ClosedLoopSlot(2))
+    k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(2))
+    k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(2))
+    k_config.closedLoop.outputRange(-1, 1, ClosedLoopSlot(2))
     # k_config.closedLoop.maxMotion.maxAcceleration(1)
     # k_config.closedLoop.maxMotion.maxVelocity(1000)
         
@@ -503,5 +513,6 @@ class DrivetrainConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
-    k_pose_stdevs_large = (2, 2, 20)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
+    k_pose_stdevs_large = (1, 1, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
+    k_pose_stdevs_disabled = (1, 1, 2)  # use when we are disabled to quickly get updates
     k_pose_stdevs_small = (0.1, 0.1, 10)  # use when you do trust the tags

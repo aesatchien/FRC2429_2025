@@ -94,13 +94,19 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
     def get_angle(self):
         return self.encoder.getPosition()
 
-    def set_goal(self, goal):
+    def set_goal(self, goal, use_trapezoid=True):
         # make our own sanity-check on the subsystem's setGoal function
         goal = goal if goal < constants.ShoulderConstants.k_max_angle else constants.ShoulderConstants.k_max_angle
         goal = goal if goal > constants.ShoulderConstants.k_min_angle else constants.ShoulderConstants.k_min_angle
         self.goal = goal
         # print(f'setting goal to {self.goal}')
-        self.setGoal(self.goal)
+        if use_trapezoid:
+            self.enable()
+            self.setGoal(self.goal)
+        else:
+            self.disable()
+            self.controller.setReference(goal, rev.SparkMax.ControlType.kPosition, slot=rev.ClosedLoopSlot(2))
+
         self.at_goal = False
 
     def move_degrees(self, delta_degrees: float, silent=True) -> None:  # way to bump up and down for testing
