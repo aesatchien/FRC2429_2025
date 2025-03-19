@@ -35,6 +35,5 @@ class Score(commands2.SequentialCommandGroup):
         self.addCommands(StowWristAfterPositionDelta(container, wait_to_finish=True, indent=indent+1))
         self.addCommands(GoToStow(container=self.container, indent=indent+1))
         self.addCommands(RunIntake(container=self.container, intake=self.container.intake, value=0,
-                                   control_type=SparkMax.ControlType.kVoltage, indent=indent + 1))
+                                    control_type=SparkMax.ControlType.kVoltage, indent=indent + 1))
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
-

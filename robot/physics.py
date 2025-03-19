@@ -124,9 +124,9 @@ class PhysicsEngine:
                                      dt=tm_diff)
         self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-        shoulder_pivot_degrees = math.degrees(self.shoulder_sim.getAngle())
+        shoulder_pivot_degrees = 180 - math.degrees(self.shoulder_sim.getAngle())
         self.mech2d_shoulder.setAngle(shoulder_pivot_degrees - 90)
-        sm.side_elevator.components["shoulder"]["ligament"].setAngle(shoulder_pivot_degrees -90 )  # CJH added
+        sm.side_elevator.components["shoulder"]["ligament"].setAngle(shoulder_pivot_degrees - 90)  # CJH added
         return self.shoulder_sim.getCurrentDraw()
 
     def update_intake(self, tm_diff):
