@@ -14,11 +14,11 @@ class Wrist(Subsystem):
 
         self.sparkmax = SparkMax(WristConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
-        controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config, 
-                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kNoPersistParameters)
-
-        print(f"Configured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
+        if constants.k_burn_flash:
+            controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config,
+                                        resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                        persistMode=SparkMax.PersistMode.kPersistParameters)
+            print(f"Reconfigured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
 
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
@@ -41,33 +41,21 @@ class Wrist(Subsystem):
 
         abs_raw = self.abs_encoder.getPosition()
         abs_raws = []
-        for reading in range(100):
+        for reading in range(20):
             abs_raws.append(self.abs_encoder.getPosition())
             sleep(0.02)
 
-        print(f"abs raws: {abs_raws}")
-        abs_raws_trunc = abs_raws[75:]
-        print(f"abs raws trunc: {abs_raws_trunc}")
+        abs_raws_trunc = abs_raws[10:]
         abs_raw = sum(abs_raws_trunc) / len(abs_raws_trunc)
-
-        print(f"abs encoder reports position {abs_raw}")
-        print(f"subtracting {WristConstants.k_abs_encoder_readout_when_at_zero_position}")
-
         abs_offset = abs_raw - WristConstants.k_abs_encoder_readout_when_at_zero_position
-        print(f"this gives us, in rotations, {abs_offset}")
-
         abs_offset_rad = abs_offset * math.tau
-        print(f"in radians, this gives us {abs_offset_rad}")
+        msg = f'Wrist raw abs enc: {abs_raws[:10]}  Final: {abs_raws_trunc}\n'
+        msg += f'Wrist absolute offset: {abs_offset:.3f} ({abs_offset_rad:.3f} rad or {math.degrees(abs_offset_rad):.1f} degrees) '
+        print(msg)
 
         self.encoder.setPosition(abs_offset_rad)
 
         self.setpoint = self.encoder.getPosition()
-
-        if constants.k_burn_flash:
-            controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config,
-                                        resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                        persistMode=SparkMax.PersistMode.kPersistParameters)
-            print(f"Reconfigured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
 
 
     def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition, closed_loop_slot=0) -> None:

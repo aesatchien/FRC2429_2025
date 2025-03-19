@@ -3,6 +3,7 @@
 import wpilib
 import constants
 
+debug = False  # printing statements
 
 # Simplified dictionary wrapper for Mechanism2d
 #UNIT: INCHES
@@ -33,7 +34,8 @@ class MechTracker:
         if name in self.components:
             raise ValueError(f"Component '{name}' already exists in the components dictionary.")
         self.components[name] = {'root': root, 'ligaments': []}
-        print(f"DEBUG: Added root '{name}' at ({x}, {y})")
+        if debug:
+            print(f"DEBUG: Added root '{name}' at ({x}, {y})")
         return root
 
     def appendLigament(self, parent_name, name, length, angle, weight, color):
@@ -54,8 +56,8 @@ class MechTracker:
             'weight': weight,  # Store the weight
             'color': color  # Store the color
         }
-        print(
-            f"DEBUG: Added ligament '{name}' under parent '{parent_name}' with length {length}, angle {angle}, weight {weight}, color {color}")
+        if debug:
+            print(f"DEBUG: Added ligament '{name}' under parent '{parent_name}' with length {length}, angle {angle}, weight {weight}, color {color}")
         return ligament
 
 
@@ -149,10 +151,12 @@ side_elevator.appendLigament("bent_branch", "top_branch", 6.8, 305, bar_width, b
 wpilib.SmartDashboard.putData("Elevator Front View", front_elevator.mechanism)
 wpilib.SmartDashboard.putData("Elevator Side View", side_elevator.mechanism)
 
-# Debugging output
-print("DEBUG: Elevator Front View Components:")
-for name, data in front_elevator.components.items():
-    print(f"side:  {name}: {data}")
+# More debugging output
+
+if debug:
+    print("DEBUG: Elevator Front View Components:")
+    for name, data in front_elevator.components.items():
+        print(f"side:  {name}: {data}")
 
 # print("DEBUG: Top Mechanism Components:")
 # for name, data in side_elevator.components.items():

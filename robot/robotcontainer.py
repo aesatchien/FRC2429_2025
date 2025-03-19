@@ -37,6 +37,7 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 from commands.reset_field_centric import ResetFieldCentric
+# from commands.calibrate_joystick import CalibrateJoystick
 
 from subsystems import swerve_constants
 from subsystems.robot_state import RobotState
@@ -171,7 +172,7 @@ class RobotContainer:
 
     def configure_codriver_joystick(self):
 
-        print("configuring codriver joystick")
+        print("Configuring codriver joystick")
 
         def stick_between_degree_angles(angle_a, angle_b, stick_x, stick_y) -> bool:
             """
@@ -317,7 +318,7 @@ class RobotContainer:
 
         wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(10)))
         wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-10)))
-        wpilib.SmartDashboard.putData('CalibrateJoystick', CalibrateJoystick(container=self, controller=self.driver_command_controller))
+        # wpilib.SmartDashboard.putData('CalibrateJoystick', CalibrateJoystick(container=self, controller=self.driver_command_controller))
 
         wpilib.SmartDashboard.putData('GoToScore', Score(container=self))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
@@ -580,43 +581,10 @@ class RobotContainer:
                     PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
         )
 
-        #
-        # self.bbox_CD.whileTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             condition=self.robot_state.is_left
-        #         )
-        # )
-        #
-        # # we swap the condition because for these ones, the driver's left is the robot's right
-        # self.bbox_EF.whileTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             condition=self.robot_state.is_right
-        #         )
-        # )
-        #
+
         self.bbox_GH.whileTrue(
                     PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])
         )
-        #
-        # self.bbox_IJ.whileTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             condition=self.robot_state.is_right
-        #         )
-        # )
-        #
-        # self.bbox_KL.whileTrue(
-        #         commands2.ConditionalCommand(
-        #             onTrue=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["a"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             onFalse=AutoBuilder.pathfindToPoseFlipped(constants.k_useful_robot_poses_blue["b"], swerve_constants.AutoConstants.pathfinding_constraints),
-        #             condition=self.robot_state.is_left
-        #         )
-        # )
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))

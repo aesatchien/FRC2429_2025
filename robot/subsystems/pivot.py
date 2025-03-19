@@ -43,7 +43,7 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         if constants.k_burn_flash:
             controller_revlib_error_source = self.motor.configure(constants.ShoulderConstants.k_config, self.rev_resets, self.rev_persists)
             controller_revlib_error_follower = self.follower.configure(constants.ShoulderConstants.k_follower_config, self.rev_resets, self.rev_persists)
-            print(f"Reconfigured pivot sparkmax. Controller status: \n {controller_revlib_error_source}\n{controller_revlib_error_follower}")
+            print(f"Reconfigured pivot sparkmaxes. Controller status: \n {controller_revlib_error_source}\n {controller_revlib_error_follower}")
 
         # configure our PID controller
         self.controller = self.motor.getClosedLoopController()
