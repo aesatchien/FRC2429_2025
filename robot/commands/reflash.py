@@ -22,9 +22,8 @@ class Reflash(commands2.Command):
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 
-        self.pivot.motor.configure(constants.ShoulderConstants.k_config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters)
-
-        self.pivot.follower.configure(constants.ShoulderConstants.k_follower_config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters)
+        self.pivot.reflash(burn=False, reset=True) # in case we're enabled in which case it won't let us burn(?)
+        self.pivot.reflash(burn=True, reset=True)
 
     def execute(self) -> None:
         pass

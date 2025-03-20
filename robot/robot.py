@@ -34,6 +34,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
         self.disabled_counter = 0
+        self.container.pivot.reflash(True, True)
         # self.container.swerve.use_photoncam = True
 
     def disabledPeriodic(self) -> None:
@@ -48,6 +49,12 @@ class MyRobot(commands2.TimedCommandRobot):
                     self.container.led.set_indicator(Led.Indicator.kCOOLBOW)
                 else:
                     self.container.led.set_indicator(Led.Indicator.kPOLKA)
+
+        if self.disabled_counter % 50 * 60 * 2:
+            # don't reset in case it goes wrong
+            # and don't burn in case it harms the spark (idt it will but idk)
+            self.container.pivot.reflash(False, False)
+
             # else:
             #     self.container.led.set_indicator(Led.Indicator.kRAINBOW)
             # print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")

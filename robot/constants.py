@@ -219,6 +219,7 @@ class IntakeConstants:
 
     k_tof_coral_port = 13
     k_max_tof_distance_where_we_have_coral = 70  # millimeters  engages at 60 and bottoms out at 26
+    k_max_tolerated_sigma = 4 # max stddev where we trust it NOTE: we may have to change at comp?
 
     k_sim_length = 0.25
 

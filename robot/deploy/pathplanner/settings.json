@@ -5,7 +5,8 @@
   "pathFolders": [
     "1+0",
     "1+0 trough",
-    "1+1"
+    "1+1",
+    "1+n"
   ],
   "autoFolders": [],
   "defaultMaxVel": 1.0,

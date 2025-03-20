@@ -122,6 +122,12 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
             message = f'setting {self.getName()} from {current_angle:.2f} to {self.goal:.2f}'
             print(message)
 
+    def reflash(self, burn: bool, reset: bool):
+        rev_persists = rev.SparkMax.PersistMode.kPersistParameters if burn else rev.SparkMax.PersistMode.kNoPersistParameters
+        rev_resets = rev.SparkMax.ResetMode.kResetSafeParameters if reset else rev.SparkMax.ResetMode.kNoResetSafeParameters
+        self.motor.configure(constants.ShoulderConstants.k_config, rev_resets, rev_persists)
+        self.follower.configure(constants.ShoulderConstants.k_follower_config, rev_resets, rev_persists)
+
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background

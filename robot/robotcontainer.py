@@ -12,7 +12,7 @@ from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
-from autonomous.one_plus_one import OnePlusOne
+from autonomous.one_plus_one import OnePlusTwo
 from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
@@ -255,9 +255,10 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator, mode='absolute'))
         wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot, mode='absolute'))
         wpilib.SmartDashboard.putData('SequentialScore', SequentialScoring(container=self))
-        wpilib.SmartDashboard.putData('move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
-        wpilib.SmartDashboard.putData('move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
-        wpilib.SmartDashboard.putData('move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
+        wpilib.SmartDashboard.putData('Move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
+        wpilib.SmartDashboard.putData('Move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
+        wpilib.SmartDashboard.putData('Move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
+        SmartDashboard.putData("Reflash", Reflash(self))
 
         waypoints = {
             0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 0},  # start 
@@ -340,7 +341,7 @@ class RobotContainer:
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
-        self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
+        self.auto_chooser.addOption('1+2', OnePlusTwo(self))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
 
         # CAN Status / sticky and fault error reports
@@ -485,6 +486,7 @@ class RobotContainer:
         NamedCommands.registerCommand('stow', GoToStow(self))
         NamedCommands.registerCommand('stow and turn off intake', RunIntake(self, self.intake, 0).andThen(GoToStow(self)))
         NamedCommands.registerCommand('score', Score(self))
+        NamedCommands.registerCommand('score then go to coral station', GoToStow(self).andThen(GoToCoralStation(self)))
         NamedCommands.registerCommand('move wrist to 90 deg', MoveWrist(self, math.radians(90), 2, False, True))
         NamedCommands.registerCommand('move wrist to -90 deg', MoveWrist(self, math.radians(-90), 2, False, True))
         NamedCommands.registerCommand('move wrist to 0 deg', MoveWrist(self, math.radians(0), 2, False, True))

@@ -34,14 +34,23 @@ class Intake(Subsystem):
         self.TOFSensorCoral = TimeOfFlight(constants.IntakeConstants.k_tof_coral_port)
         self.TOFSensorCoral.setRangingMode(mode=TimeOfFlight.RangingMode.kShort, sampleTime=50)
 
+        self.prev_measurement = self.TOFSensorCoral.getRange()
+
+        self.abs_deltas = []
+
         wpilib.SmartDashboard.putNumber("SET intake volts", 0)
 
     def set_reference(self, value: float, control_type: SparkMax.ControlType = rev.SparkBase.ControlType.kVoltage):
         self.controller.setReference(value, control_type)
 
     def get_distance(self):
+
         average_coral_distance = (self.TOFSensorCoral.getRange() + self.TOFSensorCoral.getRange()) / 2
+
+        average_coral_distance = 0 if self.TOFSensorCoral.getRangeSigma() > constants.IntakeConstants.k_max_tolerated_sigma else average_coral_distance
+        
         average_coral_distance = 0 if average_coral_distance > 500 else average_coral_distance  # correct for weird stuff
+
         return average_coral_distance
 
     def has_coral(self) -> bool:
@@ -54,6 +63,9 @@ class Intake(Subsystem):
         # print(f"setting reserefsersf to {wpilib.SmartDashboard.getNumber('SET intake volts', 0)}")
         # self.controller.setReference(wpilib.SmartDashboard.getNumber("SET intake volts", 0), SparkMax.ControlType.kVoltage)
 
+        if self.prev_measurement != self.TOFSensorCoral.getRange():
+            self.abs_deltas.append(abs(self.prev_measurement - self.TOFSensorCoral.getRange()))
+
 
         if self.counter % 10 == 0:
             if wpilib.RobotBase.isReal():
@@ -62,6 +74,7 @@ class Intake(Subsystem):
                 wpilib.SmartDashboard.putBoolean('gamepiece_present', self.counter % 200 < 100)
 
             wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
+            wpilib.SmartDashboard.putNumber('intake sigma', self.TOFSensorCoral.getRangeSigma())
 
             if constants.IntakeConstants.k_nt_debugging:  # extra debugging info for NT
                 pass
@@ -69,3 +82,6 @@ class Intake(Subsystem):
         self.counter += 1
         return super().periodic()
 
+        # look at the last 3 deltas
+        # if these last 3 are good and small, report yes
+        # else report no

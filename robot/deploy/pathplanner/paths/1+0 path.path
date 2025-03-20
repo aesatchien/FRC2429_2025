@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.540266393442623,
-        "y": 5.061936475409836
+        "x": 7.276536885248386,
+        "y": 2.9880635245959972
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.92889344262295,
-        "y": 4.582428278688524
+        "x": 6.665163934428713,
+        "y": 2.508555327874685
       },
       "isLocked": false,
       "linkedName": "start point near middle of barge"
