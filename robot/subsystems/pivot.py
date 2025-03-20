@@ -36,6 +36,13 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.follower = rev.SparkFlex(constants.ShoulderConstants.k_follower_CAN_id, rev.SparkBase.MotorType.kBrushless)
         self.sparks = [self.motor, self.follower]
 
+        # CJH looking to see if we can make these guys more robust - three things to try
+        # Use the setPeriodicFrameTimeout() function in REVLib to configure the CAN timeout for periodic status frames.
+        # self.motor.setPeriodicFrameTimeout(timeoutMs=500)  # The default timeout is 500ms.
+        # Use the setCANMaxRetries() function to configure the number of retries for CAN frames.
+        # self.motor.setCANMaxRetries(numRetries=5)  # the default is 5
+        # self.motor.setCANTimeout(milliseconds=) # not sure the default, but should go up to 32k
+
         self.rev_resets = rev.SparkFlex.ResetMode.kResetSafeParameters
         self.rev_persists = rev.SparkFlex.PersistMode.kPersistParameters
 

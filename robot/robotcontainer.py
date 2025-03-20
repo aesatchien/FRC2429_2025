@@ -58,6 +58,7 @@ from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.move_wrist_swap import MoveWristSwap
 from commands.pid_to_point import PIDToPoint
+from commands.pid_to_point_pathplanner import PIDToPointPathPlanner
 from commands.reflash import Reflash
 from commands.reset_field_centric import ResetFieldCentric
 from commands.run_intake import RunIntake
@@ -509,19 +510,22 @@ class RobotContainer:
 
         use_pathplanner = False  # quick switch back and forth
         for but, state, chars in zip(button_list, states, characters):
+            but.onTrue(PrintCommand(f'Starting AutoDriving to {chars} at {self.get_enabled_time():.1}s'))
             if use_pathplanner:
                 but.whileTrue(  # todo - wrap this in LED indicators
                     commands2.ConditionalCommand(
-                        onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints),
-                        onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints),
+                        onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
+                            self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
+                        onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints).andThen(
+                            self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
                         condition=state,
                     )
                 )
-            else:  # pidtopoint version
+            else:  # pidtopoint version - can test both versions this way
                 but.whileTrue(
                     commands2.ConditionalCommand(
-                        onTrue=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]]),
-                        onFalse=PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]]),
+                        onTrue=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='leo'),
+                        onFalse=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='pathplanner'),
                         condition=state,
                     )
                 )
@@ -535,14 +539,8 @@ class RobotContainer:
         # wrist swap
         self.bbox_human_left.onTrue(MoveWristSwap(self, self.wrist))
 
-        self.bbox_AB.whileTrue(
-                    PIDToPoint(self, self.swerve, Pose2d(0, 0, 0))
-        )
-
-
-        self.bbox_GH.whileTrue(
-                    PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"])
-        )
+        #self.bbox_AB.whileTrue(PIDToPoint(self, self.swerve, Pose2d(0, 0, 0)))
+        #self.bbox_GH.whileTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"]))
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))
@@ -576,8 +574,6 @@ class RobotContainer:
         self.bbox_processor.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
         self.bbox_processor.onTrue(GoToPosition(self, "climb"))
         self.bbox_processor.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
-
-
 
         # print commands for testing
         #self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
