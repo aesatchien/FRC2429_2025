@@ -65,9 +65,10 @@ class MoveElevator(commands2.Command):  # change the name for your command
 
     def end(self, interrupted: bool) -> None:
         end_time = self.container.get_enabled_time()
-        message = 'Interrupted' if interrupted else 'Ended'
+        end_message = 'Interrupted' if interrupted else 'Ended'
         print_end_message = True
+        end_location = self.elevator.get_height()
+        msg = f"{self.indent * '    '}** {end_message} {self.getName()} at {end_location:.3f}m after {end_time - self.start_time:.1f} s **"
         if print_end_message:
-            print(f"{self.indent * '    '}** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
-            SmartDashboard.putString(f"alert",
-                                     f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
+            print(msg)
+            SmartDashboard.putString(f"alert", msg)

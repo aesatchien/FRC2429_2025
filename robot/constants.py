@@ -60,7 +60,7 @@ k_positions = {
     },
     "l1": {
         "elevator": 0.65,
-        "shoulder_pivot": math.radians(180),
+        "shoulder_pivot": math.radians(179),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -350,7 +350,7 @@ class ShoulderConstants:
     # i.e. when it starts flat and goes up, the angle increases
 
     k_counter_offset = 4
-    k_nt_debugging = False  # print extra values to NT for debugging
+    k_nt_debugging = True  # print extra values to NT for debugging
     k_name = "profiled_pivot"
 
     k_CAN_id = 6
@@ -371,9 +371,9 @@ class ShoulderConstants:
     k_kV_volt_second_per_radian = 1.69  # stays the same with one or two motors, based on the NEO itself and gear ratio
     k_kA_volt_second_squared_per_meter = 0.04 / 2.0 # cuts in half with 2 motors
 
-    k_min_angle = math.radians(-45)
-    k_max_angle = math.radians(225)
-    k_tolerance = math.radians(2.5)
+    k_min_angle = math.radians(-45)  # not the problem for L1
+    k_max_angle = math.radians(235)  # not the problem for L1
+    k_tolerance = math.radians(4)  # this is the problem for L1 - it will not get within 2.5 degrees at 180 setpoint
     k_starting_angle = math.radians(90) # until we have an abs encoder this is where we expect it to start
 
     k_config = SparkFlexConfig()
@@ -390,7 +390,7 @@ class ShoulderConstants:
     
     k_config.absoluteEncoder.zeroOffset(0.45)
 
-    k_config.closedLoop.pid(p=0.85, i=0, d=0, slot=ClosedLoopSlot(0))
+    k_config.closedLoop.pid(p=0.9, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IZone(iZone=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.IMaxAccum(0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.outputRange(-1, 1, ClosedLoopSlot(0))

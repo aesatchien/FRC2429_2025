@@ -101,10 +101,20 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
 
     def set_goal(self, goal, use_trapezoid=True):
         # make our own sanity-check on the subsystem's setGoal function
-        goal = goal if goal < constants.ShoulderConstants.k_max_angle else constants.ShoulderConstants.k_max_angle
-        goal = goal if goal > constants.ShoulderConstants.k_min_angle else constants.ShoulderConstants.k_min_angle
-        self.goal = goal
-        # print(f'setting goal to {self.goal}')
+        # this is not what is hanging L1
+        if goal < constants.ShoulderConstants.k_min_angle:
+            self.goal = constants.ShoulderConstants.k_min_angle
+            print(f'Pivot goal too low: {goal:.3f} -> set to {self.goal}')
+        elif goal > constants.ShoulderConstants.k_max_angle:
+            self.goal = constants.ShoulderConstants.k_max_angle
+            print(f'Pivot goal too high: {goal:.3f} -> set to {self.goal}')
+        else:
+            self.goal = goal
+
+        #goal = goal if goal < constants.ShoulderConstants.k_max_angle else constants.ShoulderConstants.k_max_angle
+        #goal = goal if goal > constants.ShoulderConstants.k_min_angle else constants.ShoulderConstants.k_min_angle
+        #self.goal = goal
+
         if use_trapezoid:
             self.enable()
             self.setGoal(self.goal)
