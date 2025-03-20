@@ -1,6 +1,7 @@
+import math
 import numpy as np
 np.set_printoptions(formatter={'float': lambda x: "{0:0.2f}".format(x)})
-
+import constants
 
 class CustomTrajectory:
     def __init__(self, waypoints, duration, interpolation_type="linear", velocity_constraints=None,
@@ -237,3 +238,45 @@ acceleration_constraints = {'elevator': 20, 'pivot':1000, 'wrist':180, 'intake':
 # linear, pchip, cubic
 trajectory_L3 = CustomTrajectory(waypoints, duration=3, interpolation_type="smoothed",
                               velocity_constraints=velocity_constraints, acceleration_constraints=acceleration_constraints)
+# initialize waypoints for dashboard commands
+waypoints = {
+    0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 0},  # start
+    1: {'elevator': 1.1, 'pivot': 90, 'wrist': 0, 'intake': 0},  # get to scoring wrist
+    2: {'elevator': 0.8, 'pivot': 50, 'wrist': 90, 'intake': 3},  # return home with wrist safe
+}
+
+# WAYPOINTS FOR 67 SCORING STYLE FOR L2, L3, and L4 - TODO: TUNE + PUT IN CONSTANTS
+waypoints_l2_score_67 = {
+    0: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
+        'pivot': constants.k_positions["l2"]["shoulder_pivot"],
+        'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0},
+    0.8: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
+          'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
+          'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0}
+
+    # 1.4 : {'elevator': constants.k_positions["l2"]["elevator"] + 0.1, 'pivot': constants.k_positions["l2"]["shoulder_pivot"] + math.radians(10), 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 3}, #FOR DRIVERS; PULL BACK WHEN CORAL IS CLIPPED AFTER ~0.8 SECONDS SO THAT WHEN INTAKE IS ACTIVATED ROBOT CAN BE PULLED BACK AND PIECE RELEASED
+}
+
+waypoints_l3_score_67 = {
+    0: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
+        'pivot': constants.k_positions["l3"]["shoulder_pivot"],
+        'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0},
+    0.8: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
+          'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
+          'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0}
+}
+
+waypoints_l4_score_67 = {
+    0: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
+        'pivot': constants.k_positions["l4"]["shoulder_pivot"],
+        'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0},
+    1.2: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
+          'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 7.5,
+          'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0}
+
+    # NOTE: DRIVERS HAVE ~1 SECOND TO MOVE ROBOT BACK WHILE PIVOT IS MOVING - THIS IS REQUIRED DUE TO GEOMETRY OF OUTTAKE + REEF!
+}
+
+l2_score_67 = CustomTrajectory(waypoints_l2_score_67, 0.8)
+l3_score_67 = CustomTrajectory(waypoints_l3_score_67, 0.8)
+l4_score_67 = CustomTrajectory(waypoints_l4_score_67, 1.2)

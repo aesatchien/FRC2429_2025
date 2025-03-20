@@ -1,46 +1,29 @@
-from enum import Enum
+# 2429 FRC code for 2025 season - Reefscape
 import math
 import time
-from commands2.printcommand import PrintCommand
-from pathplannerlib.commands import PathfindingCommand
+from enum import Enum
 import rev
 import wpilib
-import commands2
-from wpilib._wpilib import SmartDashboard
-from wpimath import controller
+from wpilib import SmartDashboard
 from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
+import commands2
+from commands2.printcommand import PrintCommand
 from ntcore import NetworkTableInstance
 
-from autonomous.one_plus_one import OnePlusOne
-from autonomous.one_plus_two import OnePlusTwo
-from commands.pid_to_point import PIDToPoint
-from commands.reflash import Reflash
-import constants
-
+# pathplanner stuff
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
-from pathplannerlib.path import PathConstraints
+from pathplannerlib.path import PathConstraints, PathPlannerPath
 from pathplannerlib.auto import AutoBuilder, NamedCommands
-from pathplannerlib.path import PathPlannerPath
+from pathplannerlib.commands import PathfindingCommand
 
-from commands.drive_by_distance_swerve import DriveByVelocitySwerve
-from commands.go_to_coral_station import GoToCoralStation
-from commands.go_to_stow import GoToStow
-from commands.go_to_reef_position import GoToReefPosition
-from commands.score import Score
-from commands.sequential_scoring import SequentialScoring
-from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
-from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
-from commands.move_elevator import MoveElevator
-from commands.move_pivot import MovePivot
-from commands.move_wrist import MoveWrist
-from commands.run_intake import RunIntake
-from commands.set_leds import SetLEDs
-from commands.reset_field_centric import ResetFieldCentric
-from commands.auto_l1 import AutoL1
-# from commands.calibrate_joystick import CalibrateJoystick
+# 2429 helper files
+import constants
+import trajectory
+from trajectory import CustomTrajectory, trajectory_L3
 
+# 2429 subsystems
 from subsystems import swerve_constants
 from subsystems.robot_state import RobotState
 from subsystems.swerve import Swerve
@@ -52,26 +35,36 @@ from subsystems.wrist import Wrist
 from subsystems.climber import Climber
 from subsystems.vision import Vision
 
+# 2429 "auto" commands - just an organizational division of commands
+from autonomous.one_plus_one import OnePlusOne
+from autonomous.one_plus_two import OnePlusTwo
 from autonomous.leave_then_score_1 import LeaveThenScore
+
+# 2429 commands
+from commands.auto_l1 import AutoL1
+from commands.can_status import CANStatus
+from commands.drive_by_distance_swerve import DriveByVelocitySwerve
+from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
+from commands.follow_trajectory import FollowTrajectory
+from commands.go_to_coral_station import GoToCoralStation
+from commands.go_to_position import GoToPosition
+from commands.go_to_reef_position import GoToReefPosition
+from commands.go_to_stow import GoToStow
+from commands.intake_sequence import IntakeSequence
+from commands.move_climber import MoveClimber
 from commands.move_elevator import MoveElevator
 from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
-from commands.run_intake import RunIntake
-from commands.set_leds import SetLEDs
-from commands.move_climber import MoveClimber
-
-from commands.go_to_position import GoToPosition
-from commands.follow_trajectory import FollowTrajectory
-from commands.intake_sequence import IntakeSequence
-from commands.reset_field_centric import ResetFieldCentric
 from commands.move_wrist_swap import MoveWristSwap
+from commands.pid_to_point import PIDToPoint
+from commands.reflash import Reflash
+from commands.reset_field_centric import ResetFieldCentric
+from commands.run_intake import RunIntake
+from commands.score import Score
+from commands.sequential_scoring import SequentialScoring
+from commands.set_leds import SetLEDs
 
-from commands.can_status import CANStatus
-
-from trajectory import CustomTrajectory
-# from commands.score import Score
-# from commands.drive_by_joystick_subsystem import DriveByJoystickSubsystem
 
 class RobotContainer:
     """
@@ -253,6 +246,15 @@ class RobotContainer:
             SetLEDs(container=self, led=self.led, indicator=selected_value)))
         wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
 
+        # Arshan's trajectory tests
+        wpilib.SmartDashboard.putData('l3 trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.trajectory_L3, wait_to_finish=True))
+        wpilib.SmartDashboard.putData('l2 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l2_score_67, wait_to_finish=True))
+        wpilib.SmartDashboard.putData('l3 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l3_score_67, wait_to_finish=True))
+        wpilib.SmartDashboard.putData('l4 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l4_score_67, wait_to_finish=True))
+
+        # experimental, not used on dash
+        SmartDashboard.putData("Go to 60 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(60), False), self.pivot))
+        SmartDashboard.putData("Go to 90 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(90), False), self.pivot))
         wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
         wpilib.SmartDashboard.putData('MoveElevator', MoveElevator(container=self, elevator=self.elevator, mode='absolute'))
         wpilib.SmartDashboard.putData('MovePivot', MovePivot(container=self, pivot=self.pivot, mode='absolute'))
@@ -260,54 +262,8 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('Move wrist to -90 deg', MoveWrist(container=self, radians=math.radians(-90), timeout=4))
         wpilib.SmartDashboard.putData('Move wrist to 0 deg', MoveWrist(container=self, radians=math.radians(0), timeout=4))
         wpilib.SmartDashboard.putData('Move wrist to 90 deg', MoveWrist(container=self, radians=math.radians(90), timeout=4))
-        SmartDashboard.putData("Reflash", Reflash(self))
 
-        waypoints = {
-            0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 0},  # start 
-            1: {'elevator': 1.1, 'pivot': 90, 'wrist': 0, 'intake': 0},  # get to scoring wrist
-            2: {'elevator': 0.8, 'pivot': 50, 'wrist': 90, 'intake': 3},  # return home with wrist safe
-        }
-
-        # WAYPOINTS FOR 67 SCORING STYLE FOR L2, L3, and L4 - TODO: TUNE + PUT IN CONSTANTS
-        waypoints_l2_score_67 = {
-            0: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035, 'pivot': constants.k_positions["l2"]["shoulder_pivot"], 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0},
-            0.8: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035, 'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5, 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0}
-            
-            #1.4 : {'elevator': constants.k_positions["l2"]["elevator"] + 0.1, 'pivot': constants.k_positions["l2"]["shoulder_pivot"] + math.radians(10), 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 3}, #FOR DRIVERS; PULL BACK WHEN CORAL IS CLIPPED AFTER ~0.8 SECONDS SO THAT WHEN INTAKE IS ACTIVATED ROBOT CAN BE PULLED BACK AND PIECE RELEASED
-        }
-
-        waypoints_l3_score_67 = {
-            0: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035, 'pivot': constants.k_positions["l3"]["shoulder_pivot"], 'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0},
-            0.8: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035, 'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5, 'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0}
-        }
-
-        waypoints_l4_score_67 = {
-            0: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035, 'pivot': constants.k_positions["l4"]["shoulder_pivot"], 'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0},
-            1.2: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035, 'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 7.5, 'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0}
-
-            #NOTE: DRIVERS HAVE ~1 SECOND TO MOVE ROBOT BACK WHILE PIVOT IS MOVING - THIS IS REQUIRED DUE TO GEOMETRY OF OUTTAKE + REEF!
-        }
-
-        # waypoints = {
-        #     0: {'elevator': 0.21, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
-        #     0.25: {'elevator': 0.3, 'pivot': 90, 'wrist': 0, 'intake': 2},  # start
-        #     0.5: {'elevator': 0.5, 'pivot': 70, 'wrist': 0, 'intake': 2},  # get to safe wrist
-        #     1: {'elevator': 1.2, 'pivot': 50, 'wrist': 90, 'intake': 2},  # get to scoring wrist while raising elevator
-        #     1.5: {'elevator': 1.17, 'pivot': 40, 'wrist': 90, 'intake': -3},  # move pivot while scoring
-        #     2.5: {'elevator': 0.2, 'pivot': 70, 'wrist': 0, 'intake': 0},  # return home with wrist safe
-        #     3.0: {'elevator': 0.2, 'pivot': 90, 'wrist': 0, 'intake': 0},  # come down to bottom
-        # }
-        #
-        l3_trajectory = CustomTrajectory(waypoints, 2)
-        wpilib.SmartDashboard.putData('l3 trajectory', FollowTrajectory(container=self, current_trajectory=l3_trajectory, wait_to_finish=True))
-
-        l2_score_67 = CustomTrajectory(waypoints_l2_score_67, 0.8)
-        l3_score_67 = CustomTrajectory(waypoints_l3_score_67, 0.8)
-        l4_score_67 = CustomTrajectory(waypoints_l4_score_67, 1.2)
-
-        wpilib.SmartDashboard.putData('l2 67 score trajectory', FollowTrajectory(container=self, current_trajectory=l2_score_67, wait_to_finish=True))
-        wpilib.SmartDashboard.putData('l3 67 score trajectory', FollowTrajectory(container=self, current_trajectory=l3_score_67, wait_to_finish=True))
-        wpilib.SmartDashboard.putData('l4 67 score trajectory', FollowTrajectory(container=self, current_trajectory=l4_score_67, wait_to_finish=True))
+        # commands for pyqt dashboard - please do not remove
         wpilib.SmartDashboard.putData('MoveElevatorTop', MoveElevator(container=self, elevator=self.elevator, mode='specified', height=constants.ElevatorConstants.k_max_height-0.005 ))
         wpilib.SmartDashboard.putData('MoveElevatorUp', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=0.1 ))
         wpilib.SmartDashboard.putData('MoveElevatorDown', MoveElevator(container=self, elevator=self.elevator, mode='incremental', height=-0.1))
@@ -318,19 +274,17 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('IntakeOn', RunIntake(container=self, intake=self.intake, value=6, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeOff', RunIntake(container=self, intake=self.intake, value=0, stop_on_end=False))
         wpilib.SmartDashboard.putData('IntakeReverse', RunIntake(container=self, intake=self.intake, value=-6, stop_on_end=False))
-
         wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(10)))
         wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-10)))
-        # wpilib.SmartDashboard.putData('CalibrateJoystick', CalibrateJoystick(container=self, controller=self.driver_command_controller))
-
+        wpilib.SmartDashboard.putData('CANStatus', CANStatus(container=self))
+        wpilib.SmartDashboard.putData("ResetFlex", Reflash(container=self))
         wpilib.SmartDashboard.putData('GoToScore', Score(container=self))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
-
-        wpilib.SmartDashboard.putData('Move climber up', MoveClimber(self, self.climber, 'incremental', math.radians(5)))
-        wpilib.SmartDashboard.putData('Move climber down', MoveClimber(self, self.climber, 'incremental', math.radians(-5)))
-
-        SmartDashboard.putData("Go to 60 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(60), False), self.pivot))
-        SmartDashboard.putData("Go to 90 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(90), False), self.pivot))
+        wpilib.SmartDashboard.putData('GoToL1', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
+        wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
+        wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
+        wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+        # end pyqt dashboard section
 
         # quick way to test all scoring positions from dashboard
         self.score_test_chooser = wpilib.SendableChooser()
@@ -347,8 +301,6 @@ class RobotContainer:
         self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
 
-        # CAN Status / sticky and fault error reports
-        wpilib.SmartDashboard.putData('CANStatus', CANStatus(container=self))
 
     def bind_driver_buttons(self):
 
@@ -597,7 +549,7 @@ class RobotContainer:
 
         # L1-L4
         self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
-        self.bbox_L2.onTrue(GoToReefPosition(self, 2, self.robot_state))
+        self.bbox_L2.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
         self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 

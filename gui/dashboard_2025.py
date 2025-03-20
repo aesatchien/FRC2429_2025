@@ -440,7 +440,7 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_l3_indicator': {'widget': self.qlabel_l3_indicator, 'nt': '/SmartDashboard/GoToL3/running', 'command': '/SmartDashboard/GoToL3/running'},
         'qlabel_l4_indicator': {'widget': self.qlabel_l4_indicator, 'nt': '/SmartDashboard/GoToL4/running', 'command': '/SmartDashboard/GoToL4/running'},
         'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
-
+        'qlabel_reset_flex_indicator': {'widget': self.qlabel_reset_flex_indicator, 'nt': '/SmartDashboard/ResetFlex/running', 'command': '/SmartDashboard/ResetFlex/running'},
 
         'qlabel_arducam_high_target_indicator': {'widget': self.qlabel_arducam_high_target_indicator, 'nt': '/SmartDashboard/arducam_high_targets_exist', 'command': None},
         'qlabel_arducam_back_target_indicator': {'widget': self.qlabel_arducam_back_target_indicator, 'nt': '/SmartDashboard/arducam_back_targets_exist', 'command': None},
