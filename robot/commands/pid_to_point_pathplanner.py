@@ -5,8 +5,9 @@ from pathplannerlib.trajectory import PathPlannerTrajectoryState
 from pathplannerlib.util import DriveFeedforwards
 from wpilib import SmartDashboard
 import wpilib
-from wpimath.controller import PIDController
+from wpimath.controller import PIDController, ProfiledPIDController
 from wpimath.geometry import Pose2d
+from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians
 
 from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
@@ -15,7 +16,7 @@ from subsystems.led import Led
 
 class PIDToPointPathPlanner(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, control_type='pathplanner', indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, control_type='pathplanner', trapezoid=True, indent=0) -> None:
         """
         this command handles flipping for red alliance, so only ever pass it things which apply to blue alliance
         """
@@ -28,6 +29,7 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
         self.counter = 0
 
         self.target_pose = target_pose
+        self.trapezoid = trapezoid
 
         if self.control_type == 'pathplanner':
             self.target_state = PathPlannerTrajectoryState()
@@ -37,12 +39,20 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
             self.target_state_flipped = self.target_state
 
         else:  # custom
-            self.x_pid = PIDController(1, 0, 0.1)
-            self.y_pid = PIDController(1, 0, 0.1)
+            if self.trapezoid:  # use a trapezoidal profile
+                xy_constraints = TrapezoidProfile.Constraints(maxVelocity=2, maxAcceleration=3)
+                self.x_pid = ProfiledPIDController(1, 0, 0.1, constraints=xy_constraints)
+                self.y_pid = ProfiledPIDController(1, 0, 0.1, constraints=xy_constraints)
+                self.x_pid.setGoal(target_pose.X())
+                self.y_pid.setGoal(target_pose.Y())
+            else:
+                self.x_pid = PIDController(1, 0, 0.1)
+                self.y_pid = PIDController(1, 0, 0.1)
+                self.x_pid.setSetpoint(target_pose.X())
+                self.y_pid.setSetpoint(target_pose.Y())
+
             self.rot_pid = PIDController(1, 0, 0)
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
-            self.x_pid.setSetpoint(target_pose.X())
-            self.y_pid.setSetpoint(target_pose.Y())
             self.rot_pid.setSetpoint(target_pose.rotation().radians())
 
             SmartDashboard.putNumber("x commanded", 0)
@@ -65,9 +75,14 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
                 self.target_state_flipped = self.target_state
 
         else:
-            self.x_pid.reset()
-            self.y_pid.reset()
-            self.rot_pid.reset()
+            if self.trapezoid:
+                robot_pose = self.swerve.get_pose()
+                self.x_pid.reset(robot_pose.X())
+                self.y_pid.reset(robot_pose.Y())
+            else:
+                self.x_pid.reset()
+                self.y_pid.reset()
+                self.rot_pid.reset()
 
         # let the robot know what we're up to
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
@@ -87,15 +102,16 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
             rot_setpoint = self.rot_pid.calculate(robot_pose.rotation().radians())
             self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
             if self.counter % 10 == 0:
-                SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
-                SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
-                SmartDashboard.putNumber("rot setpoint", math.degrees(self.rot_pid.getSetpoint()))
-                SmartDashboard.putNumber("x measured", robot_pose.x)
-                SmartDashboard.putNumber("y measured", robot_pose.y)
-                SmartDashboard.putNumber("rot measured", robot_pose.rotation().degrees())
-                SmartDashboard.putNumber("x commanded", x_setpoint)
-                SmartDashboard.putNumber("y commanded", y_setpoint)
-                SmartDashboard.putNumber("rot commanded", rot_setpoint)
+                pass
+                #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
+                #SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
+                #SmartDashboard.putNumber("rot setpoint", math.degrees(self.rot_pid.getSetpoint()))
+                #SmartDashboard.putNumber("x measured", robot_pose.x)
+                #SmartDashboard.putNumber("y measured", robot_pose.y)
+                #SmartDashboard.putNumber("rot measured", robot_pose.rotation().degrees())
+                #SmartDashboard.putNumber("x commanded", x_setpoint)
+                #SmartDashboard.putNumber("y commanded", y_setpoint)
+                #SmartDashboard.putNumber("rot commanded", rot_setpoint)
 
 
 
