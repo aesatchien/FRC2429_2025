@@ -38,6 +38,7 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.set_leds import SetLEDs
 from commands.reset_field_centric import ResetFieldCentric
+from commands.auto_l1 import AutoL1
 # from commands.calibrate_joystick import CalibrateJoystick
 
 from subsystems import swerve_constants
@@ -483,7 +484,8 @@ class RobotContainer:
 
         NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
         NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
-        NamedCommands.registerCommand('go to l1', GoToReefPosition(self, 1, self.robot_state).withTimeout(2))
+        NamedCommands.registerCommand('go to l3', GoToReefPosition(self, 3, self.robot_state))
+        NamedCommands.registerCommand('go to l1', AutoL1(self).withTimeout(2))
         NamedCommands.registerCommand('go to coral station', GoToCoralStation(self))
         NamedCommands.registerCommand('stow', GoToStow(self))
         NamedCommands.registerCommand('stow and turn off intake', RunIntake(self, self.intake, 0).andThen(GoToStow(self)))

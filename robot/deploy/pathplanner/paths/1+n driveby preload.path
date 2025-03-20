@@ -16,28 +16,28 @@
     },
     {
       "anchor": {
-        "x": 3.8600409836065577,
-        "y": 2.9281249999999988
+        "x": 3.692213114754098,
+        "y": 2.5565061475409836
       },
       "prevControl": {
-        "x": 4.855020491803279,
-        "y": 2.0170594262295083
+        "x": 5.202663934426228,
+        "y": 1.4656249999999997
       },
       "nextControl": {
-        "x": 3.403625734451142,
-        "y": 3.3460473968170055
+        "x": 3.1905251343099468,
+        "y": 2.9188363556395376
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.7192622950819672,
-        "y": 1.1179815573770497
+        "x": 0.8271516393442623,
+        "y": 1.165932377049179
       },
       "prevControl": {
-        "x": 2.229713114756583,
-        "y": 2.184887295087801
+        "x": 2.3376024590188784,
+        "y": 2.2328381147599305
       },
       "nextControl": null,
       "isLocked": false,
@@ -54,13 +54,20 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "go to l1",
-      "waypointRelativePos": 0.11870845204178371,
+      "name": "l1",
+      "waypointRelativePos": 0.12630579297246042,
       "endWaypointRelativePos": null,
       "command": {
-        "type": "named",
+        "type": "sequential",
         "data": {
-          "name": "go to l1"
+          "commands": [
+            {
+              "type": "named",
+              "data": {
+                "name": "go to l1"
+              }
+            }
+          ]
         }
       }
     },

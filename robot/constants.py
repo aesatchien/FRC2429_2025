@@ -28,7 +28,9 @@ k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveCons
 
 k_reset_sparks_to_default = True  # So far, only used in swerve
 # only send and persist new parameters when something is new or goes wrong - addresses intermittent sparkflex CAN losses on boot
-k_burn_flash = False
+# must be true for sim
+# also making it true because I don't think this is the issue LHACK 3/19/2025
+k_burn_flash = True
 
 k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
@@ -517,6 +519,6 @@ class DrivetrainConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
-    k_pose_stdevs_large = (1, 1, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
+    k_pose_stdevs_large = (.5, .5, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
     k_pose_stdevs_disabled = (1, 1, 2)  # use when we are disabled to quickly get updates
     k_pose_stdevs_small = (0.1, 0.1, 10)  # use when you do trust the tags

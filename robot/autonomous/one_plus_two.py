@@ -21,7 +21,9 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
         # run driveby path (this handles l1 and gets us ready to intake)
+        self.addCommands(PrintCommand("starting driveby"))
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n driveby preload')))
+        self.addCommands(PrintCommand("ending driveby"))
         # wait for piece to come in
         self.addCommands(
                 commands2.WaitUntilCommand(
