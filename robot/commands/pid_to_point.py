@@ -15,7 +15,7 @@ from subsystems.led import Led
 
 class PIDToPoint(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, control_type=None, indent=0) -> None:
         """
         this command handles flipping for red alliance, so only ever pass it things which apply to blue alliance
         """
@@ -33,7 +33,7 @@ class PIDToPoint(commands2.Command):  # change the name for your command
         self.rot_pid.enableContinuousInput(radians(-180), radians(180))
         self.x_pid.setSetpoint(target_pose.X())
         self.y_pid.setSetpoint(target_pose.Y())
-        self.y_pid.setSetpoint(target_pose.rotation().radians())
+        self.rot_pid.setSetpoint(target_pose.rotation().radians())
 
         SmartDashboard.putNumber("x commanded", 0)
         SmartDashboard.putNumber("y commanded", 0)
