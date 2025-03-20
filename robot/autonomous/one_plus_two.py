@@ -1,5 +1,6 @@
 import math
 import commands2
+from commands2.printcommand import PrintCommand
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.commands import FollowPathCommand
 from pathplannerlib.path import PathPlannerPath
@@ -20,7 +21,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
         # run driveby path (this handles l1 and gets us ready to intake)
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n driveby preload')).alongWith(MoveWrist(container, 0, 1, wait_to_finish=True)))
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n driveby preload')))
         # wait for piece to come in
         self.addCommands(
                 commands2.WaitUntilCommand(
@@ -48,9 +49,13 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # drive to D
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
-            ))
+                ).withTimeout(5)
+            )
 
         # score on D with 3-second timeout then stow and turn off intake
+        self.addCommands(
+                PrintCommand("final score")
+                )
         self.addCommands(
                 Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
                 )

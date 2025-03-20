@@ -54,6 +54,17 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "go to l1",
+      "waypointRelativePos": 0.11870845204178371,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "go to l1"
+        }
+      }
+    },
+    {
       "name": "l1 score then go to intake",
       "waypointRelativePos": 0.9620132953466101,
       "endWaypointRelativePos": null,

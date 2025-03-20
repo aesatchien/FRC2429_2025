@@ -12,7 +12,8 @@ from wpimath.geometry import Pose2d
 from wpimath.units import degreesToRadians
 from ntcore import NetworkTableInstance
 
-from autonomous.one_plus_one import OnePlusTwo
+from autonomous.one_plus_one import OnePlusOne
+from autonomous.one_plus_two import OnePlusTwo
 from commands.pid_to_point import PIDToPoint
 from commands.reflash import Reflash
 import constants
@@ -342,6 +343,7 @@ class RobotContainer:
         self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
         self.auto_chooser.addOption('1+2', OnePlusTwo(self))
+        self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
 
         # CAN Status / sticky and fault error reports
