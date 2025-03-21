@@ -524,8 +524,8 @@ class RobotContainer:
             else:  # pidtopoint version - can test both versions this way
                 but.whileTrue(
                     commands2.ConditionalCommand(
-                        onTrue=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='leo'),
-                        onFalse=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='leo'),
+                        onTrue=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='pathplanner'),
+                        onFalse=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='pathplanner'),
                         condition=state,
                     )
                 )

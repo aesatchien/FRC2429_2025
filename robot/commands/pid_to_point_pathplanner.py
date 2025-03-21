@@ -16,7 +16,7 @@ from subsystems.led import Led
 
 class PIDToPointPathPlanner(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, control_type='pathplanner', trapezoid=True, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, control_type='pathplanner', trapezoid=False, indent=0) -> None:
         """
         this command handles flipping for red alliance, so only ever pass it things which apply to blue alliance
         """
@@ -40,18 +40,18 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
 
         else:  # custom
             if self.trapezoid:  # use a trapezoidal profile
-                xy_constraints = TrapezoidProfile.Constraints(maxVelocity=2, maxAcceleration=3)
-                self.x_pid = ProfiledPIDController(1, 0, 0.1, constraints=xy_constraints)
-                self.y_pid = ProfiledPIDController(1, 0, 0.1, constraints=xy_constraints)
+                xy_constraints = TrapezoidProfile.Constraints(maxVelocity=2, maxAcceleration=1.0)
+                self.x_pid = ProfiledPIDController(0.25, 0, 0.1, constraints=xy_constraints)
+                self.y_pid = ProfiledPIDController(0.25, 0, 0.1, constraints=xy_constraints)
                 self.x_pid.setGoal(target_pose.X())
                 self.y_pid.setGoal(target_pose.Y())
             else:
-                self.x_pid = PIDController(1, 0, 0.1)
-                self.y_pid = PIDController(1, 0, 0.1)
+                self.x_pid = PIDController(0.5, 0, 0.1)
+                self.y_pid = PIDController(0.5, 0, 0.1)
                 self.x_pid.setSetpoint(target_pose.X())
                 self.y_pid.setSetpoint(target_pose.Y())
 
-            self.rot_pid = PIDController(1, 0, 0)
+            self.rot_pid = PIDController(0.4, 0, 0)
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(target_pose.rotation().radians())
 

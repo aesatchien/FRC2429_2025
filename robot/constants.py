@@ -184,8 +184,8 @@ for tag_id in range(17, 23):
         robot_rotation = tag_yaw + Rotation2d(math.radians(-90))  # CJH changed this to get new orientation right
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
-        robot_offset_left = Translation2d(1, +0.17).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(1, -0.17).rotateBy(tag_yaw)
+        robot_offset_left = Translation2d(0.5, -0.19).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(0.5, +0.19).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left
