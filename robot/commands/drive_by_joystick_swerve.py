@@ -57,10 +57,16 @@ class DriveByJoystickSwerve(commands2.Command):
 
     def execute(self) -> None:
 
-        slowmode_multiplier = 0.2 + 0.8 * self.controller.getRightTriggerAxis()
-        angular_slowmode_multiplier = 0.5 + 0.5 * self.controller.getRightTriggerAxis()
+        # call things once and only once - buttons.run() is taking up too much time
+        right_trigger_value = self.controller.getRightTriggerAxis()
+        robot_oriented_value = self.robot_oriented_trigger.getAsBoolean()
 
-        if self.robot_oriented_debouncer.calculate(self.robot_oriented_trigger.getAsBoolean()):
+
+        slowmode_multiplier = 0.2 + 0.8 * right_trigger_value
+        angular_slowmode_multiplier = 0.5 + 0.5 * right_trigger_value
+
+
+        if self.robot_oriented_debouncer.calculate(robot_oriented_value):
             self.field_oriented = False
         else:
             self.field_oriented = True

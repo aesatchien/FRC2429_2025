@@ -54,13 +54,14 @@ class AutoToPose(commands2.Command):  #
         else:  # custom
             if self.trapezoid:  # use a trapezoidal profile
                 xy_constraints = TrapezoidProfile.Constraints(maxVelocity=2, maxAcceleration=1.0)
-                self.x_pid = ProfiledPIDController(0.25, 0, 0.1, constraints=xy_constraints)
-                self.y_pid = ProfiledPIDController(0.25, 0, 0.1, constraints=xy_constraints)
+                self.x_pid = ProfiledPIDController(0.25, 0, 0.05, constraints=xy_constraints)
+                self.y_pid = ProfiledPIDController(0.25, 0, 0.05, constraints=xy_constraints)
                 self.x_pid.setGoal(self.target_pose.X())
                 self.y_pid.setGoal(self.target_pose.Y())
             else:
-                self.x_pid = PIDController(0.5, 0, 0.1)
-                self.y_pid = PIDController(0.5, 0, 0.1)
+                # trying to get it to slow down but still make it to final position
+                self.x_pid = PIDController(0.75, 0.005, 0.05)
+                self.y_pid = PIDController(0.75, 0.005, 0.05)
                 self.x_pid.setSetpoint(self.target_pose.X())
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
@@ -110,22 +111,26 @@ class AutoToPose(commands2.Command):  #
             self.swerve.drive_robot_relative(target_chassis_speeds, "we don't use feedforwards")
 
         else:
-            x_setpoint = self.x_pid.calculate(robot_pose.X())
-            y_setpoint = self.y_pid.calculate(robot_pose.Y())
-            rot_setpoint = self.rot_pid.calculate(robot_pose.rotation().radians())
+            x_output = self.x_pid.calculate(robot_pose.X())
+            y_output = self.y_pid.calculate(robot_pose.Y())
+            rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
 
             # TODO - clamp the max output
 
             # TODO make a minimum set of setpoints rot_setpoint - does this help?
+            rot_max, rot_min = 0.6, 0.1
+            trans_max, trans_min = 0.5, 0.1
             diff = self.swerve.get_pose().relativeTo(self.target_pose)
-            if abs(rot_setpoint) < 0.15 and abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees():
-                rot_setpoint = math.copysign(0.15, rot_setpoint)
-            # if abs(x_setpoint) < 0.05 and abs(diff.X()) < ac.k_translation_tolerance_meters:
-            #     x_setpoint = math.copysign(0.05, x_setpoint)
-            # if abs(y_setpoint) < 0.05 and abs(diff.Y()) < ac.k_translation_tolerance_meters:
-            #     y_setpoint = math.copysign(0.05, y_setpoint)
+            if abs(rot_output) < rot_min and abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees():
+                rot_output = math.copysign(rot_min, rot_output)
+            if abs(x_output) < 0.05 and abs(diff.X()) < ac.k_translation_tolerance_meters:
+                x_output = math.copysign(0.05, x_output)
+            if abs(y_output) < 0.05 and abs(diff.Y()) < ac.k_translation_tolerance_meters:
+                y_setpoint = math.copysign(0.05, y_output)
+            x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
+            y_output = y_output if math.fabs(y_output) < trans_max else math.copysign(trans_max, y_output)
 
-            self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
+            self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
             if self.counter % 10 == 0:
                 pass
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())

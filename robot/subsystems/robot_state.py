@@ -60,8 +60,8 @@ class RobotState(commands2.Subsystem):
 
     class Side(Enum):
         """ Mode class is for showing robot's current scoring mode and is the default during teleop """
-        RIGHT = {'name': "LEFT", }
-        LEFT = {'name': "RIGHT", }
+        RIGHT = {'name': "RIGHT", }
+        LEFT = {'name': "LEFT", }
         NONE = {'name': "NONE", }
 
     def __init__(self, container):
@@ -82,7 +82,7 @@ class RobotState(commands2.Subsystem):
         self.side = self.Side.RIGHT
         self.set_side(self.side)
 
-        self.reef_goal = self.ReefGoal.CD
+        self.reef_goal = self.ReefGoal.AB
         self.set_reef_goal(self.reef_goal)
 
         # this should auto-update the lists for the dashboard.  you can iterate over enums

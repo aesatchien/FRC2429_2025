@@ -122,8 +122,8 @@ class RobotContainer:
 
         if not constants.k_swerve_only:
             self.configure_codriver_joystick()
-            self.bind_codriver_buttons()
-            self.bind_keyboard_buttons()
+            # self.bind_codriver_buttons()  # it takes too long to poll all these
+            # self.bind_keyboard_buttons()  # it takes too long to poll all these
             if constants.k_use_bbox:
                 self.bind_button_box()
 
@@ -311,9 +311,6 @@ class RobotContainer:
         # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
-        # giving AJ a button to hold for driving to a goal
-        self.triggerA.whileTrue(AutoToPose(self, self.swerve, target_pose=None, from_robot_state=True, control_type='pathplanner'))
-
         # this is for field centric
         #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
@@ -336,8 +333,6 @@ class RobotContainer:
     def bind_codriver_buttons(self):
 
         print("Binding codriver buttons")
-
-        self.co_trigger_a()
 
         #  leo's way: make a command that goes to any position. specify the position in command construction.
             # => a command object for each position
@@ -512,6 +507,9 @@ class RobotContainer:
         #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
 
 
+        # giving AJ a button to hold for driving to a goal
+        self.triggerA.whileTrue(AutoToPose(self, self.swerve, target_pose=None, from_robot_state=True, control_type='not_pathplanner'))
+
         # set up all six buttons on the reef for the while held conditions
         button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
         characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
@@ -520,7 +518,7 @@ class RobotContainer:
         constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
         reef_goals = self.robot_state.reef_goal_dict  # zip will give keys, but not poses
 
-        use_pathplanner = False
+        use_pathplanner = True
         for but, state, chars, reef_goal_key in zip(button_list, states, characters, reef_goals.keys()):
 
             # pure lambda fails because if you change the iterator it only gets the last one in the list at runtime
@@ -543,8 +541,8 @@ class RobotContainer:
             else:  # pidtopoint version - can test both versions this way
                 but.debounce(0.15).whileTrue(
                     commands2.ConditionalCommand(
-                        onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='leo'),
-                        onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='leo'),
+                        onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='not_pathplanner'),
+                        onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='not_pathplanner'),
                         condition=state,
                     )
                 )
