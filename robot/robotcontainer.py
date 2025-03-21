@@ -58,7 +58,7 @@ from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.move_wrist_swap import MoveWristSwap
 from commands.pid_to_point import PIDToPoint
-from commands.pid_to_point_pathplanner import PIDToPointPathPlanner
+from commands.auto_to_pose import AutoToPose
 from commands.reflash import Reflash
 from commands.reset_field_centric import ResetFieldCentric
 from commands.run_intake import RunIntake
@@ -75,7 +75,7 @@ class RobotContainer:
     subsystems, commands, and button mappings) should be declared here.
     """
 
-    # set robot modes
+    # set robot modes - TODO: this belongs in RobotState
     class RobotMode(Enum):  # use this instead of intake results directly because we want to be able to override intake results for testing and emergencies
         EMPTY = "e"
         HAS_CORAL = "c"
@@ -311,6 +311,9 @@ class RobotContainer:
         # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
+        # giving AJ a button to hold for driving to a goal
+        self.triggerA.whileTrue(AutoToPose(self, self.swerve, target_pose=None, from_robot_state=True, control_type='pathplanner'))
+
         # this is for field centric
         #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
@@ -318,7 +321,7 @@ class RobotContainer:
         # left trigger for outtake
 
         if wpilib.RobotBase.isSimulation():
-            self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
+            #self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
             self.triggerB.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
 
         self.triggerRB.onTrue(Score(self))
@@ -466,6 +469,13 @@ class RobotContainer:
 
         self.bbox_right = self.bbox_1.button(1)  # true when selected
         self.bbox_left = self.bbox_1.button(2)  #  and true when selected
+
+        print('Initializing robot state based on button box joystick:')
+        if self.bbox_right.getAsBoolean():
+            self.robot_state.set_side(self.robot_state.Side.RIGHT)
+        else:
+            self.robot_state.set_side(self.robot_state.Side.LEFT)
+
         self.bbox_human_left = self.bbox_1.button(5)
         self.bbox_human_right = self.bbox_1.button(6)
 
@@ -501,18 +511,29 @@ class RobotContainer:
         #self.bbox_IJ.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0.2, 0), timeout=2))  # go left - shows you left
         #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
 
-        # set up all six buttons on the reef
+        # how do i loop this?  the lambda fails by only doing the last one in the list
+        self.bbox_AB.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.AB)).ignoringDisable(True))
+        self.bbox_CD.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.CD)).ignoringDisable(True))
+        self.bbox_EF.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.EF)).ignoringDisable(True))
+        self.bbox_GH.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.GH)).ignoringDisable(True))
+        self.bbox_IJ.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.IJ)).ignoringDisable(True))
+        self.bbox_KL.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.KL)).ignoringDisable(True))
+
+        # set up all six buttons on the reef for the while held conditions
         button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
         characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
         states = [self.robot_state.is_left, self.robot_state.is_left, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_left]
         poses_dict = constants.k_useful_robot_poses_blue
         constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
+        reef_goals = self.robot_state.reef_goal_dict  # zip will give keys, but not poses
 
-        use_pathplanner = False  # quick switch back and forth
-        for but, state, chars in zip(button_list, states, characters):
-            but.onTrue(PrintCommand(f'Starting AutoDriving to {chars} at {self.get_enabled_time():.1}s'))
+        use_pathplanner = False
+        for but, state, chars, reef_goal_key in zip(button_list, states, characters, reef_goals.keys()):
+            # set the reef pose of the robot for other auto-driving buttons
+            but.debounce(0.15).onTrue(PrintCommand(f'Starting AutoDriving to {reef_goals[reef_goal_key]}'))
+
             if use_pathplanner:
-                but.whileTrue(  # todo - wrap this in LED indicators
+                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators
                     commands2.ConditionalCommand(
                         onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
                             self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
@@ -522,10 +543,10 @@ class RobotContainer:
                     )
                 )
             else:  # pidtopoint version - can test both versions this way
-                but.whileTrue(
+                but.debounce(0.15).whileTrue(
                     commands2.ConditionalCommand(
-                        onTrue=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='pathplanner'),
-                        onFalse=PIDToPointPathPlanner(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='pathplanner'),
+                        onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='pathplanner'),
+                        onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='pathplanner'),
                         condition=state,
                     )
                 )

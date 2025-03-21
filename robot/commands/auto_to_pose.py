@@ -14,22 +14,35 @@ from subsystems.swerve import Swerve
 from subsystems.led import Led
 
 
-class PIDToPointPathPlanner(commands2.Command):  # change the name for your command
+class AutoToPose(commands2.Command):  #
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, control_type='pathplanner', trapezoid=False, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, from_robot_state=False, control_type='pathplanner', trapezoid=False, indent=0) -> None:
         """
         this command handles flipping for red alliance, so only ever pass it things which apply to blue alliance
         """
         super().__init__()
-        self.setName('PID to point pathplanner')  # using the pathplanner controller instead
+        self.setName('AutoToPose')  # using the pathplanner controller instead
         self.indent = indent
         self.container = container
         self.swerve = swerve
         self.control_type = control_type  # choose between the pathplanner controller or our custom one
         self.counter = 0
+        self.from_robot_state = from_robot_state
 
         self.target_pose = target_pose
+
         self.trapezoid = trapezoid
+
+        self.addRequirements(self.swerve)
+        self.reset_controllers()
+
+    def reset_controllers(self):
+
+        # if we want to run this on the fly, we need to pass it a pose
+        if self.from_robot_state:
+            self.target_pose = self.container.robot_state.get_reef_goal_pose()
+        else:
+            pass  # already set in __init__
 
         if self.control_type == 'pathplanner':
             self.target_state = PathPlannerTrajectoryState()
@@ -43,23 +56,21 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
                 xy_constraints = TrapezoidProfile.Constraints(maxVelocity=2, maxAcceleration=1.0)
                 self.x_pid = ProfiledPIDController(0.25, 0, 0.1, constraints=xy_constraints)
                 self.y_pid = ProfiledPIDController(0.25, 0, 0.1, constraints=xy_constraints)
-                self.x_pid.setGoal(target_pose.X())
-                self.y_pid.setGoal(target_pose.Y())
+                self.x_pid.setGoal(self.target_pose.X())
+                self.y_pid.setGoal(self.target_pose.Y())
             else:
                 self.x_pid = PIDController(0.5, 0, 0.1)
                 self.y_pid = PIDController(0.5, 0, 0.1)
-                self.x_pid.setSetpoint(target_pose.X())
-                self.y_pid.setSetpoint(target_pose.Y())
+                self.x_pid.setSetpoint(self.target_pose.X())
+                self.y_pid.setSetpoint(self.target_pose.Y())
 
             self.rot_pid = PIDController(0.4, 0, 0)
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
-            self.rot_pid.setSetpoint(target_pose.rotation().radians())
+            self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
-            SmartDashboard.putNumber("x commanded", 0)
-            SmartDashboard.putNumber("y commanded", 0)
-            SmartDashboard.putNumber("rot commanded", 0)
-
-        self.addRequirements(self.swerve)
+            #SmartDashboard.putNumber("x commanded", 0)
+            #SmartDashboard.putNumber("y commanded", 0)
+            #SmartDashboard.putNumber("rot commanded", 0)
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
@@ -67,6 +78,8 @@ class PIDToPointPathPlanner(commands2.Command):  # change the name for your comm
         print(f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **", flush=True)
         SmartDashboard.putString("alert",
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
+
+        self.reset_controllers()  # this is supposed to get us a new pose
 
         if self.control_type == 'pathplanner':
             if self.swerve.flip_path():  # this is in initialize, not __init__, in case FMS hasn't told us the right alliance on boot-up

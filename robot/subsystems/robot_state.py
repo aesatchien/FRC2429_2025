@@ -21,6 +21,24 @@ class RobotState(commands2.Subsystem):
         Target angle
         Left or right - Wrist orientation or
     """
+
+    class ReefGoal(Enum):
+        """Class for storing position information"""
+        # todo - see if i can get the offset in here, because it's not the same y offset for left and right
+        AB = {'name': 'ab', 'left_pose': constants.k_useful_robot_poses_blue['a'], 'right_pose': constants.k_useful_robot_poses_blue['b'],
+              'lr_flip': False}
+        CD = {'name': 'cd', 'left_pose': constants.k_useful_robot_poses_blue['c'], 'right_pose': constants.k_useful_robot_poses_blue['d'],
+              'lr_flip': False}
+        EF = {'name': 'ef', 'left_pose': constants.k_useful_robot_poses_blue['f'], 'right_pose': constants.k_useful_robot_poses_blue['e'],
+              'lr_flip': True}
+        GH = {'name': 'gh', 'left_pose': constants.k_useful_robot_poses_blue['h'], 'right_pose': constants.k_useful_robot_poses_blue['g'],
+              'lr_flip': True}
+        IJ = {'name': 'ij', 'left_pose': constants.k_useful_robot_poses_blue['j'], 'right_pose': constants.k_useful_robot_poses_blue['i'],
+              'lr_flip': True}
+        KL = {'name': 'kl', 'left_pose': constants.k_useful_robot_poses_blue['k'], 'right_pose': constants.k_useful_robot_poses_blue['l'],
+              'lr_flip': False}
+
+
     class Target(Enum):
         """ Target class is for showing current goal """
         # can I generate this programmatically from the constants file's list of positions? Some of it.
@@ -57,14 +75,20 @@ class RobotState(commands2.Subsystem):
 
         # initialize modes and indicators
         self.target = self.Target.L3
-        self.side = self.Side.RIGHT
-
         self.set_target(self.target)
+
+        # try to set the side based on the joystick in RobotContainer and override this
+        print('Temporary robot state until joysticks initialized...')
+        self.side = self.Side.RIGHT
         self.set_side(self.side)
+
+        self.reef_goal = self.ReefGoal.CD
+        self.set_reef_goal(self.reef_goal)
 
         # this should auto-update the lists for the dashboard.  you can iterate over enums
         self.targets_dict = {target.value["name"]: target for target in self.Target}
         self.sides_dict = {side.value["name"]: side for side in self.Side}
+        self.reef_goal_dict = {reef_goal.value["name"]: reef_goal for reef_goal in self.ReefGoal}
 
     # put in a callback so the logic to LED is not circular
     def register_callback(self, callback):
@@ -75,6 +99,21 @@ class RobotState(commands2.Subsystem):
         """ Notify all registered callbacks when RobotState updates. """
         for callback in self._callbacks:
             callback(self.target, self.side)
+
+    def set_reef_goal(self, reef_goal: ReefGoal) -> None:
+        self.reef_goal = reef_goal
+        # self._notify_callbacks()  # Call all registered callbacks
+        print(f'ReefGoal set to {self.reef_goal.value["name"]} at {self.container.get_enabled_time():.1f}s')
+        SmartDashboard.putString('_reef_goal', self.reef_goal.value['name'])
+
+    def get_reef_goal(self):
+        return self.reef_goal
+
+    def get_reef_goal_pose(self):
+        if self.is_right():
+            return self.reef_goal.value['right_pose']
+        else:
+            return self.reef_goal.value['left_pose']
 
     def set_target(self, target: Target) -> None:
         self.prev_target = self.target
