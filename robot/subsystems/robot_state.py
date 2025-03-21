@@ -106,6 +106,9 @@ class RobotState(commands2.Subsystem):
         print(f'ReefGoal set to {self.reef_goal.value["name"]} at {self.container.get_enabled_time():.1f}s')
         SmartDashboard.putString('_reef_goal', self.reef_goal.value['name'])
 
+    def set_reef_goal_cmd(self, reef_goal: ReefGoal) -> commands2.InstantCommand:
+        return commands2.InstantCommand(lambda: self.set_reef_goal(reef_goal)).ignoringDisable(True)
+
     def get_reef_goal(self):
         return self.reef_goal
 

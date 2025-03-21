@@ -64,7 +64,7 @@ class AutoToPose(commands2.Command):  #
                 self.x_pid.setSetpoint(self.target_pose.X())
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
-            self.rot_pid = PIDController(0.4, 0, 0)
+            self.rot_pid = PIDController(0.4, 0, 0,)
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
@@ -113,6 +113,18 @@ class AutoToPose(commands2.Command):  #
             x_setpoint = self.x_pid.calculate(robot_pose.X())
             y_setpoint = self.y_pid.calculate(robot_pose.Y())
             rot_setpoint = self.rot_pid.calculate(robot_pose.rotation().radians())
+
+            # TODO - clamp the max output
+
+            # TODO make a minimum set of setpoints rot_setpoint - does this help?
+            diff = self.swerve.get_pose().relativeTo(self.target_pose)
+            if abs(rot_setpoint) < 0.15 and abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees():
+                rot_setpoint = math.copysign(0.15, rot_setpoint)
+            # if abs(x_setpoint) < 0.05 and abs(diff.X()) < ac.k_translation_tolerance_meters:
+            #     x_setpoint = math.copysign(0.05, x_setpoint)
+            # if abs(y_setpoint) < 0.05 and abs(diff.Y()) < ac.k_translation_tolerance_meters:
+            #     y_setpoint = math.copysign(0.05, y_setpoint)
+
             self.swerve.drive(x_setpoint, y_setpoint, rot_setpoint, fieldRelative=True, rate_limited=False, keep_angle=True)
             if self.counter % 10 == 0:
                 pass

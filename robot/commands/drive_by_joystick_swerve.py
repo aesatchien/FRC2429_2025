@@ -148,8 +148,11 @@ class DriveByJoystickSwerve(commands2.Command):
         self.swerve.drive(0, 0, 0, fieldRelative=self.field_oriented, rate_limited=True)
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
-        print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
-        SmartDashboard.putString(f"alert", f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
+
+        print_end_message = False  # only need to print this for debugging, because it only ever gets interrupted
+        if print_end_message:
+            print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
+            SmartDashboard.putString(f"alert", f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
 
     # def apply_deadband(self, value, db_low=dc.k_inner_deadband, db_high=dc.k_outer_deadband):
     #     # put a deadband on the joystick input values here

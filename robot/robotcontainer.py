@@ -511,13 +511,6 @@ class RobotContainer:
         #self.bbox_IJ.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0.2, 0), timeout=2))  # go left - shows you left
         #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
 
-        # how do i loop this?  the lambda fails by only doing the last one in the list
-        self.bbox_AB.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.AB)).ignoringDisable(True))
-        self.bbox_CD.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.CD)).ignoringDisable(True))
-        self.bbox_EF.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.EF)).ignoringDisable(True))
-        self.bbox_GH.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.GH)).ignoringDisable(True))
-        self.bbox_IJ.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.IJ)).ignoringDisable(True))
-        self.bbox_KL.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_reef_goal(self.robot_state.ReefGoal.KL)).ignoringDisable(True))
 
         # set up all six buttons on the reef for the while held conditions
         button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
@@ -529,11 +522,16 @@ class RobotContainer:
 
         use_pathplanner = False
         for but, state, chars, reef_goal_key in zip(button_list, states, characters, reef_goals.keys()):
-            # set the reef pose of the robot for other auto-driving buttons
-            but.debounce(0.15).onTrue(PrintCommand(f'Starting AutoDriving to {reef_goals[reef_goal_key]}'))
+
+            # pure lambda fails because if you change the iterator it only gets the last one in the list at runtime
+            # note this is an onTrue - there is no delay in setting the goal
+            but.onTrue(self.robot_state.set_reef_goal_cmd(reef_goals[reef_goal_key]))
+
+            # set the reef pose of the robot for other auto-driving buttons, but you have to hold it down
+            but.debounce(0.15).onTrue(PrintCommand(f'-- Starting AutoDriving to {reef_goals[reef_goal_key]} --'))
 
             if use_pathplanner:
-                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators
+                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with
                     commands2.ConditionalCommand(
                         onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
                             self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
@@ -545,8 +543,8 @@ class RobotContainer:
             else:  # pidtopoint version - can test both versions this way
                 but.debounce(0.15).whileTrue(
                     commands2.ConditionalCommand(
-                        onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='pathplanner'),
-                        onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='pathplanner'),
+                        onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='leo'),
+                        onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='leo'),
                         condition=state,
                     )
                 )
