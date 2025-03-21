@@ -60,12 +60,12 @@ class AutoToPose(commands2.Command):  #
                 self.y_pid.setGoal(self.target_pose.Y())
             else:
                 # trying to get it to slow down but still make it to final position
-                self.x_pid = PIDController(0.75, 0.005, 0.05)
-                self.y_pid = PIDController(0.75, 0.005, 0.05)
+                self.x_pid = PIDController(0.75, 0.00, 0.0)
+                self.y_pid = PIDController(0.75, 0.00, 0.0)
                 self.x_pid.setSetpoint(self.target_pose.X())
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
-            self.rot_pid = PIDController(0.4, 0, 0,)
+            self.rot_pid = PIDController(0.4, 0, 0,)  # 0.5
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
@@ -118,15 +118,15 @@ class AutoToPose(commands2.Command):  #
             # TODO - clamp the max output
 
             # TODO make a minimum set of setpoints rot_setpoint - does this help?
-            rot_max, rot_min = 0.6, 0.1
-            trans_max, trans_min = 0.5, 0.1
+            rot_max, rot_min = 0.6, 0.07
+            trans_max, trans_min = 0.5, 0.05
             diff = self.swerve.get_pose().relativeTo(self.target_pose)
             if abs(rot_output) < rot_min and abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees():
                 rot_output = math.copysign(rot_min, rot_output)
-            if abs(x_output) < 0.05 and abs(diff.X()) < ac.k_translation_tolerance_meters:
-                x_output = math.copysign(0.05, x_output)
-            if abs(y_output) < 0.05 and abs(diff.Y()) < ac.k_translation_tolerance_meters:
-                y_setpoint = math.copysign(0.05, y_output)
+            if abs(x_output) < trans_min and abs(diff.X()) > ac.k_translation_tolerance_meters:
+                x_output = math.copysign(trans_min, x_output)
+            if abs(y_output) < trans_min and abs(diff.Y()) > ac.k_translation_tolerance_meters:
+                y_output = math.copysign(trans_min, y_output)
             x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
             y_output = y_output if math.fabs(y_output) < trans_max else math.copysign(trans_max, y_output)
 
