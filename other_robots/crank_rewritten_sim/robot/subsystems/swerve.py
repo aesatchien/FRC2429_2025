@@ -418,7 +418,7 @@ class Swerve (Subsystem):
 
             if self.apriltag_front_count_subscriber.get() > 0:  # use front camera
                 # update pose from apriltags
-                tag_data = self.apriltag_front_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                tag_data = self.apriltag_front_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tz rx ry rz
                 tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                 rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                 tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
@@ -426,7 +426,7 @@ class Swerve (Subsystem):
 
             if self.apriltag_rear_count_subscriber.get() > 0:  # use rear camera - should I make this an elif?
                 # update pose from apriltags
-                tag_data = self.apriltag_rear_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                tag_data = self.apriltag_rear_pose_subscriber.get()  # 8 items - timestamp, id, tx ty tz rx ry rz
                 tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                 rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                 tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()

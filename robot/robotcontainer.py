@@ -65,6 +65,7 @@ from commands.run_intake import RunIntake
 from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
 from commands.set_leds import SetLEDs
+from commands.set_valid_tags import SetValidTags
 
 
 class RobotContainer:
@@ -253,6 +254,7 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
         wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+        wpilib.SmartDashboard.putData('Set valid tag IDs', SetValidTags(self, constants.VisionConstants.k_valid_tags))
         # end pyqt dashboard section
 
         # quick way to test all scoring positions from dashboard
