@@ -28,7 +28,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         self.addCommands(
                 commands2.WaitUntilCommand(
                     container.intake.has_coral
-                    ).withTimeout(6)
+                    )
                 )
 
         # --------------- C --------------
@@ -42,37 +42,40 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
 
         # score then to go HP while driving back to HP
         self.addCommands(
-                WaitCommand(0.5).andThen(Score(container).andThen(GoToCoralStation(container)).alongWith(
-                    commands2.WaitCommand(0.5).andThen(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
+                WaitCommand(0.5).andThen(
+                        Score(container).andThen(GoToCoralStation(container).withTimeout(0.7)).alongWith(
+                            commands2.WaitCommand(0.5).andThen(
+                                AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
+                                )
                         )
                     )
                 )
-                )
 
-        # # wait for piece
-        # self.addCommands(
-        #         commands2.WaitUntilCommand(
-        #             container.intake.has_coral
-        #             ).withTimeout(6)
-        #         )
+        # wait for piece to come in
+        self.addCommands(
+                commands2.WaitUntilCommand(
+                    container.intake.has_coral
+                    )
+                )
         #
         # # --------------- D --------------
         #
-        # # drive to D
-        # self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
-        #     MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
-        #         ).withTimeout(5)
-        #     )
-        #
-        # # score on D with 3-second timeout then stow and turn off intake
-        # self.addCommands(
-        #         PrintCommand("final score")
-        #         )
-        # self.addCommands(
-        #         Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
-        #         )
-        #
+
+        # drive to D
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
+            MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
+                WaitCommand(0.5).andThen(RunIntake(container, container.intake, 0))
+                )
+            ))
+
+        # score on D with 3-second timeout then stow and turn off intake
+        self.addCommands(
+                PrintCommand("final score")
+                )
+        self.addCommands(
+                WaitCommand(0.5).andThen(Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
+                ))
+
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 
