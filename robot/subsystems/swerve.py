@@ -543,7 +543,7 @@ class Swerve (Subsystem):
                     delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), tag_pose.translation())
                     use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
                     use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
-                    use_tag = False if id not in self.desired_tags else use_tag
+                    # use_tag = False if id not in self.desired_tags else use_tag
 
                     # TODO - figure out ambiguity (maybe pass to NT from the pi)
                     # do i have a fatal lag issue?  am i better without the time estimate?
