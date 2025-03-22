@@ -20,6 +20,7 @@ class Score(commands2.SequentialCommandGroup):
         self.container = container
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
+
         self.addCommands(RunIntake(container=self.container, intake=self.container.intake, 
                                  value=constants.IntakeConstants.k_coral_scoring_voltage, 
                                  control_type=SparkMax.ControlType.kVoltage, indent=indent+1))

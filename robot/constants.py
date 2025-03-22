@@ -364,8 +364,8 @@ class ShoulderConstants:
     k_moi = 0.5914
     k_plant = DCMotor.neoVortex(2)
 
-    k_max_velocity_rad_per_second = 4 * math.pi
-    k_max_acceleration_rad_per_sec_squared = 2.5
+    k_max_velocity_rad_per_second = 8 * math.pi
+    k_max_acceleration_rad_per_sec_squared = 10
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
     k_kG_volts = 1.4/2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
     k_kV_volt_second_per_radian = 1.69  # stays the same with one or two motors, based on the NEO itself and gear ratio
@@ -519,6 +519,6 @@ class DrivetrainConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
-    k_pose_stdevs_large = (.5, .5, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
+    k_pose_stdevs_large = (1, 1, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
     k_pose_stdevs_disabled = (1, 1, 2)  # use when we are disabled to quickly get updates
     k_pose_stdevs_small = (0.1, 0.1, 10)  # use when you do trust the tags

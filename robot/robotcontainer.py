@@ -39,6 +39,7 @@ from subsystems.vision import Vision
 from autonomous.one_plus_one import OnePlusOne
 from autonomous.one_plus_two import OnePlusTwo
 from autonomous.leave_then_score_1 import LeaveThenScore
+from autonomous.one_plus_two_trough import OnePlusTwoTrough
 
 # 2429 commands
 from commands.auto_l1 import AutoL1
@@ -123,7 +124,7 @@ class RobotContainer:
         if not constants.k_swerve_only:
             self.configure_codriver_joystick()
             # self.bind_codriver_buttons()  # it takes too long to poll all these
-            # self.bind_keyboard_buttons()  # it takes too long to poll all these
+            self.bind_keyboard_buttons()  # it takes too long to poll all these
             if constants.k_use_bbox:
                 self.bind_button_box()
 
@@ -300,6 +301,7 @@ class RobotContainer:
         self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
         self.auto_chooser.addOption('1+2', OnePlusTwo(self))
         self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
+        self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
 
 
@@ -436,11 +438,18 @@ class RobotContainer:
         NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
         NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
         NamedCommands.registerCommand('go to l3', GoToReefPosition(self, 3, self.robot_state))
+        NamedCommands.registerCommand('go to l1 auto', GoToReefPosition(self, 1, self.robot_state))
         NamedCommands.registerCommand('go to l1', AutoL1(self).withTimeout(2))
         NamedCommands.registerCommand('go to coral station', GoToCoralStation(self))
         NamedCommands.registerCommand('stow', GoToStow(self))
         NamedCommands.registerCommand('stow and turn off intake', RunIntake(self, self.intake, 0).andThen(GoToStow(self)))
         NamedCommands.registerCommand('score', Score(self))
+        NamedCommands.registerCommand('intake spit out', RunIntake(self, self.intake, constants.IntakeConstants.k_coral_scoring_voltage, stop_on_end=True).raceWith(
+            commands2.WaitCommand(0.5)
+            ).andThen(
+                GoToCoralStation(self)
+                )
+            )
         NamedCommands.registerCommand('score then go to coral station', GoToStow(self).andThen(GoToCoralStation(self)))
         NamedCommands.registerCommand('move wrist to 90 deg', MoveWrist(self, math.radians(90), 2, False, True))
         NamedCommands.registerCommand('move wrist to -90 deg', MoveWrist(self, math.radians(-90), 2, False, True))

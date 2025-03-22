@@ -16,65 +16,38 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
     def __init__(self, container, indent=0) -> None:
         super().__init__()
 
-        self.setName(f'1+2')
+        self.setName(f'1+1')
         self.container = container
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
-        # --------------- E --------------
-        # drive to E
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n preload E')).alongWith(
-            MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
-            ))
-
-        # score then to go HP while driving back to HP
-        self.addCommands(
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n E to HP')).alongWith(
-                    Score(container).andThen(
-                        GoToCoralStation(container)
-                        )
-                    )
-                )
-
-        self.addCommands(
-                Score(container).andThen(GoToCoralStation(container)).alongWith(
-                    commands2.WaitCommand(0.3).andThen(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n E to HP'))
-                        )
-                    )
-                )
-
+        # run driveby path (this handles l1 and gets us ready to intake)
+        self.addCommands(PrintCommand("starting driveby"))
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n driveby preload')))
+        self.addCommands(PrintCommand("ending driveby"))
         # wait for piece to come in
         self.addCommands(
                 commands2.WaitUntilCommand(
                     container.intake.has_coral
                     ).withTimeout(6)
                 )
-
-        # --------------- C --------------
-
         # drive to C
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score C')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
             ))
-
         # score then to go HP while driving back to HP
         self.addCommands(
-                Score(container).andThen(GoToCoralStation(container)).alongWith(
-                    commands2.WaitCommand(0.3).andThen(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP')).alongWith(
+                    Score(container).andThen(
+                        GoToCoralStation(container)
                         )
                     )
                 )
-
         # wait for piece
         self.addCommands(
                 commands2.WaitUntilCommand(
                     container.intake.has_coral
                     ).withTimeout(6)
                 )
-
-        # --------------- D --------------
-
         # drive to D
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
