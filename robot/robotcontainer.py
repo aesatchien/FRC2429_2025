@@ -465,7 +465,7 @@ class RobotContainer:
 
 
         # giving AJ a button to hold for driving to a goal
-        self.triggerA.whileTrue(AutoToPose(self, self.swerve, target_pose=None, from_robot_state=True, control_type='not_pathplanner'))
+        self.triggerA.whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
 
         # set up all six buttons on the reef for the while held conditions
         button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #

@@ -90,6 +90,20 @@ class RobotState(commands2.Subsystem):
         self.sides_dict = {side.value["name"]: side for side in self.Side}
         self.reef_goal_dict = {reef_goal.value["name"]: reef_goal for reef_goal in self.ReefGoal}
 
+    def set_reef_goal_by_tag(self, tag):
+        if tag in [7,18]:
+            self.set_reef_goal(self.ReefGoal.AB)
+        elif tag in [8,17]:
+            self.set_reef_goal(self.ReefGoal.CD)
+        elif tag in [9,22]:
+            self.set_reef_goal(self.ReefGoal.EF)
+        elif tag in [10,21]:
+            self.set_reef_goal(self.ReefGoal.GH)
+        elif tag in [11,20]:
+            self.set_reef_goal(self.ReefGoal.IJ)
+        elif tag in [6,19]:
+            self.set_reef_goal(self.ReefGoal.KL)
+
     # put in a callback so the logic to LED is not circular
     def register_callback(self, callback):
         """ Allow external systems (like LED) to register for updates. """
