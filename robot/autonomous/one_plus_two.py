@@ -13,6 +13,8 @@ from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.score import Score
 
+from constants import IntakeConstants
+
 class OnePlusTwo(commands2.SequentialCommandGroup):
     def __init__(self, container, indent=0) -> None:
         super().__init__()
@@ -43,13 +45,21 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # score then to go HP while driving back to HP
         self.addCommands(
                 WaitCommand(0.5).andThen(
-                        Score(container).andThen(GoToCoralStation(container).withTimeout(0.7)).alongWith(
-                            commands2.WaitCommand(0.5).andThen(
-                                AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
-                                )
+                    RunIntake(container, container.intake, IntakeConstants.k_coral_scoring_voltage).andThen(WaitCommand(0.5)).andThen(
+                            AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP')) 
                         )
                     )
                 )
+
+        # self.addCommands(
+        #         WaitCommand(0.5).andThen(
+        #                 Score(container).andThen(GoToCoralStation(container).withTimeout(0.7)).alongWith(
+        #                     commands2.WaitCommand(0.5).andThen(
+        #                         AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
+        #                         )
+        #                 )
+        #             )
+        #         )
 
         # wait for piece to come in
         self.addCommands(
