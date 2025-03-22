@@ -419,22 +419,12 @@ class Swerve (Subsystem):
         layout = ra.AprilTagFieldLayout.loadField(field)
         current_pose = self.get_pose()
 
-        if destination == 'stage':
+        if destination == 'reef':
             # get all distances to the stage tags
-            tags = [11, 12, 15, 16]  # the ones we can see from driver's station - does not matter if red or blue
+            tags = [6,7,8,9,10,11,17,18,19,20,21,22]  # the ones we can see from driver's station - does not matter if red or blue
             x_offset, y_offset = -0.10, 0.10  # subtracting translations below makes +x INTO the tage, +y LEFT of tag
             robot_offset = geo.Pose2d(geo.Translation2d(x_offset, y_offset), geo.Rotation2d(0))
             face_tag = True  # do we want to face the tag?
-        elif destination == 'amp':
-            tags = [5, 6]
-            x_offset, y_offset = -0.37, 0  # subtracting translations below makes +1 INTO the tage, +y LEFT of tag
-            robot_offset = geo.Pose2d(geo.Translation2d(x_offset, y_offset), geo.Rotation2d(0))
-            face_tag = True
-        elif destination == 'speaker':
-            tags = [7, 4]  # right one facing blue, left one facing red
-            x_offset, y_offset = -1.5, 0  # subtracting translations below makes +1 INTO the tage
-            robot_offset = geo.Pose2d(geo.Translation2d(x_offset, y_offset), geo.Rotation2d(0))
-            face_tag = False
         else:
             raise ValueError('  location for get_nearest tag must be in ["stage", "amp"] etc')
 
@@ -456,7 +446,7 @@ class Swerve (Subsystem):
         updated_pose = geo.Pose2d(translation=updated_translation, rotation=updated_rotation)  # drive to here
 
         print(f'  nearest {destination} is tag {sorted_tags[0]} at {nearest_pose.translation()}')
-        return updated_pose
+        return sorted_tags[0]  # changed this in 2025 instead of updated_pose
 
     def get_desired_swerve_module_states(self) -> list[SwerveModuleState]:
         """

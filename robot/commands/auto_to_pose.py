@@ -6,7 +6,7 @@ from pathplannerlib.util import DriveFeedforwards
 from wpilib import SmartDashboard
 import wpilib
 from wpimath.controller import PIDController, ProfiledPIDController
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians
 
 from subsystems.swerve_constants import AutoConstants as ac
@@ -16,7 +16,7 @@ from subsystems.led import Led
 
 class AutoToPose(commands2.Command):  #
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, from_robot_state=False, control_type='pathplanner', trapezoid=False, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, nearest=False, from_robot_state=False, control_type='pathplanner', trapezoid=False, indent=0) -> None:
         """
         this command handles flipping for red alliance, so only ever pass it things which apply to blue alliance
         """
@@ -28,6 +28,7 @@ class AutoToPose(commands2.Command):  #
         self.control_type = control_type  # choose between the pathplanner controller or our custom one
         self.counter = 0
         self.from_robot_state = from_robot_state
+        self.nearest = nearest  # only use nearest tags as the target
 
         self.target_pose = target_pose
         self.trapezoid = trapezoid
@@ -41,7 +42,14 @@ class AutoToPose(commands2.Command):  #
     def reset_controllers(self):
 
         # if we want to run this on the fly, we need to pass it a pose
-        if self.from_robot_state:
+        if self.nearest:
+            nearest_tag = self.container.swerve.get_nearest_tag(destination='reef')
+            self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
+            self.target_pose = self.container.robot_state.get_reef_goal_pose()
+            if wpilib.DriverStation.getAlliance()  == wpilib.DriverStation.Alliance.kRed:
+                self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2), rot=Rotation2d(math.pi))
+
+        elif self.from_robot_state:
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
         else:
             pass  # already set in __init__
