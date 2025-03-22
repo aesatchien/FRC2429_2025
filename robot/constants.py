@@ -80,8 +80,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.40,
-        "shoulder_pivot": math.radians(120),
+        "elevator": 1.46,
+        "shoulder_pivot": math.radians(125),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -109,7 +109,7 @@ k_positions = {
     },
     "coral station": {
         "elevator": 0.40, # HACK :was .40 at clark, .42 at LCEC
-        "shoulder_pivot": math.radians(61), # HACK: was 61 at clark, 57 at LCEC
+        "shoulder_pivot": math.radians(66),
         "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)

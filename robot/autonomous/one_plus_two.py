@@ -42,11 +42,12 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
 
         # score then to go HP while driving back to HP
         self.addCommands(
-                Score(container).andThen(GoToCoralStation(container)).alongWith(
+                WaitCommand(0.5).andThen(Score(container).andThen(GoToCoralStation(container)).alongWith(
                     commands2.WaitCommand(0.5).andThen(
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
                         )
                     )
+                )
                 )
 
         # # wait for piece

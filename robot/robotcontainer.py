@@ -393,7 +393,7 @@ class RobotContainer:
         NamedCommands.registerCommand('stow and turn off intake', RunIntake(self, self.intake, 0).andThen(GoToStow(self)))
         NamedCommands.registerCommand('score', Score(self))
         NamedCommands.registerCommand('intake spit out', RunIntake(self, self.intake, constants.IntakeConstants.k_coral_scoring_voltage, stop_on_end=True).raceWith(
-            commands2.WaitCommand(0.5)
+            commands2.WaitCommand(1)
             ).andThen(
                 GoToCoralStation(self)
                 )
