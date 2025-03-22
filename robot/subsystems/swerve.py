@@ -170,6 +170,8 @@ class Swerve (Subsystem):
         self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_high_pose_subscriber, self.genius_low_pose_subscriber, self.logitech_reef_pose_subscriber]
         self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_high_count_subscriber, self.genius_low_count_subscriber, self.logitech_reef_count_subscriber]
 
+        self.desired_tags = constants.VisionConstants.k_valid_tags
+
         # TODO - give me a list of six filters for the apriltags - smooth if we are not moving, else use reset each measurement
         # def tag_filter(window):
         #     return [wpimath.filter.LinearFilter.movingAverage(window) for _ in range(6) ]
@@ -342,6 +344,9 @@ class Swerve (Subsystem):
         desiredStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(desiredStates, dc.kMaxTotalSpeed)
         for idx, m in enumerate(self.swerve_modules):
             m.setDesiredState(desiredStates[idx])
+
+    def setDesiredTags(self, desired_tags: typing.List[int]) -> None:
+        self.desired_tags = desired_tags
 
     def resetEncoders(self) -> None:
         """Resets the drive encoders to currently read a position of 0."""
@@ -528,6 +533,7 @@ class Swerve (Subsystem):
                 if count_subscriber.get() > 0:  # use this camera's tag
                     # update pose from apriltags
                     tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                    id = tag_data[0]
                     tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
@@ -537,6 +543,8 @@ class Swerve (Subsystem):
                     delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), tag_pose.translation())
                     use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
                     use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
+                    use_tag = False if id not in self.desired_tags else use_tag
+
                     # TODO - figure out ambiguity (maybe pass to NT from the pi)
                     # do i have a fatal lag issue?  am i better without the time estimate?
                     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13

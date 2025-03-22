@@ -17,7 +17,6 @@ class Vision(SubsystemBase):
         self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, 'genius_low_tags': {}, 'logi_reef_tags': {}}
         self.camera_values = {}
 
-
         self.arducam_back_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamBack')  # arducam for tags
         self.arducam_high_table = NetworkTableInstance.getDefault().getTable('/Cameras/ArducamHigh')  # arducam for high tags
         # TODO - figure out how to have two tag cameras play nice

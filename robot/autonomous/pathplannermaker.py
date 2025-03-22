@@ -1,3 +1,9 @@
+import wpilib
+import os
+import constants
+from pathplannerlib.auto import AutoBuilder, PathPlannerPath, PathPlannerAuto
+
+
 class PathPlannerConfiguration():
 
     def __init__(self) -> None:

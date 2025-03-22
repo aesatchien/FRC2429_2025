@@ -499,6 +499,8 @@ class VisionConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     k_pi_names = ["top_pi"]
 
+    k_valid_tags = [11, 12, 15, 16, 5, 6, 7, 4]
+
 
 class LedConstants:
 

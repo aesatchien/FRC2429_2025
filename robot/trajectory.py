@@ -245,38 +245,58 @@ waypoints = {
     2: {'elevator': 0.8, 'pivot': 50, 'wrist': 90, 'intake': 3},  # return home with wrist safe
 }
 
-# WAYPOINTS FOR 67 SCORING STYLE FOR L2, L3, and L4 - TODO: TUNE + PUT IN CONSTANTS
-waypoints_l2_score_67 = {
-    0: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
-        'pivot': constants.k_positions["l2"]["shoulder_pivot"],
-        'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0},
-    0.8: {'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
-          'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
-          'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0}
+score_waypoint_dict = { #TODO: READ CURRENT WRIST POSITION!
+    'l2': {
+        0: {
+            'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
+            'pivot': constants.k_positions["l2"]["shoulder_pivot"],
+            'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 0
+        },
+        0.4: {
+            'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
+            'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 7.25,
+            'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 1
+        },
+        0.8: {
+            'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
+            'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
+            'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 2
+        }
+    },
 
-    # 1.4 : {'elevator': constants.k_positions["l2"]["elevator"] + 0.1, 'pivot': constants.k_positions["l2"]["shoulder_pivot"] + math.radians(10), 'wrist': constants.k_positions["l2"]["wrist_pivot"], 'intake': 3}, #FOR DRIVERS; PULL BACK WHEN CORAL IS CLIPPED AFTER ~0.8 SECONDS SO THAT WHEN INTAKE IS ACTIVATED ROBOT CAN BE PULLED BACK AND PIECE RELEASED
+    'l3': {
+        0: {
+            'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
+            'pivot': constants.k_positions["l3"]["shoulder_pivot"],
+            'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0
+        },
+        0.4: {
+            'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
+            'pivot': math.degrees(constants.k_positions["l3"]["shoulder_pivot"]) + 7.25,
+            'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 1
+        },
+        0.8: {
+            'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
+            'pivot': math.degrees(constants.k_positions["l3"]["shoulder_pivot"]) + 14.5,
+            'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 2
+        }
+    },
+
+    'l4': {
+        0: {
+            'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
+            'pivot': constants.k_positions["l4"]["shoulder_pivot"],
+            'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0
+        },
+        0.5: {
+            'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
+            'pivot': math.degrees(constants.k_positions["l4"]["shoulder_pivot"]) + 5.0,
+            'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 1
+        },
+        1.0: {
+            'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
+            'pivot': math.degrees(constants.k_positions["l4"]["shoulder_pivot"]) + 10.0,
+            'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 2
+        }
+    }
 }
-
-waypoints_l3_score_67 = {
-    0: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
-        'pivot': constants.k_positions["l3"]["shoulder_pivot"],
-        'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0},
-    0.8: {'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
-          'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
-          'wrist': constants.k_positions["l3"]["wrist_pivot"], 'intake': 0}
-}
-
-waypoints_l4_score_67 = {
-    0: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
-        'pivot': constants.k_positions["l4"]["shoulder_pivot"],
-        'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0},
-    1.2: {'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
-          'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 7.5,
-          'wrist': constants.k_positions["l4"]["wrist_pivot"], 'intake': 0}
-
-    # NOTE: DRIVERS HAVE ~1 SECOND TO MOVE ROBOT BACK WHILE PIVOT IS MOVING - THIS IS REQUIRED DUE TO GEOMETRY OF OUTTAKE + REEF!
-}
-
-l2_score_67 = CustomTrajectory(waypoints_l2_score_67, 0.8)
-l3_score_67 = CustomTrajectory(waypoints_l3_score_67, 0.8)
-l4_score_67 = CustomTrajectory(waypoints_l4_score_67, 1.2)
