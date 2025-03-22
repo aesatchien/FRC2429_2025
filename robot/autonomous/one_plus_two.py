@@ -36,14 +36,14 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # drive to C
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score C')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
-                WaitCommand(0.2).andThen(RunIntake(container, container.intake, 0))
+                WaitCommand(0.5).andThen(RunIntake(container, container.intake, 0))
                 )
             ))
 
         # score then to go HP while driving back to HP
         self.addCommands(
                 Score(container).andThen(GoToCoralStation(container)).alongWith(
-                    commands2.WaitCommand(0.3).andThen(
+                    commands2.WaitCommand(0.5).andThen(
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
                         )
                     )
