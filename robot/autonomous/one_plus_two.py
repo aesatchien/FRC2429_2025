@@ -1,6 +1,7 @@
 import math
 import commands2
 from commands2.printcommand import PrintCommand
+from commands2.waitcommand import WaitCommand
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.commands import FollowPathCommand
 from pathplannerlib.path import PathPlannerPath
@@ -20,28 +21,8 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         self.container = container
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
-        # --------------- E --------------
-        # drive to E
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n preload E')).alongWith(
-            MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
-            ))
-
-        # score then to go HP while driving back to HP
-        self.addCommands(
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n E to HP')).alongWith(
-                    Score(container).andThen(
-                        GoToCoralStation(container)
-                        )
-                    )
-                )
-
-        self.addCommands(
-                Score(container).andThen(GoToCoralStation(container)).alongWith(
-                    commands2.WaitCommand(0.3).andThen(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n E to HP'))
-                        )
-                    )
-                )
+        # trough
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n driveby preload')))
 
         # wait for piece to come in
         self.addCommands(
@@ -54,7 +35,9 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
 
         # drive to C
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score C')).alongWith(
-            MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
+            MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
+                WaitCommand(0.2).andThen(RunIntake(container, container.intake, 0))
+                )
             ))
 
         # score then to go HP while driving back to HP
@@ -66,29 +49,29 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
                     )
                 )
 
-        # wait for piece
-        self.addCommands(
-                commands2.WaitUntilCommand(
-                    container.intake.has_coral
-                    ).withTimeout(6)
-                )
-
-        # --------------- D --------------
-
-        # drive to D
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
-            MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
-                ).withTimeout(5)
-            )
-
-        # score on D with 3-second timeout then stow and turn off intake
-        self.addCommands(
-                PrintCommand("final score")
-                )
-        self.addCommands(
-                Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
-                )
-
+        # # wait for piece
+        # self.addCommands(
+        #         commands2.WaitUntilCommand(
+        #             container.intake.has_coral
+        #             ).withTimeout(6)
+        #         )
+        #
+        # # --------------- D --------------
+        #
+        # # drive to D
+        # self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
+        #     MoveWrist(container, math.radians(90), 2, wait_to_finish=True)
+        #         ).withTimeout(5)
+        #     )
+        #
+        # # score on D with 3-second timeout then stow and turn off intake
+        # self.addCommands(
+        #         PrintCommand("final score")
+        #         )
+        # self.addCommands(
+        #         Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
+        #         )
+        #
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 
