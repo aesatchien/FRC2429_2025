@@ -6,7 +6,7 @@ from pathplannerlib.util import DriveFeedforwards
 from wpilib import SmartDashboard
 import wpilib
 from wpimath.controller import PIDController, ProfiledPIDController
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians
 
 from subsystems.swerve_constants import AutoConstants as ac
@@ -47,7 +47,7 @@ class AutoToPose(commands2.Command):  #
             self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
             if wpilib.DriverStation.getAlliance()  == wpilib.DriverStation.Alliance.kRed:
-                pass
+                self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2), rot=Rotation2d(math.pi))
 
         elif self.from_robot_state:
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
