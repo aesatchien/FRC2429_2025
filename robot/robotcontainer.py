@@ -170,47 +170,6 @@ class RobotContainer:
 
         print("Configuring codriver joystick")
 
-        def stick_between_degree_angles(angle_a, angle_b, stick_x, stick_y) -> bool:
-            """
-            returns whether the stick is between angle a (lower limit) and angle b (higher limit).
-            0 <= a < b <= 360. Returns true if stick angle = a, but false if stick angle = b.
-            cannot handle wraparound for now (how is there no method for this)
-            """
-            angle_a = math.radians(angle_a)
-            angle_b = math.radians(angle_b)
-
-            stick_angle = math.atan2(stick_x, stick_y)
-            if stick_angle < 0:
-                stick_angle = math.tau + stick_angle  # compensate because atan returns -180 to 180 but we want 0 to 360
-
-            return (angle_a <= stick_angle and stick_angle < angle_b)
-
-        self.co_pilot_command_controller = commands2.button.CommandXboxController(constants.k_co_driver_controller_port)  # 2024 way
-        
-        self.co_trigger_right_stick_between_0_60_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(0, 60,
-                                                                            self.co_pilot_command_controller.getRightX(),
-                                                                            self.co_pilot_command_controller.getRightY()))
-
-        self.co_trigger_right_stick_between_60_120_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(60, 120,
-                                                                            self.co_pilot_command_controller.getRightX(),
-                                                                            self.co_pilot_command_controller.getRightY()))
-
-        self.co_trigger_right_stick_between_120_180_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(120, 180,
-                                                                            self.co_pilot_command_controller.getRightX(),
-                                                                            self.co_pilot_command_controller.getRightY()))
-
-        self.co_trigger_right_stick_between_180_240_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(180, 240,
-                                                                            self.co_pilot_command_controller.getRightX(),
-                                                                            self.co_pilot_command_controller.getRightY()))
-
-        self.co_trigger_right_stick_between_240_300_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(240, 300,
-                                                                            self.co_pilot_command_controller.getRightX(),
-                                                                            self.co_pilot_command_controller.getRightY()))
-
-        self.co_trigger_right_stick_between_300_360_deg = commands2.button.Trigger(lambda: stick_between_degree_angles(300, 360,
-                                                                            self.co_pilot_command_controller.getRightX(),
-                                                                            self.co_pilot_command_controller.getRightY()))
-
         self.co_trigger_a = self.co_pilot_command_controller.a()  # 2024 way
         self.co_trigger_b = self.co_pilot_command_controller.b()
         self.co_trigger_y = self.co_pilot_command_controller.y()
@@ -247,11 +206,21 @@ class RobotContainer:
             SetLEDs(container=self, led=self.led, indicator=selected_value)))
         wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
 
-        # Arshan's trajectory tests
-        wpilib.SmartDashboard.putData('l3 trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.trajectory_L3, wait_to_finish=True))
+        # Arshan's 67 scoring trajectory tests
+        wpilib.SmartDashboard.putData('67 score trajectory L2', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l2'], list(trajectory.score_waypoint_dict['l2'].keys())[-1]), wait_to_finish=True))
+        wpilib.SmartDashboard.putData('67 score trajectory L3', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l3'], list(trajectory.score_waypoint_dict['l3'].keys())[-1]), wait_to_finish=True))
+        wpilib.SmartDashboard.putData('67 score trajectory L4', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l4'], list(trajectory.score_waypoint_dict['l4'].keys())[-1]), wait_to_finish=True))
+
+        #wpilib.SmartDashboard.putData('67 score trajectory', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict[self.robot_state.get_target().value['name']], list(trajectory.score_waypoint_dict[self.robot_state.get_target().value['name']].keys())[-1]), wait_to_finish=True))
+
+        #.keys()[-1]
+
+        '''
+        wpilib.SmartDashboard.putData('l3 trajectory', FollowTrajectorya(container=self, current_trajectory=trajectory.trajectory_L3, wait_to_finish=True))
         wpilib.SmartDashboard.putData('l2 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l2_score_67, wait_to_finish=True))
         wpilib.SmartDashboard.putData('l3 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l3_score_67, wait_to_finish=True))
-        wpilib.SmartDashboard.putData('l4 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l4_score_67, wait_to_finish=True))
+        wpilib.SmartDashboard.putData('l4 67 score trajectory', FollowTrajectory(container=self, current_trajectory=trajectory.l4_score_67, wait_to_finish=True))'
+        '''
 
         # experimental, not used on dash
         SmartDashboard.putData("Go to 60 deg pid", commands2.cmd.runOnce(lambda: self.pivot.set_goal(math.radians(60), False), self.pivot))
@@ -337,53 +306,32 @@ class RobotContainer:
 
         print("Binding codriver buttons")
 
-        self.co_trigger_a()
+        self.co_trigger_b.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
-        #  leo's way: make a command that goes to any position. specify the position in command construction.
-            # => a command object for each position
-        # cory's way: make a command that goes to any position. specify the position in another subsystem that this command looks at.
-            # => one command object and one subsystem
-            # now we need a command object for each position to tell that subsystem where to go
-            # but we can change setpoints outside of construct-time
+        # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
+        # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
+        # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
 
-        # self.co_trigger_a.whileTrue(SequentialScoring(container=self))
+        # giving AJ a button to hold for driving to a goal
+        self.co_trigger_a.whileTrue(AutoToPose(self, self.swerve, target_pose=None, from_robot_state=True, control_type='pathplanner'))
 
-        self.co_trigger_a.onTrue(GoToReefPosition(container=self, level=1, wrist_setpoint_decider=self.robot_state))
-        
-        self.co_trigger_b.onTrue(GoToReefPosition(container=self, level=2, wrist_setpoint_decider=self.robot_state))
+        # this is for field centric
+        #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
 
-        self.co_trigger_x.onTrue(GoToReefPosition(container=self, level=3, wrist_setpoint_decider=self.robot_state))
+        # button A for intake
+        # left trigger for outtake
 
-        self.co_trigger_y.onTrue(GoToReefPosition(container=self, level=4, wrist_setpoint_decider=self.robot_state))
+        if wpilib.RobotBase.isSimulation():
+            #self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
+            self.co_trigger_b.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
 
-        # trigger on true: go to the position, start intake
-        # trigger on false: go to stow, stop intake
+        self.co_trigger_rb.onTrue(Score(self))
 
-        self.co_trigger_d.or_(self.co_trigger_l).whileTrue(GoToCoralStation(container=self).andThen(
-            RunIntake(container=self, intake=self.intake, value=constants.IntakeConstants.k_coral_intaking_voltage, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
-
-        self.co_trigger_d.or_(self.co_trigger_l).onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-            GoToStow(container=self)))
-
-        self.co_trigger_u.or_(self.co_trigger_r).whileTrue(GoToStow(container=self))
-
-
-        self.co_trigger_lb.whileTrue(RunIntake(container=self, intake=self.intake, value=-6, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=True))
-        
-        self.co_trigger_rb.onTrue(Score(container=self))
-
-        self.co_trigger_r_stick_negative_y.onTrue(MoveWrist(container=self, radians=math.radians(0), timeout=4))
-
-        self.co_trigger_r_stick_positive_x.onTrue(MoveWristSwap(self, self.wrist))  # this seems backwards but is not because y-axis is inverted
-        self.co_trigger_r_stick_positive_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))  # this seems backwards but is not because y-axis is inverted
-
-        self.co_trigger_r_stick_negative_x.onTrue(MoveWristSwap(self, self.wrist))
-        self.co_trigger_r_stick_negative_x.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
-
-        self.co_trigger_start.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
-        self.co_trigger_start.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
-        self.co_trigger_back.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
-        self.co_trigger_back.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.co_trigger_l_trigger.onTrue(
+                GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
+                    Score(container=self)
+                    )
+                )
 
     def bind_keyboard_buttons(self):
         # for convenience, and just in case a controller goes down
