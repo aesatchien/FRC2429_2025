@@ -216,16 +216,16 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
-    k_intake_config.smartCurrentLimit(10)
+    k_intake_config.smartCurrentLimit(20)
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
-    k_max_tof_distance_where_we_have_coral = 70  # millimeters  engages at 60 and bottoms out at 26
+    k_max_tof_distance_where_we_have_coral = 40  # millimeters  engages at 60 and bottoms out at 26
     k_max_tolerated_sigma = 4 # max stddev where we trust it NOTE: we may have to change at comp?
 
     k_sim_length = 0.25
 
-    k_coral_intaking_voltage = -7 # TODO: increase again to -12 once we have gears that dont break nonstop
+    k_coral_intaking_voltage = -12 # TODO: increase again to -12 once we have gears that dont break nonstop
     k_algae_intaking_voltage = 12
 
     k_coral_scoring_voltage = 12
@@ -499,7 +499,7 @@ class VisionConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     k_pi_names = ["top_pi"]
 
-    k_valid_tags = [11, 12, 15, 16, 5, 6, 7, 4]
+    k_valid_tags = list(range(1, 23))
 
 
 class LedConstants:

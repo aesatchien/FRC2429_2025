@@ -370,19 +370,16 @@ class RobotContainer:
         self.keyboard_trigger_s.onTrue(Score(self))
 
         # t: human player (mnemonic: celeste Tarula, sean Toda, Take a piece)
-        self.keyboard_trigger_t.whileTrue(GoToCoralStation(container=self).andThen(
-            RunIntake(container=self, intake=self.intake, value=-3, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False)))
+        self.keyboard_trigger_t.whileTrue(GoToCoralStation(container=self))
+
         self.keyboard_trigger_t.onFalse(RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
             GoToStow(container=self)))
 
         # v: intake on (mnemonic: vacuum up the piece)
-        self.keyboard_trigger_v.whileTrue(RunIntake(self, self.intake, -3, stop_on_end=True))
-
-        # w: wrist go left (korean left is wen chok, also position on the keyboard)
-        self.keyboard_trigger_o.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        self.keyboard_trigger_v.whileTrue(RunIntake(self, self.intake, constants.IntakeConstants.k_coral_intaking_voltage, stop_on_end=True))
 
         # o: wrist go right (korean right is orin chok, also position on the keyboard)
-        self.keyboard_trigger_w.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)).ignoringDisable(True))
+        self.keyboard_trigger_w.onTrue(MoveWristSwap(self, self.wrist))
 
     def register_commands(self):
 

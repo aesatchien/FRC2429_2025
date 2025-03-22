@@ -2,10 +2,9 @@ import math
 
 import rev
 import wpilib
-from wpimath.system.plant import DCMotor
 from commands2 import Subsystem
-from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig, SparkMaxSim, SparkMax
-from wpimath.units import inchesToMeters, radiansToDegrees, degreesToRadians
+from rev import SparkMax, SparkMax
+from wpimath.units import radiansToDegrees, degreesToRadians
 import constants
 
 class Climber(Subsystem):

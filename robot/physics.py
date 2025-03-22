@@ -131,10 +131,10 @@ class PhysicsEngine:
 
     def update_intake(self, tm_diff):
 
-        self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
+        self.robot.container.intake.spark_flex_sim.iterate(self.robot.container.intake.spark_flex_sim.getVelocity(), 12, tm_diff)
 
-        intake_redness = max(-255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
-        intake_greenness = max(255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
+        intake_redness = max(-255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
+        intake_greenness = max(255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
         self.mech2d_intake.setColor(wpilib.Color8Bit(red=int(intake_redness), green=int(intake_greenness), blue=0))
 
     def update_elevator_positions(self, tm_diff):

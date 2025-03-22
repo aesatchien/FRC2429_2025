@@ -25,14 +25,14 @@ class RunIntake(commands2.Command):  # change the name for your command
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
 
-        if self.value < 0:
-            constants.IntakeConstants.k_intake_config.smartCurrentLimit(5)
-        else:
-            constants.IntakeConstants.k_intake_config.smartCurrentLimit(10)
-
-        self.intake.sparkmax.configure(constants.IntakeConstants.k_intake_config,
-                                       SparkMax.ResetMode.kNoResetSafeParameters,
-                                       SparkMax.PersistMode.kNoPersistParameters)
+        # if self.value < 0:
+        #     constants.IntakeConstants.k_intake_config.smartCurrentLimit(20)
+        # else:
+        #     constants.IntakeConstants.k_intake_config.smartCurrentLimit(20)
+        #
+        # self.intake.spark_flex.configure(constants.IntakeConstants.k_intake_config,
+        #                                SparkMax.ResetMode.kNoResetSafeParameters,
+        #                                SparkMax.PersistMode.kNoPersistParameters)
 
         self.intake.set_reference(value=self.value, control_type=self.control_type)
 

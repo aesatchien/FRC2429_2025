@@ -23,7 +23,7 @@ class CANStatus(commands2.Command):  # change the name for your command
                         6: {'name': 'shoulder', 'motor': self.container.pivot.motor},
                         7: {'name': 'shoulder', 'motor': self.container.pivot.follower},
                         10: {'name': 'wrist', 'motor': self.container.wrist.sparkmax},
-                        12: {'name': 'intake', 'motor': self.container.intake.sparkmax},
+                        12: {'name': 'intake', 'motor': self.container.intake.spark_flex},
                         20: {'name': 'turn',  'motor': self.container.swerve.swerve_modules[0].turningSparkFlex},
                         22: {'name': 'turn', 'motor': self.container.swerve.swerve_modules[1].turningSparkFlex},
                         24: {'name': 'turn', 'motor': self.container.swerve.swerve_modules[2].turningSparkFlex},

@@ -36,7 +36,7 @@ class DriveByJoystickSubsystem(commands2.Command): # for debugging; we might wan
         if type(self.subsystem) == Elevator or type(self.subsystem) == Pivot:
             self.subsystem.motor.set(-self.controller.getRightY() * self.duty_cycle_coef)
         elif type(self.subsystem) == Wrist or type(self.subsystem) == Intake:
-            self.subsystem.sparkmax.set(-self.controller.getRightY() * self.duty_cycle_coef)
+            self.subsystem.spark_flex.set(-self.controller.getRightY() * self.duty_cycle_coef)
 
     def isFinished(self) -> bool:
         return True
