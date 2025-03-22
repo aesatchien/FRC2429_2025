@@ -163,33 +163,32 @@ class RobotContainer:
         self.triggerLeft = self.driver_command_controller.povLeft()
         self.triggerRight = self.driver_command_controller.povRight()
 
-        self.copilot_controller = commands2.button.CommandXboxController(1)
         self.copilot_controller = commands2.button.CommandXboxController(1) 
 
     def configure_codriver_joystick(self):
 
         print("Configuring codriver joystick")
 
-        self.co_trigger_a = self.co_pilot_command_controller.a()  # 2024 way
-        self.co_trigger_b = self.co_pilot_command_controller.b()
-        self.co_trigger_y = self.co_pilot_command_controller.y()
-        self.co_trigger_x = self.co_pilot_command_controller.x()
-        self.co_trigger_rb = self.co_pilot_command_controller.rightBumper()
-        self.co_trigger_lb = self.co_pilot_command_controller.leftBumper()
-        self.co_trigger_r = self.co_pilot_command_controller.povRight()
-        self.co_trigger_l = self.co_pilot_command_controller.povLeft()
-        self.co_trigger_u = self.co_pilot_command_controller.povUp()
-        self.co_trigger_d = self.co_pilot_command_controller.povDown()
+        self.co_trigger_a = self.copilot_controller.a()  # 2024 way
+        self.co_trigger_b = self.copilot_controller.b()
+        self.co_trigger_y = self.copilot_controller.y()
+        self.co_trigger_x = self.copilot_controller.x()
+        self.co_trigger_rb = self.copilot_controller.rightBumper()
+        self.co_trigger_lb = self.copilot_controller.leftBumper()
+        self.co_trigger_r = self.copilot_controller.povRight()
+        self.co_trigger_l = self.copilot_controller.povLeft()
+        self.co_trigger_u = self.copilot_controller.povUp()
+        self.co_trigger_d = self.copilot_controller.povDown()
 
-        self.co_trigger_l_trigger = self.co_pilot_command_controller.leftTrigger(0.2)
-        self.co_trigger_r_trigger = self.co_pilot_command_controller.rightTrigger(0.2)
-        self.co_trigger_start = self.co_pilot_command_controller.start()
-        self.co_trigger_back = self.co_pilot_command_controller.back()
+        self.co_trigger_l_trigger = self.copilot_controller.leftTrigger(0.2)
+        self.co_trigger_r_trigger = self.copilot_controller.rightTrigger(0.2)
+        self.co_trigger_start = self.copilot_controller.start()
+        self.co_trigger_back = self.copilot_controller.back()
 
-        self.co_trigger_r_stick_positive_x = self.co_pilot_command_controller.axisGreaterThan(4, 0.5)
-        self.co_trigger_r_stick_negative_x = self.co_pilot_command_controller.axisLessThan(4, -0.5)
-        self.co_trigger_r_stick_positive_y = self.co_pilot_command_controller.axisGreaterThan(5, 0.5)
-        self.co_trigger_r_stick_negative_y = self.co_pilot_command_controller.axisLessThan(5, -0.5)
+        self.co_trigger_r_stick_positive_x = self.copilot_controller.axisGreaterThan(4, 0.5)
+        self.co_trigger_r_stick_negative_x = self.copilot_controller.axisLessThan(4, -0.5)
+        self.co_trigger_r_stick_positive_y = self.copilot_controller.axisGreaterThan(5, 0.5)
+        self.co_trigger_r_stick_negative_y = self.copilot_controller.axisLessThan(5, -0.5)
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
