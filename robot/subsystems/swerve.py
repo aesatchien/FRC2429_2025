@@ -235,7 +235,7 @@ class Swerve (Subsystem):
         rotDelivered = rotation_commanded * dc.kMaxAngularSpeed
 
         # probably can stop doing this now
-        if dc.k_swerve_state_messages:
+        if dc.k_swerve_state_messages and self.counter % 50 == 0:
             wpilib.SmartDashboard.putNumberArray('_xyr', [xSpeedDelivered, ySpeedDelivered, rotDelivered])
             SmartDashboard.putNumber('_swerve commanded rotation', rotDelivered)
 
@@ -322,7 +322,8 @@ class Swerve (Subsystem):
             output = self.keep_angle_pid.calculate(self.get_angle(), self.keep_angle)  # 2024 real, can we just use YAW always?
             output = output if math.fabs(output) < 0.2 else 0.2 * math.copysign(1, output)  # clamp at 0.2
 
-        wpilib.SmartDashboard.putNumber('keep_angle_output', output)
+        if self.counter % 20 == 0:
+            wpilib.SmartDashboard.putNumber('keep_angle_output', output)
 
         return output
 
@@ -466,7 +467,7 @@ class Swerve (Subsystem):
 
         # send our current time to the dashboard
         ts = wpilib.Timer.getFPGATimestamp()
-        wpilib.SmartDashboard.putNumber('_timestamp', ts)
+        wpilib.SmartDashboard.putNumber('_timestamp', ts)  # this one we actually do every time
 
         # use this if we have a phononvision camera - which we don't as of 20250316
         if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
@@ -557,14 +558,14 @@ class Swerve (Subsystem):
 
                 # iterate over each chunk using its start idx
                 for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
-                    print("Adding apriltag measurement!")
+                    # print("Adding apriltag measurement!")
 
                     this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
 
                     our_now = wpilib.Timer.getFPGATimestamp()
                     this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
 
-                    print(f"this pis now: {this_pis_now}")
+                    #print(f"this pis now: {this_pis_now}")
 
                     # supposing our now is 5, and
                     # this pi's now is 8.
@@ -572,10 +573,10 @@ class Swerve (Subsystem):
                     # -3 = ournow - thispisnow
 
                     delta = our_now - this_pis_now
-                    wpilib.SmartDashboard.putNumber("delta time", delta)
+                    #wpilib.SmartDashboard.putNumber("delta time", delta)
 
                     this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
-                    wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
+                    #wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
 
                     this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
                                                          y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
