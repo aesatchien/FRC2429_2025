@@ -30,8 +30,10 @@ class AutoToPose(commands2.Command):  #
         self.from_robot_state = from_robot_state
 
         self.target_pose = target_pose
-
         self.trapezoid = trapezoid
+        self.x_overshot = False
+        self.y_overshot = False
+        self.rot_overshot = False
 
         self.addRequirements(self.swerve)
         self.reset_controllers()
@@ -60,12 +62,12 @@ class AutoToPose(commands2.Command):  #
                 self.y_pid.setGoal(self.target_pose.Y())
             else:
                 # trying to get it to slow down but still make it to final position
-                self.x_pid = PIDController(0.75, 0.00, 0.0)
-                self.y_pid = PIDController(0.75, 0.00, 0.0)
+                self.x_pid = PIDController(0.8, 0.00, 0.0)
+                self.y_pid = PIDController(0.8, 0.00, 0.0)
                 self.x_pid.setSetpoint(self.target_pose.X())
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
-            self.rot_pid = PIDController(0.4, 0, 0,)  # 0.5
+            self.rot_pid = PIDController(0.7, 0, 0,)  # 0.5
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
@@ -100,6 +102,11 @@ class AutoToPose(commands2.Command):  #
 
         # let the robot know what we're up to
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
+        self.counter = 0
+
+        self.x_overshot = False
+        self.y_overshot = False
+        self.rot_overshot = False
 
     def execute(self) -> None:
         # we could also do this with wpilib pidcontrollers
@@ -115,24 +122,33 @@ class AutoToPose(commands2.Command):  #
             y_output = self.y_pid.calculate(robot_pose.Y())
             rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
 
-            # TODO - clamp the max output
-
-            # TODO make a minimum set of setpoints rot_setpoint - does this help?
-            rot_max, rot_min = 0.6, 0.07
-            trans_max, trans_min = 0.5, 0.05
-            diff = self.swerve.get_pose().relativeTo(self.target_pose)
-            if abs(rot_output) < rot_min and abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees():
-                rot_output = math.copysign(rot_min, rot_output)
-            if abs(x_output) < trans_min and abs(diff.X()) > ac.k_translation_tolerance_meters:
+            # TODO optimize the last mile and have it gracefully not oscillate
+            rot_max, rot_min = 0.8, 0.2
+            trans_max, trans_min = 0.5, 0.1
+            # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
+            pose = self.swerve.get_pose()
+            diff_xy = pose.relativeTo(self.target_pose).rotateBy(pose.rotation())
+            diff_rot = pose.relativeTo(self.target_pose)
+            # enforce minimum values , but try to stop oscillations
+            self.x_overshot = True if math.fabs(diff_xy.X()) < ac.k_translation_tolerance_meters / 2 else self.x_overshot
+            self.y_overshot = True if math.fabs(diff_xy.Y()) < ac.k_translation_tolerance_meters / 2 else self.y_overshot
+            self.rot_overshot = True if math.fabs(diff_rot.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2 else self.rot_overshot
+            if abs(x_output) < trans_min and not self.x_overshot and abs(diff_xy.X()) > ac.k_translation_tolerance_meters:
                 x_output = math.copysign(trans_min, x_output)
-            if abs(y_output) < trans_min and abs(diff.Y()) > ac.k_translation_tolerance_meters:
+            if abs(y_output) < trans_min and not self.y_overshot and abs(diff_xy.Y()) > ac.k_translation_tolerance_meters:
                 y_output = math.copysign(trans_min, y_output)
+            if abs(rot_output) < rot_min and not self.rot_overshot and abs(diff_rot.rotation().degrees()) > ac.k_rotation_tolerance.degrees():
+                rot_output = math.copysign(rot_min, rot_output)
+            # enforce maximum values
             x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
             y_output = y_output if math.fabs(y_output) < trans_max else math.copysign(trans_max, y_output)
+            rot_output = rot_output if math.fabs(rot_output) < rot_max else math.copysign(rot_max, rot_output)
 
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
-            if self.counter % 10 == 0:
-                pass
+
+            if self.counter % 5 == 0 and wpilib.RobotBase.isSimulation():
+                msg = f'{self.counter}  {diff_xy.X():.2f} {diff_xy.Y():.2f}  {diff_rot.rotation().degrees():.1f}°  {x_output:.2f}  {y_output:.2f} {rot_output:.2f}'
+                print(msg)
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
                 #SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
                 #SmartDashboard.putNumber("rot setpoint", math.degrees(self.rot_pid.getSetpoint()))
@@ -142,8 +158,6 @@ class AutoToPose(commands2.Command):  #
                 #SmartDashboard.putNumber("x commanded", x_setpoint)
                 #SmartDashboard.putNumber("y commanded", y_setpoint)
                 #SmartDashboard.putNumber("rot commanded", rot_setpoint)
-
-
 
         self.counter += 1
 

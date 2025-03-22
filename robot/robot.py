@@ -34,7 +34,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
         self.disabled_counter = 0
-        print("Reflashing pivot sparks")
+        print(f"Reflashing pivot sparks at {self.container.get_enabled_time():.1f}s")
         self.container.pivot.reflash(True, True)
         # self.container.swerve.use_photoncam = True
 
@@ -54,7 +54,7 @@ class MyRobot(commands2.TimedCommandRobot):
         if self.disabled_counter % 1000 == 0:
             # don't reset in case it goes wrong
             # and don't burn in case it harms the spark (idt it will but idk)
-            print("Reflashing pivot sparks")
+            print(f"Reflashing pivot sparks at {self.container.get_enabled_time():.1f}s")
             self.container.pivot.reflash(False, False)
 
             # else:
