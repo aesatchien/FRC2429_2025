@@ -42,9 +42,7 @@ class Intake(Subsystem):
     def get_distance(self):
 
         average_coral_distance = (self.TOFSensorCoral.getRange() + self.TOFSensorCoral.getRange()) / 2
-
         average_coral_distance = 0 if self.TOFSensorCoral.getRangeSigma() > constants.IntakeConstants.k_max_tolerated_sigma else average_coral_distance
-        
         average_coral_distance = 0 if average_coral_distance > 200 else average_coral_distance  # correct for weird stuff
 
         return average_coral_distance
@@ -54,7 +52,7 @@ class Intake(Subsystem):
         # reads 0 when no signal, so it has to be between 1 and the actual number of mm
         coral_present = 4 < coral_distance <= constants.IntakeConstants.k_max_tof_distance_where_we_have_coral
 
-        if wpilib.RobotBase.isSimulation:  # fake this for autos
+        if wpilib.RobotBase.isSimulation():  # fake this for autos
             return self.counter % 100 < 50
         else:
             return coral_present
