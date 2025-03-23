@@ -52,7 +52,7 @@ class PhysicsEngine:
         # vision stuff - using 2024 stuff for now (CJH)
         key = 'orange'
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        self.ringcam_table = self.inst.getTable('/Cameras/ArducamReef')   # lifecam for rings
+        self.ringcam_table = self.inst.getTable('/Cameras/ArducamHigh')   # test cam for sim
         self.targets_entry = self.ringcam_table.getEntry(f"{key}/targets")
         self.distance_entry = self.ringcam_table.getEntry(f"{key}/distance")
         self.strafe_entry = self.ringcam_table.getEntry(f"{key}/strafe")
@@ -85,6 +85,8 @@ class PhysicsEngine:
         self.climber_spark_sim.setPosition(self.climber_sim.getAngle())
         self.climber_spark_sim.iterate(velocity=self.climber_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
+        self.climber_follower_spark_sim.setPosition(self.climber_sim.getAngle())
+        self.climber_follower_spark_sim.iterate(self.climber_sim.getVelocity(), 12, tm_diff)
         cimber_angle = math.degrees(self.climber_sim.getAngle())
         self.mech2d_climber.setAngle(cimber_angle - 90)
         sm.side_elevator.components["climber"]["ligament"].setAngle(cimber_angle - 90)
@@ -122,17 +124,17 @@ class PhysicsEngine:
                                      dt=tm_diff)
         self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-        shoulder_pivot_degrees = math.degrees(self.shoulder_sim.getAngle())
+        shoulder_pivot_degrees = 180 - math.degrees(self.shoulder_sim.getAngle())
         self.mech2d_shoulder.setAngle(shoulder_pivot_degrees - 90)
-        sm.side_elevator.components["shoulder"]["ligament"].setAngle(shoulder_pivot_degrees -90 )  # CJH added
+        sm.side_elevator.components["shoulder"]["ligament"].setAngle(shoulder_pivot_degrees - 90)  # CJH added
         return self.shoulder_sim.getCurrentDraw()
 
     def update_intake(self, tm_diff):
 
-        self.robot.container.intake.sparkmax_sim.iterate(self.robot.container.intake.sparkmax_sim.getVelocity(), 12, tm_diff)
+        self.robot.container.intake.spark_flex_sim.iterate(self.robot.container.intake.spark_flex_sim.getVelocity(), 12, tm_diff)
 
-        intake_redness = max(-255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
-        intake_greenness = max(255 * self.robot.container.intake.sparkmax_sim.getAppliedOutput(), 0)
+        intake_redness = max(-255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
+        intake_greenness = max(255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
         self.mech2d_intake.setColor(wpilib.Color8Bit(red=int(intake_redness), green=int(intake_greenness), blue=0))
 
     def update_elevator_positions(self, tm_diff):
@@ -240,6 +242,7 @@ class PhysicsEngine:
                                                     startingAngle=constants.ClimberConstants.k_climber_motor_stowed_angle)
 
         self.climber_spark_sim = SparkMaxSim(self.robot.container.climber.sparkmax, constants.ClimberConstants.k_plant)
+        self.climber_follower_spark_sim = SparkMaxSim(self.robot.container.climber.follower, constants.ClimberConstants.k_plant)
 
 
     def initialize_swerve(self):

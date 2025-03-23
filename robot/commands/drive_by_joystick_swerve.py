@@ -10,8 +10,9 @@ from subsystems.swerve import Swerve  # allows us to access the definitions
 from wpilib import SmartDashboard
 from commands2.button import CommandXboxController
 from wpimath.geometry import Rotation2d, Transform2d, Translation2d
-from wpimath.filter import Debouncer
+from wpimath.filter import Debouncer, SlewRateLimiter
 from subsystems.swerve_constants import DriveConstants as dc
+
 
 class DriveByJoystickSwerve(commands2.Command):
     def __init__(self, container, swerve: Swerve, controller: CommandXboxController, rate_limited=False) -> None:
@@ -32,13 +33,19 @@ class DriveByJoystickSwerve(commands2.Command):
         self.controller = controller
         # self.slow_mode_trigger = self.controller.rightBumper()
         self.robot_oriented_trigger = self.controller.leftBumper()
-        self.robot_oriented_trigger = self.controller.povUp().or_(
-                                      self.controller.povDown().or_(
-                                      self.controller.povLeft().or_(
-                                      self.controller.povRight()
-                                      )))
+        # self.robot_oriented_trigger = self.controller.povUp().or_(
+        #                               self.controller.povDown().or_(
+        #                               self.controller.povLeft().or_(
+        #                               self.controller.povRight()
+        #                               )))
         self.debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
         self.robot_oriented_debouncer = Debouncer(0.1, Debouncer.DebounceType.kBoth)
+
+        # CJH added a slew rate limiter 20250311 - but there already is one in Swerve, so is this redundant?
+        # make sure you put it on the joystick (not calculations), otherwise it doesn't help much on slow-mode
+        stick_max_units_per_second = 5  # can't be too low or you get lag - probably should be between 3 and 5
+        self.drive_limiter = SlewRateLimiter(stick_max_units_per_second)
+        self.strafe_limiter = SlewRateLimiter(stick_max_units_per_second)
 
         self.prev_commanded_vector = Translation2d(0, 0) # we should start stationary so this should be valid
 
@@ -50,10 +57,16 @@ class DriveByJoystickSwerve(commands2.Command):
 
     def execute(self) -> None:
 
-        slowmode_multiplier = 0.2 + 0.8 * self.controller.getRightTriggerAxis()
-        angular_slowmode_multiplier = 0.5 + 0.5 * self.controller.getRightTriggerAxis()
+        # call things once and only once - buttons.run() is taking up too much time
+        right_trigger_value = self.controller.getRightTriggerAxis()
+        robot_oriented_value = self.robot_oriented_trigger.getAsBoolean()
 
-        if self.robot_oriented_debouncer.calculate(self.robot_oriented_trigger.getAsBoolean()):
+
+        slowmode_multiplier = 0.2 + 0.8 * right_trigger_value
+        angular_slowmode_multiplier = 0.5 + 0.5 * right_trigger_value
+
+
+        if self.robot_oriented_debouncer.calculate(robot_oriented_value):
             self.field_oriented = False
         else:
             self.field_oriented = True
@@ -63,12 +76,21 @@ class DriveByJoystickSwerve(commands2.Command):
         # SO IF IT DOES NOT DRIVE CORRECTLY THAT WAY, CHECK KINEMATICS, THEN INVERSION OF DRIVE/ TURNING MOTORS
         # not all swerves are the same - some require inversion of drive and or turn motors
 
-        joystick_fwd = -self.controller.getLeftY()
-        joystick_strafe = -self.controller.getLeftX()
-        joystick_rot = self.controller.getRightX() # TODO: find why this had to be negated this year (2025)
+        # CJH added a rate limiter on the joystick - my help with jitter at low end 20250311
+        joystick_fwd = -(self.controller.getLeftY() - self.swerve.thrust_calibration_offset)
+        joystick_fwd = self.drive_limiter.calculate(joystick_fwd)
+        joystick_strafe = -(self.controller.getLeftX() - self.swerve.strafe_calibration_offset)
+        joystick_strafe = self.strafe_limiter.calculate(joystick_strafe)
+
+        joystick_rot = - self.controller.getRightX() # TODO: find why this had to be negated this year (2025)
         if abs(joystick_rot) < dc.k_inner_deadband: joystick_rot = 0
 
-        desired_vector = Translation2d(joystick_fwd, joystick_strafe) # duty cycle, not meters per second
+        desired_vector = Translation2d(joystick_fwd, joystick_strafe)  # duty cycle, not meters per second
+
+        trace = True  # CJH watching the joystick values so we can plot them - need to get AJ better low end control
+        if trace and wpilib.RobotBase.isSimulation():
+            wpilib.SmartDashboard.putNumber('_js_dv1_x', math.fabs(desired_vector.X()))
+            wpilib.SmartDashboard.putNumber('_js_dv1_y', math.fabs(desired_vector.Y()))
 
         # clipping should happen first (the below if statement is clipping)
         if desired_vector.norm() > dc.k_outer_deadband:
@@ -77,10 +99,20 @@ class DriveByJoystickSwerve(commands2.Command):
             desired_vector = Translation2d(0, 0)
 
         # squaring
-        desired_vector *= desired_vector.norm()
+        # desired_vector *= desired_vector.norm()
+        # CJH added a 1.5 instead of 2.0 - may help with stuttering at low end 20250311
+        desired_vector *= math.sqrt(desired_vector.norm())
 
         desired_vector *= slowmode_multiplier # must happen after clipping since we only want to clip the joystick values, not the robot speed
         desired_rot = joystick_rot * angular_slowmode_multiplier
+
+        desired_fwd = desired_vector.X()
+        desired_strafe = desired_vector.Y()
+
+        if trace and wpilib.RobotBase.isSimulation():
+            wpilib.SmartDashboard.putNumber('_js_dv_norm_x', math.fabs(desired_fwd))
+            wpilib.SmartDashboard.putNumber('_js_dv_norm_y', math.fabs(desired_strafe))
+            SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
 
         # linear_mapping = True  # two ways to make sure diagonal is at "full speed"
         #                        # TODO: find why our transforms are weird at low speed- they don't act right
@@ -105,11 +137,6 @@ class DriveByJoystickSwerve(commands2.Command):
         #     desired_strafe = -self.input_transform(1.0 * strafe) * slowmode_multiplier
         #     desired_rot = -self.input_transform(1.0 * self.controller.getRightX()) * angular_slowmode_multiplier
 
-        desired_fwd = desired_vector.X()
-        desired_strafe = desired_vector.Y()
-
-        SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
-
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed and self.field_oriented:
             # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
             # print("inverting forward and strafe because we're in field-centric mode and on red alliance!")
@@ -117,7 +144,6 @@ class DriveByJoystickSwerve(commands2.Command):
             desired_strafe *= -1
 
         # desired_fwd, desired_strafe = self.calculate_rate_limited_velocity(desired_fwd, desired_strafe, 0.02, 0.5)
-
 
         self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
                               fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
@@ -128,8 +154,11 @@ class DriveByJoystickSwerve(commands2.Command):
         self.swerve.drive(0, 0, 0, fieldRelative=self.field_oriented, rate_limited=True)
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
-        print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
-        SmartDashboard.putString(f"alert", f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
+
+        print_end_message = False  # only need to print this for debugging, because it only ever gets interrupted
+        if print_end_message:
+            print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
+            SmartDashboard.putString(f"alert", f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
 
     # def apply_deadband(self, value, db_low=dc.k_inner_deadband, db_high=dc.k_outer_deadband):
     #     # put a deadband on the joystick input values here

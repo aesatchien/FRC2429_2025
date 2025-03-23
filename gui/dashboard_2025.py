@@ -1,14 +1,21 @@
 # pyqt example for teaching GUI development for FRC dashboard
 # make sure to pip install pyqt6 pyqt6-tools
 
-# print(f'Loading Modules ...', flush=True)
+# print(f'Loading Modules ...', flush=True)'
+import os
+os.environ["OPENCV_LOG_LEVEL"] = "DEBUG"  # Options: INFO, WARNING, ERROR, DEBUG
+
+import cv2
+print("[DEBUG] OpenCV version:", cv2.__version__)
+cv2.setNumThreads(4)  # Disable multithreading
+cv2.ocl.setUseOpenCL(True)
+
 import time
 from datetime import datetime
 from pathlib import Path
 import urllib.request
 import cv2
 import numpy as np
-import setuptools
 
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from PyQt6.QtCore import Qt, QTimer, QEvent, QThread, QObject, pyqtSignal
@@ -32,8 +39,9 @@ class CameraWorker(QObject):
         self.qtgui = qtgui
         self.frames = 0
         self.previous_read_time = 0
-        self.max_fps = 60
+        self.max_fps = 20
         self.error_count = 0
+        self.cv_backend = cv2.CAP_FFMPEG  # cv2.CAP_FFMPEG or cv2.CAP_DSHOW
 
     def stop(self):
         self.running = False
@@ -42,42 +50,57 @@ class CameraWorker(QObject):
         """Blocking task that may take a long time to run"""
         self.running = True
         old_url = ''  # need to see if we switch cameras
-        while self.running:
-            if self.qtgui.qradiobutton_autoswitch.isChecked():  # auto determine which camera to show
-                # pass
-                # shooter_on = self.qtgui.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
-                #elevator_low = self.qtgui.widget_dict['qlcd_elevator_height']['entry'].getDouble(100) < 100
-                url = self.qtgui.camera_dict['Ringcam'] if True else self.qtgui.camera_dict['Tagcam']
-            else:
-                url = self.qtgui.camera_dict[self.qtgui.qcombobox_cameras.currentText()]  # figure out which url we want
+        try:
+            while self.running:
+                if self.qtgui.qradiobutton_autoswitch.isChecked():  # auto determine which camera to show
+                    # pass
+                    # shooter_on = self.qtgui.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
+                    #elevator_low = self.qtgui.widget_dict['qlcd_elevator_height']['entry'].getDouble(100) < 100
+                    url = self.qtgui.camera_dict['ArducamHigh'] if True else self.qtgui.camera_dict['LogitechReef']
+                else:
+                    url = self.qtgui.camera_dict[self.qtgui.qcombobox_cameras.currentText()]  # figure out which url we want
 
-            # stream = urllib.request.urlopen('http://10.24.29.12:1187/stream.mjpg')
-            # get and display image
-            if url != old_url:  # try to only do this if we switch streams - seems to cause a lot of errors / increases bandwidth
-                cap = cv2.VideoCapture(url)
-                if not cap.isOpened():
-                    print("Cannot open stream")
-                    return
-            old_url = url
+                # stream = urllib.request.urlopen('http://10.24.29.12:1187/stream.mjpg')
+                # get and display image
+                if url != old_url:  # try to only do this if we switch streams - seems to cause a lot of errors / increases bandwidth
+                    cap = cv2.VideoCapture(url, self.cv_backend)
+                    if not cap.isOpened():
+                        print("Cannot open stream")
+                        return
+                old_url = url
 
-            now = time.time()
-            if now - self.previous_read_time >  1.0 / self.max_fps:
-                try:
-                    ret, frame = cap.read()
-                    self.frames += 1
-                    pixmap = self.qtgui.convert_cv_qt(frame, self.qtgui.qlabel_camera_view)
-                    self.qtgui.qlabel_camera_view.setPixmap(pixmap)
-                    self.qtgui.qlabel_camera_view: QtWidgets.QLabel
-                    #self.qtgui.qlabel_camera_view.repaint()  # do not repaint in the thread.  the main loop takes care of that.
-                    # self.progress.emit(1)
-                    self.previous_read_time = now
-                except Exception as e:
-                    self.error_count += 1
-                    self.previous_read_time = now
-                    if self.error_count % 100 == 0:
-                        print(f'{datetime.today().strftime("%H%M%S")} error count:{self.error_count}: cv read error: {e}')
-                    # should I stop the thread here? or just let the user fix it by restarting manually?
+                now = time.time()
+                if now - self.previous_read_time > 1.0 / self.max_fps:
+                    try:
+                        ret, frame = cap.read()
+                        if not ret:
+                            print("[ERROR] OpenCV stopped receiving frames. Retrying...")
+                            time.sleep(0.5)  # Wait before retrying
+                            cap.release()
+                            cap = cv2.VideoCapture(url, self.cv_backend)  # Reinitialize
+                            continue
 
+                        self.frames += 1
+                        pixmap = self.qtgui.convert_cv_qt(frame, self.qtgui.qlabel_camera_view)
+                        self.qtgui.qlabel_camera_view.setPixmap(pixmap)
+                        # self.qtgui.qlabel_camera_view: QtWidgets.QLabel
+                        # self.qtgui.qlabel_camera_view.repaint()  # do not repaint in the thread.  the main loop takes care of that.
+                        # self.progress.emit(1)
+                        self.previous_read_time = now
+                        if self.frames % 1000 == 0:
+                            print(f'{datetime.today().strftime("%H%M%S")}: frames received: {self.frames}')
+                    except Exception as e:
+                        self.error_count += 1
+                        self.previous_read_time = now
+                        if self.error_count % 100 == 0:
+                            print(f'{datetime.today().strftime("%H%M%S")} error count:{self.error_count}: cv read error: {e}')
+                        # should I stop the thread here? or just let the user fix it by restarting manually
+                else:
+                    # what should this else be?  a grab to flush the camera?  it seems to bulke a buffer of frames if we don't flush
+                    cap.grab()
+
+        except Exception as e:
+            print(f'{datetime.today().strftime("%H%M%S")} Camera worker crashed: {e}')
         self.finished.emit()
 
 class Ui(QtWidgets.QMainWindow):
@@ -106,43 +129,45 @@ class Ui(QtWidgets.QMainWindow):
         self.sorted_tree = None  # keep a global list of all the nt addresses
         self.autonomous_list = []  # set up an autonomous list
 
-        self.refresh_time = 16  # milliseconds before refreshing
+        self.refresh_time = 50  # milliseconds before refreshing  - i've run it at 16 and it is fine when no video
         self.previous_frames = 0
         self.widget_dict = {}
         self.command_dict = {}
         self.camera_enabled = False
         self.worker = None
         self.thread = None
-        self.camera_dict = {'LogitechHigh': 'http://10.24.29.12:1186/stream.mjpg',
+        self.camera_dict = {'GeniusLow': 'http://10.24.29.12:1186/stream.mjpg',
                             'ArducamBack': 'http://10.24.29.12:1187/stream.mjpg',
-                            'LogitechTags': 'http://10.24.29.13:1186/stream.mjpg',
-                            'ArducamReef': 'http://10.24.29.13:1187/stream.mjpg',
+                            'LogitechReef': 'http://10.24.29.13:1186/stream.mjpg',
+                            'ArducamHigh': 'http://10.24.29.13:1187/stream.mjpg',
 
-                            'Raw LogiHigh': 'http://10.24.29.12:1181/stream.mjpg',
+                            'Raw GeniusLow': 'http://10.24.29.12:1181/stream.mjpg',
                             'Raw ArduBack': 'http://10.24.29.12:1182/stream.mjpg',
-                            'Raw LogiTags': 'http://10.24.29.13:1181/stream.mjpg',
-                            'Raw ArduReef': 'http://10.24.29.13:1182/stream.mjpg',}
+                            'Raw LogiReef': 'http://10.24.29.13:1181/stream.mjpg',
+                            'Raw ArduHigh': 'http://10.24.29.13:1182/stream.mjpg',
+                            'Debug': 'http://127.0.0.1:1186/stream.mjpg',
+                            }
 
         # --------------  CAMERA STATUS INDICATORS  ---------------
         self.robot_timestamp_entry = self.ntinst.getEntry('/SmartDashboard/_timestamp')
-        self.logitech_high_timestamp_entry = self.ntinst.getEntry('/Cameras/LogitechHigh/_timestamp')
-        self.logitech_high_connections_entry = self.ntinst.getEntry('/Cameras/LogitechHigh/_connections')
-        self.logitech_tags_timestamp_entry = self.ntinst.getEntry('/Cameras/LogitechTags/_timestamp')
-        self.logitech_tags_connections_entry = self.ntinst.getEntry('/Cameras/LogitechTags/_connections')
+        self.genius_low_timestamp_entry = self.ntinst.getEntry('/Cameras/GeniusLow/_timestamp')
+        self.genius_low_connections_entry = self.ntinst.getEntry('/Cameras/GeniusLow/_connections')
+        self.logitech_reef_timestamp_entry = self.ntinst.getEntry('/Cameras/LogitechReef/_timestamp')
+        self.logitech_reef_connections_entry = self.ntinst.getEntry('/Cameras/LogitechReef/_connections')
         self.arducam_back_timestamp_entry = self.ntinst.getEntry('/Cameras/ArducamBack/_timestamp')
         self.arducam_back_connections_entry = self.ntinst.getEntry('/Cameras/ArducamBack/_connections')
-        self.arducam_reef_timestamp_entry = self.ntinst.getEntry('/Cameras/ArducamReef/_timestamp')
-        self.arducam_reef_connections_entry = self.ntinst.getEntry('/Cameras/ArducamReef/_connections')
+        self.arducam_high_timestamp_entry = self.ntinst.getEntry('/Cameras/ArducamHigh/_timestamp')
+        self.arducam_high_connections_entry = self.ntinst.getEntry('/Cameras/ArducamHigh/_connections')
 
-        self.logitech_high_connections = 0
-        self.logitech_tags_connections = 0
+        self.genius_low_connections = 0
+        self.logitech_reef_connections = 0
         self.arducam_back_connections = 0
-        self.arducam_reef_connections = 0
+        self.arducam_high_connections = 0
 
-        self.logitech_high_alive = False
-        self.logitech_tags_alive = False
+        self.genius_low_alive = False
+        self.logitech_reef_alive = False
         self.arducam_back_alive = False
-        self.arducam_reef_alive = False
+        self.arducam_high_alive = False
 
         # --------------  ROBOT VOLTAGE AND CURRENT  ---------------
         # set up the warning labels - much of the formatting is handled in the widget class itself
@@ -263,8 +288,17 @@ class Ui(QtWidgets.QMainWindow):
     def toggle_camera_thread(self):
         # ToDo: check to see if the thread is running, then start again
 
-        # check if server is running - at the moment we are focusing on logitech_high
-        if self.check_url(self.camera_dict['LogitechTags']) or self.check_url(self.camera_dict['ArducamReef']):
+        live_cams = []
+        servers = []
+        # check if server is running - at the moment we are focusing on genius_low
+        for key, url in self.camera_dict.items():
+            status = self.check_url(url)
+            live_cams.append(status)
+            if status:
+                pass
+
+        if any(live_cams):
+        # if self.check_url(self.camera_dict['LogitechReef']) or self.check_url(self.camera_dict['ArducamHigh']) or self.check_url(self.camera_dict['Debug']):
             if self.thread is None:  # first time through we need to make the thread
                 self.thread = QThread()  # create a QThread object
                 self.worker = CameraWorker(qtgui=self)  # create a CameraWorker object, pass it the main gui
@@ -318,7 +352,6 @@ class Ui(QtWidgets.QMainWindow):
 
     def test(self):  # test function for checking new signals
         print('Test was called', flush=True)
-
 
     def filter_nt_keys_combo(self):  # used to simplify the nt key list combo box entries
         if self.sorted_tree is not None:
@@ -381,12 +414,13 @@ class Ui(QtWidgets.QMainWindow):
                                             'style_on': "border: 7px; border-radius: 7px; background-color:rgb(225, 0, 0); color:rgb(200, 200, 200);",
                                             'style_off': "border: 7px; border-radius: 7px; background-color:rgb(0, 0, 225); color:rgb(200, 200, 200);"},
         'qlabel_camera_view': {'widget': self.qlabel_camera_view, 'nt': None, 'command': None},  # does this do anything? - can't remember
-        'qlabel_arducam_reef_indicator': {'widget': self.qlabel_arducam_reef_indicator, 'nt': None, 'command': None},
-        'qlabel_logitech_tags_indicator': {'widget': self.qlabel_logitech_tags_indicator, 'nt': None, 'command': None},
-        'qlabel_logitech_high_indicator': {'widget': self.qlabel_logitech_high_indicator, 'nt': None, 'command': None},
+        'qlabel_arducam_high_indicator': {'widget': self.qlabel_arducam_high_indicator, 'nt': None, 'command': None},
+        'qlabel_logitech_reef_indicator': {'widget': self.qlabel_logitech_reef_indicator, 'nt': None, 'command': None},
+        'qlabel_genius_low_indicator': {'widget': self.qlabel_genius_low_indicator, 'nt': None, 'command': None},
         'qlabel_arducam_back_indicator': {'widget': self.qlabel_arducam_back_indicator, 'nt': None, 'command': None},
 
             # COMMANDS
+        'qlabel_elevator_top_indicator': {'widget': self.qlabel_elevator_top_indicator, 'nt': '/SmartDashboard/MoveElevatorTop/running', 'command': '/SmartDashboard/MoveElevatorTop/running'},
         'qlabel_elevator_up_indicator': {'widget': self.qlabel_elevator_up_indicator, 'nt': '/SmartDashboard/MoveElevatorUp/running', 'command': '/SmartDashboard/MoveElevatorUp/running'},
         'qlabel_elevator_down_indicator': {'widget': self.qlabel_elevator_down_indicator, 'nt': '/SmartDashboard/MoveElevatorDown/running', 'command': '/SmartDashboard/MoveElevatorDown/running'},
         'qlabel_pivot_up_indicator': {'widget': self.qlabel_pivot_up_indicator, 'nt': '/SmartDashboard/MovePivotUp/running', 'command': '/SmartDashboard/MovePivotUp/running'},
@@ -396,29 +430,32 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_intake_on_indicator': {'widget': self.qlabel_intake_on_indicator, 'nt': '/SmartDashboard/IntakeOn/running', 'command': '/SmartDashboard/IntakeOn/running'},
         'qlabel_intake_off_indicator': {'widget': self.qlabel_intake_off_indicator, 'nt': '/SmartDashboard/IntakeOff/running','command': '/SmartDashboard/IntakeOff/running'},
         'qlabel_intake_reverse_indicator': {'widget': self.qlabel_intake_reverse_indicator, 'nt': '/SmartDashboard/IntakeReverse/running','command': '/SmartDashboard/IntakeReverse/running'},
+        'qlabel_climber_down_indicator': {'widget': self.qlabel_climber_down_indicator, 'nt': '/SmartDashboard/Move climber down/running', 'command': '/SmartDashboard/Move climber down/running'},
+        'qlabel_climber_up_indicator': {'widget': self.qlabel_climber_up_indicator, 'nt': '/SmartDashboard/Move climber up/running', 'command': '/SmartDashboard/Move climber up/running'},
 
-        'qlabel_arducam_reef_target_indicator': {'widget': self.qlabel_arducam_reef_target_indicator, 'nt': '/SmartDashboard/arducam_reef_targets_exist', 'command': None},
+        'qlabel_stow_indicator': {'widget': self.qlabel_stow_indicator, 'nt': '/SmartDashboard/GoToStow/running', 'command': '/SmartDashboard/GoToStow/running'},
+        'qlabel_score_indicator': {'widget': self.qlabel_score_indicator, 'nt': '/SmartDashboard/Score/running', 'command': '/SmartDashboard/Score/running', 'flash':True},
+        'qlabel_l1_indicator': {'widget': self.qlabel_l1_indicator, 'nt': '/SmartDashboard/GoToL1/running', 'command': '/SmartDashboard/GoToL1/running'},
+        'qlabel_l2_indicator': {'widget': self.qlabel_l2_indicator, 'nt': '/SmartDashboard/GoToL2/running', 'command': '/SmartDashboard/GoToL2/running'},
+        'qlabel_l3_indicator': {'widget': self.qlabel_l3_indicator, 'nt': '/SmartDashboard/GoToL3/running', 'command': '/SmartDashboard/GoToL3/running'},
+        'qlabel_l4_indicator': {'widget': self.qlabel_l4_indicator, 'nt': '/SmartDashboard/GoToL4/running', 'command': '/SmartDashboard/GoToL4/running'},
+        'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
+        'qlabel_reset_flex_indicator': {'widget': self.qlabel_reset_flex_indicator, 'nt': '/SmartDashboard/ResetFlex/running', 'command': '/SmartDashboard/ResetFlex/running'},
+
+        'qlabel_arducam_high_target_indicator': {'widget': self.qlabel_arducam_high_target_indicator, 'nt': '/SmartDashboard/arducam_high_targets_exist', 'command': None},
         'qlabel_arducam_back_target_indicator': {'widget': self.qlabel_arducam_back_target_indicator, 'nt': '/SmartDashboard/arducam_back_targets_exist', 'command': None},
-        'qlabel_logitech_tags_target_indicator': {'widget': self.qlabel_logitech_tags_target_indicator, 'nt': '/SmartDashboard/logitech_tags_targets_exist', 'command': None},
-        'qlabel_logitech_high_target_indicator': {'widget': self.qlabel_logitech_high_target_indicator, 'nt': '/SmartDashboard/logitech_high_targets_exist', 'command': None},
-
+        'qlabel_logitech_reef_target_indicator': {'widget': self.qlabel_logitech_reef_target_indicator, 'nt': '/SmartDashboard/logitech_reef_targets_exist', 'command': None},
+        'qlabel_genius_low_target_indicator': {'widget': self.qlabel_genius_low_target_indicator, 'nt': '/SmartDashboard/genius_low_targets_exist', 'command': None},
+        'qlabel_photoncam_target_indicator': {'widget': self.qlabel_photoncam_target_indicator, 'nt': '/SmartDashboard/photoncam_targets_exist', 'command': None},
+        'qlabel_pose_indicator': {'widget': self.qlabel_pose_indicator, 'nt': None, 'command': None,},
+        'qlabel_game_piece_indicator': {'widget': self.qlabel_game_piece_indicator, 'nt': '/SmartDashboard/gamepiece_present', 'command': '/SmartDashboard/LedToggle/running',
+                                        'style_on': "border: 7px; border-radius: 7px; background-color:rgb(0, 220, 220); color:rgb(250, 250, 250);",
+                                        'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
             # UNFINISHED for 2025
         'qlabel_navx_reset_indicator': {'widget': self.qlabel_navx_reset_indicator, 'nt': '/SmartDashboard/GyroReset/running', 'command': '/SmartDashboard/GyroReset/running'},
-        'qlabel_shooter_off_indicator': {'widget': self.qlabel_shooter_off_indicator, 'nt': '/SmartDashboard/ShooterOff/running', 'command': '/SmartDashboard/ShooterOff/running'},
-        'qlabel_shooter_on_indicator': {'widget': self.qlabel_shooter_on_indicator, 'nt': '/SmartDashboard/ShooterOn/running', 'command': '/SmartDashboard/ShooterOn/running'},
-        'qlabel_shooter_indicator': {'widget': self.qlabel_shooter_indicator,'nt': '/SmartDashboard/shooter_on', 'command': None, 'flash': True},
-        'qlabel_shoot_cycle_indicator': {'widget': self.qlabel_shoot_cycle_indicator, 'nt': '/SmartDashboard/AutoShootCycle/running', 'command': '/SmartDashboard/AutoShootCycle/running'},
-        'qlabel_indexer_indicator': {'widget': self.qlabel_indexer_indicator, 'nt': '/SmartDashboard/indexer_enabled', 'command': None, 'flash': True},
-        'qlabel_intake_indicator': {'widget': self.qlabel_intake_indicator, 'nt': '/SmartDashboard/intake_enabled', 'command': None, 'flash': True},
         # 'qlabel_orange_target_indicator': {'widget': self.qlabel_orange_target_indicator, 'nt': '/SmartDashboard/orange_targets_exist', 'command': None},
 
-        'qlabel_position_indicator': {'widget': self.qlabel_position_indicator, 'nt': '/SmartDashboard/arm_config', 'command': None},
-        'qlabel_note_captured_indicator': {'widget': self.qlabel_note_captured_indicator, 'nt': '/SmartDashboard/shooter_has_ring', 'command': None,},
-        'qlabel_reset_gyro_from_pose_indicator': {'widget': self.qlabel_reset_gyro_from_pose_indicator, 'nt': '/SmartDashboard/GyroFromPose/running', 'command': '/SmartDashboard/GyroFromPose/running'},
-        'qlabel_drive_to_stage_indicator': {'widget': self.qlabel_drive_to_stage_indicator, 'nt': '/SmartDashboard/ToStage/running', 'command': '/SmartDashboard/ToStage/running'},
-        'qlabel_drive_to_speaker_indicator': {'widget': self.qlabel_drive_to_speaker_indicator, 'nt': '/SmartDashboard/ToSpeaker/running', 'command': '/SmartDashboard/ToSpeaker/running'},
-        'qlabel_drive_to_amp_indicator': {'widget': self.qlabel_drive_to_amp_indicator, 'nt': '/SmartDashboard/ToAmp/running', 'command': '/SmartDashboard/ToAmp/running'},
-        'qlabel_can_report_indicator': {'widget': self.qlabel_can_report_indicator, 'nt': '/SmartDashboard/CANStatus/running', 'command': '/SmartDashboard/CANStatus/running'},
+        'qlabel_position_indicator': {'widget': self.qlabel_position_indicator, 'nt': '/SmartDashboard/_target', 'command': None},
 
             # NUMERIC INDICATORS - LCDS should be phased out since they are a legacy item (and not particularly cool anyway)
         'qlcd_navx_heading': {'widget': self.qlcd_navx_heading, 'nt': '/SmartDashboard/_navx', 'command': None},
@@ -426,20 +463,17 @@ class Ui(QtWidgets.QMainWindow):
         'qlcd_pivot_angle': {'widget': self.qlcd_pivot_angle, 'nt': '/SmartDashboard/profiled_pivot_spark_angle', 'command': None},
         'qlcd_wrist_angle': {'widget' :self.qlcd_wrist_angle, 'nt': '/SmartDashboard/wrist relative encoder, degrees', 'command': None},
         'qlcd_intake_speed': {'widget': self.qlcd_intake_speed, 'nt': '/SmartDashboard/intake_output', 'command': None},
-        'qlcd_shooter_speed': {'widget': self.qlcd_shooter_speed, 'nt': '/SmartDashboard/shooter_rpm', 'command': None},
+        'qlcd_climber_position': {'widget': self.qlcd_climber_position, 'nt': '/SmartDashboard/climber_spark_angle', 'command': None},
         'qlabel_pdh_voltage_monitor': {'widget': self.qlabel_pdh_voltage_monitor, 'nt': '/SmartDashboard/_pdh_voltage', 'command': None},
         'qlabel_pdh_current_monitor': {'widget': self.qlabel_pdh_current_monitor, 'nt': '/SmartDashboard/_pdh_current', 'command': None},
 
             # LEFTOVER TO SORT FROM 2023
         #'qlabel_align_to_target_indicator': {'widget': self.qlabel_align_to_target_indicator, 'nt': '/SmartDashboard/AutoSetupScore/running', 'command': '/SmartDashboard/AutoSetupScore/running'},
         #'qlabel_arm_calibration_indicator': {'widget': self.qlabel_arm_calibration_indicator, 'nt': '/SmartDashboard/ArmCalibration/running', 'command': '/SmartDashboard/ArmCalibration/running'},
-        'qlabel_game_piece_indicator': {'widget': self.qlabel_game_piece_indicator, 'nt': '/SmartDashboard/shooter_has_ring', 'command': '/SmartDashboard/LedToggle/running',
-                                        'style_on': "border: 7px; border-radius: 7px; background-color:rgb(245, 120, 0); color:rgb(240, 240, 240);",
-                                        'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
         # 'qlabel_upper_pickup_indicator': {'widget': self.qlabel_upper_pickup_indicator, 'nt': '/SmartDashboard/UpperSubstationPickup/running', 'command': '/SmartDashboard/UpperSubstationPickup/running'},
-        'hub_targets': {'widget': None, 'nt': '/arducam_reef//orange/targets', 'command': None},
-        'hub_rotation': {'widget': None, 'nt': '/arducam_reef//orange/rotation', 'command': None},
-        'hub_distance': {'widget': None, 'nt': '/arducam_reef//orange/distance', 'command': None},
+        'hub_targets': {'widget': None, 'nt': '/arducam_high//orange/targets', 'command': None},
+        'hub_rotation': {'widget': None, 'nt': '/arducam_high//orange/rotation', 'command': None},
+        'hub_distance': {'widget': None, 'nt': '/arducam_high//orange/distance', 'command': None},
 
         }
 
@@ -455,7 +489,7 @@ class Ui(QtWidgets.QMainWindow):
                 d['widget'].clicked.connect(lambda label=key: self.label_click(label))
             else:
                 d.update({'command_entry': None})
-            print(f'Widget {key}: {d}')
+            #print(f'Widget {key}: {d}')
 
         for key, item in self.camera_dict.items():
             self.qcombobox_cameras.addItem(key)
@@ -559,6 +593,15 @@ class Ui(QtWidgets.QMainWindow):
         bot_width, bot_height = 41, 41 # self.qlabel_robot.width(), self.qlabel_robot.height()
         x_lim, y_lim = 17.6, 8.2  # 16.4, 8.2
         drive_pose = self.widget_dict['drive_pose']['entry'].getDoubleArray([0, 0, 0])
+        # not sure how to get labels to justify strings properly - not true to total string length somehow
+        x_pad = 1 if drive_pose[0] < 10 else 0
+        theta_pad = 0  # must be a quicker way to do this
+        theta_pad = theta_pad + 1 if drive_pose[2] < 0 else theta_pad
+        theta_pad = theta_pad + 1 if abs(drive_pose[2]) < 100 else theta_pad
+        theta_pad = theta_pad + 1 if abs(drive_pose[2]) < 10 else theta_pad
+        pose_msg = f'POSE\n{" " * x_pad}{drive_pose[0]:>5.2f}m {drive_pose[1]:>4.2f}m {" " * theta_pad}{drive_pose[2]:>4.0f}°'
+        self.qlabel_pose_indicator.setText(pose_msg)
+
         pixmap_rotated = self.robot_pixmap.transformed(QtGui.QTransform().rotate(90-drive_pose[2]), QtCore.Qt.TransformationMode.SmoothTransformation)
         new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * drive_pose[2] * np.pi / 180.0))))
         self.qlabel_robot.resize(new_size, new_size)  # take account of rotation shrinkage
@@ -572,64 +615,65 @@ class Ui(QtWidgets.QMainWindow):
         allowed_delay = 0.5  # how long before we call a camera dead
         timestamp = self.robot_timestamp_entry.getDouble(1)
 
-        # look for a disconnect - just in arducam_reef for now since that's the one we watch
+        # look for a disconnect - just in arducam_high for now since that's the one we watch
         if self.thread is not None:  # camera stream view has been started
             if self.thread.isRunning():  # camera is on
-                if self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) > allowed_delay:  # arducam_reef died
-                    self.arducam_reef_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_reef - KILLING camera thread')
+                if self.arducam_high_alive and timestamp - self.arducam_high_timestamp_entry.getDouble(-1) > allowed_delay:  # arducam_high died
+                    self.arducam_high_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_high - KILLING camera thread')
                     self.toggle_camera_thread()
                 else:
                     pass
-                if self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
-                    self.logitech_high_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_high - information only')
-                if self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
-                    self.logitech_tags_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_tags - information only')
+                if self.genius_low_alive and timestamp - self.genius_low_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+                    self.genius_low_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of genius_low - information only')
+                if self.logitech_reef_alive and timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) > allowed_delay:  # back tagcam died
+                    self.logitech_reef_alive = False
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of logitech_reef - information only')
                 if self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) > allowed_delay:  # front tagcam died
                     self.arducam_back_alive = False
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of Farducam_back - information only')
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected loss of arducam_back - information only')
 
             else:  # we started the camera but the thread is not running
-                if not self.arducam_reef_alive and timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_reef alive again
-                    self.arducam_reef_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_reef - RESTARTING camera thread')
+                if not self.arducam_high_alive and timestamp - self.arducam_high_timestamp_entry.getDouble(-1) < allowed_delay:  # arducam_high alive again
+                    self.arducam_high_alive = True
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_high - RESTARTING camera thread')
                     self.toggle_camera_thread()
-                if not self.logitech_tags_alive and timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
-                    self.logitech_tags_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_tags - information only')
-                if not self.logitech_high_alive and timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
-                    self.logitech_high_alive = True
-                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_high - information only')
+                if not self.logitech_reef_alive and timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
+                    self.logitech_reef_alive = True
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected logitech_reef - information only')
+                if not self.genius_low_alive and timestamp - self.genius_low_timestamp_entry.getDouble(-1) < allowed_delay:  # back tagcam alive again
+                    self.genius_low_alive = True
+                    self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected genius_low - information only')
                 if not self.arducam_back_alive and timestamp - self.arducam_back_timestamp_entry.getDouble(-1) < allowed_delay:  # front tagcam alive again
                     self.arducam_back_alive = True
                     self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Detected arducam_back - information only')
 
         # really seems like i should be able to do this with a loop ...
-        self.arducam_reef_alive = timestamp - self.arducam_reef_timestamp_entry.getDouble(-1) < allowed_delay
-        arducam_reef_style = style_on if self.arducam_reef_alive else style_off
-        self.arducam_reef_connections = int(self.arducam_reef_connections_entry.getDouble(0))
-        self.qlabel_arducam_reef_indicator.setText(f'ARDU REEF: {self.logitech_high_connections:2d}')
-        self.qlabel_arducam_reef_indicator.setStyleSheet(arducam_reef_style)
+        self.arducam_high_alive = timestamp - self.arducam_high_timestamp_entry.getDouble(-1) < allowed_delay
+        arducam_high_style = style_on if self.arducam_high_alive else style_off
+        self.arducam_high_connections = int(self.arducam_high_connections_entry.getDouble(0))
+        self.qlabel_arducam_high_indicator.setText(f'ARDU HIGH: {self.arducam_high_connections:2d}')
+        self.qlabel_arducam_high_indicator.setStyleSheet(arducam_high_style)
 
-        self.logitech_tags_alive = timestamp - self.logitech_tags_timestamp_entry.getDouble(-1) < allowed_delay
-        logitech_tags_style = style_on if self.logitech_tags_alive else style_off
-        self.logitech_tags_connections = int(self.logitech_tags_connections_entry.getDouble(0))
-        self.qlabel_logitech_tags_indicator.setText(f'LOGI TAGS: {self.logitech_tags_connections:2d}')
-        self.qlabel_logitech_tags_indicator.setStyleSheet(logitech_tags_style)
+        self.logitech_reef_alive = timestamp - self.logitech_reef_timestamp_entry.getDouble(-1) < allowed_delay
+        logitech_reef_style = style_on if self.logitech_reef_alive else style_off
+        self.logitech_reef_connections = int(self.logitech_reef_connections_entry.getDouble(0))
+        self.qlabel_logitech_reef_indicator.setText(f'LOGI REEF: {self.logitech_reef_connections:2d}')
+        self.qlabel_logitech_reef_indicator.setStyleSheet(logitech_reef_style)
 
-        self.logitech_high_alive = timestamp - self.logitech_high_timestamp_entry.getDouble(-1) < allowed_delay
-        logitech_high_style = style_on if self.logitech_high_alive else style_off
-        self.logitech_high_connections = int(self.logitech_high_connections_entry.getDouble(0))
-        self.qlabel_logitech_high_indicator.setText(f'LOGI HIGH: {self.logitech_high_connections:2d}')
-        self.qlabel_logitech_high_indicator.setStyleSheet(logitech_high_style)
+        self.genius_low_alive = timestamp - self.genius_low_timestamp_entry.getDouble(-1) < allowed_delay
+        genius_low_style = style_on if self.genius_low_alive else style_off
+        self.genius_low_connections = int(self.genius_low_connections_entry.getDouble(0))
+        self.qlabel_genius_low_indicator.setText(f'GENIUS LO: {self.genius_low_connections:2d}')
+        self.qlabel_genius_low_indicator.setStyleSheet(genius_low_style)
 
         self.arducam_back_alive = timestamp - self.arducam_back_timestamp_entry.getDouble(-1) < allowed_delay
         arducam_back_style = style_on if self.arducam_back_alive else style_off
         self.arducam_back_connections = int(self.arducam_back_connections_entry.getDouble(0))
         self.qlabel_arducam_back_indicator.setText(f'ARDU BACK: {self.arducam_back_connections:2d}')
         self.qlabel_arducam_back_indicator.setStyleSheet(arducam_back_style)
+
 
         # --------------  SPEAKER POSITION CALCULATIONS  ---------------
         k_blue_speaker = [0, 5.55, 180]  # (x, y, rotation)
@@ -700,8 +744,9 @@ class Ui(QtWidgets.QMainWindow):
         # update the 2024 arm configuration indicator
         config = self.widget_dict['qlabel_position_indicator']['entry'].getString('?')
         if config.upper() not in ['LOW_SHOOT', 'INTAKE']:  # these two positions drive under the stage
-            text_color = '(0,0,0)' if self.counter % 30 < 15 else '(255,255,255)'  # make it blink
-            postion_style = f"border: 7px; border-radius: 7px; background-color:rgb(220, 0, 0); color:rgb{text_color};"
+            # text_color = '(0,0,0)' if self.counter % 30 < 15 else '(255,255,255)'  # make it blink
+            # postion_style = f"border: 7px; border-radius: 7px; background-color:rgb(220, 0, 0); color:rgb{text_color};"
+            postion_style = style_on
         else:
             postion_style = style_on
         self.qlabel_position_indicator.setText(f'POS: {config.upper()}')

@@ -1,5 +1,4 @@
-from os import WIFCONTINUED
-from sys import get_asyncgen_hooks
+from time import sleep
 from commands2.subsystem import Subsystem
 import math
 import wpilib
@@ -15,11 +14,11 @@ class Wrist(Subsystem):
 
         self.sparkmax = SparkMax(WristConstants.k_CAN_id, SparkMax.MotorType.kBrushless)
 
-        controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config, 
-                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kPersistParameters)
-
-        print(f"Configured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
+        if constants.k_burn_flash:
+            controller_revlib_error = self.sparkmax.configure(config=WristConstants.k_config,
+                                        resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                        persistMode=SparkMax.PersistMode.kPersistParameters)
+            print(f"Reconfigured wrist sparkmax. Wrist controller status: {controller_revlib_error}")
 
         self.encoder = self.sparkmax.getEncoder()
         self.abs_encoder = self.sparkmax.getAbsoluteEncoder()
@@ -33,10 +32,31 @@ class Wrist(Subsystem):
         self.pivot = pivot
         self.elevator = elevator
 
-        self.encoder.setPosition(WristConstants.k_starting_angle)
         self.controller = self.sparkmax.getClosedLoopController()
+        self.counter = constants.WristConstants.k_counter_offset
+
+        faults = self.sparkmax.getFaults()
+        if faults.sensor:
+            print("WARNING! faults.sensor is true!")
+
+        abs_raw = self.abs_encoder.getPosition()
+        abs_raws = []
+        for reading in range(20):
+            abs_raws.append(self.abs_encoder.getPosition())
+            sleep(0.02)
+
+        abs_raws_trunc = abs_raws[10:]
+        abs_raw = sum(abs_raws_trunc) / len(abs_raws_trunc)
+        abs_offset = abs_raw - WristConstants.k_abs_encoder_readout_when_at_zero_position
+        abs_offset_rad = abs_offset * math.tau
+        msg = f'Wrist raw abs enc: {abs_raws[:10]}  Final: {abs_raws_trunc}\n'
+        msg += f'Wrist absolute offset: {abs_offset:.3f} ({abs_offset_rad:.3f} rad or {math.degrees(abs_offset_rad):.1f} degrees) '
+        print(msg)
+
+        self.encoder.setPosition(abs_offset_rad)
+
         self.setpoint = self.encoder.getPosition()
-        self.counter = 0
+
 
     def set_position(self, radians: float, control_type: SparkMax.ControlType=SparkMax.ControlType.kPosition, closed_loop_slot=0) -> None:
 
@@ -70,7 +90,8 @@ class Wrist(Subsystem):
 
         elevator_in_safe_position = self.elevator.get_height() > WristConstants.k_max_elevator_height_where_spinning_dangerous
 
-        return pivot_in_safe_position or elevator_in_safe_position
+        # return pivot_in_safe_position or elevator_in_safe_position
+        return True  # CJH 20250302  - always True now
 
     def periodic(self) -> None:
 
@@ -86,5 +107,8 @@ class Wrist(Subsystem):
             wpilib.SmartDashboard.putNumber("wrist relative encoder, rad", self.encoder.getPosition())
             wpilib.SmartDashboard.putNumber("wrist abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
             wpilib.SmartDashboard.putNumber("wrist relative encoder, degrees", math.degrees(self.encoder.getPosition()))
+
+            if constants.WristConstants.k_nt_debugging:  # extra debugging info for NT
+                pass
 
         return super().periodic()

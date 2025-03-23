@@ -2,27 +2,31 @@ import math
 
 import rev
 import wpilib
-from wpimath.system.plant import DCMotor
 from commands2 import Subsystem
-from wpilib import SmartDashboard
-from rev import ClosedLoopSlot, SparkMax, SparkMaxConfig, SparkMaxSim, SparkMax
-from wpimath.units import inchesToMeters, radiansToDegrees, degreesToRadians
+from rev import SparkMax, SparkMax
+from wpimath.units import radiansToDegrees, degreesToRadians
 import constants
 
 class Climber(Subsystem):
     def __init__(self):
         super().__init__()
         self.setName('climber')
-        self.counter = 3
+        self.counter = constants.ClimberConstants.k_counter_offset
 
         self.sparkmax = rev.SparkMax(constants.ClimberConstants.k_CAN_id, rev.SparkMax.MotorType.kBrushless)
 
-        self.sparkmax.configure(config=constants.ClimberConstants.k_config,
-                                resetMode=SparkMax.ResetMode.kResetSafeParameters,
-                                persistMode=SparkMax.PersistMode.kPersistParameters)
+        if constants.k_burn_flash:
+            controller_revlib_error = self.sparkmax.configure(config=constants.ClimberConstants.k_config,
+                                        resetMode=SparkMax.ResetMode.kResetSafeParameters,
+                                        persistMode=SparkMax.PersistMode.kPersistParameters)
+            print(f"Reconfigured climber sparkmax. Wrist controller status: {controller_revlib_error}")
+
         
         #configure PID controller
         self.controller = self.sparkmax.getClosedLoopController()
+
+        self.follower = SparkMax(constants.ClimberConstants.k_follower_CAN_id, SparkMax.MotorType.kBrushless)
+        self.follower.configure(constants.ClimberConstants.k_follower_config, SparkMax.ResetMode.kResetSafeParameters, SparkMax.PersistMode.kPersistParameters)
 
         #get encoder
         self.encoder = self.sparkmax.getEncoder()
@@ -71,17 +75,19 @@ class Climber(Subsystem):
     def is_ready(self):
         return math.fabs(self.get_angle() - constants.ClimberConstants.k_climber_motor_ready) < self.tolerance
 
+    def set_duty_cycle(self, duty_cycle):
+        self.sparkmax.set(duty_cycle)
+
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
         self.counter += 1
-        if self.counter % 5 == 0:
+        if self.counter % 10 == 0:
             self.angle = self.encoder.getPosition()
             self.at_goal = math.fabs(self.angle - self.goal) < self.tolerance
             self.error = self.angle - self.goal
 
-            debug = True
-            if debug:
+            if constants.IntakeConstants.k_nt_debugging: # print only necessary messages for competition
                 wpilib.SmartDashboard.putBoolean(f'{self.getName()}_at_goal', self.at_goal)
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_error', radiansToDegrees(self.error))
                 wpilib.SmartDashboard.putNumber(f'{self.getName()}_goal', radiansToDegrees(self.goal))

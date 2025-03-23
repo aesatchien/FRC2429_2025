@@ -1,7 +1,9 @@
 import math
 from pathplannerlib.auto import PathConstraints
+from pathplannerlib.controller import PPHolonomicDriveController
+import wpilib
 from wpimath import units
-from wpimath.geometry import Translation2d
+from wpimath.geometry import Rotation2d, Translation2d
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.trajectory import TrapezoidProfileRadians
 from rev import SparkMax, SparkFlex, SparkFlexConfig, SparkMaxConfig
@@ -18,7 +20,7 @@ class DriveConstants:
     # set the acceleration limits used in driving using the SlewRateLimiter tool
     kMagnitudeSlewRate = 5  # hundred percent per second (1 = 100%)
     kRotationalSlewRate = 5  # hundred percent per second (1 = 100%)
-    k_inner_deadband = 0.08  # use deadbands for joystick transformations and keepangle calculations
+    k_inner_deadband = 0.10  # use deadbands for joystick transformations and keepangle calculations
     k_outer_deadband = 0.95  # above this you just set it to 1 - makes going diagonal easier
     # k_minimum_rotation = kMaxAngularSpeed * k_inner_deadband
 
@@ -33,7 +35,6 @@ class DriveConstants:
     # Front left is X+Y+, Front right is + -, Rear left is - +, Rear right is - - (otherwise odometery is wrong)
     # this should be left as the convention, so match the above.  Then take care of turning issues with the
     # INVERSION OF THE TURN OR DRIVE MOTORS, GYRO and ABSOLUTE ENCODERS
-    swerve_orientation = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # MAKE SURE ANGLE ENCODERS ARE CCW +
     swerve_orientation = [(1, 1), (1, -1), (-1, 1), (-1, -1)]  # MAKE SURE ANGLE ENCODERS ARE CCW +
     kModulePositions = [
         Translation2d(swerve_orientation[0][0]*kWheelBase / 2, swerve_orientation[0][1]*kTrackWidth / 2),
@@ -61,27 +62,42 @@ class DriveConstants:
 
     # absolute encoder values when wheels facing forward  - 20230322 CJH
     # NOW IN RADIANS to feed right to the AnalogPotentiometer on the module
-    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.532)  #  rad
-    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.937)  #  rad   billet gear out on rf
-    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.573)  #  rad
-    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.988)  #  rad  billet gear out on rb
+    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.988) # (0.532)  #  rad
+    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.573) # (0.937)  #  rad   billet gear out on rf
+    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.937) # (0.573)  #  rad
+    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.532) # (0.988)  #  rad  billet gear out on rb
     k_analog_encoder_offsets = {'lf':0.829, 'rf':0.783, 'lb':0.304, 'rb':0.986}  # use in sim
 
-    # SPARK MAX CAN IDs
-    kFrontLeftDrivingCanId = 21
-    kRearLeftDrivingCanId = 23
-    kFrontRightDrivingCanId = 25
-    kRearRightDrivingCanId = 27
+    # SPARK MAX CAN IDs  - checked for correctness 2025 0317
+    kFrontLeftDrivingCanId = 27
+    kRearLeftDrivingCanId = 25
+    kFrontRightDrivingCanId = 23
+    kRearRightDrivingCanId = 21
 
-    kFrontLeftTurningCanId = 20
-    kRearLeftTurningCanId = 22
-    kFrontRightTurningCanId = 24
-    kRearRightTurningCanId = 26
+    kFrontLeftTurningCanId = 26
+    kRearLeftTurningCanId = 24
+    kFrontRightTurningCanId = 22
+    kRearRightTurningCanId = 20
 
-    kFrontLeftAbsEncoderPort = 0
-    kFrontRightAbsEncoderPort = 1
-    kBackLeftAbsEncoderPort = 2
-    kBackRightAbsEncoderPort = 3
+    kFrontLeftAbsEncoderPort = 3
+    kFrontRightAbsEncoderPort = 2
+    kBackLeftAbsEncoderPort = 1
+    kBackRightAbsEncoderPort = 0
+
+    # kFrontLeftDrivingCanId = 21
+    # kRearLeftDrivingCanId = 23
+    # kFrontRightDrivingCanId = 25
+    # kRearRightDrivingCanId = 27
+    #
+    # kFrontLeftTurningCanId = 20
+    # kRearLeftTurningCanId = 22
+    # kFrontRightTurningCanId = 24
+    # kRearRightTurningCanId = 26
+
+    # kFrontLeftAbsEncoderPort = 0
+    # kFrontRightAbsEncoderPort = 1
+    # kBackLeftAbsEncoderPort = 2
+    # kBackRightAbsEncoderPort = 3
 
 class NeoMotorConstants:
     kFreeSpeedRpm = 6784  # neo is 5676, vortex is 6784
@@ -164,29 +180,24 @@ class ModuleConstants:
     kTurningMotorCurrentLimit = 40  # amp
 
 class AutoConstants:
-    kMaxSpeedMetersPerSecond = 3
-    kMaxAccelerationMetersPerSecondSquared = 3
-    kMaxAngularSpeedRadiansPerSecond = math.pi
-    kMaxAngularSpeedRadiansPerSecondSquared = math.pi
-
-    kPXController = 1
-    kPYController = 1
-    kPThetaController = 1
 
     k_pathplanner_translation_pid_constants = PIDConstants(kP=6, kI=0, kD=0)
-    k_pathplanner_rotation_pid_constants = PIDConstants(kP=-4, kI=0, kD=0)
+    k_pathplanner_rotation_pid_constants = PIDConstants(kP=4, kI=0, kD=0)  # no longer negative when swerve correct
 
-    pathfinding_constraints = PathConstraints(
-            maxVelocityMps=0.5,
-            maxAccelerationMpsSq=3,
-            maxAngularVelocityRps=math.radians(90),
-            maxAngularAccelerationRpsSq=math.degrees(720),
-            nominalVoltage=12
+    k_pathplanner_holonomic_controller = PPHolonomicDriveController(
+            translation_constants=k_pathplanner_translation_pid_constants,
+            rotation_constants=k_pathplanner_rotation_pid_constants,
     )
 
+    k_pathfinding_constraints = PathConstraints(
+            maxVelocityMps=3,
+            maxAccelerationMpsSq=6,
+            maxAngularVelocityRps=2*math.pi,  # radians per second
+            maxAngularAccelerationRpsSq=4*math.pi,  # radians per second squared
+            nominalVoltage=12,
 
-    # Constraint for the motion profiled robot angle controller
-    kThetaControllerConstraints = TrapezoidProfileRadians.Constraints(
-        kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared
     )
+
+    k_rotation_tolerance = Rotation2d(math.radians(1.5))
+    k_translation_tolerance_meters = 4 / 100
 

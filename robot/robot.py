@@ -34,21 +34,31 @@ class MyRobot(commands2.TimedCommandRobot):
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
         self.disabled_counter = 0
+        print(f"Reflashing pivot sparks at {self.container.get_enabled_time():.1f}s")
+        self.container.pivot.reflash(True, True)
+        # self.container.swerve.use_photoncam = True
 
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
         if self.disabled_counter % 100 == 0:
-            if wpilib.DriverStation.isFMSAttached():
-                alliance_color = wpilib.DriverStation.getAlliance()
-                if alliance_color is not None:
-                    if alliance_color == wpilib.DriverStation.Alliance.kRed:
-                        self.container.led.set_indicator(Led.Indicator.kHOTBOW)
-                    elif alliance_color == wpilib.DriverStation.Alliance.kBlue:
-                        self.container.led.set_indicator(Led.Indicator.kCOOLBOW)
-                    else:
-                        self.container.led.set_indicator(Led.Indicator.kPOLKA)
-            else:
-                self.container.led.set_indicator(Led.Indicator.kRAINBOW)
+            # if wpilib.DriverStation.isFMSAttached():
+            alliance_color = wpilib.DriverStation.getAlliance()
+            if alliance_color is not None:
+                if alliance_color == wpilib.DriverStation.Alliance.kRed:
+                    self.container.led.set_indicator(Led.Indicator.kHOTBOW)
+                elif alliance_color == wpilib.DriverStation.Alliance.kBlue:
+                    self.container.led.set_indicator(Led.Indicator.kCOOLBOW)
+                else:
+                    self.container.led.set_indicator(Led.Indicator.kPOLKA)
+
+        if self.disabled_counter % 1000 == 0:
+            # don't reset in case it goes wrong
+            # and don't burn in case it harms the spark (idt it will but idk)
+            print(f"Reflashing pivot sparks at {self.container.get_enabled_time():.1f}s")
+            self.container.pivot.reflash(False, False)
+
+            # else:
+            #     self.container.led.set_indicator(Led.Indicator.kRAINBOW)
             # print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
         self.disabled_counter += 1
 
@@ -67,6 +77,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopInit(self) -> None:
 
+        # self.container.swerve.use_photoncam = False
         self.container.set_start_time()  # putting this after the scheduler is bad
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to
@@ -83,8 +94,8 @@ class MyRobot(commands2.TimedCommandRobot):
         commands2.CommandScheduler.getInstance().cancelAll()
 
     def robotPeriodic(self) -> None:
-
-        wpilib.SmartDashboard.putNumber("ajs turn commanded", self.container.driver_command_controller.getRightX())
+        # commented out 2025 0305 CJH - this should never have been in here
+        # wpilib.SmartDashboard.putNumber("ajs turn commanded", self.container.driver_command_controller.getRightX())
         return super().robotPeriodic()
 
 

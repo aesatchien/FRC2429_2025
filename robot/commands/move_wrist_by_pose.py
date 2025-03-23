@@ -22,7 +22,7 @@ class StowWristAfterPositionDelta(commands2.Command):
         move the wrist unless the arm is pretty much already at a safe position.
         """
         super().__init__()
-        self.setName('Stow wrist after position delta')
+        self.setName('Stow wrist because position delta')
         self.indent = indent
         self.container = container
         self.wrist: Wrist = self.container.wrist
@@ -51,7 +51,7 @@ class StowWristAfterPositionDelta(commands2.Command):
     # NOTE 20250225 - why is this in execute and not initialize?  seems like it will get called many times
     def execute(self) -> None:
         delta_translation = self.swerve.get_pose().translation() - self.initial_translation
-        if delta_translation.norm() > 0.5: # we've moved that much since calling this command, so we should be safe to move the wrist
+        if delta_translation.norm() > 0.3: # we've moved that much since calling this command, so we should be safe to move the wrist
             self.wrist.set_position(constants.k_positions["stow"]["wrist_pivot"])
             self.moved_wrist = True
         

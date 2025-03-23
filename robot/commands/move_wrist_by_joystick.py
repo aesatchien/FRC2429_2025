@@ -29,6 +29,7 @@ class MoveWristByJoystick(commands2.Command):
         is pointing at the drivers, the command will invert the driver's request because
         the driver's left is the robot's right
         """
+
         super().__init__()
         self.setName('Move wrist by joystick')
         self.indent = indent
@@ -75,21 +76,21 @@ class MoveWristByJoystick(commands2.Command):
             else:
                 self.setpoint = math.radians(-90)
 
-        if self.swerve:
-            if -90 < self.swerve.get_angle() <= 90:
-                if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
-                    # we are facing away from the driver so don't invert
-                    pass
-                else:
-                    # we are facing towards the driver so invert
-                    self.setpoint *= -1
-
-            else:
-                if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
-                    # we are facing towards the driver so invert
-                    self.setpoint *= -1
-                else:
-                    pass
+        # if self.swerve:
+        #     if -90 < self.swerve.get_angle() <= 90:
+        #         if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+        #             # we are facing away from the driver so don't invert
+        #             pass
+        #         else:
+        #             # we are facing towards the driver so invert
+        #             self.setpoint *= -1
+        #
+        #     else:
+        #         if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+        #             # we are facing towards the driver so invert
+        #             self.setpoint *= -1
+        #         else:
+        #             pass
 
         if self.wrist.is_safe_to_move():
             self.wrist.set_position(radians=self.setpoint, control_type=SparkMax.ControlType.kPosition)

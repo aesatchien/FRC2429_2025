@@ -32,33 +32,42 @@ class FollowTrajectory(commands2.Command):  # change the name for your command
         else:
             self.trajectory: CustomTrajectory = current_trajectory
         self.waypoint_counter = 0
+        self.has_invalid_keys = False
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = self.container.get_enabled_time()
         self.waypoint_counter = 0
 
+        self.has_invalid_keys = self.container.robot_state.get_target().value['name'] not in list(trajectory.score_waypoint_dict.keys())
+
         print(f"{self.indent * '    '}** Started {self.getName()}  at {self.start_time:.1f} s **", flush=True)
 
     def execute(self) -> None:
-        # get how long we are into the command
-        self.command_time = self.container.get_enabled_time() - self.start_time
-        # get the trajectory positions
-        targets = self.trajectory.get_value(self.command_time)
-        # move all subsystems to the new target
-        self.elevator.set_goal(targets['elevator'])
-        self.pivot.set_goal(degreesToRadians(targets['pivot']))
-        self.wrist.set_position(degreesToRadians(targets['wrist']))
-        self.intake.set_reference(targets['intake'])
+        if self.has_invalid_keys:
+            pass
 
-        # report progress
-        waypoint_list = list(self.trajectory.waypoints.keys())  # make this part of the class
-        if self.command_time > waypoint_list[self.waypoint_counter]:
-            print(f'{"  " + " " * self.indent}starting waypoint {self.waypoint_counter}: {self.trajectory.waypoints[waypoint_list[self.waypoint_counter]]} at {self.container.get_enabled_time():.1f}')
-            self.waypoint_counter += 1
+        else:
+            # get how long we are into the command
+            self.command_time = self.container.get_enabled_time() - self.start_time
+            # get the trajectory positions
+            targets = self.trajectory.get_value(self.command_time)
+            # move all subsystems to the new target
+            self.elevator.set_goal(targets['elevator'])
+            self.pivot.set_goal(degreesToRadians(targets['pivot']))
+            self.wrist.set_position(degreesToRadians(targets['wrist']))
+            self.intake.set_reference(targets['intake'])
+
+            # report progress
+            waypoint_list = list(self.trajectory.waypoints.keys())  # make this part of the class
+            if self.command_time > waypoint_list[self.waypoint_counter]:
+                print(f'{"  " + " " * self.indent}starting waypoint {self.waypoint_counter}: {self.trajectory.waypoints[waypoint_list[self.waypoint_counter]]} at {self.container.get_enabled_time():.1f}')
+                self.waypoint_counter += 1
 
     def isFinished(self) -> bool:
-        if self.wait_to_finish:
+        if self.has_invalid_keys:
+            return True
+        elif self.wait_to_finish:
             return self.command_time >= self.trajectory.time_steps[-1]
         else:
             return True

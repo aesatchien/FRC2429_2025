@@ -17,16 +17,8 @@ from commands.move_elevator import MoveElevator
 
 class GoToPosition(commands2.SequentialCommandGroup):
     def __init__(self, container, position: str, indent=0) -> None:
-        """
-        @deprecated
-        DON'T USE. I've replaced it with individual commands for different positions
-        because this one was getting too big and having too many cases. I don't want 
-        to deal with debugging all that at comp. LHACK 2/26/25
 
-        .. deprecated:: what the hell
-        """
         super().__init__()
-
         self.setName(f'Go to position (with position {position})')
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} to {position} **"))
         self.container = container

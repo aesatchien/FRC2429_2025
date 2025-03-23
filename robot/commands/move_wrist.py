@@ -1,6 +1,7 @@
 import commands2
 from rev import SparkMax
 from wpilib import SmartDashboard, Timer
+import wpilib
 from constants import WristConstants
 from subsystems.pivot import Pivot
 from subsystems.wrist import Wrist
@@ -60,14 +61,15 @@ class MoveWrist(commands2.Command):
 
     def isFinished(self) -> bool:
 
-        if self.timer.get() > self.timeout: return True
-
         if self.wait_to_finish:
             return self.wrist.get_at_setpoint()
         else:
             return self.moved_wrist
 
     def end(self, interrupted: bool) -> None:
+
+        # if (wpilib.DriverStation.isAutonomous()): self.wrist.set_position(radians=self.radians, control_type=SparkMax.ControlType.kPosition)
+
         end_time = self.container.get_enabled_time()
         message = 'Interrupted' if interrupted else 'Ended'
         print_end_message = True
