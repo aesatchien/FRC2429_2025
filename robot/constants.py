@@ -15,7 +15,7 @@ from subsystems.swerve_constants import DriveConstants
 # starting position for odometry
 k_start_x = 0
 k_start_y = 0
-# joysticks nad other input
+# joysticks and other input
 k_driver_controller_port = 0
 k_co_driver_controller_port = 1
 k_use_bbox = True  # set to true for actual use
@@ -184,9 +184,11 @@ for tag_id in range(17, 23):
         robot_rotation = tag_yaw + Rotation2d(math.radians(-90))  # CJH changed this to get new orientation right
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
+        coral_center_offset = 0  # the center of the arm is not the center of the robot - this is in x
+        x_offset = 0.45 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
         y_offset = -0.0  # should be 0.20 as of 20250323
-        robot_offset_left = Translation2d(0.45, -y_offset).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(0.45, +y_offset).rotateBy(tag_yaw)
+        robot_offset_left = Translation2d(x_offset +  coral_center_offset, -y_offset).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(x_offset +  coral_center_offset, +y_offset).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left

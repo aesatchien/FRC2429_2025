@@ -18,8 +18,11 @@ from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
 from pathplannerlib.config import ModuleConfig, RobotConfig
 
+from photonlibpy import PhotonCamera, PhotonPoseEstimator, PoseStrategy  #  2025 is first time for us
+
 import robotpy_apriltag as ra
 import wpimath.geometry as geo
+from wpimath.units import inchesToMeters
 
 import constants
 from .swervemodule_2429 import SwerveModule
@@ -82,6 +85,11 @@ class Swerve (Subsystem):
         self.strafe_magLimiter = SlewRateLimiter(dc.kMagnitudeSlewRate)
         self.rotLimiter = SlewRateLimiter(dc.kRotationalSlewRate)
 
+        # see if the asymmetry in the controllers is an issue for AJ  - 20250311 CJH
+        # update this in calibrate_joystick, and use in drive_by_joystick
+        self.thrust_calibration_offset = 0
+        self.strafe_calibration_offset = 0
+
         # Odometry class for tracking robot pose
         # when we boot should we always be at zero angle?
         # self.odometry = SwerveDrive4Odometry(
@@ -104,27 +112,66 @@ class Swerve (Subsystem):
             this_pi_subscriber_dict.update({"wpinow_time_subscriber": self.inst.getDoubleTopic(f"vision/{pi_name}/wpinow_time").subscribe(0)})
             self.pi_subscriber_dicts.append(this_pi_subscriber_dict)
 
+
+        # photonvision camera setup
+        self.use_photoncam = constants.k_use_photontags  # decide down below in periodic
+        if self.use_photoncam:
+            # self.photon_name = "Arducam_OV9281_USB_Camera"
+            # self.photon_name = "HD_Pro_Webcam_C920"
+            self.photon_name = "Geniuscam"
+
+            self.photoncam_arducam_a = PhotonCamera(self.photon_name)
+            self.photoncam_target_subscriber = self.inst.getBooleanTopic(f'/photonvision/{self.photon_name}/hasTarget').subscribe(False)
+            self.photoncam_latency_subscriber = self.inst.getDoubleTopic(f'/photonvision/{self.photon_name}/LatencyMillis').subscribe(0)
+
+            # example is cam mounted facing forward, half a meter forward of center, half a meter up from center
+            # robot_to_cam_example = wpimath.geometry.Transform3d(wpimath.geometry.Translation3d(0.5, 0.0, 0.5),
+            #     wpimath.geometry.Rotation3d.fromDegrees(0.0, -30.0, 0.0),)
+            robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
+                wpimath.geometry.Translation3d(inchesToMeters(10), inchesToMeters(7.75), 0.45),
+                wpimath.geometry.Rotation3d.fromDegrees(0.0, 0.0, math.radians(270)))
+
+            robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
+                wpimath.geometry.Translation3d(inchesToMeters(0), inchesToMeters(0), 0.),
+                wpimath.geometry.Rotation3d.fromDegrees(0.0, -20, math.radians(0)))
+
+            # geniuscam with standard convention - 10.5in x, -8in y, -111 degrees yaw
+            robot_to_cam_arducam_a = wpimath.geometry.Transform3d(
+                wpimath.geometry.Translation3d(inchesToMeters(0), inchesToMeters(0), 0.),
+                wpimath.geometry.Rotation3d.fromDegrees(0.0, 0, math.radians(0)))  # -111 from front if ccw +
+
+            # todo - see if we can update the PoseStrategy based on if disabled, and use closest to current odometry when enabled
+            # but MULTI_TAG_PNP_ON_COPROCESSOR probably does not help at all since we only see one tag at a time
+            # TODO: we can set a fallback for multi_tag_pnp_on_coprocessor, we can make that lowest ambiguity or cloest to current odo
+            self.photoncam_pose_est = PhotonPoseEstimator(
+                ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded),
+                PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, self.photoncam_arducam_a, robot_to_cam_arducam_a)
+            # default is above PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, but maybe PoseStrategy.LOWEST_AMBIGUITY is better
+            self.photoncam_pose_est.primaryStrategy = PoseStrategy.LOWEST_AMBIGUITY
+
         # -----------   CJH simple apriltags  ------------
         # get poses from NT
-        self.use_CJH_apriltags = True  # dowm below we decide which one to use in the periodic method
+        self.use_CJH_apriltags = constants.k_use_CJH_tags  # down below we decide which one to use in the periodic method
         # lhack turned off 15:48 2/28/25 to test pathplanner wo tags first
         self.inst = ntcore.NetworkTableInstance.getDefault()
         # TODO - make this a loop with just the names
         self.arducam_back_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamBack/poses/tag1").subscribe([0] * 8)
         self.arducam_back_count_subscriber = self.inst.getDoubleTopic("/Cameras/ArducamBack/tags/targets").subscribe(0)
 
-        self.arducam_reef_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamReef/poses/tag1").subscribe([0] * 8)
-        self.arducam_reef_count_subscriber = self.inst.getDoubleTopic("/Cameras/ArducamReef/tags/targets").subscribe(0)
+        self.arducam_high_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/ArducamHigh/poses/tag1").subscribe([0] * 8)
+        self.arducam_high_count_subscriber = self.inst.getDoubleTopic("/Cameras/ArducamHigh/tags/targets").subscribe(0)
 
-        self.logitech_high_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechHigh/poses/tag1").subscribe([0] * 8)
-        self.logitech_high_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechHigh/tags/targets").subscribe(0)
+        self.genius_low_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/GeniusLow/poses/tag1").subscribe([0] * 8)
+        self.genius_low_count_subscriber = self.inst.getDoubleTopic("/Cameras/GeniusLow/tags/targets").subscribe(0)
 
-        self.logitech_tags_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechTags/poses/tag1").subscribe([0] * 8)
-        self.logitech_tags_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechTags/tags/targets").subscribe(0)
+        self.logitech_reef_pose_subscriber = self.inst.getDoubleArrayTopic("/Cameras/LogitechReef/poses/tag1").subscribe([0] * 8)
+        self.logitech_reef_count_subscriber = self.inst.getDoubleTopic("/Cameras/LogitechReef/tags/targets").subscribe(0)
 
         # set myself up for a zip later on
-        self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_reef_pose_subscriber, self.logitech_high_pose_subscriber, self.logitech_tags_pose_subscriber]
-        self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_reef_count_subscriber, self.logitech_high_count_subscriber, self.logitech_tags_count_subscriber]
+        self.pose_subscribers = [self.arducam_back_pose_subscriber, self.arducam_high_pose_subscriber, self.genius_low_pose_subscriber, self.logitech_reef_pose_subscriber]
+        self.count_subscribers = [self.arducam_back_count_subscriber, self.arducam_high_count_subscriber, self.genius_low_count_subscriber, self.logitech_reef_count_subscriber]
+
+        self.desired_tags = constants.VisionConstants.k_valid_tags
 
         # TODO - give me a list of six filters for the apriltags - smooth if we are not moving, else use reset each measurement
         # def tag_filter(window):
@@ -135,18 +182,12 @@ class Swerve (Subsystem):
 
         robot_config = RobotConfig.fromGUISettings()
 
-        holonomic_controller = PPHolonomicDriveController(
-                translation_constants=ac.k_pathplanner_translation_pid_constants,
-                rotation_constants=ac.k_pathplanner_rotation_pid_constants,
-        )
-
-
         AutoBuilder.configure(
                 pose_supplier=self.get_pose,
                 reset_pose=self.resetOdometry,
                 robot_relative_speeds_supplier=self.get_relative_speeds,
                 output=self.drive_robot_relative,
-                controller=holonomic_controller,
+                controller=ac.k_pathplanner_holonomic_controller,
                 robot_config=robot_config,
                 should_flip_path=self.flip_path,
                 drive_subsystem=self
@@ -197,7 +238,7 @@ class Swerve (Subsystem):
         rotDelivered = rotation_commanded * dc.kMaxAngularSpeed
 
         # probably can stop doing this now
-        if dc.k_swerve_state_messages:
+        if dc.k_swerve_state_messages and self.counter % 50 == 0:
             wpilib.SmartDashboard.putNumberArray('_xyr', [xSpeedDelivered, ySpeedDelivered, rotDelivered])
             SmartDashboard.putNumber('_swerve commanded rotation', rotDelivered)
 
@@ -218,6 +259,9 @@ class Swerve (Subsystem):
         return dc.kDriveKinematics.toChassisSpeeds(self.get_module_states())
 
     def drive_robot_relative(self, chassis_speeds: ChassisSpeeds, feedforwards):
+        """
+        feedforwards isn't used at all so pass it whatever
+        """
         # required for the pathplanner lib's pathfollowing based on chassis speeds
         # idk if we need the feedforwards
         swerveModuleStates = dc.kDriveKinematics.toSwerveModuleStates(chassis_speeds)
@@ -281,7 +325,8 @@ class Swerve (Subsystem):
             output = self.keep_angle_pid.calculate(self.get_angle(), self.keep_angle)  # 2024 real, can we just use YAW always?
             output = output if math.fabs(output) < 0.2 else 0.2 * math.copysign(1, output)  # clamp at 0.2
 
-        wpilib.SmartDashboard.putNumber('keep_angle_output', output)
+        if self.counter % 20 == 0:
+            wpilib.SmartDashboard.putNumber('keep_angle_output', output)
 
         return output
 
@@ -300,6 +345,9 @@ class Swerve (Subsystem):
         desiredStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(desiredStates, dc.kMaxTotalSpeed)
         for idx, m in enumerate(self.swerve_modules):
             m.setDesiredState(desiredStates[idx])
+
+    def setDesiredTags(self, desired_tags: typing.List[int]) -> None:
+        self.desired_tags = desired_tags
 
     def resetEncoders(self) -> None:
         """Resets the drive encoders to currently read a position of 0."""
@@ -368,26 +416,16 @@ class Swerve (Subsystem):
     # figure out the nearest stage - or any tag, I suppose if we pass in a list
     def get_nearest_tag(self, destination='stage'):
         # get a field so we can query the tags
-        field = ra.AprilTagField.k2024Crescendo
-        layout = ra.loadAprilTagLayoutField(field)
+        field = ra.AprilTagField.k2025ReefscapeWelded
+        layout = ra.AprilTagFieldLayout.loadField(field)
         current_pose = self.get_pose()
 
-        if destination == 'stage':
+        if destination == 'reef':
             # get all distances to the stage tags
-            tags = [11, 12, 15, 16]  # the ones we can see from driver's station - does not matter if red or blue
+            tags = [6,7,8,9,10,11,17,18,19,20,21,22]  # the ones we can see from driver's station - does not matter if red or blue
             x_offset, y_offset = -0.10, 0.10  # subtracting translations below makes +x INTO the tage, +y LEFT of tag
             robot_offset = geo.Pose2d(geo.Translation2d(x_offset, y_offset), geo.Rotation2d(0))
             face_tag = True  # do we want to face the tag?
-        elif destination == 'amp':
-            tags = [5, 6]
-            x_offset, y_offset = -0.37, 0  # subtracting translations below makes +1 INTO the tage, +y LEFT of tag
-            robot_offset = geo.Pose2d(geo.Translation2d(x_offset, y_offset), geo.Rotation2d(0))
-            face_tag = True
-        elif destination == 'speaker':
-            tags = [7, 4]  # right one facing blue, left one facing red
-            x_offset, y_offset = -1.5, 0  # subtracting translations below makes +1 INTO the tage
-            robot_offset = geo.Pose2d(geo.Translation2d(x_offset, y_offset), geo.Rotation2d(0))
-            face_tag = False
         else:
             raise ValueError('  location for get_nearest tag must be in ["stage", "amp"] etc')
 
@@ -409,7 +447,7 @@ class Swerve (Subsystem):
         updated_pose = geo.Pose2d(translation=updated_translation, rotation=updated_rotation)  # drive to here
 
         print(f'  nearest {destination} is tag {sorted_tags[0]} at {nearest_pose.translation()}')
-        return updated_pose
+        return sorted_tags[0]  # changed this in 2025 instead of updated_pose
 
     def get_desired_swerve_module_states(self) -> list[SwerveModuleState]:
         """
@@ -424,59 +462,89 @@ class Swerve (Subsystem):
         self.counter += 1
 
         # send our current time to the dashboard
-        wpilib.SmartDashboard.putNumber('_timestamp', wpilib.Timer.getFPGATimestamp())
+        ts = wpilib.Timer.getFPGATimestamp()
+        wpilib.SmartDashboard.putNumber('_timestamp', ts)  # this one we actually do every time
+
+        # use this if we have a phononvision camera - which we don't as of 20250316
+        if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam
+            has_photontag = self.photoncam_target_subscriber.get()
+            #has_photontag = self.photoncam_target_subscriber.get()
+            # how do we get the time offset and standard deviation?
+
+            if has_photontag:  # TODO - CHANGE ANGLE OF CAMERA MOUNTS
+                result = self.photoncam_arducam_a.getLatestResult()
+                cam_est_pose = self.photoncam_pose_est.update(result)
+                # can also use result.hasTargets() instead of nt
+                target = result.getBestTarget()
+                if target is not None:  # not sure why it returns None sometimes when we have tags
+                    # get id with target.fiducialId
+                    # get % of camera with target.getArea() to get a sense of distance
+                    try:
+                        ambiguity = target.getPoseAmbiguity()
+                    except AttributeError as e:
+                        ambiguity = 999
+
+                    latency = self.photoncam_latency_subscriber.get()
+                    # if statements to test if we want to update using a tag
+                    use_tag = constants.k_use_photontags  # can disable this in constants
+                    # do not allow large jumps when enabled
+                    delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), cam_est_pose.estimatedPose.translation().toTranslation2d())
+                    use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled() ) else use_tag  # no big movements in odometry from tags
+                    # limit a pose rotation to less than x degrees
+                    delta_rot = math.fabs(self.get_pose().rotation().degrees() - cam_est_pose.estimatedPose.rotation().angle_degrees)
+                    use_tag = False if delta_rot > 10 and wpilib.DriverStation.isEnabled() else use_tag
+                    # TODO - ignore tags if we are moving too fast
+                    use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
+                    use_tag = False if latency > 100 else use_tag  # ignore stale tags
+
+                    # TODO - filter out tags that are too far away from camera (different from pose itself too far away from robot)
+                    # filter out tags with too much ambiguity - where ratio > 0.2 per docs
+                    use_tag = False if ambiguity > 0.2 else use_tag
+
+                    if use_tag:
+                        self.pose_estimator.addVisionMeasurement(cam_est_pose.estimatedPose.toPose2d(), ts - latency, constants.DrivetrainConstants.k_pose_stdevs_large)
+                # _ = self.photoncam_arducam_a.getAllUnreadResults()
+            else:
+                pass
+
+            if self.counter % 10 == 0 and self.use_photoncam:  # get diagnostics on photontags
+                wpilib.SmartDashboard.putBoolean('photoncam_targets_exist', has_photontag)
+                if has_photontag:
+                    try:
+                        ambiguity = self.photoncam_arducam_a.getLatestResult().getBestTarget().getPoseAmbiguity()
+                    except AttributeError as e:
+                        ambiguity = 998
+                    wpilib.SmartDashboard.putNumber('photoncam_ambiguity', ambiguity)
+                else:
+                    wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 997)
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
-                if count_subscriber.get() > 0:  # use front camera
+                # print(f"count subscriber says it has {count_subscriber.get()} tags")
+                if count_subscriber.get() > 0:  # use this camera's tag
                     # update pose from apriltags
                     tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                    id = tag_data[0]
                     tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
-                    self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0])
 
+                    use_tag = constants.k_use_CJH_tags  # can disable this in constants
+                    # do not allow large jumps when enabled
+                    delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), tag_pose.translation())
+                    use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
+                    use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
+                    # use_tag = False if id not in self.desired_tags else use_tag
 
-        else:  # Leo's experiment
-            # update pose based on apriltags
-            if constants.k_use_apriltag_odometry:
-                # iterate over the lists of poses supplied by each pi
-                for pi_subscriber_dict in self.pi_subscriber_dicts:
+                    # TODO - figure out ambiguity (maybe pass to NT from the pi)
+                    # do i have a fatal lag issue?  am i better without the time estimate?
+                    # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
+                    # I gave a fairly high x and y, and a very high theta
+                    if use_tag:
+                        # print(f'adding vision measurement at {wpilib.getTime()}')
+                        sdevs = constants.DrivetrainConstants.k_pose_stdevs_large if wpilib.DriverStation.isEnabled() else constants.DrivetrainConstants.k_pose_stdevs_disabled
+                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], sdevs)
 
-                    # this list has 4*n floats (n is an integer),
-                    # where each 4-float chunk represents the robot pose as computed from one tag.
-                    # Each chunk is of the form [timestamp, robot x, robot y, robot yaw].
-                    robot_pose_info_list_from_this_pi: list[float] = pi_subscriber_dict["robot_pose_info_subscriber"].get()
-
-                    # iterate over each chunk using its start idx
-                    for chunk_start_idx in range(0, len(robot_pose_info_list_from_this_pi) - 3, 4):
-                        print("Adding apriltag measurement!")
-
-                        this_single_apriltag_timestamp = robot_pose_info_list_from_this_pi[chunk_start_idx]
-
-                        our_now = wpilib.Timer.getFPGATimestamp()
-                        this_pis_now: float = pi_subscriber_dict["wpinow_time_subscriber"].get() / 1_000_000 # convert to seconds from microseconds
-
-                        print(f"this pis now: {this_pis_now}")
-
-                        # supposing our now is 5, and
-                        # this pi's now is 8.
-                        # we must add -3 to this pi's now.
-                        # -3 = ournow - thispisnow
-
-                        delta = our_now - this_pis_now
-                        wpilib.SmartDashboard.putNumber("delta time", delta)
-
-                        this_single_apriltag_timestamp_in_our_time = this_single_apriltag_timestamp / 1_000_000 + delta
-                        wpilib.SmartDashboard.putNumber("apriltag timestamp: robot time", this_single_apriltag_timestamp_in_our_time)
-
-                        this_single_apriltag_pose2d = Pose2d(x=robot_pose_info_list_from_this_pi[chunk_start_idx + 1],
-                                                             y=robot_pose_info_list_from_this_pi[chunk_start_idx + 2],
-                                                             angle=robot_pose_info_list_from_this_pi[chunk_start_idx + 3])
-
-                        self.field2d_for_atag_testing.setRobotPose(this_single_apriltag_pose2d)
-
-                        self.pose_estimator.addVisionMeasurement(this_single_apriltag_pose2d, this_single_apriltag_timestamp_in_our_time)
 
         # Update the odometry in the periodic block -
         if wpilib.RobotBase.isReal():
@@ -489,7 +557,7 @@ class Swerve (Subsystem):
 
         if self.counter % 10 == 0:
             pose = self.get_pose()  # self.odometry.getPose()
-            if True: # wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
+            if True:  # wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
                 wpilib.SmartDashboard.putNumberArray('drive_pose', [pose.X(), pose.Y(), pose.rotation().degrees()])
                 wpilib.SmartDashboard.putNumber('drive_x', pose.X())
                 wpilib.SmartDashboard.putNumber('drive_y', pose.Y())
@@ -497,7 +565,7 @@ class Swerve (Subsystem):
 
             wpilib.SmartDashboard.putNumber('_navx', self.get_angle())
             wpilib.SmartDashboard.putNumber('_navx_yaw', self.get_yaw())
-            wpilib.SmartDashboard.putNumber('_navx_angle', self.get_angle())
+            wpilib.SmartDashboard.putNumber('_navx_angle', self.get_gyro_angle())
 
             wpilib.SmartDashboard.putNumber('keep_angle', self.keep_angle)
                 # wpilib.SmartDashboard.putNumber('keep_angle_output', output)
