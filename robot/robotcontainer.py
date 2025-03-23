@@ -35,7 +35,9 @@ from subsystems.vision import Vision
 
 # 2429 "auto" commands - just an organizational division of commands
 from autonomous.one_plus_one import OnePlusOne
-from autonomous.one_plus_two import OnePlusTwo
+from autonomous.one_plus_two_right import OnePlusTwoRight
+from autonomous.one_plus_two_left import OnePlusTwoLeft
+from autonomous.one_plus_one_left import OnePlusOne
 
 # 2429 commands
 from commands.auto_l1 import AutoL1
@@ -263,7 +265,8 @@ class RobotContainer:
         self.auto_chooser = AutoBuilder.buildAutoChooser()
         self.auto_chooser.setDefaultOption('Wait *CODE*', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('Drive by velocity leave *CODE*', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
-        self.auto_chooser.addOption('1+2 Right *CODE*', OnePlusTwo(self))  # the working auto that score three coral on right
+        self.auto_chooser.addOption('1+2 Right *CODE*', OnePlusTwoRight(self))  # the working auto that score three coral on right
+        self.auto_chooser.addOption('1+2 Left *CODE*', OnePlusTwoLeft(self))  # simulated left version of code
         self.auto_chooser.addOption('1+1 in code *CODE*', OnePlusOne(self))  #
         # self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))  # not a real auto
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)  #

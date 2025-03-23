@@ -6,8 +6,9 @@
     "1+0",
     "1+0 trough",
     "1+1",
-    "1+n",
-    "1+1 left"
+    "1+1 left",
+    "1+n RIGHT",
+    "1+n LEFT"
   ],
   "autoFolders": [],
   "defaultMaxVel": 1.0,
