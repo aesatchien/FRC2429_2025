@@ -4,50 +4,50 @@
     {
       "anchor": {
         "x": 7.276536885248386,
-        "y": 2.9880635245959972
+        "y": 5.074
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.646209016393443,
-        "y": 2.3527151639344255
-      },
-      "isLocked": false,
-      "linkedName": "start point near middle of barge"
-    },
-    {
-      "anchor": {
-        "x": 3.632,
-        "y": 2.65
-      },
-      "prevControl": {
-        "x": 5.69388524590164,
-        "y": 1.3433401639344267
-      },
-      "nextControl": {
-        "x": 2.831495707970052,
-        "y": 3.157296324600374
+        "x": 5.916807348560079,
+        "y": 5.075037239324726
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.8870901639344262,
-        "y": 1.0940061475409835
+        "x": 3.632,
+        "y": 5.412
       },
       "prevControl": {
-        "x": 2.3975409836090424,
-        "y": 2.160911885251735
+        "x": 6.247939424031777,
+        "y": 6.88754965243297
+      },
+      "nextControl": {
+        "x": 2.8065492274234884,
+        "y": 4.946395334468951
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.9829918032786884,
+        "y": 7.051895491803278
+      },
+      "prevControl": {
+        "x": 1.6208043694141012,
+        "y": 6.843979642502482
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "right hp"
+      "linkedName": "left hp"
     }
   ],
   "rotationTargets": [
     {
       "waypointRelativePos": 0.7013194722111141,
-      "rotationDegrees": 150.0
+      "rotationDegrees": 29.999999999999996
     }
   ],
   "constraintZones": [
@@ -67,7 +67,7 @@
     {
       "name": "Constraints Zone",
       "minWaypointRelativePos": 0.9278252611585974,
-      "maxWaypointRelativePos": 2.0,
+      "maxWaypointRelativePos": 2.5,
       "constraints": {
         "maxVelocity": 3.0,
         "maxAcceleration": 3.0,
@@ -120,10 +120,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 145.00797980144137
+    "rotation": 36.86436100262474
   },
   "reversed": false,
-  "folder": "1+n",
+  "folder": "1+n LEFT",
   "idealStartingState": {
     "velocity": 0,
     "rotation": -90.0

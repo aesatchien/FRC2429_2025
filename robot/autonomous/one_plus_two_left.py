@@ -14,16 +14,16 @@ from commands.run_intake import RunIntake
 from commands.score import Score
 import constants
 
-class OnePlusTwo(commands2.SequentialCommandGroup):
+class OnePlusTwoLeft(commands2.SequentialCommandGroup):
     def __init__(self, container, indent=0) -> None:
         super().__init__()
 
-        self.setName(f'1+2')
+        self.setName(f'1+2 LEFT')
         self.container = container
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
         # run the path that takes us by the reef, drops the coral in the trough, and goes to human station
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT A driveby preload')))
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT A driveby preload')))
 
         # wait for piece to come in
         self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
@@ -31,7 +31,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # --------------- STEP B --------------
 
         # go from HP to get ready to score at L whatever is in the path
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT B score')).alongWith(
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT B score')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
                 WaitCommand(0.4).andThen(RunIntake(container, container.intake, 0))
                 )
@@ -41,7 +41,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # score then to go HP while driving back to HP
         self.addCommands(
                 WaitCommand(0.4).andThen(RunIntake(container, container.intake, constants.IntakeConstants.k_coral_scoring_voltage)).andThen(WaitCommand(0.3)).andThen(
-                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT C to HP'))
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT C to HP'))
                     )
                 )
 
@@ -50,7 +50,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         #
         # # --------------- STEP D --------------
         # drive to D
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT D score')).alongWith(
+        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT D score')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
                 WaitCommand(0.4).andThen(RunIntake(container, container.intake, 0))
                 )
