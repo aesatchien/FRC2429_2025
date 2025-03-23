@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.66,
-        "y": 3.035
+        "x": 3.65,
+        "y": 3.055
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0080264343257013,
-        "y": 2.5842418127117575
+        "x": 2.9187499999989455,
+        "y": 2.5275409836049185
       },
       "isLocked": false,
       "linkedName": "C"
     },
     {
       "anchor": {
-        "x": 0.85,
-        "y": 1.0
+        "x": 0.741805845511482,
+        "y": 1.0251565762004191
       },
       "prevControl": {
-        "x": 2.0167013075791016,
-        "y": 1.8369791013721921
+        "x": 1.940576337313706,
+        "y": 1.7803819860348424
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "right hp"
     }
   ],
   "rotationTargets": [],
@@ -33,10 +33,10 @@
     {
       "name": "Constraints Zone",
       "minWaypointRelativePos": 0,
-      "maxWaypointRelativePos": 1.0,
+      "maxWaypointRelativePos": 0.9805318138651455,
       "constraints": {
         "maxVelocity": 4.0,
-        "maxAcceleration": 5.0,
+        "maxAcceleration": 4.0,
         "maxAngularVelocity": 90.0,
         "maxAngularAcceleration": 720.0,
         "nominalVoltage": 12.0,
@@ -47,13 +47,13 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "go to coral station",
-      "waypointRelativePos": 0.17711301044633776,
+      "name": "intake spit out",
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
         "data": {
-          "name": "go to coral station"
+          "name": "intake spit out"
         }
       }
     }

@@ -220,7 +220,7 @@ class IntakeConstants:
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
-    k_max_tof_distance_where_we_have_coral = 40  # millimeters  engages at 60 and bottoms out at 26
+    k_max_tof_distance_where_we_have_coral = 55  # millimeters  engages at 60 and bottoms out at 26
     k_max_tolerated_sigma = 4 # max stddev where we trust it NOTE: we may have to change at comp?
 
     k_sim_length = 0.25
@@ -521,6 +521,6 @@ class DrivetrainConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
-    k_pose_stdevs_large = (.5, .5, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
+    k_pose_stdevs_large = (1, 1, 10)  # use when you don't trust the april tags - stdev x, stdev y, stdev theta
     k_pose_stdevs_disabled = (1, 1, 2)  # use when we are disabled to quickly get updates
     k_pose_stdevs_small = (0.1, 0.1, 10)  # use when you do trust the tags

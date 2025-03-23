@@ -12,8 +12,7 @@ from commands.go_to_stow import GoToStow
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.score import Score
-
-from constants import IntakeConstants
+import constants
 
 class OnePlusTwo(commands2.SequentialCommandGroup):
     def __init__(self, container, indent=0) -> None:
@@ -38,28 +37,16 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # drive to C
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score C')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
-                WaitCommand(0.5).andThen(RunIntake(container, container.intake, 0))
+                WaitCommand(0.4).andThen(RunIntake(container, container.intake, 0))
                 )
             ))
 
         # score then to go HP while driving back to HP
         self.addCommands(
-                WaitCommand(0.5).andThen(
-                    RunIntake(container, container.intake, IntakeConstants.k_coral_scoring_voltage).andThen(WaitCommand(0.5)).andThen(
-                            AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP')) 
-                        )
+                WaitCommand(0.4).andThen(RunIntake(container, container.intake, constants.IntakeConstants.k_coral_scoring_voltage)).andThen(WaitCommand(0.3)).andThen(
+                        AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
                     )
                 )
-
-        # self.addCommands(
-        #         WaitCommand(0.5).andThen(
-        #                 Score(container).andThen(GoToCoralStation(container).withTimeout(0.7)).alongWith(
-        #                     commands2.WaitCommand(0.5).andThen(
-        #                         AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n C to HP'))
-        #                         )
-        #                 )
-        #             )
-        #         )
 
         # wait for piece to come in
         self.addCommands(
@@ -74,7 +61,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
         # drive to D
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n score D')).alongWith(
             MoveWrist(container, math.radians(90), 2, wait_to_finish=True).alongWith(
-                WaitCommand(0.5).andThen(RunIntake(container, container.intake, 0))
+                WaitCommand(0.4).andThen(RunIntake(container, container.intake, 0))
                 )
             ))
 
@@ -83,7 +70,7 @@ class OnePlusTwo(commands2.SequentialCommandGroup):
                 PrintCommand("final score")
                 )
         self.addCommands(
-                WaitCommand(0.5).andThen(Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
+                WaitCommand(0.1).andThen(Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
                 ))
 
 
