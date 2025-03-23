@@ -21,7 +21,7 @@ class OnePlusOne(commands2.SequentialCommandGroup):
 
         self.addCommands(
                 commands2.ParallelCommandGroup(
-                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+1 preload")),
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+1 A preload")),
                     # this moves our wrist to 0 which is fine till we have to score on l4
                     GoToReefPosition(container, 1, 0).withTimeout(2)
                     )
@@ -29,7 +29,7 @@ class OnePlusOne(commands2.SequentialCommandGroup):
 
         self.addCommands(
                 commands2.ParallelCommandGroup(
-                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+1 go to hp")),
+                    AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+1 B go to hp")),
                     Score(container).andThen(GoToCoralStation(container))
                     )
                 )
@@ -44,7 +44,7 @@ class OnePlusOne(commands2.SequentialCommandGroup):
         # move to HP while moving the wrist while waiting a bit more then stopping the intake
         # path handles going to l4
         self.addCommands(
-                AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+1 score")).alongWith(
+                AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+1 C score")).alongWith(
                     MoveWrist(container, math.radians(90), 2, incremental=False, wait_to_finish=True)
                     ).alongWith(
                         commands2.WaitCommand(0.5).andThen(
@@ -54,8 +54,7 @@ class OnePlusOne(commands2.SequentialCommandGroup):
                 )
         
         self.addCommands(
-                Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
-                )
+                Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0)))
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 

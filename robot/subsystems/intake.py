@@ -53,18 +53,18 @@ class Intake(Subsystem):
         coral_distance = self.get_distance()
         # reads 0 when no signal, so it has to be between 1 and the actual number of mm
         coral_present = 4 < coral_distance <= constants.IntakeConstants.k_max_tof_distance_where_we_have_coral
-        return coral_present
+
+        if wpilib.RobotBase.isSimulation:  # fake this for autos
+            return self.counter % 100 < 50
+        else:
+            return coral_present
 
     def periodic(self) -> None:
         # print(f"setting reserefsersf to {wpilib.SmartDashboard.getNumber('SET intake volts', 0)}")
         # self.controller.setReference(wpilib.SmartDashboard.getNumber("SET intake volts", 0), SparkMax.ControlType.kVoltage)
 
         if self.counter % 10 == 0:
-            if wpilib.RobotBase.isReal():
-                wpilib.SmartDashboard.putBoolean('gamepiece_present', self.has_coral())
-            else:
-                wpilib.SmartDashboard.putBoolean('gamepiece_present', self.counter % 200 < 100)
-
+            wpilib.SmartDashboard.putBoolean('gamepiece_present', self.has_coral())
             wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
             wpilib.SmartDashboard.putNumber('intake sigma', self.TOFSensorCoral.getRangeSigma())
 

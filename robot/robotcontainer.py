@@ -14,14 +14,12 @@ from ntcore import NetworkTableInstance
 # pathplanner stuff
 from pathplannerlib.pathfinders import LocalADStar
 from pathplannerlib.pathfinding import Pathfinding
-from pathplannerlib.path import PathConstraints, PathPlannerPath
 from pathplannerlib.auto import AutoBuilder, NamedCommands
-from pathplannerlib.commands import PathfindingCommand
 
 # 2429 helper files
 import constants
 import trajectory
-from trajectory import CustomTrajectory, trajectory_L3
+from trajectory import CustomTrajectory
 
 # 2429 subsystems
 from subsystems import swerve_constants
@@ -38,21 +36,17 @@ from subsystems.vision import Vision
 # 2429 "auto" commands - just an organizational division of commands
 from autonomous.one_plus_one import OnePlusOne
 from autonomous.one_plus_two import OnePlusTwo
-from autonomous.leave_then_score_1 import LeaveThenScore
-from autonomous.one_plus_two_trough import OnePlusTwoTrough
 
 # 2429 commands
 from commands.auto_l1 import AutoL1
 from commands.can_status import CANStatus
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
-from commands.drive_by_apriltag_swerve import DriveByApriltagSwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.follow_trajectory import FollowTrajectory
 from commands.go_to_coral_station import GoToCoralStation
 from commands.go_to_position import GoToPosition
 from commands.go_to_reef_position import GoToReefPosition
 from commands.go_to_stow import GoToStow
-from commands.intake_sequence import IntakeSequence
 from commands.move_climber import MoveClimber
 from commands.move_elevator import MoveElevator
 from commands.move_pivot import MovePivot
@@ -267,12 +261,12 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
 
         self.auto_chooser = AutoBuilder.buildAutoChooser()
-        self.auto_chooser.setDefaultOption('Wait', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
-        self.auto_chooser.addOption('Drive by velocity leave', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
-        self.auto_chooser.addOption('1+2', OnePlusTwo(self))
-        self.auto_chooser.addOption('1+1 in code', OnePlusOne(self))
-        self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))
-        wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)
+        self.auto_chooser.setDefaultOption('Wait *CODE*', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
+        self.auto_chooser.addOption('Drive by velocity leave *CODE*', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
+        self.auto_chooser.addOption('1+2 Right *CODE*', OnePlusTwo(self))  # the working auto that score three coral on right
+        self.auto_chooser.addOption('1+1 in code *CODE*', OnePlusOne(self))  #
+        # self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))  # not a real auto
+        wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)  #
 
 
     def bind_driver_buttons(self):
