@@ -78,6 +78,9 @@ class Climber(Subsystem):
     def set_duty_cycle(self, duty_cycle):
         self.sparkmax.set(duty_cycle)
 
+    def set_voltage(self, voltage):
+        self.sparkmax.setVoltage(voltage)
+
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background

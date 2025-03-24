@@ -73,7 +73,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.86,
+        "elevator": 0.91,  # 0.86
         "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -184,11 +184,11 @@ for tag_id in range(17, 23):
         robot_rotation = tag_yaw + Rotation2d(math.radians(-90))  # CJH changed this to get new orientation right
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
-        coral_center_offset = 0  # the center of the arm is not the center of the robot - this is in x
+        coral_center_offset = 0.0  # the center of the arm is not the center of the robot - this is in y because we rotated 90
         x_offset = 0.45 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
-        y_offset = -0.0  # should be 0.20 as of 20250323
-        robot_offset_left = Translation2d(x_offset +  coral_center_offset, -y_offset).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(x_offset +  coral_center_offset, +y_offset).rotateBy(tag_yaw)
+        y_offset = 0.165  # should be 0.20 as of 20250323
+        robot_offset_left = Translation2d(x_offset , -y_offset -  coral_center_offset).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(x_offset -  coral_center_offset, +y_offset -  coral_center_offset).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left

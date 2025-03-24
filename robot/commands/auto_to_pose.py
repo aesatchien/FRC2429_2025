@@ -132,7 +132,7 @@ class AutoToPose(commands2.Command):  #
 
             # TODO optimize the last mile and have it gracefully not oscillate
             rot_max, rot_min = 0.8, 0.2
-            trans_max, trans_min = 0.5, 0.1
+            trans_max, trans_min = 0.4, 0.1
             # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
             pose = self.swerve.get_pose()
             diff_xy = pose.relativeTo(self.target_pose).rotateBy(pose.rotation())

@@ -277,6 +277,13 @@ class RobotContainer:
 
         self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
+        dpad_output = 0.125
+        self.triggerUp.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(dpad_output, 0, 0), timeout=10))
+        self.triggerDown.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(-dpad_output, 0, 0), timeout=10))
+        self.triggerLeft.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, dpad_output, 0), timeout=10))
+        self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
+
+
         # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
         # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
         # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
@@ -443,8 +450,8 @@ class RobotContainer:
         self.bbox_L4 = self.bbox_2.button(4)
         self.bbox_reef_alga_high = self.bbox_2.button(5)
         self.bbox_reef_alga_low = self.bbox_2.button(7)
-        self.bbox_net = self.bbox_2.button(6)
-        self.bbox_processor = self.bbox_2.button(8)
+        self.bbox_climb_up = self.bbox_2.button(8)  # this is lower down on the box
+        self.bbox_climb_down = self.bbox_2.button(6)
 
         # actual bindings
 
@@ -539,13 +546,13 @@ class RobotContainer:
                 GoToStow(container=self)))
 
         # climber actions
-        self.bbox_net.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0.2), self.climber))
-        self.bbox_net.onTrue(GoToPosition(self, "climb"))
-        self.bbox_net.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.bbox_climb_up.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))
+        self.bbox_climb_up.onTrue(GoToPosition(self, "climb"))
+        self.bbox_climb_up.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
 
-        self.bbox_processor.onTrue(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(-0.2), self.climber))
-        self.bbox_processor.onTrue(GoToPosition(self, "climb"))
-        self.bbox_processor.onFalse(commands2.InstantCommand(lambda: self.climber.set_duty_cycle(0), self.climber))
+        self.bbox_climb_down.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(10), self.climber))
+        self.bbox_climb_down.onTrue(GoToPosition(self, "climb"))
+        self.bbox_climb_down.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
 
         # print commands for testing
         #self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))
