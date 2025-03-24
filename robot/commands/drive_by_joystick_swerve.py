@@ -1,9 +1,7 @@
-#  copying 1706's default swerve drive control
 
 import math
 import typing
 import commands2
-from numpy import datetime_as_string
 import wpilib
 
 from subsystems.swerve import Swerve  # allows us to access the definitions

@@ -8,6 +8,7 @@ import wpilib
 from wpimath.controller import PIDController, ProfiledPIDController
 from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians
+from wpimath.filter import Debouncer, SlewRateLimiter
 
 from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
@@ -29,6 +30,11 @@ class AutoToPose(commands2.Command):  #
         self.counter = 0
         self.from_robot_state = from_robot_state
         self.nearest = nearest  # only use nearest tags as the target
+
+        # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot
+        max_units_per_second = 3  # can't be too low or you get lag - probably should be between 3 and 5
+        self.x_limiter = SlewRateLimiter(max_units_per_second)
+        self.y_limiter = SlewRateLimiter(max_units_per_second)
 
         self.target_pose = target_pose
         self.trapezoid = trapezoid
@@ -132,7 +138,7 @@ class AutoToPose(commands2.Command):  #
 
             # TODO optimize the last mile and have it gracefully not oscillate
             rot_max, rot_min = 0.8, 0.2
-            trans_max, trans_min = 0.4, 0.1
+            trans_max, trans_min = 0.4, 0.1  # it browns out when you start if this is too high
             # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
             pose = self.swerve.get_pose()
             diff_xy = pose.relativeTo(self.target_pose).rotateBy(pose.rotation())
@@ -152,6 +158,8 @@ class AutoToPose(commands2.Command):  #
             y_output = y_output if math.fabs(y_output) < trans_max else math.copysign(trans_max, y_output)
             rot_output = rot_output if math.fabs(rot_output) < rot_max else math.copysign(rot_max, rot_output)
 
+            x_output = self.x_limiter.calculate(x_output)
+            y_output = self.y_limiter.calculate(y_output)
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
 
             if self.counter % 5 == 0 and wpilib.RobotBase.isSimulation():

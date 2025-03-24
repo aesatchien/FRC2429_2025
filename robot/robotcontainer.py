@@ -275,8 +275,17 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
-        self.triggerB.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
+        # move this to the top of the button area so we have a left and a right auto-drive
+        self.triggerY.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
+        # giving AJ buttons to hold for driving to a goal on the left and on the right
+        self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
+        self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True,control_type='not_pathplanner'))
+
+        self.triggerX.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)))
+        self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
+
+        # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125
         self.triggerUp.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(dpad_output, 0, 0), timeout=10))
         self.triggerDown.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(-dpad_output, 0, 0), timeout=10))
@@ -284,19 +293,10 @@ class RobotContainer:
         self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
 
 
-        # self.triggerX.whileTrue(AutoBuilder.buildAuto("testt"))
-        # self.triggerX.onTrue(commands2.PrintCommand("starting pathplanner auto"))
-        # self.triggerX.onFalse(commands2.PrintCommand("ending pathplanner auto"))
-
-        # this is for field centric
-        #self.triggerLB.whileTrue(DriveByApriltagSwerve(container=self, swerve=self.swerve, target_heading=0))
-
-        # button A for intake
-        # left trigger for outtake
-
         if wpilib.RobotBase.isSimulation():
-            #self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
-            self.triggerB.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
+            pass
+            # self.triggerA.onTrue(AutoBuilder.pathfindToPoseFlipped(pose=constants.k_useful_robot_poses_blue["a"], constraints=swerve_constants.AutoConstants.k_pathfinding_constraints)) # this one is convenient for testing
+            # self.triggerB.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
 
         self.triggerRB.onTrue(Score(self))
 
@@ -468,10 +468,6 @@ class RobotContainer:
         #self.bbox_IJ.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0.2, 0), timeout=2))  # go left - shows you left
         #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
 
-
-        # giving AJ a button to hold for driving to a goal
-        self.triggerA.whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
-
         # set up all six buttons on the reef for the while held conditions
         button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
         characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
@@ -545,7 +541,7 @@ class RobotContainer:
             RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
                 GoToStow(container=self)))
 
-        # climber actions
+        # climber actions  # todo - possibly extend climber setting arm to L1 -  maybe based on the climber encoder
         self.bbox_climb_up.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))
         self.bbox_climb_up.onTrue(GoToPosition(self, "climb"))
         self.bbox_climb_up.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
