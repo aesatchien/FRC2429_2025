@@ -253,23 +253,17 @@ score_waypoint_dict = { #TODO: READ CURRENT WRIST POSITION!
             'wrist': constants.k_positions["l2"]["wrist_pivot"],
             'intake': 0
         },
-        0.3: {
+        0.4: {
             'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
             'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 7.25,
             'wrist': constants.k_positions["l2"]["wrist_pivot"],
             'intake': 1
         },
-        0.6: {
-            'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
-            'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
-            'wrist': constants.k_positions["l2"]["wrist_pivot"],
-            'intake': 2
-        },
         0.8: {
             'elevator': constants.k_positions["l2"]["elevator"] + 0.035,
             'pivot': math.degrees(constants.k_positions["l2"]["shoulder_pivot"]) + 14.5,
             'wrist': constants.k_positions["l2"]["wrist_pivot"],
-            'intake': 0
+            'intake': 2
         }
     },
 
@@ -280,23 +274,17 @@ score_waypoint_dict = { #TODO: READ CURRENT WRIST POSITION!
             'wrist': constants.k_positions["l3"]["wrist_pivot"],
             'intake': 0
         },
-        0.3: {
+        0.4: {
             'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
             'pivot': math.degrees(constants.k_positions["l3"]["shoulder_pivot"]) + 7.25,
             'wrist': constants.k_positions["l3"]["wrist_pivot"],
             'intake': 1
         },
-        0.6: {
-            'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
-            'pivot': math.degrees(constants.k_positions["l3"]["shoulder_pivot"]) + 14.5,
-            'wrist': constants.k_positions["l3"]["wrist_pivot"],
-            'intake': 2
-        },
         0.8: {
             'elevator': constants.k_positions["l3"]["elevator"] + 0.035,
             'pivot': math.degrees(constants.k_positions["l3"]["shoulder_pivot"]) + 14.5,
             'wrist': constants.k_positions["l3"]["wrist_pivot"],
-            'intake': 0
+            'intake': 2
         }
     },
 
@@ -307,23 +295,17 @@ score_waypoint_dict = { #TODO: READ CURRENT WRIST POSITION!
             'wrist': constants.k_positions["l4"]["wrist_pivot"],
             'intake': 0
         },
-        0.3: {
+        0.4: {
             'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
             'pivot': math.degrees(constants.k_positions["l4"]["shoulder_pivot"]) + 5.0,
             'wrist': constants.k_positions["l4"]["wrist_pivot"],
             'intake': 1
         },
-        0.6: {
+        0.8: {
             'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
             'pivot': math.degrees(constants.k_positions["l4"]["shoulder_pivot"]) + 10.0,
             'wrist': constants.k_positions["l4"]["wrist_pivot"],
             'intake': 2
-        },
-        0.9: {
-            'elevator': constants.k_positions["l4"]["elevator"] + 0.035,
-            'pivot': math.degrees(constants.k_positions["l4"]["shoulder_pivot"]) + 10.0,
-            'wrist': constants.k_positions["l4"]["wrist_pivot"],
-            'intake': 0
         }
     }
 }
