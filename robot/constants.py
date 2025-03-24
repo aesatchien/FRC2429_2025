@@ -186,9 +186,9 @@ for tag_id in range(17, 23):
         # see ../resources/plots/useful_robot_locations.ipynb
         coral_center_offset = 0.0  # the center of the arm is not the center of the robot - this is in y because we rotated 90
         x_offset = 0.45 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
-        y_offset = 0.165  # should be 0.20 as of 20250323
-        robot_offset_left = Translation2d(x_offset , -y_offset -  coral_center_offset).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(x_offset -  coral_center_offset, +y_offset -  coral_center_offset).rotateBy(tag_yaw)
+        y_offset = 0.165  # was 0.20 as of 20250323
+        robot_offset_left = Translation2d(x_offset, -y_offset - coral_center_offset).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(x_offset - coral_center_offset, +y_offset - coral_center_offset).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left
@@ -266,6 +266,9 @@ class ClimberConstants:
     k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
     # k_config.smartCurrentLimit(40)
     k_config.voltageCompensation(12)
+    # CJH adding hardware acceleration limit to stop climber being jerky
+    k_config.closedLoopRampRate(0.4)  # seconds to go from 0 to 100% output
+    k_config.openLoopRampRate(0.4)
 
     k_config.encoder.positionConversionFactor(math.tau / k_gear_ratio)
     k_config.encoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))

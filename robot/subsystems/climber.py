@@ -3,7 +3,7 @@ import math
 import rev
 import wpilib
 from commands2 import Subsystem
-from rev import SparkMax, SparkMax
+from rev import SparkMax
 from wpimath.units import radiansToDegrees, degreesToRadians
 import constants
 
@@ -37,12 +37,12 @@ class Climber(Subsystem):
         self.tolerance = constants.ClimberConstants.k_tolerance  # rads equal to five degrees - then we will be "at goal"
         self.goal = constants.ClimberConstants.k_climber_motor_stowed_angle
 
+
     def set_reference(self, radians: float):
         radians = radians if radians < constants.ClimberConstants.k_climber_forward_rotation_limit else constants.ClimberConstants.k_climber_forward_rotation_limit
         radians = radians if radians > constants.ClimberConstants.k_climber_reverse_rotation_limit else constants.ClimberConstants.k_climber_reverse_rotation_limit
 
         self.goal = radians
-
         self.controller.setReference(self.goal, SparkMax.ControlType.kPosition, rev.ClosedLoopSlot.kSlot0)
 
     def set_brake_mode(self, mode='brake'):

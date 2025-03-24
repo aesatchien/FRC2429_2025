@@ -8,7 +8,7 @@ import wpilib
 from wpimath.controller import PIDController, ProfiledPIDController
 from wpimath.geometry import Pose2d, Translation2d, Rotation2d
 from wpimath.trajectory import TrapezoidProfile, TrapezoidProfileRadians
-from wpimath.filter import Debouncer, SlewRateLimiter
+from wpimath.filter import SlewRateLimiter
 
 from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
@@ -31,8 +31,8 @@ class AutoToPose(commands2.Command):  #
         self.from_robot_state = from_robot_state
         self.nearest = nearest  # only use nearest tags as the target
 
-        # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot
-        max_units_per_second = 3  # can't be too low or you get lag - probably should be between 3 and 5
+        # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot if it servos to full speed
+        max_units_per_second = 2  # can't be too low or you get lag and we allow a max of < 50% below
         self.x_limiter = SlewRateLimiter(max_units_per_second)
         self.y_limiter = SlewRateLimiter(max_units_per_second)
 
@@ -76,8 +76,8 @@ class AutoToPose(commands2.Command):  #
                 self.y_pid.setGoal(self.target_pose.Y())
             else:
                 # trying to get it to slow down but still make it to final position
-                self.x_pid = PIDController(0.8, 0.00, 0.0)
-                self.y_pid = PIDController(0.8, 0.00, 0.0)
+                self.x_pid = PIDController(0.7, 0.00, 0.0)
+                self.y_pid = PIDController(0.7, 0.00, 0.0)
                 self.x_pid.setSetpoint(self.target_pose.X())
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
@@ -158,6 +158,7 @@ class AutoToPose(commands2.Command):  #
             y_output = y_output if math.fabs(y_output) < trans_max else math.copysign(trans_max, y_output)
             rot_output = rot_output if math.fabs(rot_output) < rot_max else math.copysign(rot_max, rot_output)
 
+            # smooth out the initial jumps with slew_limiters
             x_output = self.x_limiter.calculate(x_output)
             y_output = self.y_limiter.calculate(y_output)
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
