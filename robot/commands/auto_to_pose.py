@@ -180,8 +180,8 @@ class AutoToPose(commands2.Command):  #
 
     def isFinished(self) -> bool:
         diff = self.swerve.get_pose().relativeTo(self.target_pose)
-        rotation_achieved = abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees()
-        translation_achieved = diff.translation().norm() < ac.k_translation_tolerance_meters
+        rotation_achieved = abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2  # really push it - less than a degree
+        translation_achieved = diff.translation().norm() < ac.k_translation_tolerance_meters / 2  # get to within an inch
         return rotation_achieved and translation_achieved
 
     def end(self, interrupted: bool) -> None:

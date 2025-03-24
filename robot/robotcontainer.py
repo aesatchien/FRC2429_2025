@@ -487,7 +487,7 @@ class RobotContainer:
             but.debounce(0.15).onTrue(PrintCommand(f'-- Starting AutoDriving to {reef_goals[reef_goal_key]} --'))
 
             if use_pathplanner:
-                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with
+                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with - or a finallyDo(lambda interrupted: x or y)
                     commands2.ConditionalCommand(
                         onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
                             self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
