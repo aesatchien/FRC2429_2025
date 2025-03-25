@@ -542,13 +542,13 @@ class RobotContainer:
                 GoToStow(container=self)))
 
         # climber actions  # todo - possibly extend climber setting arm to L1 -  maybe based on the climber encoder
-        self.bbox_climb_up.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))
-        self.bbox_climb_up.onTrue(GoToPosition(self, "climb"))
-        self.bbox_climb_up.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
-
-        self.bbox_climb_down.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(10), self.climber))
-        self.bbox_climb_down.onTrue(GoToPosition(self, "climb"))
+        self.bbox_climb_down.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))
+        self.bbox_climb_down.onTrue(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "climb")))
         self.bbox_climb_down.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
+
+        self.bbox_climb_up.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(10), self.climber))
+        self.bbox_climb_up.onTrue(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "climb")))
+        self.bbox_climb_up.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
 
         # print commands for testing
         #self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))

@@ -143,8 +143,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "climb": {
-        "elevator": inchesToMeters(14),
-        "shoulder_pivot": math.radians(0),
+        "elevator": inchesToMeters(8),
+        "shoulder_pivot": math.radians(30),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -324,7 +324,7 @@ class WristConstants:
     k_config.absoluteEncoder.inverted(True)
     # print("setting zero offset!")
     # k_config.absoluteEncoder.zeroOffset(3.52) this doesn't work that well LHACK 3/14/2025
-    k_abs_encoder_readout_when_at_zero_position = 0.456
+    k_abs_encoder_readout_when_at_zero_position = 0.43
 
     k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))
