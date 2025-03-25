@@ -77,6 +77,13 @@ class Wrist(Subsystem):
     def set_encoder_position(self, radians: float):
         self.encoder.setPosition(radians)
 
+    def offset_encoder_position_degrees(self, offset_degrees):
+        # allow the drivers to fine-tune the wrist until we figure out its weird offset issues
+        current_position = self.encoder.getPosition()
+        new_position = current_position + math.radians(offset_degrees)
+        self.set_encoder_position(new_position)
+        print(f' -- offset wrist by {offset_degrees}°--')
+
     def get_angle(self) -> float:
         return self.encoder.getPosition()
         # return self.abs_encoder.getPosition()

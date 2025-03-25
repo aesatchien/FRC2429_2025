@@ -58,6 +58,7 @@ from commands.pid_to_point import PIDToPoint
 from commands.auto_to_pose import AutoToPose
 from commands.reflash import Reflash
 from commands.reset_field_centric import ResetFieldCentric
+from commands.recalibrate_wrist import RecalibrateWrist
 from commands.run_intake import RunIntake
 from commands.score import Score
 from commands.sequential_scoring import SequentialScoring
@@ -252,6 +253,11 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
         wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
         wpilib.SmartDashboard.putData('Set valid tag IDs', SetValidTags(self, constants.VisionConstants.k_valid_tags))
+        wpilib.SmartDashboard.putData('IncScoringUp', commands2.InstantCommand(lambda: self.elevator.increment_scoring(1)).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('IncScoringDown', commands2.InstantCommand(lambda: self.elevator.increment_scoring(-1)).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('RecalWrist', RecalibrateWrist(container=self).withTimeout(10))
+        wpilib.SmartDashboard.putData('CalWristUp', commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(2)).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('CalWristDown', commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(-2)).ignoringDisable(True))
         # end pyqt dashboard section
 
         # quick way to test all scoring positions from dashboard

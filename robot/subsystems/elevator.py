@@ -110,6 +110,27 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
     def get_at_goal(self):
         return self.at_goal
 
+    # note - this won't work with the way scoring are all sequential commands with no initialize phase
+    def increment_scoring(self, delta_inches):  # correct for elevator sag by adding an inch or more to scoring positions
+        positions = ['l1', 'l2', 'l3', 'l4']
+        current_positions = []
+        final_positions = []
+        for position in positions:
+            current_positions.append(round(constants.k_positions[position]['elevator'], 2))
+            constants.k_positions[position]['elevator'] = constants.k_positions[position]['elevator'] + inchesToMeters(delta_inches)
+            final_positions.append(round(constants.k_positions[position]['elevator'], 2))
+        print(f'Elevator scoring changed from {current_positions} to {final_positions}')
+
+    def increment_pickup(self, delta_inches):  # correct for elevator sag by adding an inch or more to human player positions
+        positions = ['coral station']
+        current_positions = []
+        final_positions = []
+        for position in positions:
+            current_positions.append(round(constants.k_positions[position]['elevator'], 2))
+            constants.k_positions[position]['elevator'] = constants.k_positions[position]['elevator'] + inchesToMeters(delta_inches)
+            final_positions.append(round(constants.k_positions[position]['elevator'], 2))
+        print(f'Coral pickup changed from {current_positions} to {final_positions}')
+
     def periodic(self) -> None:
         # What if we didn't call the below for a few cycles after we set the position?
         super().periodic()  # this does the automatic motion profiling in the background
