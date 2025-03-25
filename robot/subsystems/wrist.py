@@ -103,9 +103,8 @@ class Wrist(Subsystem):
 
         if self.counter % 10 == 0:
 
-            wpilib.SmartDashboard.putNumber("wrist abs encoder, rad", self.abs_encoder.getPosition())
+            wpilib.SmartDashboard.putNumber("wrist abs encoder", self.abs_encoder.getPosition())
             wpilib.SmartDashboard.putNumber("wrist relative encoder, rad", self.encoder.getPosition())
-            wpilib.SmartDashboard.putNumber("wrist abs encoder, degrees", math.degrees(self.abs_encoder.getPosition()))
             wpilib.SmartDashboard.putNumber("wrist relative encoder, degrees", math.degrees(self.encoder.getPosition()))
 
             if constants.WristConstants.k_nt_debugging:  # extra debugging info for NT
