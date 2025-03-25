@@ -205,9 +205,9 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
 
         # Arshan's 67 scoring trajectory tests
-        wpilib.SmartDashboard.putData('67 score trajectory L2', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l2'], list(trajectory.score_waypoint_dict['l2'].keys())[-1]), wait_to_finish=True))
-        wpilib.SmartDashboard.putData('67 score trajectory L3', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l3'], list(trajectory.score_waypoint_dict['l3'].keys())[-1]), wait_to_finish=True))
-        wpilib.SmartDashboard.putData('67 score trajectory L4', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l4'], list(trajectory.score_waypoint_dict['l4'].keys())[-1]), wait_to_finish=True))
+        wpilib.SmartDashboard.putData('67 score trajectory L2', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l2'], list(trajectory.score_waypoint_dict['l2'].keys())[-1]), wait_to_finish=True, ignore_wrist=True))
+        wpilib.SmartDashboard.putData('67 score trajectory L3', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l3'], list(trajectory.score_waypoint_dict['l3'].keys())[-1]), wait_to_finish=True, ignore_wrist=True))
+        wpilib.SmartDashboard.putData('67 score trajectory L4', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict['l4'], list(trajectory.score_waypoint_dict['l4'].keys())[-1]), wait_to_finish=True, ignore_wrist=True))
 
         #wpilib.SmartDashboard.putData('67 score trajectory', FollowTrajectory(container=self, current_trajectory=CustomTrajectory(trajectory.score_waypoint_dict[self.robot_state.get_target().value['name']], list(trajectory.score_waypoint_dict[self.robot_state.get_target().value['name']].keys())[-1]), wait_to_finish=True))
 
@@ -493,7 +493,7 @@ class RobotContainer:
             but.debounce(0.15).onTrue(PrintCommand(f'-- Starting AutoDriving to {reef_goals[reef_goal_key]} --'))
 
             if use_pathplanner:
-                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with
+                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with - or a finallyDo(lambda interrupted: x or y)
                     commands2.ConditionalCommand(
                         onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
                             self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
@@ -548,13 +548,13 @@ class RobotContainer:
                 GoToStow(container=self)))
 
         # climber actions  # todo - possibly extend climber setting arm to L1 -  maybe based on the climber encoder
-        self.bbox_climb_up.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))
-        self.bbox_climb_up.onTrue(GoToPosition(self, "climb"))
-        self.bbox_climb_up.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
-
-        self.bbox_climb_down.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(10), self.climber))
-        self.bbox_climb_down.onTrue(GoToPosition(self, "climb"))
+        self.bbox_climb_down.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))
+        self.bbox_climb_down.onTrue(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "climb")))
         self.bbox_climb_down.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
+
+        self.bbox_climb_up.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(10), self.climber))
+        self.bbox_climb_up.onTrue(RunIntake(self, self.intake, 0).andThen(GoToPosition(self, "climb")))
+        self.bbox_climb_up.onFalse(commands2.InstantCommand(lambda: self.climber.set_voltage(0), self.climber))
 
         # print commands for testing
         #self.bbox_net.onTrue(commands2.PrintCommand("Pushed BBox Net"))

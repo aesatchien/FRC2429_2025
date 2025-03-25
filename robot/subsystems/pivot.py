@@ -5,6 +5,7 @@ import rev
 import wpilib
 from wpimath.units import inchesToMeters, radiansToDegrees, degreesToRadians
 import math
+from time import sleep
 
 import constants
 
@@ -71,6 +72,25 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
         self.tolerance = 0.087  # rads equal to five degrees - then we will be "at goal"
         self.goal = constants.ShoulderConstants.k_starting_angle
         self.at_goal = True
+
+        self.abs_encoder = self.motor.getAbsoluteEncoder()
+        abs_raw = self.abs_encoder.getPosition()
+        abs_raws = []
+        for reading in range(20):
+            abs_raws.append(self.abs_encoder.getPosition())
+            sleep(0.02)
+
+        abs_raws_trunc = abs_raws[10:]
+        abs_raw = sum(abs_raws_trunc) / len(abs_raws_trunc)
+        abs_offset = -(abs_raw - constants.ShoulderConstants.k_abs_encoder_readout_when_at_ninety_deg_position)
+        abs_offset_rad = abs_offset * math.tau
+        abs_offset_rad += math.pi / 2
+        msg = f'Pivot raw abs enc: {abs_raws[:10]}  Final: {abs_raws_trunc}\n'
+        msg += f'Pivot absolute offset: {abs_offset:.3f} ({abs_offset_rad:.3f} rad or {math.degrees(abs_offset_rad):.1f} degrees) '
+        print(msg)
+
+        self.encoder.setPosition(abs_offset_rad)
+
 
         self.enable()
         # self.disable()
@@ -163,3 +183,4 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
             self.is_moving = abs(self.encoder.getVelocity()) > 0.001  # m per second
             wpilib.SmartDashboard.putBoolean(f'{self.getName()}_is_moving', self.is_moving)
             wpilib.SmartDashboard.putNumber(f'{self.getName()}_spark_angle', radiansToDegrees(self.angle))
+            wpilib.SmartDashboard.putNumber(f'{self.getName()}_abs_encoder_readout', self.abs_encoder.getPosition())
