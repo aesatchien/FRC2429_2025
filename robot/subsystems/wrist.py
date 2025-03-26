@@ -82,7 +82,7 @@ class Wrist(Subsystem):
         current_position = self.encoder.getPosition()
         new_position = current_position + math.radians(offset_degrees)
         self.set_encoder_position(new_position)
-        print(f' -- offset wrist by {offset_degrees}°--')
+        print(f' -- offset wrist by {offset_degrees}°  (from {math.degrees(current_position):.1f} to {math.degrees(new_position):.1f}) --')
 
     def get_angle(self) -> float:
         return self.encoder.getPosition()
