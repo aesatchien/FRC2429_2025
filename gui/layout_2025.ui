@@ -1200,9 +1200,9 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_scoring_up_indicator">
+      <widget class="QLabel2" name="qlabel_elevator_shift_up_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1226,7 +1226,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>SCORE+</string>
+        <string>C ELE+</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1336,9 +1336,9 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_scoring_down_indicator">
+      <widget class="QLabel2" name="qlabel_elevator_shift_down_indicator">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1362,7 +1362,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>SCORE -</string>
+        <string>C ELE -</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>

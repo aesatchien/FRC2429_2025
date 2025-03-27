@@ -110,6 +110,16 @@ class Elevator(commands2.TrapezoidProfileSubsystem):
     def get_at_goal(self):
         return self.at_goal
 
+    def set_encoder_position(self, meters: float):
+        self.encoder.setPosition(meters)
+
+    def offset_encoder_position_meters(self, offset_meters):
+        # allow the drivers to fine-tune the elevator until heights are good enough
+        current_position = self.encoder.getPosition()
+        new_position = current_position + offset_meters
+        self.set_encoder_position(new_position)
+        print(f' -- offset elevator by {offset_meters:.3f}m  (from {current_position:.3f}m  to {new_position:.3f}m) --')
+
     # note - this won't work with the way scoring are all sequential commands with no initialize phase
     def increment_scoring(self, delta_inches):  # correct for elevator sag by adding an inch or more to scoring positions
         positions = ['l1', 'l2', 'l3', 'l4']
