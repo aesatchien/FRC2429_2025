@@ -370,8 +370,8 @@ class ShoulderConstants:
     k_moi = 0.5914
     k_plant = DCMotor.neoVortex(2)
 
-    k_max_velocity_rad_per_second = 0.5
-    k_max_acceleration_rad_per_sec_squared = 5
+    k_max_velocity_rad_per_second = 8 * math.pi
+    k_max_acceleration_rad_per_sec_squared = 10
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
     k_kG_volts = 1.4/2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
     k_kV_volt_second_per_radian = 1.69  # stays the same with one or two motors, based on the NEO itself and gear ratio
