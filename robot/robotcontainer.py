@@ -533,27 +533,6 @@ class RobotContainer:
         # self.bbox_EF.or_(self.bbox_CD).onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(-2)).ignoringDisable(True))
 
         self.bbox_AB.whileTrue(
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             MoveElevator(self, self.elevator, 'incremental', 0.1)
         )
 

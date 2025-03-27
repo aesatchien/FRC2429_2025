@@ -46,7 +46,7 @@ k_positions = {
     "stow": {
         "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(90),
+        "wrist_pivot": math.radians(93),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
@@ -110,7 +110,7 @@ k_positions = {
     "coral station": {
         "elevator": 0.35, # HACK :was .40 at clark, .42 at LCEC
         "shoulder_pivot": math.radians(66),
-        "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
+        "wrist_pivot": math.radians(0 -3), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -324,7 +324,7 @@ class WristConstants:
     k_config.absoluteEncoder.inverted(True)
     # print("setting zero offset!")
     # k_config.absoluteEncoder.zeroOffset(3.52) this doesn't work that well LHACK 3/14/2025
-    k_abs_encoder_readout_when_at_zero_position = 0.458
+    k_abs_encoder_readout_when_at_zero_position = 0.47
 
     k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))
