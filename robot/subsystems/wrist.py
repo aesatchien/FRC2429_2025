@@ -108,7 +108,7 @@ class Wrist(Subsystem):
         #     # the wrist is currently in a bad position, so retract it!
         #     self.set_position(constants.k_positions["stow"]["wrist_pivot"])
 
-        if self.counter % 10 == 0:
+        if True: # self.counter % 10 == 0:
 
             wpilib.SmartDashboard.putNumber("wrist abs encoder", self.abs_encoder.getPosition())
             wpilib.SmartDashboard.putNumber("wrist relative encoder, rad", self.encoder.getPosition())

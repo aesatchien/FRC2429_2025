@@ -370,6 +370,9 @@ class RobotContainer:
         self.keyboard_trigger_w = commands2.button.Trigger(lambda: 87 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
         self.keyboard_trigger_o = commands2.button.Trigger(lambda: 79 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
 
+        self.keyboard_trigger_l = commands2.button.Trigger(lambda: 76 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+        self.keyboard_trigger_h = commands2.button.Trigger(lambda: 76 in self.keys_pressed_entry.getIntegerArray([])).debounce(0.06)
+
         # p: place (score)
         self.keyboard_trigger_p.onTrue(GoToStow(self))
 
@@ -391,6 +394,10 @@ class RobotContainer:
 
         # o: wrist go right (korean right is orin chok, also position on the keyboard)
         self.keyboard_trigger_w.onTrue(MoveWristSwap(self, self.wrist))
+
+        self.keyboard_trigger_h.onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(2)).ignoringDisable(True))
+        self.keyboard_trigger_l.onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(-2)).ignoringDisable(True))
+
 
     def register_commands(self):
 
@@ -475,41 +482,41 @@ class RobotContainer:
         #self.bbox_KL.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, 0, 0.2), timeout=2))  # positive should spin CCW
 
         # set up all six buttons on the reef for the while held conditions
-        button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
-        characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
-        states = [self.robot_state.is_left, self.robot_state.is_left, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_left]
-        poses_dict = constants.k_useful_robot_poses_blue
-        constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
-        reef_goals = self.robot_state.reef_goal_dict  # zip will give keys, but not poses
-
-        use_pathplanner = True
-        for but, state, chars, reef_goal_key in zip(button_list, states, characters, reef_goals.keys()):
-
-            # pure lambda fails because if you change the iterator it only gets the last one in the list at runtime
-            # note this is an onTrue - there is no delay in setting the goal
-            but.onTrue(self.robot_state.set_reef_goal_cmd(reef_goals[reef_goal_key]))
-
-            # set the reef pose of the robot for other auto-driving buttons, but you have to hold it down
-            but.debounce(0.15).onTrue(PrintCommand(f'-- Starting AutoDriving to {reef_goals[reef_goal_key]} --'))
-
-            if use_pathplanner:
-                but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with - or a finallyDo(lambda interrupted: x or y)
-                    commands2.ConditionalCommand(
-                        onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
-                            self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
-                        onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints).andThen(
-                            self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
-                        condition=state,
-                    )
-                )
-            else:  # pidtopoint version - can test both versions this way
-                but.debounce(0.15).whileTrue(
-                    commands2.ConditionalCommand(
-                        onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='not_pathplanner'),
-                        onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='not_pathplanner'),
-                        condition=state,
-                    )
-                )
+        # button_list = [self.bbox_AB, self.bbox_CD, self.bbox_EF, self.bbox_GH, self.bbox_IJ, self.bbox_KL]  #
+        # characters = ['ab', 'cd', 'ef', 'gh', 'ij', 'kl']
+        # states = [self.robot_state.is_left, self.robot_state.is_left, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_right, self.robot_state.is_left]
+        # poses_dict = constants.k_useful_robot_poses_blue
+        # constraints = swerve_constants.AutoConstants.k_pathfinding_constraints
+        # reef_goals = self.robot_state.reef_goal_dict  # zip will give keys, but not poses
+        #
+        # use_pathplanner = True
+        # for but, state, chars, reef_goal_key in zip(button_list, states, characters, reef_goals.keys()):
+        #
+        #     # pure lambda fails because if you change the iterator it only gets the last one in the list at runtime
+        #     # note this is an onTrue - there is no delay in setting the goal
+        #     but.onTrue(self.robot_state.set_reef_goal_cmd(reef_goals[reef_goal_key]))
+        #
+        #     # set the reef pose of the robot for other auto-driving buttons, but you have to hold it down
+        #     but.debounce(0.15).onTrue(PrintCommand(f'-- Starting AutoDriving to {reef_goals[reef_goal_key]} --'))
+        #
+        #     if use_pathplanner:
+        #         but.debounce(0.15).whileTrue(  # todo - wrap this in LED indicators, or make a start/end with - or a finallyDo(lambda interrupted: x or y)
+        #             commands2.ConditionalCommand(
+        #                 onTrue=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[0]], constraints=constraints).andThen(
+        #                     self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
+        #                 onFalse=AutoBuilder.pathfindToPoseFlipped(pose=poses_dict[chars[1]], constraints=constraints).andThen(
+        #                     self.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2)),
+        #                 condition=state,
+        #             )
+        #         )
+        #     else:  # pidtopoint version - can test both versions this way
+        #         but.debounce(0.15).whileTrue(
+        #             commands2.ConditionalCommand(
+        #                 onTrue=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[0]], control_type='not_pathplanner'),
+        #                 onFalse=AutoToPose(self, self.swerve, constants.k_useful_robot_poses_blue[chars[1]], control_type='not_pathplanner'),
+        #                 condition=state,
+        #             )
+        #         )
 
         # picking up coral from the human station
         self.bbox_human_right.whileTrue(GoToCoralStation(container=self))
@@ -522,6 +529,33 @@ class RobotContainer:
 
         #self.bbox_AB.whileTrue(PIDToPoint(self, self.swerve, Pose2d(0, 0, 0)))
         #self.bbox_GH.whileTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["g"]))
+        # self.bbox_KL.or_(self.bbox_IJ).onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(2)).ignoringDisable(True))
+        # self.bbox_EF.or_(self.bbox_CD).onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(-2)).ignoringDisable(True))
+
+        self.bbox_AB.whileTrue(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            MoveElevator(self, self.elevator, 'incremental', 0.1)
+        )
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))
@@ -533,19 +567,28 @@ class RobotContainer:
         self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
 
         # Reef actions
+        # possibilities:
+            # blocking command (very dangerous [will cook us entirely if we screw up])
+            # wait command and then retract (prone to user error)
+            # slow retraction (ditto if retracting soon)
+
         self.bbox_reef_alga_high.whileTrue(commands2.ParallelCommandGroup(
             GoToPosition(self, "algae high"),
             RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+
         self.bbox_reef_alga_high.onFalse(
-            RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-                GoToStow(container=self)))
+            commands2.WaitCommand(5).andThen(
+                RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+                    GoToStow(container=self))))
 
         self.bbox_reef_alga_low.whileTrue(commands2.ParallelCommandGroup(
             GoToPosition(self, "algae low"),
             RunIntake(self, self.intake, constants.IntakeConstants.k_algae_intaking_voltage)))
+
         self.bbox_reef_alga_low.onFalse(
-            RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
-                GoToStow(container=self)))
+            commands2.WaitCommand(5).andThen(
+                RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage, stop_on_end=False).andThen(
+                    GoToStow(container=self))))
 
         # climber actions  # todo - possibly extend climber setting arm to L1 -  maybe based on the climber encoder
         self.bbox_climb_down.onTrue(commands2.InstantCommand(lambda: self.climber.set_voltage(-10), self.climber))

@@ -44,8 +44,10 @@ class RecalibrateWrist(commands2.Command):
 
 
     def isFinished(self) -> bool:
-
         return self.counter > len(self.cal_positions)
+
+    def runsWhenDisabled(self) -> bool:
+        return True
 
     def end(self, interrupted: bool) -> None:
 
