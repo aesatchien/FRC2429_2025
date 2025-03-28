@@ -91,7 +91,6 @@ class Pivot(commands2.TrapezoidProfileSubsystem):
 
         self.encoder.setPosition(abs_offset_rad)
 
-
         self.enable()
         # self.disable()
 

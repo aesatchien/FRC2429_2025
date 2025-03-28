@@ -54,47 +54,49 @@ class CANStatus(commands2.Command):  # change the name for your command
             motor: rev.SparkBase =  self.can_ids[key]['motor']
 
             sticky_faults = motor.getStickyFaults()  # will be an integer representing the bit mask of the faults
-            if wpilib.RobotBase.isSimulation():
-                sticky_faults = random.randint(0,2048)
-            active_faults = motor.getFaults()  # TODO - parse these too
-            motor.clearFaults()  # apparently does not clear sticky faults, active only
+            print(sticky_faults)
 
-            set_bits = []
-            binary_string = bin(sticky_faults)[2:]  # convert to binary and ignore the initial two 0b characters
-            for i, bit in enumerate(reversed(binary_string), start=0):
-                # Check if the bit is set (i.e., equals '1')
-                if bit == '1':
-                    # Add the position (0-based indexing) of the set bit to the list
-                    set_bits.append(i)
-
-            fault_codes = [self.fault_ids[id] for id in set_bits]
-            self.can_ids[key].update({'sticky_faults': sticky_faults})
-            self.can_ids[key].update({'set_bits': set_bits})
-            self.can_ids[key].update({'fault_codes': fault_codes})
-
-            print(f"CANID {key:02d}: {self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
-            SmartDashboard.putString(f"CANID {key:02d}", f"{self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
-
-        if self.write_log:
-            try:
-                with open('can.pkl', 'rb') as file:
-                    records = pkl.load(file)
-            except FileNotFoundError:  # start with a header row
-                header = [f"{key} {self.can_ids[key]['name']}" for key in self.can_ids.keys()]
-                records = [header]
-
-            output = {}
-            for key in self.can_ids: # can't pickle a motor
-                output.update({key:{'NAME': self.can_ids[key]['name'], 'STICKY_FAULTS': self.can_ids[key]['sticky_faults'],
-                                    'SET_BITS': self.can_ids[key]['set_bits'], 'FAULT_CODES': self.can_ids[key]['fault_codes']}})
-
-            just_faults = [self.can_ids[key]['fault_codes'] for key in self.can_ids.keys()]
-
-            records.append(just_faults)
-
-            with open('can.pkl', 'wb') as file:
-                pkl.dump(records, file)
-            print('Wrote CAN faults to can.pkl')
+            # if wpilib.RobotBase.isSimulation():
+            #     sticky_faults = random.randint(0,2048)
+            # active_faults = motor.getFaults()  # TODO - parse these too
+            # motor.clearFaults()  # apparently does not clear sticky faults, active only
+            #
+            # set_bits = []
+            # binary_string = bin(sticky_faults)[2:]  # convert to binary and ignore the initial two 0b characters
+            # for i, bit in enumerate(reversed(binary_string), start=0):
+            #     # Check if the bit is set (i.e., equals '1')
+            #     if bit == '1':
+            #         # Add the position (0-based indexing) of the set bit to the list
+            #         set_bits.append(i)
+            #
+            # fault_codes = [self.fault_ids[id] for id in set_bits]
+            # self.can_ids[key].update({'sticky_faults': sticky_faults})
+            # self.can_ids[key].update({'set_bits': set_bits})
+            # self.can_ids[key].update({'fault_codes': fault_codes})
+        #
+        #     print(f"CANID {key:02d}: {self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
+        #     SmartDashboard.putString(f"CANID {key:02d}", f"{self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
+        #
+        # if self.write_log:
+        #     try:
+        #         with open('can.pkl', 'rb') as file:
+        #             records = pkl.load(file)
+        #     except FileNotFoundError:  # start with a header row
+        #         header = [f"{key} {self.can_ids[key]['name']}" for key in self.can_ids.keys()]
+        #         records = [header]
+        #
+        #     output = {}
+        #     for key in self.can_ids: # can't pickle a motor
+        #         output.update({key:{'NAME': self.can_ids[key]['name'], 'STICKY_FAULTS': self.can_ids[key]['sticky_faults'],
+        #                             'SET_BITS': self.can_ids[key]['set_bits'], 'FAULT_CODES': self.can_ids[key]['fault_codes']}})
+        #
+        #     just_faults = [self.can_ids[key]['fault_codes'] for key in self.can_ids.keys()]
+        #
+        #     records.append(just_faults)
+        #
+        #     with open('can.pkl', 'wb') as file:
+        #         pkl.dump(records, file)
+        #     print('Wrote CAN faults to can.pkl')
 
             # to read, just do this script
             # import pickle as pkl

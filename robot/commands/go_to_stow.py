@@ -1,4 +1,5 @@
 import commands2
+from commands.reflash import Reflash
 import constants
 from commands.move_wrist import MoveWrist
 from commands.move_pivot import MovePivot
@@ -20,6 +21,8 @@ class GoToStow(commands2.SequentialCommandGroup):
                     MoveElevator(container=container, elevator=self.container.elevator, mode="specified",
                                  height=constants.k_positions["stow"]["elevator"], wait_to_finish=True, indent=indent + 1).withTimeout(5)
         ))
+
+        self.addCommands(Reflash(container))
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
 
