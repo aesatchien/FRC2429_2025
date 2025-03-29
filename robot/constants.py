@@ -66,7 +66,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.46, # 0.52 at ventura
+        "elevator": 0.44, # 0.52 at ventura
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
