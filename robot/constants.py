@@ -219,7 +219,7 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
-    k_intake_config.smartCurrentLimit(20)
+    k_intake_config.smartCurrentLimit(40)
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
@@ -231,7 +231,7 @@ class IntakeConstants:
     k_coral_intaking_voltage = -4 # TODO: increase again to -12 once we have gears that dont break nonstop
     k_algae_intaking_voltage = 12
 
-    k_coral_scoring_voltage = 12
+    k_coral_scoring_voltage = 1.3
 
     k_seconds_to_stay_on_while_scoring = 0.5
 
