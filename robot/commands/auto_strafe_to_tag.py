@@ -56,9 +56,9 @@ class AutoStrafeToTag(commands2.Command):  #
         if self.location == 'center':
             self.camera_setpoint = 0.5
         elif self.location == 'left':  # we want to be on the left of the tag, so it is past center in image
-            self.camera_setpoint = 0.855  # 0.886 against reef, 0.828 2" back
+            self.camera_setpoint = 0.788  # 0.788 against reef, lower 2" back
         elif self.location == 'right' :
-            self.camera_setpoint = 0.490  # 0.505 against reef, 0.470 2" back
+            self.camera_setpoint = 0.427  # 0.427 against reef, 0.03 lower 2" back
         else:
             raise ValueError(f"Location must be in [center, left, right] - not {self.location}.")
 
