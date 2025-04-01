@@ -51,32 +51,32 @@ class CANStatus(commands2.Command):  # change the name for your command
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.1f} s **")
 
         for key in self.can_ids.keys():
-            motor: rev.SparkBase =  self.can_ids[key]['motor']
+            motor: rev.SparkBase = self.can_ids[key]['motor']
 
-            sticky_faults = motor.getStickyFaults()  # will be an integer representing the bit mask of the faults
-            print(sticky_faults)
+            sticky_faults = motor.getStickyFaults()  # in 2024 will be an integer representing the bit mask of the faults
+            print(sticky_faults.rawBits)  # 2024 it was just sticky_faults that was the integer, now it's an object with rawBits
 
-            # if wpilib.RobotBase.isSimulation():
-            #     sticky_faults = random.randint(0,2048)
-            # active_faults = motor.getFaults()  # TODO - parse these too
-            # motor.clearFaults()  # apparently does not clear sticky faults, active only
-            #
-            # set_bits = []
-            # binary_string = bin(sticky_faults)[2:]  # convert to binary and ignore the initial two 0b characters
-            # for i, bit in enumerate(reversed(binary_string), start=0):
-            #     # Check if the bit is set (i.e., equals '1')
-            #     if bit == '1':
-            #         # Add the position (0-based indexing) of the set bit to the list
-            #         set_bits.append(i)
-            #
-            # fault_codes = [self.fault_ids[id] for id in set_bits]
-            # self.can_ids[key].update({'sticky_faults': sticky_faults})
-            # self.can_ids[key].update({'set_bits': set_bits})
-            # self.can_ids[key].update({'fault_codes': fault_codes})
-        #
-        #     print(f"CANID {key:02d}: {self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
-        #     SmartDashboard.putString(f"CANID {key:02d}", f"{self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
-        #
+            if wpilib.RobotBase.isSimulation():
+                sticky_faults = random.randint(0,2048)
+            active_faults = motor.getFaults()  # TODO - parse these too
+            motor.clearFaults()  # apparently does not clear sticky faults, active only
+
+            set_bits = []
+            binary_string = bin(sticky_faults)[2:]  # convert to binary and ignore the initial two 0b characters
+            for i, bit in enumerate(reversed(binary_string), start=0):
+                # Check if the bit is set (i.e., equals '1')
+                if bit == '1':
+                    # Add the position (0-based indexing) of the set bit to the list
+                    set_bits.append(i)
+
+            fault_codes = [self.fault_ids[id] for id in set_bits]
+            self.can_ids[key].update({'sticky_faults': sticky_faults})
+            self.can_ids[key].update({'set_bits': set_bits})
+            self.can_ids[key].update({'fault_codes': fault_codes})
+
+            print(f"CANID {key:02d}: {self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
+            SmartDashboard.putString(f"CANID {key:02d}", f"{self.can_ids[key]['name']:13} sticky_faults: {sticky_faults} {set_bits} {fault_codes}")
+
         # if self.write_log:
         #     try:
         #         with open('can.pkl', 'rb') as file:
@@ -97,15 +97,15 @@ class CANStatus(commands2.Command):  # change the name for your command
         #     with open('can.pkl', 'wb') as file:
         #         pkl.dump(records, file)
         #     print('Wrote CAN faults to can.pkl')
-
-            # to read, just do this script
-            # import pickle as pkl
-            # import pandas as pd
-            # with open('can.pkl', 'rb') as file:
-            #     data = pkl.load(file)
-            # column_names = data[0]
-            # df = pd.DataFrame(data[1:], columns=column_names)
-            # df
+        #
+        #     to read, just do this script
+        #     import pickle as pkl
+        #     import pandas as pd
+        #     with open('can.pkl', 'rb') as file:
+        #         data = pkl.load(file)
+        #     column_names = data[0]
+        #     df = pd.DataFrame(data[1:], columns=column_names)
+        #     df
 
     def execute(self) -> None:
         pass
