@@ -2,6 +2,8 @@ import wpilib
 from commands2 import SubsystemBase
 from wpilib import SmartDashboard, DriverStation
 from ntcore import NetworkTableInstance
+from wpimath.geometry import Pose2d
+import math
 
 import constants
 
@@ -44,6 +46,19 @@ class Vision(SubsystemBase):
         return target_available and time_stamp_good
 
     def get_tag_strafe(self, target='ardu_high_tags'):
+
+        if wpilib.RobotBase.isSimulation():  # trick the sim into thinking we are on tag 18
+            drive_y = SmartDashboard.getNumber('drive_y', 0)
+            y_dist = drive_y - 4.025900	# will be positive if we are left of tag,right if center
+            # pretend that we get 100% change over a meter
+            if math.fabs(y_dist) > 0.5:  # todo - make this dist from tag
+                return 0
+            else:
+                # mimic the behavior of a tag in a camera - if we are on the left of the tag (y above tag 18)
+                # we add to the return value a positive number, so the "tag" is on the right side of the camera
+                cam_fraction = 0.5 + y_dist
+                return cam_fraction # should go from 0 to 1, with 0.5 being centered
+
         tag_available = self.target_available(target)
         if tag_available > 0:
             return self.camera_dict[target]['strafe_entry'].get()

@@ -40,6 +40,8 @@ from autonomous.one_plus_two_left import OnePlusTwoLeft
 from autonomous.one_plus_one_left import OnePlusOne
 
 # 2429 commands
+from commands.auto_to_pose import AutoToPose
+from commands.auto_strafe_to_tag import AutoStrafeToTag
 from commands.auto_l1 import AutoL1
 from commands.can_status import CANStatus
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
@@ -55,7 +57,6 @@ from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.move_wrist_swap import MoveWristSwap
 from commands.pid_to_point import PIDToPoint
-from commands.auto_to_pose import AutoToPose
 from commands.reflash import Reflash
 from commands.reset_field_centric import ResetFieldCentric
 from commands.recalibrate_wrist import RecalibrateWrist
@@ -284,12 +285,15 @@ class RobotContainer:
         # move this to the top of the button area so we have a left and a right auto-drive
         self.triggerY.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
+        self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, location='right'))
+        self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, location='left'))
+
         # giving AJ buttons to hold for driving to a goal on the left and on the right
         self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
-        self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True,control_type='not_pathplanner'))
+        #self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True,control_type='not_pathplanner'))
 
         self.triggerX.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)))
-        self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
+        #self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125
