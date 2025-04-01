@@ -232,6 +232,6 @@ class RobotState(commands2.Subsystem):
             return "unknown"
 
     def periodic(self):
+        self.counter += 1  # Increment the main counter
         if self.counter % 10 == 0:  # Execute every 5 cycles (10Hz update rate)
             pass
-        self.counter += 1  # Increment the main counter
