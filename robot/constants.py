@@ -46,7 +46,7 @@ k_positions = {
     "stow": {
         "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(90),
+        "wrist_pivot": math.radians(93),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
@@ -59,21 +59,21 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 0.65,
+        "elevator": 0.64,
         "shoulder_pivot": math.radians(179),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.46, # 0.52 at ventura
+        "elevator": 0.45, # 0.52 at ventura
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.89,  # 0.86
+        "elevator": 0.87,  # 0.86
         "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -110,7 +110,7 @@ k_positions = {
     "coral station": {
         "elevator": 0.35, # HACK :was .40 at clark, .42 at LCEC
         "shoulder_pivot": math.radians(66),
-        "wrist_pivot": math.radians(0), # hopefully the negative makes it turn the safer way
+        "wrist_pivot": math.radians(-4), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -219,7 +219,7 @@ class IntakeConstants:
     k_intake_config = SparkMaxConfig()
     k_intake_config.inverted(False) # this is how our code works LHACK 3/3/25
     k_intake_config.closedLoop.pid(1, 0, 0)
-    k_intake_config.smartCurrentLimit(20)
+    k_intake_config.smartCurrentLimit(40)
     k_intake_config.voltageCompensation(12)
 
     k_tof_coral_port = 13
@@ -231,7 +231,7 @@ class IntakeConstants:
     k_coral_intaking_voltage = -4 # TODO: increase again to -12 once we have gears that dont break nonstop
     k_algae_intaking_voltage = 12
 
-    k_coral_scoring_voltage = 12
+    k_coral_scoring_voltage = 1.3
 
     k_seconds_to_stay_on_while_scoring = 0.5
 
@@ -324,7 +324,7 @@ class WristConstants:
     k_config.absoluteEncoder.inverted(True)
     # print("setting zero offset!")
     # k_config.absoluteEncoder.zeroOffset(3.52) this doesn't work that well LHACK 3/14/2025
-    k_abs_encoder_readout_when_at_zero_position = 0.458
+    k_abs_encoder_readout_when_at_zero_position = 0.47
 
     k_config.closedLoop.pid(p=0.8, i=0, d=0, slot=ClosedLoopSlot(0))
     k_config.closedLoop.pid(p=0.4, i=0, d=0, slot=ClosedLoopSlot(1))
@@ -370,8 +370,8 @@ class ShoulderConstants:
     k_moi = 0.5914
     k_plant = DCMotor.neoVortex(2)
 
-    k_max_velocity_rad_per_second = 0.5
-    k_max_acceleration_rad_per_sec_squared = 5
+    k_max_velocity_rad_per_second = 8 * math.pi
+    k_max_acceleration_rad_per_sec_squared = 10
     k_kS_volts = 0 # constant to always add, uses the sign of velocity
     k_kG_volts = 1.4/2.0  # 12kg at .2m COM, cuts in half with two motors, goes up with mass and distance, down with efficiency
     k_kV_volt_second_per_radian = 1.69  # stays the same with one or two motors, based on the NEO itself and gear ratio

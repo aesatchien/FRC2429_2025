@@ -23,9 +23,9 @@ class MoveWristSwap(commands2.Command):
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 
         if self.wrist.get_angle() > math.radians(45):
-            self.wrist.set_position(math.radians(-90))
+            self.wrist.set_position(math.radians(-92))
         elif self.wrist.get_angle() < math.radians(45):
-            self.wrist.set_position(math.radians(90))
+            self.wrist.set_position(math.radians(93))
         else:
             print("Didn't swap wrist- it's not in a swappable position anyways!")
 

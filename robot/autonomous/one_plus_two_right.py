@@ -9,6 +9,7 @@ from pathplannerlib.path import PathPlannerPath
 from commands.go_to_coral_station import GoToCoralStation
 from commands.go_to_reef_position import GoToReefPosition
 from commands.go_to_stow import GoToStow
+from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.score import Score
@@ -57,9 +58,9 @@ class OnePlusTwoRight(commands2.SequentialCommandGroup):
             ))
 
         # score on D with 3-second timeout then stow and turn off intake
-        self.addCommands(PrintCommand("final score")                )
+        self.addCommands(PrintCommand("final score"))
         self.addCommands(
-                WaitCommand(0.1).andThen(Score(container).withTimeout(3).andThen(GoToStow(container)).andThen(RunIntake(container, container.intake, 0))
+                WaitCommand(0.1).andThen(Score(container).withTimeout(0.5).andThen(MovePivot(container, container.pivot, "specified", angle=math.radians(90)))
                 ))
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
