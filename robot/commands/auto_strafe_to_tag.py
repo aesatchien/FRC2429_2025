@@ -35,7 +35,7 @@ class AutoStrafeToTag(commands2.Command):  #
         self.lost_tag_counter = 0
         self.location = location
         self.camera_setpoint = 0.5 # default value
-        self.tolerance = 0.02  # fraction of the cameraFoV
+        self.tolerance = 0.01  # fraction of the cameraFoV
         self.tolerance_counter = 0
 
         # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot if it servos to full speed
@@ -56,9 +56,9 @@ class AutoStrafeToTag(commands2.Command):  #
         if self.location == 'center':
             self.camera_setpoint = 0.5
         elif self.location == 'left':  # we want to be on the left of the tag, so it is past center in image
-            self.camera_setpoint = 0.75  # TODO - figure this out on the geniuscam
+            self.camera_setpoint = 0.855  # 0.886 against reef, 0.828 2" back
         elif self.location == 'right' :
-            self.camera_setpoint = 0.25  # TODO - figure this out on the geniuscam
+            self.camera_setpoint = 0.490  # 0.505 against reef, 0.470 2" back
         else:
             raise ValueError(f"Location must be in [center, left, right] - not {self.location}.")
 
@@ -70,7 +70,7 @@ class AutoStrafeToTag(commands2.Command):  #
 
         else:
             # trying to get it to slow down but still make it to final position
-            self.x_pid = PIDController(1, 0.00, 0.0)
+            self.x_pid = PIDController(0.5, 0.00, 0.0)
             self.x_pid.setSetpoint(self.camera_setpoint)
 
             self.rot_pid = PIDController(0.7, 0, 0,)  # 0.5
@@ -128,7 +128,7 @@ class AutoStrafeToTag(commands2.Command):  #
 
             # TODO optimize the last mile and have it gracefully not oscillate
             #rot_max, rot_min = 0.8, 0.2
-            trans_max, trans_min = 0.3, 0.05  # it browns out when you start if this is too high
+            trans_max, trans_min = 0.25, 0.05  # it browns out when you start if this is too high
 
             # enforce minimum values , but try to stop oscillations
             diff_x = self.camera_setpoint - current_strafe  # this is the error, as a fraction of the x FoV
@@ -136,6 +136,8 @@ class AutoStrafeToTag(commands2.Command):  #
                 self.tolerance_counter += 1
             else:
                 self.tolerance_counter = 0
+
+
             self.x_overshot = True if math.fabs(diff_x) < self.tolerance else self.x_overshot
             if abs(x_output) < trans_min and not self.x_overshot and abs(diff_x) > self.tolerance:
                 x_output = math.copysign(trans_min, x_output)
