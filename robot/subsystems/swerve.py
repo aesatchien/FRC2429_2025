@@ -463,7 +463,7 @@ class Swerve (Subsystem):
 
         # send our current time to the dashboard
         ts = wpilib.Timer.getFPGATimestamp()
-        wpilib.SmartDashboard.putNumber('_timestamp', ts)  # this one we actually do every time
+        wpilib.SmartDashboard.putNumber('_timestamp', ts)  # this one we actually do every time TODO - see if this is done by wpilib and use it instead
 
         # use this if we have a phononvision camera - which we don't as of 20250316
         if self.use_photoncam and wpilib.RobotBase.isReal():  # sim complains if you don't set up a sim photoncam

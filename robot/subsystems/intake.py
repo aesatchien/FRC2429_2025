@@ -63,11 +63,10 @@ class Intake(Subsystem):
 
         if self.counter % 10 == 0:
             wpilib.SmartDashboard.putBoolean('gamepiece_present', self.has_coral())
-            wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
-            wpilib.SmartDashboard.putNumber('intake sigma', self.TOFSensorCoral.getRangeSigma())
 
             if constants.IntakeConstants.k_nt_debugging:  # extra debugging info for NT
-                pass
+                wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
+                wpilib.SmartDashboard.putNumber('intake sigma', self.TOFSensorCoral.getRangeSigma())
 
         self.counter += 1
         return super().periodic()

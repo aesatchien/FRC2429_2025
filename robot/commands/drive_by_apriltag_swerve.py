@@ -54,16 +54,16 @@ class DriveByApriltagSwerve(commands2.Command):  # change the name for your comm
                 tag_heading = tag_info_bit
 
 
-        wpilib.SmartDashboard.putNumber("_atag heading", tag_heading)
-        wpilib.SmartDashboard.putNumber("_atag distance", tag_distance)
+        #wpilib.SmartDashboard.putNumber("_atag heading", tag_heading)
+        #wpilib.SmartDashboard.putNumber("_atag distance", tag_distance)
 
         heading_out = self.heading_pid.calculate(tag_heading)
         distance_out = self.distance_pid.calculate(tag_distance)
 
         heading_out += math.copysign(0.015, heading_out)
 
-        wpilib.SmartDashboard.putNumber("_aheading out", heading_out)
-        wpilib.SmartDashboard.putNumber("_adistance out", distance_out)
+        #wpilib.SmartDashboard.putNumber("_aheading out", heading_out)
+        #wpilib.SmartDashboard.putNumber("_adistance out", distance_out)
 
         if abs(tag_heading) < math.radians(0.5):
             self.done_strafing = True
