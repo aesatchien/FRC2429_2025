@@ -111,6 +111,7 @@ class Led(commands2.Subsystem):
         ).withTimeout(timeout)
 
     def periodic(self):
+        self.counter += 1  # Increment the main counter
         if self.counter % 5 == 0:  # Execute every 5 cycles (10Hz update rate)
             current_time = time.monotonic()  # Current time in seconds
             time_since_toggle = current_time - self.last_toggle_time
@@ -174,4 +175,4 @@ class Led(commands2.Subsystem):
             if constants.LedConstants.k_nt_debugging:  # extra debugging info for NT
                 pass
 
-        self.counter += 1  # Increment the main counter
+

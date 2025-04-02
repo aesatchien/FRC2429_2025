@@ -28,7 +28,7 @@ class DriveByJoystickSwerve(commands2.Command):
         self.rate_limited = rate_limited
         self.addRequirements(*[self.swerve])
         # can't import container and don't want to pass lambdas just yet
-        self.controller = controller
+        self.controller: CommandXboxController = controller
         # self.slow_mode_trigger = self.controller.rightBumper()
         self.robot_oriented_trigger = self.controller.leftBumper()
         # self.robot_oriented_trigger = self.controller.povUp().or_(
@@ -55,10 +55,9 @@ class DriveByJoystickSwerve(commands2.Command):
 
     def execute(self) -> None:
 
-        # call things once and only once - buttons.run() is taking up too much time
-        right_trigger_value = self.controller.getRightTriggerAxis()
-        robot_oriented_value = self.robot_oriented_trigger.getAsBoolean()
-
+        # do not call the controller, call its HID - seems to cause overruns
+        right_trigger_value = self.controller.getHID().getRightTriggerAxis()  # self.controller.getRightTriggerAxis()
+        robot_oriented_value =  self.controller.getHID().getLeftBumperButton()  # self.robot_oriented_trigger.getAsBoolean()
 
         slowmode_multiplier = 0.2 + 0.8 * right_trigger_value
         angular_slowmode_multiplier = 0.5 + 0.5 * right_trigger_value
@@ -74,13 +73,18 @@ class DriveByJoystickSwerve(commands2.Command):
         # SO IF IT DOES NOT DRIVE CORRECTLY THAT WAY, CHECK KINEMATICS, THEN INVERSION OF DRIVE/ TURNING MOTORS
         # not all swerves are the same - some require inversion of drive and or turn motors
 
+        # can't call the controller.function - apparently that leads to overruns.  use getHID instead
+        left_y = self.controller.getHID().getLeftY()
+        left_x = self.controller.getHID().getLeftX()
+
         # CJH added a rate limiter on the joystick - my help with jitter at low end 20250311
-        joystick_fwd = -(self.controller.getLeftY() - self.swerve.thrust_calibration_offset)
+        joystick_fwd = -(left_y - self.swerve.thrust_calibration_offset)
         joystick_fwd = self.drive_limiter.calculate(joystick_fwd)
-        joystick_strafe = -(self.controller.getLeftX() - self.swerve.strafe_calibration_offset)
+        joystick_strafe = -(left_x - self.swerve.strafe_calibration_offset)
         joystick_strafe = self.strafe_limiter.calculate(joystick_strafe)
 
-        joystick_rot = - self.controller.getRightX() # TODO: find why this had to be negated this year (2025)
+        right_x = self.controller.getHID().getRightX()  # don't use  self.controller.getRightX()
+        joystick_rot = - right_x # TODO: find why this had to be negated this year (2025)
         if abs(joystick_rot) < dc.k_inner_deadband: joystick_rot = 0
 
         desired_vector = Translation2d(joystick_fwd, joystick_strafe)  # duty cycle, not meters per second

@@ -60,14 +60,12 @@ class Intake(Subsystem):
     def periodic(self) -> None:
         # print(f"setting reserefsersf to {wpilib.SmartDashboard.getNumber('SET intake volts', 0)}")
         # self.controller.setReference(wpilib.SmartDashboard.getNumber("SET intake volts", 0), SparkMax.ControlType.kVoltage)
-
+        self.counter += 1
         if self.counter % 10 == 0:
             wpilib.SmartDashboard.putBoolean('gamepiece_present', self.has_coral())
-            wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
-            wpilib.SmartDashboard.putNumber('intake sigma', self.TOFSensorCoral.getRangeSigma())
 
             if constants.IntakeConstants.k_nt_debugging:  # extra debugging info for NT
-                pass
+                wpilib.SmartDashboard.putNumber('intake_tof', self.get_distance())
+                wpilib.SmartDashboard.putNumber('intake sigma', self.TOFSensorCoral.getRangeSigma())
 
-        self.counter += 1
         return super().periodic()

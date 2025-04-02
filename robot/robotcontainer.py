@@ -536,9 +536,7 @@ class RobotContainer:
         # self.bbox_KL.or_(self.bbox_IJ).onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(2)).ignoringDisable(True))
         # self.bbox_EF.or_(self.bbox_CD).onTrue(commands2.InstantCommand(lambda: self.wrist.offset_encoder_position_degrees(-2)).ignoringDisable(True))
 
-        self.bbox_AB.whileTrue(
-            MoveElevator(self, self.elevator, 'incremental', 0.1)
-        )
+        self.bbox_AB.whileTrue(MoveElevator(self, self.elevator, 'incremental', 0.1)        )
 
         # self.bbox_GH.onTrue(commands2.WaitCommand(4).andThen(Reflash(self)))
         # self.bbox_GH.onTrue(GoToStow(self))
