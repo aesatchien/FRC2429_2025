@@ -47,17 +47,23 @@ class AutoStrafeToTag(commands2.Command):  #
         self.x_overshot = False
         self.y_overshot = False
         self.rot_overshot = False
+        self.last_diff_x = 999 # needs to start bigly
 
         self.addRequirements(self.swerve)
         self.reset_controllers()
 
     def reset_controllers(self):
 
+        # reset the smoothing objects
+        self.last_diff_x = 999  # needs to start bigly
+        self.x_limiter.reset(0)
+
+        # get the setpoint from a list
         if self.location == 'center':
-            self.camera_setpoint = 0.5
+            self.camera_setpoint = 0.5  # TODO - figure out where the actual center is
         elif self.location == 'left':  # we want to be on the left of the tag, so it is past center in image
             self.camera_setpoint = 0.788  # 0.788 against reef, lower 2" back
-        elif self.location == 'right' :
+        elif self.location == 'right':
             self.camera_setpoint = 0.448  # 0.448 against reef, 0.03 lower 2" back
         else:
             raise ValueError(f"Location must be in [center, left, right] - not {self.location}.")
@@ -122,27 +128,56 @@ class AutoStrafeToTag(commands2.Command):  #
             return  # just do nothing if we have no tag except increment the lost tag counter
 
         if True:  #
-            x_output = self.x_pid.calculate(current_strafe)
+            diff_x = self.camera_setpoint - current_strafe  # this is the error, as a fraction of the x FoV
+            abs_error = abs(diff_x)
+            raw_output = self.x_pid.calculate(current_strafe)
+            x_output = raw_output  # we’ll clamp this
+
             #y_output = self.y_pid.calculate(robot_pose.Y())
             #rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
 
-            # TODO optimize the last mile and have it gracefully not oscillate
-            #rot_max, rot_min = 0.8, 0.2
-            trans_max, trans_min = 0.25, 0.05  # it browns out when you start if this is too high
-
-            # enforce minimum values , but try to stop oscillations
-            diff_x = self.camera_setpoint - current_strafe  # this is the error, as a fraction of the x FoV
-            if math.fabs(diff_x) <  self.tolerance:
+            # keep track of how long we've been good - allow to recover if we overshoot
+            if abs_error < self.tolerance:
                 self.tolerance_counter += 1
             else:
                 self.tolerance_counter = 0
 
+            # TODO optimize the last mile and have it gracefully not oscillate
+            #rot_max, rot_min = 0.8, 0.2
+            trans_max = 0.25  # max strafe power
+            trans_min = 0.05  # hard lower bound to overcome static friction
 
-            self.x_overshot = True if math.fabs(diff_x) < self.tolerance else self.x_overshot
-            if abs(x_output) < trans_min and not self.x_overshot and abs(diff_x) > self.tolerance:
-                x_output = math.copysign(trans_min, x_output)
+            # the simple way doesn't work if we overshoot too quickly, error increasing means we passed the target
+            # self.x_overshot = True if math.fabs(diff_x) < self.tolerance else self.x_overshot
+            if abs(diff_x) > abs(self.last_diff_x) and self.counter > 2:
+                self.x_overshot = True
+            self.last_diff_x = diff_x
+
+            # enforce min values
+            # if abs(x_output) < trans_min and not self.x_overshot and abs(diff_x) > self.tolerance:
+            #     x_output = math.copysign(trans_min, x_output)
+            # if not self.x_overshot:
+            #     min_output = max(trans_min, 0.1 * abs(diff_x))
+            #     x_output = math.copysign(max(min_output, abs(x_output)), x_output)
+
+            # Before overshoot
+            if not self.x_overshot:
+                # Enforce minimum based on distance from target
+                scaled_min = max(trans_min, 0.1 * abs(diff_x))
+                if abs(x_output) < scaled_min:
+                    x_output = math.copysign(scaled_min, x_output)
+            # After overshoot
+            else:
+                # If still far and output is too small, nudge with trans_min
+                if abs(diff_x) > self.tolerance and abs(x_output) < trans_min:
+                    x_output = math.copysign(trans_min, x_output)
+                # If within tolerance, let it decay
+                # No modification needed
+
             # enforce maximum values
-            x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
+            # x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
+            # same thing, maybe cleaner
+            x_output = max(-trans_max, min(trans_max, x_output))
 
             # smooth out the initial jumps with slew_limiters
             x_output = self.x_limiter.calculate(x_output)
@@ -161,8 +196,6 @@ class AutoStrafeToTag(commands2.Command):  #
                 #SmartDashboard.putNumber("x commanded", x_setpoint)
                 #SmartDashboard.putNumber("y commanded", y_setpoint)
                 #SmartDashboard.putNumber("rot commanded", rot_setpoint)
-
-
 
     def isFinished(self) -> bool:
         diff_x = self.camera_setpoint - self.vision.get_tag_strafe(target='genius_low_tags')  # this is the error, as a fraction of the x FoV
