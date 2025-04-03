@@ -18,7 +18,7 @@ from subsystems.vision import Vision
 
 class AutoStrafeToTag(commands2.Command):  #
 
-    def __init__(self, container, swerve: Swerve, location='center', trapezoid=False, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, location='center', hug_reef=True, trapezoid=False, indent=0) -> None:
         """
         Set a setpoint as a fraction of the screen width for your setpoint for the apriltag
         e.g. 0.5 will try to center the tag in the camera
@@ -37,6 +37,7 @@ class AutoStrafeToTag(commands2.Command):  #
         self.camera_setpoint = 0.5 # default value
         self.tolerance = 0.01  # fraction of the cameraFoV
         self.tolerance_counter = 0
+        self.hug_reef = hug_reef  # if we want to keep pushing against reef the whole time
 
         # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot if it servos to full speed
         max_units_per_second = 2  # can't be too low or you get lag and we allow a max of < 50% below
@@ -58,15 +59,23 @@ class AutoStrafeToTag(commands2.Command):  #
         self.last_diff_x = 999  # needs to start bigly
         self.x_limiter.reset(0)
 
-        # get the setpoint from a list
+        # get the camera fraction setpoint from a list
         if self.location == 'center':
-            self.camera_setpoint = 0.5  # TODO - figure out where the actual center is
+            self.camera_setpoint = 0.6  # TODO - figure out where the actual center is
         elif self.location == 'left':  # we want to be on the left of the tag, so it is past center in image
             self.camera_setpoint = 0.788  # 0.788 against reef, lower 2" back
         elif self.location == 'right':
             self.camera_setpoint = 0.448  # 0.448 against reef, 0.03 lower 2" back
         else:
             raise ValueError(f"Location must be in [center, left, right] - not {self.location}.")
+
+        # grab a rotation target that we need to maintain
+        nearest_tag = self.container.swerve.get_nearest_tag(destination='reef')
+        self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
+        self.target_pose = self.container.robot_state.get_reef_goal_pose()
+        if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+            self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2),
+                                                             rot=Rotation2d(math.pi))
 
         # if we want to run this on the fly, we need to pass it a location
         if self.trapezoid:  # use a trapezoidal profile
@@ -79,30 +88,27 @@ class AutoStrafeToTag(commands2.Command):  #
             self.x_pid = PIDController(0.5, 0.00, 0.0)
             self.x_pid.setSetpoint(self.camera_setpoint)
 
-            self.rot_pid = PIDController(0.7, 0, 0,)  # 0.5
+            self.rot_pid = PIDController(0.5, 0, 0,)  # 0.5
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
-            #self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
+            self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
-            #SmartDashboard.putNumber("x commanded", 0)
-            #SmartDashboard.putNumber("y commanded", 0)
-            #SmartDashboard.putNumber("rot commanded", 0)
-
-    def initialize(self) -> None:
-        """Called just before this Command runs the first time."""
-        self.start_time = round(self.container.get_enabled_time(), 2)
-        print(f"{self.indent * '    '}** Started {self.getName()} to {self.location} at {self.start_time} s **", flush=True)
-        SmartDashboard.putString("alert",
-                                 f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
-
-        self.reset_controllers()  # this is supposed to get us a new pose
-
+        # set everyone to zero
         if self.trapezoid:
             self.x_pid.reset(self.location)
             # self.y_pid.reset(robot_pose.Y())
         else:
             self.x_pid.reset()
             # self.y_pid.reset()
-            # self.rot_pid.reset()
+        self.rot_pid.reset()
+
+    def initialize(self) -> None:
+        """Called just before this Command runs the first time."""
+        self.start_time = round(self.container.get_enabled_time(), 2)
+        msg = f"{self.indent * '    '}** Started {self.getName()} to {self.location} at {self.start_time} s **"
+        print(msg, flush=True)
+        SmartDashboard.putString("alert", msg)
+
+        self.reset_controllers()  # this is supposed to get us a new pose
 
         # let the robot know what we're up to
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
@@ -113,8 +119,11 @@ class AutoStrafeToTag(commands2.Command):  #
         self.x_overshot = False
         self.y_overshot = False
         self.rot_overshot = False
-        msg = f'CNT  CSP STRAFE DIFF OUT '
-        print(msg)
+
+        if wpilib.RobotBase.isSimulation():
+            msg = f'CNT  CSP STRAFE DIFF OUT '
+            print(msg)
+
 
     def execute(self) -> None:
 
@@ -178,11 +187,17 @@ class AutoStrafeToTag(commands2.Command):  #
             # x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
             # same thing, maybe cleaner
             x_output = max(-trans_max, min(trans_max, x_output))
-
             # smooth out the initial jumps with slew_limiters
             x_output = self.x_limiter.calculate(x_output)
+
+            # add a y_output to hug the reef
+            y_output = -0.04 if self.hug_reef else 0  # just enough to hug the reef
+            # maintain rotation
+            robot_pose = self.swerve.get_pose()
+            rot_output = self.rot_pid.calculate(robot_pose.rotation().radians()) if not self.hug_reef else 0
+
             # robot battery is front and on the left when scoring, so + x takes you left
-            self.swerve.drive(x_output, 0, 0, fieldRelative=False, rate_limited=False, keep_angle=False)
+            self.swerve.drive(x_output, y_output, rot_output, fieldRelative=False, rate_limited=False, keep_angle=False)
 
             if self.counter % 5 == 0 and wpilib.RobotBase.isSimulation():
                 msg = f'{self.counter}  {self.camera_setpoint:.2f} {current_strafe:.2f} {diff_x:.2f}  {x_output:.2f}  '

@@ -285,15 +285,23 @@ class RobotContainer:
         # move this to the top of the button area so we have a left and a right auto-drive
         self.triggerY.onTrue(ResetFieldCentric(container=self, swerve=self.swerve, angle=0))
 
-        self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, location='right'))
-        self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, location='left'))
+        # test a setting of the swerve modules straight before running the auto to tag
+        self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right
         self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
-        #self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True,control_type='not_pathplanner'))
-
         self.triggerX.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)))
+
+        self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, location='right'))
+        self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, location='left'))
+        #self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True,control_type='not_pathplanner'))
         #self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
+
+        # move the pivot out of the way when using the autostrafe
+        self.triggerB.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
+        self.triggerB.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+        self.triggerX.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
+        self.triggerX.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125
@@ -301,7 +309,6 @@ class RobotContainer:
         self.triggerDown.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(-dpad_output, 0, 0), timeout=10))
         self.triggerLeft.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, dpad_output, 0), timeout=10))
         self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
-
 
         if wpilib.RobotBase.isSimulation():
             pass
