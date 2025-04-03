@@ -28,6 +28,7 @@ class AutoToPose(commands2.Command):  #
         self.swerve = swerve
         self.control_type = control_type  # choose between the pathplanner controller or our custom one
         self.counter = 0
+        self.tolerance_counter = 0
         self.from_robot_state = from_robot_state
         self.nearest = nearest  # only use nearest tags as the target
 
@@ -38,9 +39,14 @@ class AutoToPose(commands2.Command):  #
 
         self.target_pose = target_pose
         self.trapezoid = trapezoid
+
+        # check for overshoot
         self.x_overshot = False
         self.y_overshot = False
         self.rot_overshot = False
+        self.last_diff_x = 0
+        self.last_diff_y = 0
+        self.last_diff_radians = 0
 
         self.addRequirements(self.swerve)
         self.reset_controllers()
@@ -85,6 +91,14 @@ class AutoToPose(commands2.Command):  #
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
+            # reset overshoot
+            self.x_overshot = False
+            self.y_overshot = False
+            self.rot_overshot = False
+            self.last_diff_x = 0
+            self.last_diff_y = 0
+            self.last_diff_radians = 0
+
             #SmartDashboard.putNumber("x commanded", 0)
             #SmartDashboard.putNumber("y commanded", 0)
             #SmartDashboard.putNumber("rot commanded", 0)
@@ -92,10 +106,6 @@ class AutoToPose(commands2.Command):  #
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        print(f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **", flush=True)
-        SmartDashboard.putString("alert",
-                                 f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
-
         self.reset_controllers()  # this is supposed to get us a new pose
 
         if self.control_type == 'pathplanner':
@@ -122,6 +132,10 @@ class AutoToPose(commands2.Command):  #
         self.y_overshot = False
         self.rot_overshot = False
 
+        msg = f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **"
+        print(msg, flush=True)
+        SmartDashboard.putString("alert", msg)
+
     def execute(self) -> None:
         # we could also do this with wpilib pidcontrollers
         robot_pose = self.swerve.get_pose()
@@ -137,16 +151,26 @@ class AutoToPose(commands2.Command):  #
             rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
 
             # TODO optimize the last mile and have it gracefully not oscillate
-            rot_max, rot_min = 0.8, 0.2
-            trans_max, trans_min = 0.4, 0.1  # it browns out when you start if this is too high
+            rot_max, rot_min = 0.6, 0.15
+            trans_max, trans_min = 0.3, 0.1  # it browns out when you start if this is too high
             # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
             pose = self.swerve.get_pose()
             diff_xy = pose.relativeTo(self.target_pose).rotateBy(pose.rotation())
             diff_rot = pose.relativeTo(self.target_pose)
             # enforce minimum values , but try to stop oscillations
-            self.x_overshot = True if math.fabs(diff_xy.X()) < ac.k_translation_tolerance_meters / 2 else self.x_overshot
-            self.y_overshot = True if math.fabs(diff_xy.Y()) < ac.k_translation_tolerance_meters / 2 else self.y_overshot
-            self.rot_overshot = True if math.fabs(diff_rot.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2 else self.rot_overshot
+            diff_x = diff_xy.X()
+            if abs(diff_x) > abs(self.last_diff_x) and self.counter > 2:
+                self.x_overshot = True
+            self.last_diff_x = diff_x
+            diff_y = diff_xy.Y()
+            if abs(diff_y) > abs(self.last_diff_y) and self.counter > 2:
+                self.x_overshot = True
+            self.last_diff_y = diff_y
+            diff_radians = diff_rot.rotation().radians()
+            if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 2:
+                self.x_overshot = True
+            self.last_diff_radians = diff_radians
+
             if abs(x_output) < trans_min and not self.x_overshot and abs(diff_xy.X()) > ac.k_translation_tolerance_meters:
                 x_output = math.copysign(trans_min, x_output)
             if abs(y_output) < trans_min and not self.y_overshot and abs(diff_xy.Y()) > ac.k_translation_tolerance_meters:
@@ -163,7 +187,16 @@ class AutoToPose(commands2.Command):  #
             y_output = self.y_limiter.calculate(y_output)
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
 
-            if self.counter % 5 == 0 and wpilib.RobotBase.isSimulation():
+            # keep track of how long we've been good - allow to recover if we overshoot
+            diff = robot_pose.relativeTo(self.target_pose)
+            rotation_achieved = abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2  # really push it - less than a degree
+            translation_achieved = diff.translation().norm() < ac.k_translation_tolerance_meters / 2  # get to within an inch
+            if rotation_achieved and translation_achieved:
+                self.tolerance_counter += 1
+            else:
+                self.tolerance_counter = 0
+
+            if self.counter % 10 == 0 and wpilib.RobotBase.isSimulation():
                 msg = f'{self.counter}  {diff_xy.X():.2f} {diff_xy.Y():.2f}  {diff_rot.rotation().degrees():.1f}°  {x_output:.2f}  {y_output:.2f} {rot_output:.2f}'
                 print(msg)
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
@@ -179,10 +212,7 @@ class AutoToPose(commands2.Command):  #
         self.counter += 1
 
     def isFinished(self) -> bool:
-        diff = self.swerve.get_pose().relativeTo(self.target_pose)
-        rotation_achieved = abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2  # really push it - less than a degree
-        translation_achieved = diff.translation().norm() < ac.k_translation_tolerance_meters / 2  # get to within an inch
-        return rotation_achieved and translation_achieved
+        return self.tolerance_counter > 10
 
     def end(self, interrupted: bool) -> None:
         end_time = self.container.get_enabled_time()
@@ -195,7 +225,7 @@ class AutoToPose(commands2.Command):  #
                 self.container.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2))
 
         print_end_message = True
-        msg = f"{self.indent * '    '}** {end_message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **"
+        msg = f"{self.indent * '    '}** {end_message} {self.getName()} at {self.swerve.get_pose()} at time {end_time:.1f} s after {end_time - self.start_time:.1f} s **"
         if print_end_message:
             print(msg)
             SmartDashboard.putString(f"alert", msg)

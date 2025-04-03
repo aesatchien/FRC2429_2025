@@ -48,7 +48,7 @@ class AutoStrafeToTag(commands2.Command):  #
         self.x_overshot = False
         self.y_overshot = False
         self.rot_overshot = False
-        self.last_diff_x = 999 # needs to start bigly
+        self.last_diff_x = 999  # needs to start bigly
 
         self.addRequirements(self.swerve)
         self.reset_controllers()
@@ -77,28 +77,21 @@ class AutoStrafeToTag(commands2.Command):  #
             self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2),
                                                              rot=Rotation2d(math.pi))
 
-        # if we want to run this on the fly, we need to pass it a location
-        if self.trapezoid:  # use a trapezoidal profile
-            xy_constraints = TrapezoidProfile.Constraints(maxVelocity=2, maxAcceleration=1.0)
-            self.x_pid = ProfiledPIDController(0.25, 0, 0.05, constraints=xy_constraints)
-            self.x_pid.setGoal(self.camera_setpoint)
+        # this is a hybid - X goes to the tag center but y and rotation are based on pose
+        # trying to get it to slow down but still make it to final position
+        self.x_pid = PIDController(0.5, 0.00, 0.0)
+        self.x_pid.setSetpoint(self.camera_setpoint)
 
-        else:
-            # trying to get it to slow down but still make it to final position
-            self.x_pid = PIDController(0.5, 0.00, 0.0)
-            self.x_pid.setSetpoint(self.camera_setpoint)
+        self.y_pid = PIDController(0.3, 0.00, 0.0)
+        self.y_pid.setSetpoint(self.target_pose.Y())
 
-            self.rot_pid = PIDController(0.5, 0, 0,)  # 0.5
-            self.rot_pid.enableContinuousInput(radians(-180), radians(180))
-            self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
+        self.rot_pid = PIDController(0.5, 0, 0,)  # 0.5
+        self.rot_pid.enableContinuousInput(radians(-180), radians(180))
+        self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
-        # set everyone to zero
-        if self.trapezoid:
-            self.x_pid.reset(self.location)
-            # self.y_pid.reset(robot_pose.Y())
-        else:
-            self.x_pid.reset()
-            # self.y_pid.reset()
+
+        self.x_pid.reset()
+        # self.y_pid.reset()
         self.rot_pid.reset()
 
     def initialize(self) -> None:
@@ -129,6 +122,9 @@ class AutoStrafeToTag(commands2.Command):  #
 
         self.counter += 1  # better to do this at the top
 
+        # use the pose as secondary - know our rotation and our position
+        robot_pose = self.swerve.get_pose()
+
         # get_tag_strafe returns zero if no tag, else fraction of camera where tag is located
         current_strafe = self.vision.get_tag_strafe(target='genius_low_tags')
         if current_strafe <= 0.001:
@@ -141,9 +137,6 @@ class AutoStrafeToTag(commands2.Command):  #
             abs_error = abs(diff_x)
             raw_output = self.x_pid.calculate(current_strafe)
             x_output = raw_output  # we’ll clamp this
-
-            #y_output = self.y_pid.calculate(robot_pose.Y())
-            #rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
 
             # keep track of how long we've been good - allow to recover if we overshoot
             if abs_error < self.tolerance:
@@ -161,13 +154,6 @@ class AutoStrafeToTag(commands2.Command):  #
             if abs(diff_x) > abs(self.last_diff_x) and self.counter > 2:
                 self.x_overshot = True
             self.last_diff_x = diff_x
-
-            # enforce min values
-            # if abs(x_output) < trans_min and not self.x_overshot and abs(diff_x) > self.tolerance:
-            #     x_output = math.copysign(trans_min, x_output)
-            # if not self.x_overshot:
-            #     min_output = max(trans_min, 0.1 * abs(diff_x))
-            #     x_output = math.copysign(max(min_output, abs(x_output)), x_output)
 
             # Before overshoot
             if not self.x_overshot:
@@ -190,11 +176,14 @@ class AutoStrafeToTag(commands2.Command):  #
             # smooth out the initial jumps with slew_limiters
             x_output = self.x_limiter.calculate(x_output)
 
-            # add a y_output to hug the reef
-            y_output = -0.04 if self.hug_reef else 0  # just enough to hug the reef
-            # maintain rotation
-            robot_pose = self.swerve.get_pose()
-            rot_output = self.rot_pid.calculate(robot_pose.rotation().radians()) if not self.hug_reef else 0
+            # add a y_output to hug the reef, else maintain rotation and y position
+            if self.hug_reef:
+                y_output = -0.04
+                rot_output = 0
+            else:
+                y_output = self.y_pid.calculate(robot_pose.Y())
+                rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
+
 
             # robot battery is front and on the left when scoring, so + x takes you left
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=False, rate_limited=False, keep_angle=False)
