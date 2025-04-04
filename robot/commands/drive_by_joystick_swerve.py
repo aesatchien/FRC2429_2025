@@ -41,7 +41,7 @@ class DriveByJoystickSwerve(commands2.Command):
 
         # CJH added a slew rate limiter 20250311 - but there already is one in Swerve, so is this redundant?
         # make sure you put it on the joystick (not calculations), otherwise it doesn't help much on slow-mode
-        stick_max_units_per_second = 5  # can't be too low or you get lag - probably should be between 3 and 5
+        stick_max_units_per_second = 3  # can't be too low or you get lag - probably should be between 3 and 5
         self.drive_limiter = SlewRateLimiter(stick_max_units_per_second)
         self.strafe_limiter = SlewRateLimiter(stick_max_units_per_second)
 
@@ -76,9 +76,7 @@ class DriveByJoystickSwerve(commands2.Command):
 
         # CJH added a rate limiter on the joystick - my help with jitter at low end 20250311
         joystick_fwd = -(self.controller.getLeftY() - self.swerve.thrust_calibration_offset)
-        joystick_fwd = self.drive_limiter.calculate(joystick_fwd)
         joystick_strafe = -(self.controller.getLeftX() - self.swerve.strafe_calibration_offset)
-        joystick_strafe = self.strafe_limiter.calculate(joystick_strafe)
 
         joystick_rot = - self.controller.getRightX() # TODO: find why this had to be negated this year (2025)
         if abs(joystick_rot) < dc.k_inner_deadband: joystick_rot = 0
@@ -106,6 +104,9 @@ class DriveByJoystickSwerve(commands2.Command):
 
         desired_fwd = desired_vector.X()
         desired_strafe = desired_vector.Y()
+
+        desired_fwd = self.drive_limiter.calculate(desired_fwd)
+        desired_strafe = self.strafe_limiter.calculate(desired_strafe)
 
         if trace and wpilib.RobotBase.isSimulation():
             wpilib.SmartDashboard.putNumber('_js_dv_norm_x', math.fabs(desired_fwd))
