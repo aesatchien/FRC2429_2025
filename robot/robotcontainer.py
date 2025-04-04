@@ -298,10 +298,10 @@ class RobotContainer:
         self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
 
         # move the pivot out of the way when using the autostrafe
-        self.triggerB.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
-        self.triggerB.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
-        self.triggerX.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
-        self.triggerX.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+        #self.triggerB.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+        #self.triggerB.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
+        #self.triggerX.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+        #self.triggerX.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125
