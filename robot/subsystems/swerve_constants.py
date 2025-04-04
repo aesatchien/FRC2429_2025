@@ -200,5 +200,5 @@ class AutoConstants:
 
     # used as end conditions in auto to pose / pid to point
     k_rotation_tolerance = Rotation2d(math.radians(2))
-    k_translation_tolerance_meters = 4 / 100
+    k_translation_tolerance_meters = 2 / 100
 

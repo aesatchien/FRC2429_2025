@@ -135,6 +135,9 @@ class AutoToPose(commands2.Command):  #
         msg = f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **"
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
+        if wpilib.RobotBase.isSimulation():
+            msg = f'CNT  DX  XT?  Xo | DY  YT?  Yo |  DR RT?  Ro  | TC'
+            print(msg)
 
     def execute(self) -> None:
         # we could also do this with wpilib pidcontrollers
@@ -155,20 +158,22 @@ class AutoToPose(commands2.Command):  #
             trans_max, trans_min = 0.3, 0.1  # it browns out when you start if this is too high
             # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
             pose = self.swerve.get_pose()
-            diff_xy = pose.relativeTo(self.target_pose).rotateBy(pose.rotation())
-            diff_rot = pose.relativeTo(self.target_pose)
+            diff_pose = pose.relativeTo(self.target_pose)
+            diff_xy = diff_pose.rotateBy(pose.rotation())
+            diff_rot = diff_pose
             # enforce minimum values , but try to stop oscillations
-            diff_x = diff_xy.X()
-            if abs(diff_x) > abs(self.last_diff_x) and self.counter > 2:
+            # try to get us to overshoot but very gently
+            diff_x = diff_pose.X()
+            if abs(diff_x) > abs(self.last_diff_x) and self.counter > 1:
                 self.x_overshot = True
             self.last_diff_x = diff_x
-            diff_y = diff_xy.Y()
-            if abs(diff_y) > abs(self.last_diff_y) and self.counter > 2:
-                self.x_overshot = True
+            diff_y = diff_pose.Y()
+            if abs(diff_y) > abs(self.last_diff_y) and self.counter > 1:
+                self.y_overshot = True
             self.last_diff_y = diff_y
             diff_radians = diff_rot.rotation().radians()
-            if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 2:
-                self.x_overshot = True
+            if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 1:
+                self.rot_overshot = True
             self.last_diff_radians = diff_radians
 
             if abs(x_output) < trans_min and not self.x_overshot and abs(diff_xy.X()) > ac.k_translation_tolerance_meters:
@@ -188,16 +193,15 @@ class AutoToPose(commands2.Command):  #
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
 
             # keep track of how long we've been good - allow to recover if we overshoot
-            diff = robot_pose.relativeTo(self.target_pose)
-            rotation_achieved = abs(diff.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2  # really push it - less than a degree
-            translation_achieved = diff.translation().norm() < ac.k_translation_tolerance_meters / 2  # get to within an inch
+            rotation_achieved = abs(diff_pose.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2  # really push it - less than a degree
+            translation_achieved = diff_pose.translation().norm() < ac.k_translation_tolerance_meters / 2  # get to within an inch total
             if rotation_achieved and translation_achieved:
                 self.tolerance_counter += 1
             else:
                 self.tolerance_counter = 0
 
             if self.counter % 10 == 0 and wpilib.RobotBase.isSimulation():
-                msg = f'{self.counter}  {diff_xy.X():.2f} {diff_xy.Y():.2f}  {diff_rot.rotation().degrees():.1f}°  {x_output:.2f}  {y_output:.2f} {rot_output:.2f}'
+                msg = f'{self.counter:3d}  {diff_xy.X():.2f} {self.x_overshot} {x_output:.2f} | {diff_xy.Y():.2f}  {self.y_overshot} {y_output:.2f} | {diff_rot.rotation().degrees():.1f}° {self.rot_overshot} {rot_output:.2f} | {self.tolerance_counter}'
                 print(msg)
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
                 #SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
