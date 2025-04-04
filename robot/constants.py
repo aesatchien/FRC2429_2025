@@ -46,7 +46,7 @@ k_positions = {
     "stow": {
         "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(93),
+        "wrist_pivot": math.radians(-90),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
@@ -61,7 +61,7 @@ k_positions = {
     "l1": {
         "elevator": 0.64,
         "shoulder_pivot": math.radians(179),
-        "wrist_pivot": math.radians(0),
+        "wrist_pivot": math.radians(-180),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -73,7 +73,7 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.87,  # 0.86
+        "elevator": 0.90,  # 0.86
         "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -306,8 +306,8 @@ class WristConstants:
     k_moi = 0.0474
     k_plant = DCMotor.NEO550(1)
 
-    k_min_angle = math.radians(-180)
-    k_max_angle = math.radians(95)
+    k_min_angle = math.radians(-185)
+    k_max_angle = math.radians(185)
     k_tolerance = math.radians(2.5)
     k_starting_angle = 0 # sim mechanism2d takes degrees
 

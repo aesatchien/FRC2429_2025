@@ -29,7 +29,7 @@ class GoToReefPosition(commands2.SequentialCommandGroup):
         # go to final position
         if level == 1:
             self.addCommands(commands2.ParallelCommandGroup(
-                MoveWrist(container, constants.k_positions["l1"]["wrist_pivot"], 5, False, False, indent=indent+1).withTimeout(2),
+                WaitCommand(0.5).andThen(MoveWrist(container, constants.k_positions["l1"]["wrist_pivot"], 5, False, False, indent=indent+1).withTimeout(2)),
                 WaitCommand(min(0, level - 2) * 0.5).andThen(MoveElevator(container=container, elevator=container.elevator, mode="specified", height=constants.k_positions[f"l{level}"]["elevator"], wait_to_finish=True, indent=indent+1)).withTimeout(5),
                 MovePivot(container=container, pivot=self.container.pivot, mode="specified", angle=constants.k_positions[f"l{level}"]["shoulder_pivot"], wait_to_finish=True, indent=indent+1).withTimeout(5),
             ))

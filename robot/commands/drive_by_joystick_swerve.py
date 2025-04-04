@@ -41,7 +41,7 @@ class DriveByJoystickSwerve(commands2.Command):
 
         # CJH added a slew rate limiter 20250311 - but there already is one in Swerve, so is this redundant?
         # make sure you put it on the joystick (not calculations), otherwise it doesn't help much on slow-mode
-        stick_max_units_per_second = 5  # can't be too low or you get lag - probably should be between 3 and 5
+        stick_max_units_per_second = 3  # can't be too low or you get lag - probably should be between 3 and 5
         self.drive_limiter = SlewRateLimiter(stick_max_units_per_second)
         self.strafe_limiter = SlewRateLimiter(stick_max_units_per_second)
 
@@ -79,9 +79,7 @@ class DriveByJoystickSwerve(commands2.Command):
 
         # CJH added a rate limiter on the joystick - my help with jitter at low end 20250311
         joystick_fwd = -(left_y - self.swerve.thrust_calibration_offset)
-        joystick_fwd = self.drive_limiter.calculate(joystick_fwd)
         joystick_strafe = -(left_x - self.swerve.strafe_calibration_offset)
-        joystick_strafe = self.strafe_limiter.calculate(joystick_strafe)
 
         right_x = self.controller.getHID().getRightX()  # don't use  self.controller.getRightX()
         joystick_rot = - right_x # TODO: find why this had to be negated this year (2025)
@@ -95,6 +93,7 @@ class DriveByJoystickSwerve(commands2.Command):
             wpilib.SmartDashboard.putNumber('_js_dv1_y', math.fabs(desired_vector.Y()))
 
         # clipping should happen first (the below if statement is clipping)
+        # we clip rotation above
         if desired_vector.norm() > dc.k_outer_deadband:
             desired_vector *= 1 / desired_vector.norm()
         elif desired_vector.norm() < dc.k_inner_deadband:
@@ -111,41 +110,22 @@ class DriveByJoystickSwerve(commands2.Command):
         desired_fwd = desired_vector.X()
         desired_strafe = desired_vector.Y()
 
+        # should come after everything else
+        # see if we want to put the slewratelimiter on the trigger because changing directions isn't as bad as changing speed
+        # and the trigger changes speed whereas the joystick often changes direction more than speed (??)
+        desired_fwd = self.drive_limiter.calculate(desired_fwd)
+        desired_strafe = self.strafe_limiter.calculate(desired_strafe)
+
         if trace and wpilib.RobotBase.isSimulation():
             wpilib.SmartDashboard.putNumber('_js_dv_norm_x', math.fabs(desired_fwd))
             wpilib.SmartDashboard.putNumber('_js_dv_norm_y', math.fabs(desired_strafe))
             SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
-
-        # linear_mapping = True  # two ways to make sure diagonal is at "full speed"
-        #                        # TODO: find why our transforms are weird at low speed- they don't act right
-        #
-        # # apply deadband
-        #
-        # if linear_mapping:
-        #     # this lets you go full speed diagonal at the cost of sensitivity on the low end
-        #     desired_fwd = -self.input_transform_linear(1.0 * joystick_fwd) * slowmode_multiplier
-        #     desired_strafe = -self.input_transform_linear(1.0 * joystick_strafe) * slowmode_multiplier
-        #     desired_rot = -self.input_transform_linear(1.0 * self.controller.getRightX()) * angular_slowmode_multiplier
-        # else:
-        #     # correcting for the x^2 + y^2 = 1 of the joysticks so we don't have to use a linear mapping
-        #     angle = math.atan2(joystick_fwd, joystick_strafe)
-        #     correction = math.fabs(math.cos(angle) * (math.sin(angle)))  # peaks at 45 degrees
-        #     fwd = joystick_fwd * (1 + 0.3 * math.copysign(correction, joystick_fwd))  # they max out at .77, so add the remainder at 45 degrees to make 1
-        #     strafe = joystick_strafe * (1 + 0.3 * math.copysign(correction, joystick_strafe))
-        #     if wpilib.RobotBase.isSimulation():
-        #         wpilib.SmartDashboard.putNumberArray('joysticks',[joystick_fwd, joystick_strafe, correction, fwd, strafe])
-        #
-        #     desired_fwd = -self.input_transform(1.0 * fwd) * slowmode_multiplier
-        #     desired_strafe = -self.input_transform(1.0 * strafe) * slowmode_multiplier
-        #     desired_rot = -self.input_transform(1.0 * self.controller.getRightX()) * angular_slowmode_multiplier
 
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed and self.field_oriented:
             # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
             # print("inverting forward and strafe because we're in field-centric mode and on red alliance!")
             desired_fwd *= -1
             desired_strafe *= -1
-
-        # desired_fwd, desired_strafe = self.calculate_rate_limited_velocity(desired_fwd, desired_strafe, 0.02, 0.5)
 
         self.swerve.drive(xSpeed=desired_fwd,ySpeed=desired_strafe, rot=desired_rot,
                               fieldRelative=self.field_oriented, rate_limited=self.rate_limited, keep_angle=False)
@@ -161,54 +141,4 @@ class DriveByJoystickSwerve(commands2.Command):
         if print_end_message:
             print(f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **", flush=True)
             SmartDashboard.putString(f"alert", f"** {message} {self.getName()} at {end_time:.1f} s after {end_time - self.start_time:.1f} s **")
-
-    # def apply_deadband(self, value, db_low=dc.k_inner_deadband, db_high=dc.k_outer_deadband):
-    #     # put a deadband on the joystick input values here
-    #     if abs(value) < db_low:
-    #         return 0
-    #     elif abs(value) > db_high:
-    #         return 1 * math.copysign(1, value)
-    #     else:
-    #         return value
-    #
-    # def input_transform(self, value, a=0.9, b=0.1):
-    #     # 1706 uses a nice transform
-    #     db_value = self.apply_deadband(value)
-    #     return a * db_value**3 + b * db_value
-    #
-    # def input_transform_linear(self, value, a=0.9, b=0.1):
-    #     # 1706 uses a nice transform
-    #     db_value = self.apply_deadband(value)
-    #     return db_value
-    #
-    # def calculate_rate_limited_velocity(self, commanded_fwd, commanded_strafe, time_since_last_called, max_accel):
-    #     """
-    #     all in meters/sec^n
-    #     BUG: is very very broken and will cook a robot by making it increase velocity indefinitely. DO NOT USE
-    #     """
-    #
-    #     commanded_vector = Translation2d(commanded_fwd, commanded_strafe)
-    #     print(f"prev commanded: {self.prev_commanded_vector.X()}, {self.prev_commanded_vector.Y()}")
-    #     print(f"     commanded: {commanded_vector.X()}, {commanded_vector.Y()}")
-    #     # commanded is (0, 0)
-    #     # prev commanded is (0, 4)
-    #     # too much accel!
-    #     # add (1, 0) to  prev commanded
-    #
-    #     commanded_accel_vector: Translation2d = (commanded_vector - self.prev_commanded_vector) / time_since_last_called
-    #     print("we're being commanded an acceleration of", commanded_accel_vector.norm())
-    #
-    #     if commanded_accel_vector.norm() > max_accel:
-    #         # print("commanding too much acceleration!")
-    #         # print(f"giving angle of {commanded_vector.angle()}")
-    #         # print(f"initial x: {commanded_fwd}; initial y: {commanded_strafe}; final x: {commanded_vector.X()}; final y: {commanded_vector.Y()}")
-    #         if commanded_vector.norm() == 0:
-    #             print(f"suposed to go to 0")
-    #             commanded_vector = self.prev_commanded_vector - Translation2d(distance=max_accel * time_since_last_called, angle=self.prev_commanded_vector.angle())
-    #         else:
-    #             print(" ")
-    #             commanded_vector = self.prev_commanded_vector + Translation2d(distance=max_accel * time_since_last_called, angle=commanded_vector.angle())
-    #
-    #     self.prev_commanded_vector = commanded_vector
-    #     return (commanded_vector.X(), commanded_vector.Y())
 
