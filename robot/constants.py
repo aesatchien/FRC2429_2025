@@ -185,10 +185,11 @@ for tag_id in range(17, 23):
         # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
         # see ../resources/plots/useful_robot_locations.ipynb
         coral_center_offset = 0.0  # the center of the arm is not the center of the robot - this is in y because we rotated 90
-        x_offset = 0.45 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
-        y_offset = 0.165  # was 0.20 as of 20250323
-        robot_offset_left = Translation2d(x_offset, -y_offset - coral_center_offset).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(x_offset - coral_center_offset, +y_offset - coral_center_offset).rotateBy(tag_yaw)
+        x_offset = 0.47 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
+        right_y_offset = 0.18  # POSITIVE  - because of tag yaw we have to add the right
+        left_y_offset = 0.175  # POSITIVE  - because of tag yaw we have to subtract the left below
+        robot_offset_left = Translation2d(x_offset, -left_y_offset - coral_center_offset).rotateBy(tag_yaw)
+        robot_offset_right = Translation2d(x_offset - coral_center_offset, +right_y_offset - coral_center_offset).rotateBy(tag_yaw)
 
         # Compute robot positions
         left_branch_position = tag_translation + robot_offset_left

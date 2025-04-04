@@ -121,9 +121,9 @@ class RobotContainer:
         ))
 
         if not constants.k_swerve_only:
-            self.configure_codriver_joystick()
+            # self.configure_codriver_joystick()
             # self.bind_codriver_buttons()  # it takes too long to poll all these
-            self.bind_keyboard_buttons()  # it takes too long to poll all these
+            # self.bind_keyboard_buttons()  # it takes too long to poll all these
             if constants.k_use_bbox:
                 self.bind_button_box()
 
@@ -298,10 +298,12 @@ class RobotContainer:
         self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
 
         # move the pivot out of the way when using the autostrafe
-        #self.triggerB.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
-        #self.triggerB.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
-        #self.triggerX.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
-        #self.triggerX.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
+        move_arm_on_auto = False
+        if move_arm_on_auto:
+            self.triggerB.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+            self.triggerB.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
+            self.triggerX.onTrue(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=-10))
+            self.triggerX.onFalse(MovePivot(container=self, pivot=self.pivot, mode='incremental', angle=10))
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125

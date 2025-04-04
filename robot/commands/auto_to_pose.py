@@ -31,11 +31,13 @@ class AutoToPose(commands2.Command):  #
         self.tolerance_counter = 0
         self.from_robot_state = from_robot_state
         self.nearest = nearest  # only use nearest tags as the target
+        self.print_debug = True
 
         # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot if it servos to full speed
         max_units_per_second = 2  # can't be too low or you get lag and we allow a max of < 50% below
         self.x_limiter = SlewRateLimiter(max_units_per_second)
         self.y_limiter = SlewRateLimiter(max_units_per_second)
+        self.rot_limiter = SlewRateLimiter(max_units_per_second)
 
         self.target_pose = target_pose
         self.trapezoid = trapezoid
@@ -82,12 +84,12 @@ class AutoToPose(commands2.Command):  #
                 self.y_pid.setGoal(self.target_pose.Y())
             else:
                 # trying to get it to slow down but still make it to final position
-                self.x_pid = PIDController(0.7, 0.00, 0.0)
-                self.y_pid = PIDController(0.7, 0.00, 0.0)
+                self.x_pid = PIDController(0.8, 0.01, 0.0)
+                self.y_pid = PIDController(0.8, 0.01, 0.0)
                 self.x_pid.setSetpoint(self.target_pose.X())
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
-            self.rot_pid = PIDController(0.7, 0, 0,)  # 0.5
+            self.rot_pid = PIDController(0.7, 0.01, 0,)  # 0.5
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
@@ -98,6 +100,27 @@ class AutoToPose(commands2.Command):  #
             self.last_diff_x = 0
             self.last_diff_y = 0
             self.last_diff_radians = 0
+            self.tolerance_counter = 0
+            self.rot_limiter.reset(0)
+            self.x_limiter.reset(0)
+            self.y_limiter.reset(0)
+            self.counter = 0
+
+            if self.control_type == 'pathplanner':
+                if self.swerve.flip_path():  # this is in initialize, not __init__, in case FMS hasn't told us the right alliance on boot-up
+                    self.target_state_flipped = self.target_state.flip()
+                else:
+                    self.target_state_flipped = self.target_state
+
+            else:
+                if self.trapezoid:
+                    robot_pose = self.swerve.get_pose()
+                    self.x_pid.reset(robot_pose.X())
+                    self.y_pid.reset(robot_pose.Y())
+                else:
+                    self.x_pid.reset()
+                    self.y_pid.reset()
+                    self.rot_pid.reset()
 
             #SmartDashboard.putNumber("x commanded", 0)
             #SmartDashboard.putNumber("y commanded", 0)
@@ -106,23 +129,7 @@ class AutoToPose(commands2.Command):  #
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = round(self.container.get_enabled_time(), 2)
-        self.reset_controllers()  # this is supposed to get us a new pose
-
-        if self.control_type == 'pathplanner':
-            if self.swerve.flip_path():  # this is in initialize, not __init__, in case FMS hasn't told us the right alliance on boot-up
-                self.target_state_flipped = self.target_state.flip()
-            else:
-                self.target_state_flipped = self.target_state
-
-        else:
-            if self.trapezoid:
-                robot_pose = self.swerve.get_pose()
-                self.x_pid.reset(robot_pose.X())
-                self.y_pid.reset(robot_pose.Y())
-            else:
-                self.x_pid.reset()
-                self.y_pid.reset()
-                self.rot_pid.reset()
+        self.reset_controllers()  # this is supposed to get us a new pose and reset all the parameters
 
         # let the robot know what we're up to
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
@@ -135,7 +142,7 @@ class AutoToPose(commands2.Command):  #
         msg = f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **"
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
-        if wpilib.RobotBase.isSimulation():
+        if wpilib.RobotBase.isSimulation() or self.print_debug:
             msg = f'CNT  DX  XT?  Xo | DY  YT?  Yo |  DR RT?  Ro  | TC'
             print(msg)
 
@@ -154,7 +161,7 @@ class AutoToPose(commands2.Command):  #
             rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
 
             # TODO optimize the last mile and have it gracefully not oscillate
-            rot_max, rot_min = 0.6, 0.15
+            rot_max, rot_min = 0.5, 0.1
             trans_max, trans_min = 0.3, 0.1  # it browns out when you start if this is too high
             # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
             pose = self.swerve.get_pose()
@@ -190,17 +197,18 @@ class AutoToPose(commands2.Command):  #
             # smooth out the initial jumps with slew_limiters
             x_output = self.x_limiter.calculate(x_output)
             y_output = self.y_limiter.calculate(y_output)
+            rot_output = self.rot_limiter.calculate(rot_output)
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
 
             # keep track of how long we've been good - allow to recover if we overshoot
-            rotation_achieved = abs(diff_pose.rotation().degrees()) < ac.k_rotation_tolerance.degrees() / 2  # really push it - less than a degree
-            translation_achieved = diff_pose.translation().norm() < ac.k_translation_tolerance_meters / 2  # get to within an inch total
+            rotation_achieved = abs(diff_pose.rotation().degrees()) < ac.k_rotation_tolerance.degrees()   # really push it - less than a degree
+            translation_achieved = diff_pose.translation().norm() < ac.k_translation_tolerance_meters   # get to within an inch total
             if rotation_achieved and translation_achieved:
                 self.tolerance_counter += 1
             else:
                 self.tolerance_counter = 0
 
-            if self.counter % 10 == 0 and wpilib.RobotBase.isSimulation():
+            if self.counter % 10 == 0 and (wpilib.RobotBase.isSimulation() or self.print_debug):
                 msg = f'{self.counter:3d}  {diff_xy.X():.2f} {self.x_overshot} {x_output:.2f} | {diff_xy.Y():.2f}  {self.y_overshot} {y_output:.2f} | {diff_rot.rotation().degrees():.1f}° {self.rot_overshot} {rot_output:.2f} | {self.tolerance_counter}'
                 print(msg)
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
