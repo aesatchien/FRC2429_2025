@@ -46,9 +46,9 @@ class AutoToPose(commands2.Command):  #
         self.x_overshot = False
         self.y_overshot = False
         self.rot_overshot = False
-        self.last_diff_x = 0
-        self.last_diff_y = 0
-        self.last_diff_radians = 0
+        self.last_diff_x = 999
+        self.last_diff_y = 999
+        self.last_diff_radians = 1
 
         self.addRequirements(self.swerve)
         self.reset_controllers()
@@ -84,12 +84,18 @@ class AutoToPose(commands2.Command):  #
                 self.y_pid.setGoal(self.target_pose.Y())
             else:
                 # trying to get it to slow down but still make it to final position
-                self.x_pid = PIDController(0.8, 0.01, 0.0)
-                self.y_pid = PIDController(0.8, 0.01, 0.0)
+                # after 1s at 1 error the integral contribution will be Ki - so 1s at 0.1 error will output 0.1 * Ki
+                self.x_pid = PIDController(0.8, 0.1, 0.0)  # can allow for a higher Ki because of clamping below
+                self.x_pid.setIntegratorRange(-0.1,0.1)  # clamp Ki * Tot Error min(negative) and max output
+                self.x_pid.setIZone(0.25)  # do not allow integral unless we are within 0.25m (prevents windup)
                 self.x_pid.setSetpoint(self.target_pose.X())
+
+                self.y_pid = PIDController(0.8, 0.1, 0.0)
+                self.y_pid.setIntegratorRange(-0.1,0.1)  # clamp min(negative) and max output of the integral term
+                self.y_pid.setIZone(0.25)  # do not allow integral unless we are within 0.25m (prevents windup)
                 self.y_pid.setSetpoint(self.target_pose.Y())
 
-            self.rot_pid = PIDController(0.7, 0.01, 0,)  # 0.5
+            self.rot_pid = PIDController(0.7, 0.0, 0,)  # 0.5
             self.rot_pid.enableContinuousInput(radians(-180), radians(180))
             self.rot_pid.setSetpoint(self.target_pose.rotation().radians())
 
@@ -97,9 +103,9 @@ class AutoToPose(commands2.Command):  #
             self.x_overshot = False
             self.y_overshot = False
             self.rot_overshot = False
-            self.last_diff_x = 0
-            self.last_diff_y = 0
-            self.last_diff_radians = 0
+            self.last_diff_x = 99  # has to start out a large number
+            self.last_diff_y = 99
+            self.last_diff_radians = 9
             self.tolerance_counter = 0
             self.rot_limiter.reset(0)
             self.x_limiter.reset(0)
@@ -143,7 +149,7 @@ class AutoToPose(commands2.Command):  #
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
         if wpilib.RobotBase.isSimulation() or self.print_debug:
-            msg = f'CNT  DX  XT?  Xo | DY  YT?  Yo |  DR RT?  Ro  | TC'
+            msg = f'CNT  DX  XT?  Xo | DY  YT?  Yo |  DR RT?  Ro  |  TC'
             print(msg)
 
     def execute(self) -> None:
@@ -179,7 +185,7 @@ class AutoToPose(commands2.Command):  #
                 self.y_overshot = True
             self.last_diff_y = diff_y
             diff_radians = diff_rot.rotation().radians()
-            if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 1:
+            if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 0:
                 self.rot_overshot = True
             self.last_diff_radians = diff_radians
 
