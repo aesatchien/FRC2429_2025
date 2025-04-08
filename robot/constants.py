@@ -46,7 +46,7 @@ k_positions = {
     "stow": {
         "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(-90),
+        "wrist_pivot": math.radians(-92),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
@@ -80,8 +80,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.45,
-        "shoulder_pivot": math.radians(125),
+        "elevator": 1.41,
+        "shoulder_pivot": math.radians(118),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
@@ -186,8 +186,8 @@ for tag_id in range(17, 23):
         # see ../resources/plots/useful_robot_locations.ipynb
         coral_center_offset = 0.0  # the center of the arm is not the center of the robot - this is in y because we rotated 90
         x_offset = 0.47 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
-        right_y_offset = 0.18  # POSITIVE  - because of tag yaw we have to add the right
-        left_y_offset = 0.175  # POSITIVE  - because of tag yaw we have to subtract the left below
+        right_y_offset = 0.19  # POSITIVE  - because of tag yaw we have to add the right
+        left_y_offset = 0.17  # POSITIVE  - because of tag yaw we have to subtract the left below
         robot_offset_left = Translation2d(x_offset, -left_y_offset - coral_center_offset).rotateBy(tag_yaw)
         robot_offset_right = Translation2d(x_offset - coral_center_offset, +right_y_offset - coral_center_offset).rotateBy(tag_yaw)
 

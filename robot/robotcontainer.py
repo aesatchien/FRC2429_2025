@@ -123,7 +123,7 @@ class RobotContainer:
         if not constants.k_swerve_only:
             # self.configure_codriver_joystick()
             # self.bind_codriver_buttons()  # it takes too long to poll all these
-            # self.bind_keyboard_buttons()  # it takes too long to poll all these
+            self.bind_keyboard_buttons()  # it takes too long to poll all these
             if constants.k_use_bbox:
                 self.bind_button_box()
 
@@ -403,7 +403,7 @@ class RobotContainer:
             GoToStow(container=self)))
 
         # v: intake on (mnemonic: vacuum up the piece)
-        self.keyboard_trigger_v.whileTrue(RunIntake(self, self.intake, constants.IntakeConstants.k_coral_intaking_voltage, stop_on_end=True))
+        self.keyboard_trigger_v.whileTrue(RunIntake(self, self.intake, -12, stop_on_end=True))
 
         # o: wrist go right (korean right is orin chok, also position on the keyboard)
         self.keyboard_trigger_w.onTrue(MoveWristSwap(self, self.wrist))
