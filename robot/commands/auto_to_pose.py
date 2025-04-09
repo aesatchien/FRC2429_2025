@@ -166,7 +166,7 @@ class AutoToPose(commands2.Command):  #
             trans_max, trans_min = 0.3, 0.1  # it browns out when you start if this is too high
             diff_pose = robot_pose.relativeTo(self.target_pose)  # this is pretty much useless for x and y, only rotation
             # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees and using robot centric
-            # diff_xy = diff_pose.rotateBy(robot_pose.rotation())
+            diff_xy = diff_pose.rotateBy(-self.target_pose.rotation())  # now dX and dY should be correct if you use .X and .Y
             diff_rot = diff_pose
             # enforce minimum values , but try to stop oscillations  i.e. try to get us to overshoot but very gently
             diff_x = self.target_pose.X() - robot_pose.X()  # x error
@@ -210,7 +210,7 @@ class AutoToPose(commands2.Command):  #
 
             if self.counter % 10 == 0 and (wpilib.RobotBase.isSimulation() or self.print_debug):
                 msg = f'{self.counter:3d}  {diff_x:+.2f} {str(self.x_overshot):>5} {x_output:+.2f} | {diff_y:+.2f}  {str(self.y_overshot):>5} {y_output:+.2f} '
-                msg += f'| {diff_rot.rotation().degrees():>+6.1f}° {str(self.rot_overshot):>5} {rot_output:+.2f} | {self.tolerance_counter} '
+                msg += f'| {diff_rot.rotation().degrees():>+6.1f}° {str(self.rot_overshot):>5} {rot_output:+.2f} | {self.tolerance_counter} '  # {diff_pose} {diff_xy}'
                 print(msg)
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
                 #SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
