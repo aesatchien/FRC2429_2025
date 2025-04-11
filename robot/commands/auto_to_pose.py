@@ -60,7 +60,6 @@ class AutoToPose(commands2.Command):  #
             nearest_tag = self.container.swerve.get_nearest_tag(destination='reef')
             self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
-
         elif self.from_robot_state:
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
         else:
@@ -140,17 +139,12 @@ class AutoToPose(commands2.Command):  #
 
         # let the robot know what we're up to
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
-        self.counter = 0
-
-        self.x_overshot = False
-        self.y_overshot = False
-        self.rot_overshot = False
 
         msg = f"{self.indent * '    '}** Started {self.getName()} to {self.target_pose} at {self.start_time} s **"
         print(msg, flush=True)
         SmartDashboard.putString("alert", msg)
         if wpilib.RobotBase.isSimulation() or self.print_debug:
-            msg = f'CNT  DX  XT?  Xo | DY  YT?  Yo |  DR RT?  Ro  |  TC'
+            msg = f'CNT  DX     XT?   Xo   |   DY    YT?   Yo   |   DR     RT?   Ro   | TC'
             print(msg)
 
     def execute(self) -> None:
@@ -163,36 +157,34 @@ class AutoToPose(commands2.Command):  #
             self.swerve.drive_robot_relative(target_chassis_speeds, "we don't use feedforwards")
 
         else:
-            x_output = self.x_pid.calculate(robot_pose.X())
-            y_output = self.y_pid.calculate(robot_pose.Y())
-            rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())
+            x_output = self.x_pid.calculate(robot_pose.X())  # setpoint is the target pose X
+            y_output = self.y_pid.calculate(robot_pose.Y())  # setpoint is the target pose Y
+            rot_output = self.rot_pid.calculate(robot_pose.rotation().radians())  # setpoint is the target pose radians
 
             # TODO optimize the last mile and have it gracefully not oscillate
             rot_max, rot_min = 0.5, 0.1
             trans_max, trans_min = 0.3, 0.1  # it browns out when you start if this is too high
-            # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees
-            pose = self.swerve.get_pose()
-            diff_pose = pose.relativeTo(self.target_pose)
-            diff_xy = diff_pose.rotateBy(pose.rotation())
+            diff_pose = robot_pose.relativeTo(self.target_pose)  # this is pretty much useless for x and y, only rotation
+            # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees and using robot centric
+            diff_xy = diff_pose.rotateBy(-self.target_pose.rotation())  # now dX and dY should be correct if you use .X and .Y
             diff_rot = diff_pose
-            # enforce minimum values , but try to stop oscillations
-            # try to get us to overshoot but very gently
-            diff_x = diff_pose.X()
-            if abs(diff_x) > abs(self.last_diff_x) and self.counter > 1:
+            # enforce minimum values , but try to stop oscillations  i.e. try to get us to overshoot but very gently
+            diff_x = self.target_pose.X() - robot_pose.X()  # x error
+            if abs(diff_x) > abs(self.last_diff_x) and self.counter > 0:
                 self.x_overshot = True
             self.last_diff_x = diff_x
-            diff_y = diff_pose.Y()
-            if abs(diff_y) > abs(self.last_diff_y) and self.counter > 1:
+            diff_y = self.target_pose.Y() - robot_pose.Y()  # y error
+            if abs(diff_y) > abs(self.last_diff_y) and self.counter > 0:
                 self.y_overshot = True
             self.last_diff_y = diff_y
-            diff_radians = diff_rot.rotation().radians()
+            diff_radians = diff_rot.rotation().radians()  # rot error - could also use self.target_pose.rotation().radians() - robot_pose.rotation().radians()
             if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 0:
                 self.rot_overshot = True
             self.last_diff_radians = diff_radians
 
-            if abs(x_output) < trans_min and not self.x_overshot and abs(diff_xy.X()) > ac.k_translation_tolerance_meters:
+            if abs(x_output) < trans_min and not self.x_overshot and abs(diff_x) > ac.k_translation_tolerance_meters:
                 x_output = math.copysign(trans_min, x_output)
-            if abs(y_output) < trans_min and not self.y_overshot and abs(diff_xy.Y()) > ac.k_translation_tolerance_meters:
+            if abs(y_output) < trans_min and not self.y_overshot and abs(diff_y) > ac.k_translation_tolerance_meters:
                 y_output = math.copysign(trans_min, y_output)
             if abs(rot_output) < rot_min and not self.rot_overshot and abs(diff_rot.rotation().degrees()) > ac.k_rotation_tolerance.degrees():
                 rot_output = math.copysign(rot_min, rot_output)
@@ -205,7 +197,8 @@ class AutoToPose(commands2.Command):  #
             x_output = self.x_limiter.calculate(x_output)
             y_output = self.y_limiter.calculate(y_output)
             rot_output = self.rot_limiter.calculate(rot_output)
-            self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=True)
+            # I finally tracked down the initial error to the keep_angle - if it is True it has a rotation kink the first time
+            self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=False)
 
             # keep track of how long we've been good - allow to recover if we overshoot
             rotation_achieved = abs(diff_pose.rotation().degrees()) < ac.k_rotation_tolerance.degrees()   # really push it - less than a degree
@@ -216,7 +209,8 @@ class AutoToPose(commands2.Command):  #
                 self.tolerance_counter = 0
 
             if self.counter % 10 == 0 and (wpilib.RobotBase.isSimulation() or self.print_debug):
-                msg = f'{self.counter:3d}  {diff_xy.X():.2f} {self.x_overshot} {x_output:.2f} | {diff_xy.Y():.2f}  {self.y_overshot} {y_output:.2f} | {diff_rot.rotation().degrees():.1f}° {self.rot_overshot} {rot_output:.2f} | {self.tolerance_counter}'
+                msg = f'{self.counter:3d}  {diff_x:+.2f} {str(self.x_overshot):>5} {x_output:+.2f} | {diff_y:+.2f}  {str(self.y_overshot):>5} {y_output:+.2f} '
+                msg += f'| {diff_rot.rotation().degrees():>+6.1f}° {str(self.rot_overshot):>5} {rot_output:+.2f} | {self.tolerance_counter} '  # {diff_pose} {diff_xy}'
                 print(msg)
                 #SmartDashboard.putNumber("x setpoint", self.x_pid.getSetpoint())
                 #SmartDashboard.putNumber("y setpoint", self.y_pid.getSetpoint())
