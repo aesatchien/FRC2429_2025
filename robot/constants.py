@@ -86,6 +86,13 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
+    "l4_auto": {
+        "elevator": 1.45,
+        "shoulder_pivot": math.radians(125),
+        "wrist_pivot": math.radians(90),
+        "wrist_color_for_ligament": wpilib.Color.kRed,
+        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    },
     "l2_wrist_clearing": { # intermediate position in which we spin the wrist before scoring
         "elevator": inchesToMeters(23),
         "shoulder_pivot": math.radians(130), 

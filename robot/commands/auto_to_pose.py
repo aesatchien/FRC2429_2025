@@ -17,9 +17,9 @@ from subsystems.led import Led
 
 class AutoToPose(commands2.Command):  #
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, nearest=False, from_robot_state=False, control_type='pathplanner', trapezoid=False, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, nearest=False, from_robot_state=False, control_type='not_pathplanner', trapezoid=False, indent=0) -> None:
         """
-        this command handles flipping for red alliance, so only ever pass it things which apply to blue alliance
+        if nearest, it overrides target_pose
         """
         super().__init__()
         self.setName('AutoToPose')  # using the pathplanner controller instead
@@ -60,13 +60,14 @@ class AutoToPose(commands2.Command):  #
             nearest_tag = self.container.swerve.get_nearest_tag(destination='reef')
             self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
-            if wpilib.DriverStation.getAlliance()  == wpilib.DriverStation.Alliance.kRed:
-                self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2), rot=Rotation2d(math.pi))
 
         elif self.from_robot_state:
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
         else:
             pass  # already set in __init__
+
+        if wpilib.DriverStation.getAlliance()  == wpilib.DriverStation.Alliance.kRed:
+            self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2), rot=Rotation2d(math.pi))
 
         if self.control_type == 'pathplanner':
             self.target_state = PathPlannerTrajectoryState()

@@ -135,7 +135,7 @@ class PhysicsEngine:
 
         intake_redness = max(-255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
         intake_greenness = max(255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
-        self.mech2d_intake.setColor(wpilib.Color8Bit(red=int(intake_redness), green=int(intake_greenness), blue=0))
+        self.mech2d_intake.setColor(wpilib.Color8Bit(red=10 * int(intake_redness), green=10 * int(intake_greenness), blue=0))
 
     def update_elevator_positions(self, tm_diff):
 

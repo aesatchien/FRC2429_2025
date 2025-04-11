@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import typing
+from rev import SparkMax
 import wpilib
 import commands2
+import math
 
 from robotcontainer import RobotContainer
 
@@ -26,6 +28,8 @@ class MyRobot(commands2.TimedCommandRobot):
         # Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         # autonomous chooser on the dashboard.
         self.container = RobotContainer()
+        self.manipulator = SparkMax(2, SparkMax.MotorType.kBrushless)
+        self.counter = 0
 
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
@@ -59,11 +63,14 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopPeriodic(self) -> None:
         """This function is called periodically during operator control"""
+        self.counter += 1
+        sin_out = 1 / 20 * math.sin(self.counter / 100)
+        wpilib.SmartDashboard.putNumber('sin out', sin_out)
+        self.manipulator.set(sin_out)
 
     def testInit(self) -> None:
         # Cancels all running commands at the start of test mode
         commands2.CommandScheduler.getInstance().cancelAll()
-
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)

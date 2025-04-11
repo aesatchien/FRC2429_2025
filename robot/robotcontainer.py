@@ -38,6 +38,7 @@ from autonomous.one_plus_one import OnePlusOne
 from autonomous.one_plus_two_right import OnePlusTwoRight
 from autonomous.one_plus_two_left import OnePlusTwoLeft
 from autonomous.one_plus_one_left import OnePlusOne
+from autonomous.l4_preload_auto_aim import L4PreloadAutoAim
 
 # 2429 commands
 from commands.auto_to_pose import AutoToPose
@@ -249,10 +250,10 @@ class RobotContainer:
         wpilib.SmartDashboard.putData("ResetFlex", Reflash(container=self))
         wpilib.SmartDashboard.putData('GoToScore', Score(container=self))
         wpilib.SmartDashboard.putData('GoToStow', GoToStow(container=self))
-        wpilib.SmartDashboard.putData('GoToL1', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
-        wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+        wpilib.SmartDashboard.putData('GoToL1', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1)))
+        wpilib.SmartDashboard.putData('GoToL2', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2)))
+        wpilib.SmartDashboard.putData('GoToL3', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3)))
+        wpilib.SmartDashboard.putData('GoToL4', commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4)))
         wpilib.SmartDashboard.putData('Set valid tag IDs', SetValidTags(self, constants.VisionConstants.k_valid_tags))
         wpilib.SmartDashboard.putData('CalElevatorUp', commands2.InstantCommand(lambda: self.elevator.offset_encoder_position_meters(0.025)).ignoringDisable(True))
         wpilib.SmartDashboard.putData('CalElevatorDown', commands2.InstantCommand(lambda: self.elevator.offset_encoder_position_meters(-0.025)).ignoringDisable(True))
@@ -275,6 +276,7 @@ class RobotContainer:
         self.auto_chooser.addOption('1+2 Right *CODE*', OnePlusTwoRight(self))  # the working auto that score three coral on right
         self.auto_chooser.addOption('1+2 Left *CODE*', OnePlusTwoLeft(self))  # simulated left version of code
         self.auto_chooser.addOption('1+1 in code *CODE*', OnePlusOne(self))  #  is there any reason for this?
+        self.auto_chooser.addOption('l4 preload auto aim', L4PreloadAutoAim(self))
 
         # self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))  # not a real auto
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)  #
@@ -320,7 +322,7 @@ class RobotContainer:
         self.triggerRB.onTrue(Score(self))
 
         self.trigger_L_trigger.onTrue(
-                GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
+                GoToReefPosition(container=self, level=2).andThen(
                     Score(container=self)
                     )
                 )
@@ -352,7 +354,7 @@ class RobotContainer:
         self.co_trigger_rb.onTrue(Score(self))
 
         self.co_trigger_l_trigger.onTrue(
-                GoToReefPosition(container=self, level=2, wrist_setpoint_decider=math.radians(90)).andThen(
+                GoToReefPosition(container=self, level=2).andThen(
                     Score(container=self)
                     )
                 )
@@ -389,10 +391,10 @@ class RobotContainer:
         # p: place (score)
         self.keyboard_trigger_p.onTrue(GoToStow(self))
 
-        self.keyboard_trigger_1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
-        self.keyboard_trigger_2.onTrue(GoToReefPosition(self, 2, self.robot_state))
-        self.keyboard_trigger_3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
-        self.keyboard_trigger_4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+        self.keyboard_trigger_1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1)))
+        self.keyboard_trigger_2.onTrue(GoToReefPosition(self, 2))
+        self.keyboard_trigger_3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3)))
+        self.keyboard_trigger_4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4)))
 
         self.keyboard_trigger_s.onTrue(Score(self))
 
@@ -415,9 +417,9 @@ class RobotContainer:
     def register_commands(self):
 
         NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
-        NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, self.robot_state))
-        NamedCommands.registerCommand('go to l3', GoToReefPosition(self, 3, self.robot_state))
-        NamedCommands.registerCommand('go to l1 auto', GoToReefPosition(self, 1, self.robot_state))
+        NamedCommands.registerCommand('go to l4', GoToReefPosition(self, 4, auto=True))
+        NamedCommands.registerCommand('go to l3', GoToReefPosition(self, 3))
+        NamedCommands.registerCommand('go to l1 auto', GoToReefPosition(self, 1))
         NamedCommands.registerCommand('go to l1', AutoL1(self).withTimeout(2))
         NamedCommands.registerCommand('go to coral station', GoToCoralStation(self))
         NamedCommands.registerCommand('stow', GoToStow(self))
@@ -551,10 +553,10 @@ class RobotContainer:
         # self.bbox_GH.onTrue(GoToStow(self))
 
         # L1-L4
-        self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1, self.robot_state)))
-        self.bbox_L2.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2, self.robot_state)))
-        self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3, self.robot_state)))
-        self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4, self.robot_state)))
+        self.bbox_L1.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L1)).ignoringDisable(True).andThen(GoToReefPosition(self, 1)))
+        self.bbox_L2.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L2)).ignoringDisable(True).andThen(GoToReefPosition(self, 2)))
+        self.bbox_L3.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L3)).ignoringDisable(True).andThen(GoToReefPosition(self, 3)))
+        self.bbox_L4.onTrue(commands2.InstantCommand(lambda: self.robot_state.set_target(RobotState.Target.L4)).ignoringDisable(True).andThen(GoToReefPosition(self, 4)))
 
         # Reef actions
         # possibilities:
