@@ -66,21 +66,21 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l2": {
-        "elevator": 0.45, # 0.52 at ventura
+        "elevator": 0.43,
         "shoulder_pivot": math.radians(130),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l3": {
-        "elevator": 0.90,  # 0.86
+        "elevator": 0.85,  # 0.86
         "shoulder_pivot": math.radians(132),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "l4": {
-        "elevator": 1.41,
+        "elevator": 1.40,
         "shoulder_pivot": math.radians(118),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
