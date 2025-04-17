@@ -41,12 +41,17 @@ k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True
 
+# HACK: we don't use this for autos, we directly command +- 90, so change if needed
+# there are a few other places where we hardcode +- 90 but those aren't really too significant
+# TODO: make a 0ish angle for HP?
+k_wrist_positive_90ish_angle = 93
+k_wrist_negative_90ish_angle = -92
 
 k_positions = { 
     "stow": {
         "elevator": inchesToMeters(8),
         "shoulder_pivot": math.radians(90),
-        "wrist_pivot": math.radians(-92),
+        "wrist_pivot": math.radians(k_wrist_negative_90ish_angle),
         "wrist_color_for_ligament": wpilib.Color.kBlue,
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
@@ -79,15 +84,15 @@ k_positions = {
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
-    "l4": {
-        "elevator": 1.40,
-        "shoulder_pivot": math.radians(118),
-        "wrist_pivot": math.radians(90),
-        "wrist_color_for_ligament": wpilib.Color.kRed,
-        "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
-    },
+   # "l4": { # HACK:  we match this with l4_auto below with an update()
+    #     "elevator": 1.40,
+    #     "shoulder_pivot": math.radians(118),
+    #     "wrist_pivot": math.radians(90),
+    #     "wrist_color_for_ligament": wpilib.Color.kRed,
+    #     "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
+    # },
     "l4_auto": {
-        "elevator": 1.45,
+        "elevator": 1.43,
         "shoulder_pivot": math.radians(125),
         "wrist_pivot": math.radians(90),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -157,6 +162,8 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
 }
+
+k_positions.update({"l4" : k_positions["l4_auto"]})
 
 print("\nWARNING! NOT USING COMP SETPOINTS!!" * 10)
 
@@ -237,7 +244,7 @@ class IntakeConstants:
     k_sim_length = 0.25
 
     k_coral_intaking_voltage = -4 # TODO: increase again to -12 once we have gears that dont break nonstop
-    k_algae_intaking_voltage = 12
+    k_algae_intaking_voltage = 8
 
     k_coral_scoring_voltage = 1.3
 
@@ -355,7 +362,6 @@ class WristConstants:
 
     k_stowed_min_angle = math.radians(-15)
     k_stowed_max_angle = math.radians(15)
-
 
 class ShoulderConstants:
 

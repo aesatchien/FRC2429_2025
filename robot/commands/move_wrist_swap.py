@@ -2,6 +2,7 @@ import math
 import commands2
 from wpilib import SmartDashboard
 
+import constants
 from subsystems.wrist import Wrist
 
 
@@ -23,9 +24,9 @@ class MoveWristSwap(commands2.Command):
                                  f"** Started {self.getName()} at {self.start_time - self.container.get_enabled_time():2.2f} s **")
 
         if self.wrist.get_angle() > math.radians(45):
-            self.wrist.set_position(math.radians(-92))
+            self.wrist.set_position(math.radians(constants.k_wrist_negative_90ish_angle))
         elif self.wrist.get_angle() < math.radians(45):
-            self.wrist.set_position(math.radians(93))
+            self.wrist.set_position(math.radians(constants.k_wrist_positive_90ish_angle))
         else:
             print("Didn't swap wrist- it's not in a swappable position anyways!")
 

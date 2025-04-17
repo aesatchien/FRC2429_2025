@@ -2,6 +2,7 @@ import commands2
 from commands.auto_to_pose import AutoToPose
 from commands.go_to_reef_position import GoToReefPosition
 from commands.score import Score
+from commands.move_wrist_swap import MoveWristSwap
 import constants
 
 class L4PreloadAutoAim(commands2.SequentialCommandGroup):
@@ -13,7 +14,9 @@ class L4PreloadAutoAim(commands2.SequentialCommandGroup):
 
         self.addCommands(AutoToPose(container, container.swerve, constants.k_useful_robot_poses_blue['g'], nearest=False, from_robot_state=False, control_type='not_pathplanner').alongWith(
             GoToReefPosition(container, 4, auto=False) # auto false because we have enough time to let it slide down
-            ))
+            ).alongWith(
+                MoveWristSwap(container, container.wrist)
+                ))
 
         self.addCommands(Score(container))
 
