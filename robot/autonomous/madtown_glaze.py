@@ -30,7 +30,7 @@ class MadtownGlaze(commands2.SequentialCommandGroup):
                 commands2.ParallelCommandGroup(
                     AutoBuilder.followPath(PathPlannerPath.fromPathFile("1+0 path")),
                     # this moves our wrist to 0 which is fine till we have to score on l4
-                    GoToReefPosition(container, 4).withTimeout(3),
+                    GoToReefPosition(container, 4).withTimeout(5),
                     MoveWristSwap(container, container.wrist)
                     )
                 )
@@ -38,7 +38,7 @@ class MadtownGlaze(commands2.SequentialCommandGroup):
         # --------------- STEP 2 --------------
         # score then to go HP while driving back to HP
         self.addCommands(
-                WaitCommand(5).andThen(RunIntake(container, container.intake, constants.IntakeConstants.k_coral_scoring_voltage)).andThen(WaitCommand(0.3)).andThen(
+                WaitCommand(3).andThen(RunIntake(container, container.intake, constants.IntakeConstants.k_coral_scoring_voltage)).andThen(WaitCommand(0.4)).andThen(
                         AutoBuilder.followPath(PathPlannerPath.fromPathFile('go around for MADTOWN'))
                     )
                 )
@@ -58,7 +58,7 @@ class MadtownGlaze(commands2.SequentialCommandGroup):
         # score on D with 3-second timeout then stow and turn off intake
         self.addCommands(PrintCommand("final score"))
         self.addCommands(
-                WaitCommand(0.1).andThen(Score(container).withTimeout(0.7).andThen(MovePivot(container, container.pivot, "specified", angle=math.radians(90)))
+                WaitCommand(0.2).andThen(Score(container).withTimeout(0.7).andThen(MovePivot(container, container.pivot, "specified", angle=math.radians(90)))
                 ))
 
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Finished {self.getName()} **"))
