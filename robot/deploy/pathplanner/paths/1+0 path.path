@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.276536885248386,
-        "y": 2.9880635245959972
+        "x": 7.300512295081968,
+        "y": 4.0549692622950815
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.665163934428713,
-        "y": 2.508555327874685
+        "x": 6.749077868852458,
+        "y": 3.983043032786885
       },
       "isLocked": false,
       "linkedName": "start point near middle of barge"
     },
     {
       "anchor": {
-        "x": 5.76608606557377,
-        "y": 4.270747950819672
+        "x": 5.754098360655737,
+        "y": 3.8511782786885242
       },
       "prevControl": {
-        "x": 6.245594262295082,
-        "y": 4.402612704918033
+        "x": 6.185655737704918,
+        "y": 3.887141393442622
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "start madtown glazing"
     }
   ],
   "rotationTargets": [],

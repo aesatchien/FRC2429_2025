@@ -64,7 +64,7 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 0.62,
+        "elevator": 0.60,
         "shoulder_pivot": math.radians(179),
         "wrist_pivot": math.radians(-180),
         "wrist_color_for_ligament": wpilib.Color.kRed,

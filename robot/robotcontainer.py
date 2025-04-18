@@ -39,6 +39,7 @@ from autonomous.one_plus_two_right import OnePlusTwoRight
 from autonomous.one_plus_two_left import OnePlusTwoLeft
 from autonomous.one_plus_one_left import OnePlusOne
 from autonomous.l4_preload_auto_aim import L4PreloadAutoAim
+from autonomous.madtown_glaze import MadtownGlaze
 
 # 2429 commands
 from commands.auto_to_pose import AutoToPose
@@ -277,6 +278,7 @@ class RobotContainer:
         self.auto_chooser.addOption('1+2 Left *CODE*', OnePlusTwoLeft(self))  # simulated left version of code
         self.auto_chooser.addOption('1+1 in code *CODE*', OnePlusOne(self))  #  is there any reason for this?
         self.auto_chooser.addOption('l4 preload auto aim', L4PreloadAutoAim(self))
+        self.auto_chooser.addOption('madtwon', MadtownGlaze(self))
 
         # self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))  # not a real auto
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)  #
