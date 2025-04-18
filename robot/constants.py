@@ -64,7 +64,7 @@ k_positions = {
 
     },
     "l1": {
-        "elevator": 0.64,
+        "elevator": 0.62,
         "shoulder_pivot": math.radians(179),
         "wrist_pivot": math.radians(-180),
         "wrist_color_for_ligament": wpilib.Color.kRed,
@@ -122,7 +122,7 @@ k_positions = {
     "coral station": {
         "elevator": 0.35, # HACK :was .40 at clark, .42 at LCEC
         "shoulder_pivot": math.radians(66),
-        "wrist_pivot": math.radians(-4), # hopefully the negative makes it turn the safer way
+        "wrist_pivot": math.radians(-2), # hopefully the negative makes it turn the safer way
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
@@ -141,15 +141,15 @@ k_positions = {
         "wrist_color_for_setColor": wpilib.Color8Bit(0, 0, 255)
     },
     "algae low": {
-        "elevator": 0.75,
-        "shoulder_pivot": math.radians(180),
+        "elevator": 0.82,
+        "shoulder_pivot": math.radians(190),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
     },
     "algae high": {
-        "elevator": 1.1,
-        "shoulder_pivot": math.radians(180),
+        "elevator": 1.22,
+        "shoulder_pivot": math.radians(190),
         "wrist_pivot": math.radians(0),
         "wrist_color_for_ligament": wpilib.Color.kRed,
         "wrist_color_for_setColor": wpilib.Color8Bit(255, 0, 0)
