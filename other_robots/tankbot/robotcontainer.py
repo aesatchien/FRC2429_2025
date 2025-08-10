@@ -2,6 +2,7 @@ import time
 import wpilib
 import commands2
 import constants
+from commands.drive_by_joystick import DriveByJoystick
 
 from subsystems.drivetrain import Drivetrain
 
@@ -26,6 +27,8 @@ class RobotContainer:
         self.configure_joysticks()
         self.bind_driver_buttons()
 
+        self.drive.setDefaultCommand(DriveByJoystick(self, self.drive))
+
     def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
         self.start_time = time.time()
 
@@ -40,7 +43,7 @@ class RobotContainer:
         """
         # The driver's controller
         self.driver_command_controller = commands2.button.CommandXboxController(constants.k_driver_controller_port)
-        self.triggerA = self.driver_command_controller.a()
+        # self.triggerA = self.driver_command_controller.a()
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))

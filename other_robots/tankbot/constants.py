@@ -1,7 +1,9 @@
 import math
 from rev import ClosedLoopSlot, SparkClosedLoopController, SparkFlexConfig, SparkMax, SparkMaxConfig
+from commands.drive_by_joystick import DriveByJoystick
 
 k_burn_flash = True
+k_driver_controller_port = 0
 
 class TestSubsystemConstants:
     k_my_constant = 1
