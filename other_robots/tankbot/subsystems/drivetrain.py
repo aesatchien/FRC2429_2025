@@ -60,13 +60,13 @@ class Drivetrain(Subsystem):
 
         # this should be its own function later - we will call it whenever we change brake mode
         if constants.k_burn_flash:
-            controller_revlib_error_source_r = self.motor.configure(DriveConstants.k_config_r1, self.rev_resets,
+            controller_revlib_error_source_r = self.drive_r1.configure(DriveConstants.k_right_config, self.rev_resets,
                                                                   self.rev_persists)
-            controller_revlib_error_follower_r = self.follower.configure(DriveConstants.k_follower_config_r2,
+            controller_revlib_error_follower_r = self.drive_r2.configure(DriveConstants.k_follower_config_r2,
                                                                        self.rev_resets, self.rev_persists)
-            controller_revlib_error_source_l = self.motor.configure(DriveConstants.k_config_l1, self.rev_resets,
+            controller_revlib_error_source_l = self.drive_l1.configure(DriveConstants.k_left_config, self.rev_resets,
                                                                   self.rev_persists)
-            controller_revlib_error_follower_l = self.follower.configure(DriveConstants.k_follower_config_l2,
+            controller_revlib_error_follower_l = self.drive_l2.configure(DriveConstants.k_follower_config_l2,
                                                                        self.rev_resets, self.rev_persists)
             print(
                 f"Reconfigured elevator sparkmaxes. Controller status: \n {controller_revlib_error_source_r}\n {controller_revlib_error_follower_r}\n {controller_revlib_error_source_l}\n {controller_revlib_error_follower_l}")

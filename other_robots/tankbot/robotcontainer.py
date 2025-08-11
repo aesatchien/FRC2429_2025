@@ -27,7 +27,7 @@ class RobotContainer:
         self.configure_joysticks()
         self.bind_driver_buttons()
 
-        self.drive.setDefaultCommand(DriveByJoystick(self, self.drive))
+        self.drive.setDefaultCommand(DriveByJoystick(self, self.drive, self.driver_command_controller))
 
     def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
         self.start_time = time.time()
