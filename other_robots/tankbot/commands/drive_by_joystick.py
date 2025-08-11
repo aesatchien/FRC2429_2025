@@ -3,12 +3,11 @@ from wpilib import SmartDashboard
 from commands2.button import CommandXboxController
 
 
-class DriveByJoystick(commands2.Command):  # change the name for your command
+class DriveByJoystick(commands2.Command):
 
-    def __init__(self, container, indent=0) -> None:
+    def __init__(self, container, controller: CommandXboxController) -> None:
         super().__init__()
-        self.setName('Sample Name')  # change this to something appropriate for this command
-        self.indent = indent
+        self.setName('drive_by_joystick')
         self.container = container
         self.controller: CommandXboxController = controller
         # self.addRequirements(self.container.)  # commandsv2 version of requirements
