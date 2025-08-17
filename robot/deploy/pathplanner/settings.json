@@ -10,7 +10,9 @@
     "1+n RIGHT",
     "1+n LEFT"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "New Folder"
+  ],
   "defaultMaxVel": 1.0,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 90.0,
