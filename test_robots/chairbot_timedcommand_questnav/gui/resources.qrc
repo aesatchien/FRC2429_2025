@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="stuff">
+    <file>am14u.jpg</file>
+    <file>chairbot.png</file>
+  </qresource>
+</RCC>
