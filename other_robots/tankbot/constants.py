@@ -29,8 +29,8 @@ class DriveConstants:
     k_right_config = SparkMaxConfig()
     k_configs = [k_left_config, k_right_config]
 
-    [config.encoder.positionConversionFactor(6 * math.pi * 0.0254 / k_gear_ratio) for config in k_configs]
-    [config.encoder.velocityConversionFactor(6 * math.pi * 0.0254 / (k_gear_ratio * 60)) for config in k_configs]
+    #[config.encoder.positionConversionFactor(6 * math.pi * 0.0254 / k_gear_ratio) for config in k_configs]
+    #[config.encoder.velocityConversionFactor(6 * math.pi * 0.0254 / (k_gear_ratio * 60)) for config in k_configs]
     [config.voltageCompensation(12) for config in  k_configs]
     k_left_config.inverted(True)
     k_right_config.inverted(False)

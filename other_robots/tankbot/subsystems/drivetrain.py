@@ -83,8 +83,8 @@ class Drivetrain(Subsystem):
     def tank_drive(self, leftSpeed, rightSpeed):
         self.drive.tankDrive(leftSpeed, rightSpeed)
 
-    def arcade_drive(self, xSpeed, zRotation):
-        self.drive.arcadeDrive(xSpeed, zRotation, True)
+    def arcade_drive(self, xSpeed, zRotation, square_inputs):
+        self.drive.arcadeDrive(xSpeed, zRotation, square_inputs)
 
     def periodic(self):
         # here we do all the checking of the robot state - read inputs, calculate outputs
