@@ -6,33 +6,28 @@
 [tool.robotpy]
 
 # Version of robotpy this project depends on
-robotpy_version = "2024.3.2.2"
+robotpy_version = "2025.3.2.2"
 
 # Which extra RobotPy components should be installed
 # -> equivalent to `pip install robotpy[extra1, ...]
 robotpy_extras = [
-#     "all",
-#     "apriltag",
-     "commands2",
-#    "cscore",
-     "navx",
-#     "pathplannerlib",
+    # "all",
+    "apriltag",
+    "commands2",
+    # "cscore",
+    "navx",
+    "pathplannerlib",
     # "phoenix5",
     # "phoenix6",
-#     "playingwithfusion",
-     "rev",
+    # "photonvision",
+    # "playingwithfusion",
+    "rev",
     # "romi",
-     "sim",
+    "sim",
     # "xrp",
-]
-
-# idk why this works but I got the idea from 4774 -LHACK
-dependencies = [
-     #"photonlibpy"
 ]
 
 # Other pip packages to install
 requires = [
-     #"photonlibpy"
-#    "robotpy-commands-v2==2024.0.0b4"
+    "protobuf==6.32.0"
 ]

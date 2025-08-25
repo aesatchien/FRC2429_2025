@@ -1,0 +1,65 @@
+Questnav using protobuf. What needs to be added to the code.
+
+1. pip install protobuf (currently 6.32.0)
+2. On pyproject.toml, add 
+    # Other pip packages to install
+    requires = [
+        "protobuf==6.32.0"
+    ]
+
+3. Add helpers directry containing questnav, elasticlib.py etc. These are available at 
+    https://github.com/escime/CT25/blob/questnav_implementation/helpers/questnav/questnav2.py
+
+4. In subsystems -  drivetrain.py, add these in import section:
+    from helpers.questnav.questnav2 import QuestNav
+    from wpimath.geometry import Rotation2d, Transform2d, Pose2d
+    from wpimath.units import inchesToMeters
+
+5. In drivetrain.py, add these in _init_
+
+        #QuestNav
+        self.questnav = QuestNav()
+        self.quest_to_robot = Transform2d(inchesToMeters(-12.5-0.55), 0, Rotation2d().fromDegrees(0))
+        # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
+        self.quest_field = Field2d()
+
+6. In drivetrain.py, add this in def periodic(self):
+        # Import pose from QuestNav.
+        self.quest_periodic()
+
+7. In drivetrain.py add these defs:
+    def quest_periodic(self) -> None:
+        self.questnav.command_periodic()
+        SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
+        SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
+        quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
+
+        SmartDashboard.putString("QUEST_POSE", str(quest_pose))
+        self.quest_field.setRobotPose(quest_pose)
+        SmartDashboard.putData("QUEST_FIELD", self.quest_field)
+        if 0 < quest_pose.x < 17.658 and 0 < quest_pose.y < 8.131 and self.questnav.is_connected():
+            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", True)
+            # print("Quest Timestamp: " + str(self.questnav.get_app_timestamp()))
+            # print("System Timestamp: " + str(utils.get_system_time_seconds()))
+            # if abs(self.questnav.get_data_timestamp() - utils.get_current_time_seconds()) < 5:
+            #     print("Timestamp in correct epoch.")
+            #self.add_vision_measurement(quest_pose,
+            #                            utils.fpga_to_current_time(self.questnav.get_data_timestamp()),
+            #                            (0.02, 0.02, 0.035))
+        else:
+            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
+
+    def reset_pose_with_quest(self, pose: Pose2d) -> None:
+        self.reset_pose(pose)
+        self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
+
+    def reset_odometry(self):
+        """Reset robot odometry at the Subwoofer."""
+        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
+            self.reset_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
+            #self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))
+            self.questnav.set_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)).transformBy(self.quest_to_robot.inverse()))
+        else:
+            self.reset_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
+            #self.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
+            self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))
