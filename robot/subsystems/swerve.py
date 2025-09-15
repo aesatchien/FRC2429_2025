@@ -6,7 +6,7 @@ import navx
 import ntcore
 import wpimath.filter
 
-from commands2 import Subsystem
+from commands2 import Subsystem, InstantCommand
 
 from wpilib._wpilib import SmartDashboard
 from wpimath.filter import SlewRateLimiter
@@ -27,6 +27,11 @@ from wpimath.units import inchesToMeters
 import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
+
+from helpers.questnav.questnav2 import QuestNav
+from wpimath.geometry import Transform2d
+from wpimath.units import inchesToMeters
+from wpilib import DriverStation, Field2d
 
 
 class Swerve (Subsystem):
@@ -194,6 +199,15 @@ class Swerve (Subsystem):
         )
 
         self.automated_path = None
+
+        #QuestNav
+        self.questnav = QuestNav()
+        self.quest_to_robot = Transform2d(inchesToMeters(-12.5-0.55), 0, Rotation2d().fromDegrees(90))
+        # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
+        self.quest_field = Field2d()
+
+        wpilib.SmartDashboard.putData('Quest Reset Odometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('Quest Sync Odometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
 
     def get_pose(self) -> Pose2d:
         # return the pose of the robot  TODO: update the dashboard here?
@@ -600,4 +614,49 @@ class Swerve (Subsystem):
 
                 wpilib.SmartDashboard.putNumberArray(f'_angles', angles)
                 # wpilib.SmartDashboard.putNumberArray(f'_analog_radians', absolutes)
+    
+        # Import pose from QuestNav.
+        self.quest_periodic()
 
+    def quest_periodic(self) -> None:
+        self.questnav.command_periodic()
+        SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
+        SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
+        quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
+
+        SmartDashboard.putString("QUEST_POSE", str(quest_pose))
+        self.quest_field.setRobotPose(quest_pose)
+        SmartDashboard.putData("QUEST_FIELD", self.quest_field)
+        if 0 < quest_pose.x < 17.658 and 0 < quest_pose.y < 8.131 and self.questnav.is_connected():
+            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", True)
+            # print("Quest Timestamp: " + str(self.questnav.get_app_timestamp()))
+            # print("System Timestamp: " + str(utils.get_system_time_seconds()))
+            # if abs(self.questnav.get_data_timestamp() - utils.get_current_time_seconds()) < 5:
+            #     print("Timestamp in correct epoch.")
+            #self.add_vision_measurement(quest_pose,
+            #                            utils.fpga_to_current_time(self.questnav.get_data_timestamp()),
+            #                            (0.02, 0.02, 0.035))
+        else:
+            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
+
+
+    def reset_pose_with_quest(self, pose: Pose2d) -> None:
+        #self.reset_pose(pose)
+        self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
+
+    def quest_reset_odometry(self) -> None:
+        """Reset robot odometry at the Subwoofer."""
+        if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
+            #self.reset_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
+            #self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))
+            self.questnav.set_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)).transformBy(self.quest_to_robot.inverse()))
+            print("reset to red")
+        else:
+            #self.reset_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
+            #self.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
+            self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))
+            print(self.questnav.get_pose())
+            print("reset to blue")
+
+    def quest_sync_odometry(self) -> None:
+        self.questnav.set_pose(self.get_pose())

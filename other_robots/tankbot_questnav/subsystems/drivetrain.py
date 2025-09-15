@@ -4,6 +4,7 @@ import typing
 
 import navx
 import ntcore
+import commands2
 
 from commands2 import Subsystem
 from wpilib import SmartDashboard, DriverStation, Field2d
@@ -89,6 +90,7 @@ class Drivetrain(Subsystem):
         self.quest_to_robot = Transform2d(inchesToMeters(-12.5-0.55), 0, Rotation2d().fromDegrees(0))
         # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
         self.quest_field = Field2d()
+        wpilib.SmartDashboard.putData('Reset Quest Odometry', commands2.InstantCommand(lambda: self.reset_quest_odometry()))
 
     def tank_drive(self, leftSpeed, rightSpeed):
         self.drive.tankDrive(leftSpeed, rightSpeed)
@@ -129,16 +131,16 @@ class Drivetrain(Subsystem):
             SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
 
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
-        self.reset_pose(pose)
+        #self.reset_pose(pose)
         self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
 
-    def reset_odometry(self):
+    def reset_quest_odometry(self) -> None:
         """Reset robot odometry at the Subwoofer."""
         if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
-            self.reset_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
+            #self.reset_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
             #self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))
             self.questnav.set_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)).transformBy(self.quest_to_robot.inverse()))
         else:
-            self.reset_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
+            #self.reset_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
             #self.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
             self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))

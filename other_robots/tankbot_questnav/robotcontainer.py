@@ -28,8 +28,10 @@ class RobotContainer:
         self.bind_driver_buttons()
 
         self.drive.setDefaultCommand(DriveByJoystick(self, self.driver_command_controller))
-        wpilib.SmartDashboard.putData('ResetOdometry', commands2.InstantCommand(lambda: self.drive.reset_odometry())).ignoringDisable(True)
-        wpilib.SmartDashboard.putData('Test', commands2.PrintCommand('hello')).ignoringDisable(True)
+        #wpilib.SmartDashboard.putData('ResetOdometry', commands2.InstantCommand(lambda: self.drive.reset_odometry())).ignoringDisable(True)
+        #wpilib.SmartDashboard.putData('Test', commands2.PrintCommand('hello')).ignoringDisable(True)
+        #wpilib.SmartDashboard.putData('Reset Quest Odometry', commands2.InstantCommand(lambda: self.drive.reset_quest_odometry()))
+
 
     def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
         self.start_time = time.time()
