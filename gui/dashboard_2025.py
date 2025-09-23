@@ -1,6 +1,6 @@
 # pyqt example for teaching GUI development for FRC dashboard
 # make sure to pip install pyqt6 pyqt6-tools
-
+import math
 # print(f'Loading Modules ...', flush=True)'
 import os
 os.environ["OPENCV_LOG_LEVEL"] = "DEBUG"  # Options: INFO, WARNING, ERROR, DEBUG
@@ -16,10 +16,12 @@ from pathlib import Path
 import urllib.request
 import cv2
 import numpy as np
+import re
 
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from PyQt6.QtCore import Qt, QTimer, QEvent, QThread, QObject, pyqtSignal
 #from PyQt6.QtWidgets import  QApplication, QTreeWidget, QTreeWidgetItem
+from PyQt6.QtWidgets import QGraphicsOpacityEffect
 
 import qlabel2
 from warning_label import WarningLabel
@@ -196,6 +198,12 @@ class Ui(QtWidgets.QMainWindow):
         self.qt_text_new_value.installEventFilter(self)
 
         self.robot_pixmap = QtGui.QPixmap("png\\blockhead.png")  # for the field update
+        self.quest_pixmap = QtGui.QPixmap("png\\quest.png")
+        # Create an opacity effect with 50% transparency - quest icon
+        opacity_effect = QGraphicsOpacityEffect()
+        opacity_effect.setOpacity(0.5)
+        self.qlabel_quest.setGraphicsEffect(opacity_effect)
+        self.qlabel_robot.raise_()  # put the robot above the other labels (i.e. above the quest)
 
         # button connections
         self.qt_button_set_key.clicked.connect(self.update_key)
@@ -221,6 +229,8 @@ class Ui(QtWidgets.QMainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_widgets)
         self.timer.start(self.refresh_time)
+
+
 
         # if you need to print out the list of children
         # children = [(child.objectName()) for child in self.findChildren(QtWidgets.QWidget) if child.objectName()]
@@ -407,6 +417,7 @@ class Ui(QtWidgets.QMainWindow):
         # FINISHED FOR 2024
             # GUI UPDATES
         'drive_pose': {'widget': None, 'nt': '/SmartDashboard/drive_pose', 'command': None},
+        'quest_pose': {'widget': None, 'nt': '/SmartDashboard/QUEST_POSE', 'command': None},
         'qcombobox_autonomous_routines': {'widget':self.qcombobox_autonomous_routines, 'nt': r'/SmartDashboard/autonomous routines/options', 'command':None, 'selected': r'/SmartDashboard/autonomous routines/selected'},
         'qlabel_nt_connected': {'widget': self.qlabel_nt_connected, 'nt': None, 'command': None},
         'qlabel_matchtime': {'widget': self.qlabel_matchtime, 'nt': '/SmartDashboard/match_time', 'command': None},
@@ -582,10 +593,10 @@ class Ui(QtWidgets.QMainWindow):
             shooter_rpm = 2000
             shooter_distance = shooter_rpm * 0.00075
             center_offset = shooter_distance * -np.sin(hub_rotation * 3.14159 / 180)
-            x = 205 + center_offset * (380 / 1.2) # 380 px per 1.2 m
-            y = 190
+            hub_x = 205 + center_offset * (380 / 1.2) # 380 px per 1.2 m
+            hub_y = 190
 
-            self.qlabel_ball.move(int(x), int(y))
+            self.qlabel_ball.move(int(hub_x), int(hub_y))
             if self.qlabel_ball.isHidden():
                 self.qlabel_ball.show()
         else:
@@ -607,12 +618,33 @@ class Ui(QtWidgets.QMainWindow):
         pose_msg = f'POSE\n{" " * x_pad}{drive_pose[0]:>5.2f}m {drive_pose[1]:>4.2f}m {" " * theta_pad}{drive_pose[2]:>4.0f}°'
         self.qlabel_pose_indicator.setText(pose_msg)
 
+        # quick quest pose hack
+        quest_pose = self.widget_dict['quest_pose']['entry'].getString('No quest pose')
+        pattern = r"x=(?P<x>-?\d+\.\d+).*y=(?P<y>-?\d+\.\d+).*Rotation2d\((?P<rotation>-?\d+\.\d+)\)"
+        match = re.search(pattern, quest_pose)
+        if match:
+            quest_x, quest_y, quest_rot = float(match.group("x")), float(match.group("y")), float(match.group("rotation"))
+            quest_rot = math.degrees(quest_rot)
+        else:
+            quest_x, quest_y, quest_rot = -1, -1, -1
+        pose_msg = f'QUEST POSE\n{" " * x_pad}{quest_x:>5.2f}m {quest_y:>4.2f}m {" " * theta_pad}{quest_rot:>4.0f}°'
+        self.qlabel_quest_pose_indicator.setText(pose_msg)
+
         pixmap_rotated = self.robot_pixmap.transformed(QtGui.QTransform().rotate(90-drive_pose[2]), QtCore.Qt.TransformationMode.SmoothTransformation)
         new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * drive_pose[2] * np.pi / 180.0))))
         self.qlabel_robot.resize(new_size, new_size)  # take account of rotation shrinkage
         self.qlabel_robot.setPixmap(pixmap_rotated)  # this does rotate successfully
         # self.qlabel_robot.move(int(-bot_width / 2 + width * drive_pose[0] / x_lim), int(-bot_height / 2 + height * (1 - drive_pose[1] / y_lim)))
-        self.qlabel_robot.move(int(-new_size/2 + width * drive_pose[0] / x_lim ), int(-new_size/2 + height * (1 - drive_pose[1] / y_lim)))
+        self.qlabel_robot.move(int(-new_size / 2 + width * drive_pose[0] / x_lim), int(-new_size / 2 + height * (1 - drive_pose[1] / y_lim)))
+
+        # duplicate for the quest odometry 20250923 CJH
+        quest_pixmap_rotated = self.quest_pixmap.transformed(QtGui.QTransform().rotate(90-quest_rot), QtCore.Qt.TransformationMode.SmoothTransformation)
+        quest_new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * quest_rot * np.pi / 180.0))))
+        self.qlabel_quest.resize(quest_new_size, quest_new_size)
+        self.qlabel_quest.setPixmap(quest_pixmap_rotated)
+        self.qlabel_quest.move(int(-new_size/2 + width * quest_x / x_lim ), int(-new_size/2 + height * (1 - quest_y / y_lim)))
+
+
         ## print(f'Pose X:{drive_pose[0]:2.2f} Pose Y:{drive_pose[1]:2.2f} Pose R:{drive_pose[2]:2.2f}', end='\r', flush=True)
 
         # --------------  CAMERA STATUS INDICATORS  ---------------
