@@ -640,6 +640,13 @@ class Swerve (Subsystem):
         else:
             SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
 
+        if self.counter % 10 == 0:
+            wpilib.SmartDashboard.putNumber("Quest_Battery_%", self.questnav.get_battery_percent())
+            wpilib.SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
+            wpilib.SmartDashboard.putNumber("Quest_Tracking_lost_count", self.questnav.get_tracking_lost_counter())
+            wpilib.SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
+            wpilib.SmartDashboard.putNumber("Quest_frame_count", self.questnav.get_frame_count())
+
 
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
         #self.reset_pose(pose)

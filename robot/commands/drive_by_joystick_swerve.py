@@ -58,11 +58,11 @@ class DriveByJoystickSwerve(commands2.Command):
 
         # do not call the controller, call its HID - seems to cause overruns
         right_trigger_value = self.controller.getHID().getRightTriggerAxis()  # self.controller.getRightTriggerAxis()
-        self.turbo_limiter.calculate(right_trigger_value)  # the turbo triggers the stuttering if we don't limit it - 20251004 CJH
+        turbo = self.turbo_limiter.calculate(right_trigger_value)  # the turbo triggers the stuttering if we don't limit it - 20251004 CJH
         robot_oriented_value =  self.controller.getHID().getLeftBumperButton()  # self.robot_oriented_trigger.getAsBoolean()
 
-        slowmode_multiplier = 0.2 + 0.8 * self.turbo_limiter
-        angular_slowmode_multiplier = 0.5 + 0.5 * self.turbo_limiter
+        slowmode_multiplier = 0.2 + 0.8 * turbo
+        angular_slowmode_multiplier = 0.5 + 0.5 * turbo
 
 
         if self.robot_oriented_debouncer.calculate(robot_oriented_value):

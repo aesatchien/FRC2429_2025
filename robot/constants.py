@@ -257,7 +257,8 @@ class ClimberConstants:
     k_nt_debugging = False  # print extra values to NT for debugging
     k_CAN_id = 2
     k_follower_CAN_id = 3
-    k_gear_ratio = 167
+    # k_gear_ratio = 167
+    k_gear_ratio = (5 * 5 * 3) * (32/9) * (64/26)  # 657 
     # 25:1
     # 26:64
     # 30:80
@@ -265,7 +266,7 @@ class ClimberConstants:
     k_climber_motor_stowed_angle = 0
     k_climber_motor_climb_angle = math.radians(60)
     k_climber_forward_rotation_limit = math.radians(90)
-    k_climber_reverse_rotation_limit = 0
+    k_climber_reverse_rotation_limit = math.radians(-50)
     k_length_meters = 0.1209
     k_moi = 0.0173 #kg m^2
     k_plant = DCMotor.NEO(2)
@@ -298,8 +299,8 @@ class ClimberConstants:
     k_config.softLimit.forwardSoftLimit(k_climber_forward_rotation_limit)
     k_config.softLimit.reverseSoftLimit(k_climber_reverse_rotation_limit)
 
-    k_config.softLimit.forwardSoftLimitEnabled(False)
-    k_config.softLimit.reverseSoftLimitEnabled(False)
+    k_config.softLimit.forwardSoftLimitEnabled(True)
+    k_config.softLimit.reverseSoftLimitEnabled(True)
 
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
