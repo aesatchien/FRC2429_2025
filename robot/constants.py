@@ -165,7 +165,7 @@ k_positions = {
 
 k_positions.update({"l4" : k_positions["l4_auto"]})
 
-print("\nWARNING! NOT USING COMP SETPOINTS!!" * 10)
+print("\nWARNING! NOT USING COMP SETPOINTS!!" * 4)
 
 
 # Load the AprilTag field layout
