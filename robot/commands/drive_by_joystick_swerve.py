@@ -44,6 +44,7 @@ class DriveByJoystickSwerve(commands2.Command):
         stick_max_units_per_second = 3  # can't be too low or you get lag - probably should be between 3 and 5
         self.drive_limiter = SlewRateLimiter(stick_max_units_per_second)
         self.strafe_limiter = SlewRateLimiter(stick_max_units_per_second)
+        self.turbo_limiter = SlewRateLimiter(stick_max_units_per_second)
 
         self.prev_commanded_vector = Translation2d(0, 0) # we should start stationary so this should be valid
 
@@ -57,10 +58,11 @@ class DriveByJoystickSwerve(commands2.Command):
 
         # do not call the controller, call its HID - seems to cause overruns
         right_trigger_value = self.controller.getHID().getRightTriggerAxis()  # self.controller.getRightTriggerAxis()
+        turbo = self.turbo_limiter.calculate(right_trigger_value)  # the turbo triggers the stuttering if we don't limit it - 20251004 CJH
         robot_oriented_value =  self.controller.getHID().getLeftBumperButton()  # self.robot_oriented_trigger.getAsBoolean()
 
-        slowmode_multiplier = 0.2 + 0.8 * right_trigger_value
-        angular_slowmode_multiplier = 0.5 + 0.5 * right_trigger_value
+        slowmode_multiplier = 0.2 + 0.8 * turbo
+        angular_slowmode_multiplier = 0.5 + 0.5 * turbo
 
 
         if self.robot_oriented_debouncer.calculate(robot_oriented_value):
