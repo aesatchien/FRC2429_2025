@@ -41,6 +41,7 @@ class MyRobot(commands2.TimedCommandRobot):
     def disabledPeriodic(self) -> None:
         """This function is called periodically when disabled"""
         if self.disabled_counter % 100 == 0:
+            # set the LEDs
             # if wpilib.DriverStation.isFMSAttached():
             alliance_color = wpilib.DriverStation.getAlliance()
             if alliance_color is not None:
@@ -51,12 +52,18 @@ class MyRobot(commands2.TimedCommandRobot):
                 else:
                     self.container.led.set_indicator(Led.Indicator.kPOLKA)
 
+            # check on the questnav - auto synch it if we have been up more than 10s and have not synched yet
+            # but attempt to see if we have a good starting tag (logitech reef)
+            if (self.container.get_enabled_time() > 10 and
+                    not self.container.swerve.quest_has_synched and
+                    self.container.swerve.logitech_reef_count_subscriber.get() > 0):
+                self.container.swerve.quest_sync_odometry()  # this will mark that we have synched
+
         if self.disabled_counter % 1000 == 0:
             # don't reset in case it goes wrong
             # and don't burn in case it harms the spark (idt it will but idk)
             print(f"Reflashing pivot sparks at {self.container.get_enabled_time():.1f}s")
             self.container.pivot.reflash(False, False)
-
             # else:
             #     self.container.led.set_indicator(Led.Indicator.kRAINBOW)
             # print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")

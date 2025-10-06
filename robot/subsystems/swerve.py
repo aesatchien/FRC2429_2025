@@ -200,12 +200,13 @@ class Swerve (Subsystem):
 
         self.automated_path = None
 
-        #QuestNav
+        # QuestNav - eventually we will push all of this out to a class
         self.questnav = QuestNav()
         self.quest_to_robot = Transform2d(inchesToMeters(-8.35), inchesToMeters(-10.50), Rotation2d().fromDegrees(270)) #10.50 -8.35
         # This is quest-centric coordinate. X is robot center position -8.35 inch as seen rom Quest. y is robot center -10.50 inches as seen from Quest
         # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
         self.quest_field = Field2d()
+        self.quest_has_synched = False  # use this to check in disabled whether to update the quest with the robot odometry
 
         wpilib.SmartDashboard.putData('Quest Reset Odometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
         wpilib.SmartDashboard.putData('Quest Sync Odometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
@@ -621,26 +622,26 @@ class Swerve (Subsystem):
 
     def quest_periodic(self) -> None:
         self.questnav.command_periodic()
-        SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
-        SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
         quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
-
-        SmartDashboard.putString("QUEST_POSE", str(quest_pose))
         self.quest_field.setRobotPose(quest_pose)
-        SmartDashboard.putData("QUEST_FIELD", self.quest_field)
-        if 0 < quest_pose.x < 17.658 and 0 < quest_pose.y < 8.131 and self.questnav.is_connected():
-            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", True)
-            # print("Quest Timestamp: " + str(self.questnav.get_app_timestamp()))
-            # print("System Timestamp: " + str(utils.get_system_time_seconds()))
-            # if abs(self.questnav.get_data_timestamp() - utils.get_current_time_seconds()) < 5:
-            #     print("Timestamp in correct epoch.")
-            #self.add_vision_measurement(quest_pose,
-            #                            utils.fpga_to_current_time(self.questnav.get_data_timestamp()),
-            #                            (0.02, 0.02, 0.035))
-        else:
-            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
 
         if self.counter % 10 == 0:
+            SmartDashboard.putData("QUEST_FIELD", self.quest_field)
+            if 0 < quest_pose.x < 17.658 and 0 < quest_pose.y < 8.131 and self.questnav.is_connected():
+                SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", True)
+                # print("Quest Timestamp: " + str(self.questnav.get_app_timestamp()))
+                # print("System Timestamp: " + str(utils.get_system_time_seconds()))
+                # if abs(self.questnav.get_data_timestamp() - utils.get_current_time_seconds()) < 5:
+                #     print("Timestamp in correct epoch.")
+                #self.add_vision_measurement(quest_pose,
+                #                            utils.fpga_to_current_time(self.questnav.get_data_timestamp()),
+                #                            (0.02, 0.02, 0.035))
+            else:
+                SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
+
+            SmartDashboard.putString("QUEST_POSE", str(quest_pose))
+            SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
+            SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
             wpilib.SmartDashboard.putNumber("Quest_Battery_%", self.questnav.get_battery_percent())
             wpilib.SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
             wpilib.SmartDashboard.putNumber("Quest_Tracking_lost_count", self.questnav.get_tracking_lost_counter())
@@ -667,5 +668,7 @@ class Swerve (Subsystem):
             print("reset to blue")
 
     def quest_sync_odometry(self) -> None:
-        #self.questnav.set_pose(self.get_pose())  
-        self.questnav.set_pose(self.get_pose().transformBy(self.quest_to_robot.inverse()))  
+        #self.questnav.set_pose(self.get_pose())
+        self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
+        self.questnav.set_pose(self.get_pose().transformBy(self.quest_to_robot.inverse()))
+        
