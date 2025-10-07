@@ -200,7 +200,7 @@ for tag_id in range(17, 23):
         # see ../resources/plots/useful_robot_locations.ipynb
         coral_center_offset = 0.0  # the center of the arm is not the center of the robot - this is in y because we rotated 90
         x_offset = 0.47 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
-        right_y_offset = 0.19  # POSITIVE  - because of tag yaw we have to add the right
+        right_y_offset = 0.15  # POSITIVE  - because of tag yaw we have to add the right  was 0.19 on 20251006 - CJH changed to 0.15
         left_y_offset = 0.17  # POSITIVE  - because of tag yaw we have to subtract the left below
         robot_offset_left = Translation2d(x_offset, -left_y_offset - coral_center_offset).rotateBy(tag_yaw)
         robot_offset_right = Translation2d(x_offset - coral_center_offset, +right_y_offset - coral_center_offset).rotateBy(tag_yaw)
@@ -266,7 +266,7 @@ class ClimberConstants:
     k_climber_motor_stowed_angle = 0
     k_climber_motor_climb_angle = math.radians(60)
     k_climber_forward_rotation_limit = math.radians(90)
-    k_climber_reverse_rotation_limit = math.radians(-50)
+    k_climber_reverse_rotation_limit = math.radians(-70)
     k_length_meters = 0.1209
     k_moi = 0.0173 #kg m^2
     k_plant = DCMotor.NEO(2)

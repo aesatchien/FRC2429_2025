@@ -52,12 +52,6 @@ class MyRobot(commands2.TimedCommandRobot):
                 else:
                     self.container.led.set_indicator(Led.Indicator.kPOLKA)
 
-            # check on the questnav - auto synch it if we have been up more than 10s and have not synched yet
-            # but attempt to see if we have a good starting tag (logitech reef)
-            if (self.container.get_enabled_time() > 10 and
-                    not self.container.swerve.quest_has_synched and
-                    self.container.swerve.logitech_reef_count_subscriber.get() > 0):
-                self.container.swerve.quest_sync_odometry()  # this will mark that we have synched
 
         if self.disabled_counter % 1000 == 0:
             # don't reset in case it goes wrong
@@ -67,6 +61,13 @@ class MyRobot(commands2.TimedCommandRobot):
             # else:
             #     self.container.led.set_indicator(Led.Indicator.kRAINBOW)
             # print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
+
+            # check on the questnav - auto synch it if we have been up more than 10s and have not synched yet
+            # but attempt to see if we have a good starting tag (logitech reef)
+            if (# self.container.get_enabled_time() > 10 and
+                    not self.container.swerve.quest_has_synched and
+                    self.container.swerve.logitech_reef_count_subscriber.get() > 0):
+                self.container.swerve.quest_sync_odometry()  # this will mark that we have synched
         self.disabled_counter += 1
 
     def autonomousInit(self) -> None:

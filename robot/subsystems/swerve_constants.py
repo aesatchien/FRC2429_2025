@@ -191,7 +191,7 @@ class AutoConstants:
 
     k_pathfinding_constraints = PathConstraints(
             maxVelocityMps=3,
-            maxAccelerationMpsSq=6,
+            maxAccelerationMpsSq=6,  # this was at 6 for all comps - CJH lowered it to 4 for old batteries 20251006
             maxAngularVelocityRps=2*math.pi,  # radians per second
             maxAngularAccelerationRpsSq=4*math.pi,  # radians per second squared
             nominalVoltage=12,
