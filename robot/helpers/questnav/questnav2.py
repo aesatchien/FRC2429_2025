@@ -77,8 +77,8 @@ class QuestNav:
         payload.target_pose.rotation.value = pose.rotation().radians()
 
         self.request_publisher.set(self.cached_command_request.SerializeToString())
-        print(self.cached_command_request)
-        print(self.cached_command_request.SerializeToString())
+        #print(self.cached_command_request)
+        #print(self.cached_command_request.SerializeToString())
         
 
     def get_battery_percent(self) -> int:

@@ -458,6 +458,11 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_cal_wrist_up_indicator': {'widget': self.qlabel_cal_wrist_up_indicator, 'nt': '/SmartDashboard/CalWristUp/running', 'command': '/SmartDashboard/CalWristUp/running'},
         'qlabel_cal_wrist_down_indicator': {'widget': self.qlabel_cal_wrist_down_indicator, 'nt': '/SmartDashboard/CalWristDown/running', 'command': '/SmartDashboard/CalWristDown/running'},
 
+        'qlabel_questnav_sync_indicator': {'widget': self.qlabel_questnav_sync_indicator, 'nt': '/SmartDashboard/Quest Sync Odometry/running', 'command': '/SmartDashboard/Quest Sync Odometry/running'},
+        'qlabel_questnav_unsync_indicator': {'widget': self.qlabel_questnav_unsync_indicator, 'nt': '/SmartDashboard/Quest UnSync/running', 'command': '/SmartDashboard/Quest UnSync/running'},
+        'qlabel_questnav_reset_indicator': {'widget': self.qlabel_questnav_reset_indicator, 'nt': '/SmartDashboard/Quest Reset Odometry/running', 'command': '/SmartDashboard/Quest Reset Odometry/running'},
+
+
         'qlabel_arducam_high_target_indicator': {'widget': self.qlabel_arducam_high_target_indicator, 'nt': '/SmartDashboard/arducam_high_targets_exist', 'command': None},
         'qlabel_arducam_back_target_indicator': {'widget': self.qlabel_arducam_back_target_indicator, 'nt': '/SmartDashboard/arducam_back_targets_exist', 'command': None},
         'qlabel_logitech_reef_target_indicator': {'widget': self.qlabel_logitech_reef_target_indicator, 'nt': '/SmartDashboard/logitech_reef_targets_exist', 'command': None},

@@ -665,20 +665,22 @@ class Swerve (Subsystem):
             #self.reset_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
             #self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))
             self.questnav.set_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)).transformBy(self.quest_to_robot.inverse()))
-            print("reset to red")
+            #print("reset to red")
         else:
             #self.reset_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
             #self.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
             self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))
-            print(self.questnav.get_pose())
-            print("reset to blue")
+            #print(self.questnav.get_pose())
+        print(f"Reset questnav at {wpilib.Timer.getFPGATimestamp():.1f}s")
 
     def quest_sync_odometry(self) -> None:
         #self.questnav.set_pose(self.get_pose())
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
         self.questnav.set_pose(self.get_pose().transformBy(self.quest_to_robot.inverse()))
+        print(f'Synched quest at {wpilib.Timer.getFPGATimestamp():.1f}s')
 
     def quest_unsync_odometry(self) -> None:
         #self.questnav.set_pose(self.get_pose())
         self.quest_has_synched = False  # let the robot know we have been synched so we don't automatically do it again
+        print(f'Unsynched quest at {wpilib.Timer.getFPGATimestamp():.1f}s')
         
