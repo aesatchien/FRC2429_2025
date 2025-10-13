@@ -44,7 +44,7 @@ class DriveByJoystickSwerve(commands2.Command):
         stick_max_units_per_second = 3  # can't be too low or you get lag - probably should be between 3 and 5
         self.drive_limiter = SlewRateLimiter(stick_max_units_per_second)
         self.strafe_limiter = SlewRateLimiter(stick_max_units_per_second)
-        self.turbo_limiter = SlewRateLimiter(2.5)
+        self.turbo_limiter = SlewRateLimiter(10)
 
         self.prev_commanded_vector = Translation2d(0, 0) # we should start stationary so this should be valid
 

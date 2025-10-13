@@ -33,7 +33,7 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def disabledInit(self) -> None:
         """This function is called once each time the robot enters Disabled mode."""
-        self.disabled_counter = 0
+        self.disabled_counter = 1
         print(f"Reflashing pivot sparks at {self.container.get_enabled_time():.1f}s")
         self.container.pivot.reflash(True, True)
         # self.container.swerve.use_photoncam = True
@@ -61,13 +61,14 @@ class MyRobot(commands2.TimedCommandRobot):
             # else:
             #     self.container.led.set_indicator(Led.Indicator.kRAINBOW)
             # print(f"Alliance: {wpilib.DriverStation.getAlliance()}, FMS Attached: {wpilib.DriverStation.isFMSAttached()}")
-
+        if self.disabled_counter % 500 == 0:
             # check on the questnav - auto synch it if we have been up more than 10s and have not synched yet
             # but attempt to see if we have a good starting tag (logitech reef)
-            if (# self.container.get_enabled_time() > 10 and
+            if ( wpilib.Timer.getFPGATimestamp() > 10 and
                     not self.container.swerve.quest_has_synched and
                     self.container.swerve.logitech_reef_count_subscriber.get() > 0):
                 self.container.swerve.quest_sync_odometry()  # this will mark that we have synched
+            print(f"quest sync:{self.container.swerve.quest_has_synched} logitec tag count is:{self.container.swerve.logitech_reef_count_subscriber.get()} at {self.container.get_enabled_time():.1f}s")
         self.disabled_counter += 1
 
     def autonomousInit(self) -> None:

@@ -144,7 +144,7 @@ class ModuleConstants:
     k_driving_config.closedLoop.maxMotion.maxVelocity(3)
     k_driving_config.closedLoop.maxMotion.maxAcceleration(2)
     k_driving_config.setIdleMode(idleMode=SparkFlexConfig.IdleMode.kBrake)
-    k_driving_config.smartCurrentLimit(stallLimit=0)
+    k_driving_config.smartCurrentLimit(stallLimit=60, freeLimit=60, limitRpm=5700)
     k_driving_config.voltageCompensation(12)
     k_driving_config.encoder.positionConversionFactor((kWheelDiameterMeters * math.pi) / kDrivingMotorReduction) # meters
     k_driving_config.encoder.velocityConversionFactor((kWheelDiameterMeters * math.pi) / ( kDrivingMotorReduction * 60)) # meters per second

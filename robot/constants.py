@@ -35,6 +35,7 @@ k_burn_flash = True
 k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False
+k_use_quest_odometry = True
 k_use_photontags = False  # take tags from photonvision camera
 k_use_CJH_tags = True  # take tags from the pis
 k_swerve_only = False
@@ -280,7 +281,7 @@ class ClimberConstants:
     k_config = SparkMaxConfig()
     k_config.inverted(True) # makes more sense LHACK 3/3/25
     k_config.setIdleMode(SparkFlexConfig.IdleMode.kBrake)
-    # k_config.smartCurrentLimit(40)
+    k_config.smartCurrentLimit(40)
     k_config.voltageCompensation(12)
     # CJH adding hardware acceleration limit to stop climber being jerky
     k_config.closedLoopRampRate(0.4)  # seconds to go from 0 to 100% output
@@ -301,6 +302,7 @@ class ClimberConstants:
 
     k_config.softLimit.forwardSoftLimitEnabled(True)
     k_config.softLimit.reverseSoftLimitEnabled(True)
+    
 
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
@@ -329,6 +331,7 @@ class WristConstants:
 
     k_config = SparkMaxConfig()
     k_config.voltageCompensation(12)
+    k_config.smartCurrentLimit(40)
     k_config.inverted(False)
     k_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
 
