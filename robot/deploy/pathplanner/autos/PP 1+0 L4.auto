@@ -5,21 +5,41 @@
     "data": {
       "commands": [
         {
-          "type": "path",
+          "type": "parallel",
           "data": {
-            "pathName": "1+0 path"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "move wrist to 90 deg"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "go to l4"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "1+0 path"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "move wrist to 90 deg"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "go to l4"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         },
         {
