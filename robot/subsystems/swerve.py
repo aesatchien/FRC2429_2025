@@ -207,10 +207,17 @@ class Swerve (Subsystem):
         # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
         self.quest_field = Field2d()
         self.quest_has_synched = False  # use this to check in disabled whether to update the quest with the robot odometry
+        SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
+        self.use_quest = constants.k_use_quest_odometry
+        SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
 
+        # note - have Risaku standardize these with the rest of the putDatas
         wpilib.SmartDashboard.putData('Quest Reset Odometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
         wpilib.SmartDashboard.putData('Quest Sync Odometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
         wpilib.SmartDashboard.putData('Quest UnSync', InstantCommand(lambda: self.quest_unsync_odometry()).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('Quest_Toggle', InstantCommand(lambda: self.quest_toggle()).ignoringDisable(True))
+
+        # end of init
 
     def get_pose(self) -> Pose2d:
         # return the pose of the robot  TODO: update the dashboard here?
@@ -540,7 +547,7 @@ class Swerve (Subsystem):
                 else:
                     wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 997)
 
-        if constants.k_use_quest_odometry and  self.quest_has_synched and self.counter % 5 == 0:
+        if self.use_quest and  self.quest_has_synched and self.counter % 5 == 0:
             #print('quest pose synced')
             self.pose_estimator.addVisionMeasurement(self.questnav.get_pose().transformBy(self.quest_to_robot), wpilib.Timer.getFPGATimestamp(), constants.DrivetrainConstants.k_pose_stdevs_disabled)
 
@@ -672,15 +679,37 @@ class Swerve (Subsystem):
             self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))
             #print(self.questnav.get_pose())
         print(f"Reset questnav at {wpilib.Timer.getFPGATimestamp():.1f}s")
+        self.quest_unsync_odometry()
 
     def quest_sync_odometry(self) -> None:
         #self.questnav.set_pose(self.get_pose())
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
         self.questnav.set_pose(self.get_pose().transformBy(self.quest_to_robot.inverse()))
         print(f'Synched quest at {wpilib.Timer.getFPGATimestamp():.1f}s')
+        SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
 
     def quest_unsync_odometry(self) -> None:
         #self.questnav.set_pose(self.get_pose())
         self.quest_has_synched = False  # let the robot know we have been synched so we don't automatically do it again
         print(f'Unsynched quest at {wpilib.Timer.getFPGATimestamp():.1f}s')
+        SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
+
+    def quest_toggle(self, force=None):  # allow us to stop using quest if it is a problem - 20251014 CJH
+        if force is None:
+            self.use_quest = not self.use_quest  # toggle the boolean
+        elif force == 'on':
+            self.use_quest = True
+        elif force == 'off':
+            self.use_quest = False
+        else:
+            self.use_quest = False
+
+        print(f'swerve use_quest updated to {self.use_quest} at {wpilib.Timer.getFPGATimestamp():.1f}s')
+        SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
+
+
+    def is_quest_enabled(self):
+        return self.use_quest
+
+
         
