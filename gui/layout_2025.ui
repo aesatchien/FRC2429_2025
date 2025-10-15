@@ -1808,15 +1808,15 @@ background-color:rgb(180,180,180);</string>
        <string>QuestNav</string>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_sync_indicator">
+     <widget class="QLabel2" name="qlabel_questnav_sync_toggle_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>330</y>
-        <width>81</width>
+        <y>374</y>
+        <width>91</width>
         <height>20</height>
        </rect>
       </property>
@@ -1833,41 +1833,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>SYNC</string>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::AutoText</enum>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-     <widget class="QLabel2" name="qlabel_questnav_unsync_indicator">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>130</x>
-        <y>352</y>
-        <width>81</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>MS Shell Dlg 2</family>
-        <pointsize>10</pointsize>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">border: 7px;
-border-radius: 7px;
-background-color:rgb(180,180,180);</string>
-      </property>
-      <property name="text">
-       <string>UNSYNC</string>
+       <string>SYNCED</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -1883,8 +1849,8 @@ background-color:rgb(180,180,180);</string>
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>374</y>
-        <width>81</width>
+        <y>396</y>
+        <width>91</width>
         <height>20</height>
        </rect>
       </property>
@@ -1910,16 +1876,16 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_toggle_indicator">
+     <widget class="QLabel2" name="qlabel_questnav_enabled_toggle_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
       <property name="geometry">
        <rect>
         <x>130</x>
-        <y>396</y>
-        <width>81</width>
-        <height>20</height>
+        <y>330</y>
+        <width>91</width>
+        <height>42</height>
        </rect>
       </property>
       <property name="font">
@@ -1935,7 +1901,8 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>TOGGLE</string>
+       <string>ODOMETRY
+ENABLED</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>

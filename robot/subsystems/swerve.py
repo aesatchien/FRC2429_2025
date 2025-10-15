@@ -212,10 +212,11 @@ class Swerve (Subsystem):
         SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
 
         # note - have Risaku standardize these with the rest of the putDatas
-        wpilib.SmartDashboard.putData('Quest Reset Odometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
-        wpilib.SmartDashboard.putData('Quest Sync Odometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
-        wpilib.SmartDashboard.putData('Quest UnSync', InstantCommand(lambda: self.quest_unsync_odometry()).ignoringDisable(True))
-        wpilib.SmartDashboard.putData('Quest_Toggle', InstantCommand(lambda: self.quest_toggle()).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('QuestResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('QuestSyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
+        # wpilib.SmartDashboard.putData('QuestUnSync', InstantCommand(lambda: self.quest_unsync_odometry()).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('QuestEnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
+        wpilib.SmartDashboard.putData('QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
 
         # end of init
 
@@ -694,7 +695,7 @@ class Swerve (Subsystem):
         print(f'Unsynched quest at {wpilib.Timer.getFPGATimestamp():.1f}s')
         SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
 
-    def quest_toggle(self, force=None):  # allow us to stop using quest if it is a problem - 20251014 CJH
+    def quest_enabled_toggle(self, force=None):  # allow us to stop using quest if it is a problem - 20251014 CJH
         if force is None:
             self.use_quest = not self.use_quest  # toggle the boolean
         elif force == 'on':
@@ -707,9 +708,22 @@ class Swerve (Subsystem):
         print(f'swerve use_quest updated to {self.use_quest} at {wpilib.Timer.getFPGATimestamp():.1f}s')
         SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
 
+    def quest_sync_toggle(self, force=None):  # toggle sync state for dashboard - 20251014 CJH
+        current_state = self.quest_has_synched
+        if force is None:
+            current_state = not current_state  # toggle the boolean
+        elif force == 'on':
+            current_state = True
+        elif force == 'off':
+            current_state = False
+        else:
+            current_state = False
+
+        if current_state:
+            self.quest_sync_odometry()
+        else:
+            self.quest_unsync_odometry()
+        # reporting done by the sync/unsync functions
 
     def is_quest_enabled(self):
         return self.use_quest
-
-
-        
