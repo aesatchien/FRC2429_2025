@@ -53,7 +53,7 @@ class Intake(Subsystem):
         coral_present = 4 < coral_distance <= constants.IntakeConstants.k_max_tof_distance_where_we_have_coral
 
         if wpilib.RobotBase.isSimulation():  # fake this for autos
-            return self.counter % 100 < 50
+            return self.counter % 100 < 40
         else:
             return coral_present
 

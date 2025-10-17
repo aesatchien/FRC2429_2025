@@ -13,6 +13,8 @@ from commands.move_pivot import MovePivot
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.score import Score
+from commands.drive_by_distance_swerve import DriveByVelocitySwerve
+from wpimath.geometry import Pose2d
 import constants
 
 class OnePlusTwoRight(commands2.SequentialCommandGroup):
@@ -27,7 +29,10 @@ class OnePlusTwoRight(commands2.SequentialCommandGroup):
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT A driveby preload')))
 
         # wait for piece to come in
-        self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
+        # 20251017 CJH- add a slow move left while waiting for coral
+        # this replaces the wait until with a drive left (to align against HP wall) while waiting
+        # self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
+        self.addCommands(DriveByVelocitySwerve(self.container, self.container.swerve, Pose2d(0, 0.05, 0), timeout=4).until(container.intake.has_coral))
 
         # --------------- STEP B --------------
 
@@ -47,7 +52,10 @@ class OnePlusTwoRight(commands2.SequentialCommandGroup):
                 )
 
         # wait for piece to come in
-        self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
+        # self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
+        self.addCommands(DriveByVelocitySwerve(self.container, self.container.swerve, Pose2d(0, 0.05, 0), timeout=4).until(container.intake.has_coral))
+
+
         #
         # # --------------- STEP D --------------
         # drive to D
