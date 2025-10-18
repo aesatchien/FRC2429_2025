@@ -324,6 +324,8 @@ class RobotContainer:
             # self.triggerB.onTrue(PIDToPoint(self, self.swerve, constants.k_useful_robot_poses_blue["a"]))
 
         self.triggerRB.onTrue(Score(self))
+        self.triggerLB.whileTrue(GoToCoralStation(container=self))
+
 
         self.trigger_L_trigger.onTrue(
                 GoToReefPosition(container=self, level=2).andThen(
