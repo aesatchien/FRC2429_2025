@@ -325,6 +325,10 @@ class RobotContainer:
 
         self.triggerRB.onTrue(Score(self))
         self.triggerLB.whileTrue(GoToCoralStation(container=self))
+        self.triggerLB.onFalse(
+            RunIntake(container=self, intake=self.intake, value=0, control_type=rev.SparkMax.ControlType.kVoltage,
+                      stop_on_end=False).andThen(
+                GoToStow(container=self)))
 
 
         self.trigger_L_trigger.onTrue(

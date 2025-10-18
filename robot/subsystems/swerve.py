@@ -550,9 +550,10 @@ class Swerve (Subsystem):
 
         if self.use_quest and  self.quest_has_synched and self.counter % 5 == 0:
             #print('quest pose synced')
+            quest_accepted = SmartDashboard.getBoolean("QUEST_POSE_ACCEPTED", False)
             quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
             delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), quest_pose.translation())
-            if delta_pos < 5:  # if the quest is way off, we don't want to update from it
+            if delta_pos < 5 and quest_accepted:  # if the quest is way off, we don't want to update from it
                 self.pose_estimator.addVisionMeasurement(quest_pose, wpilib.Timer.getFPGATimestamp(), constants.DrivetrainConstants.k_pose_stdevs_disabled)
 
 
@@ -570,7 +571,8 @@ class Swerve (Subsystem):
                     use_tag = constants.k_use_CJH_tags  # can disable this in constants
                     # do not allow large jumps when enabled
                     delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), tag_pose.translation())
-                    use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
+                    # 20251018 commented out the 1m sanity check in case the questnav dies - this way we can get back
+                    #use_tag = False if (delta_pos > 1 and wpilib.DriverStation.isEnabled()) else use_tag  # no big movements in odometry from tags
                     use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
                     # use_tag = False if id not in self.desired_tags else use_tag
 
