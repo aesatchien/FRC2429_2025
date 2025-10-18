@@ -550,7 +550,10 @@ class Swerve (Subsystem):
 
         if self.use_quest and  self.quest_has_synched and self.counter % 5 == 0:
             #print('quest pose synced')
-            self.pose_estimator.addVisionMeasurement(self.questnav.get_pose().transformBy(self.quest_to_robot), wpilib.Timer.getFPGATimestamp(), constants.DrivetrainConstants.k_pose_stdevs_disabled)
+            quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
+            delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), quest_pose.translation())
+            if delta_pos > 5:  # if the quest is way off, we don't want to update from it
+                self.pose_estimator.addVisionMeasurement(quest_pose, wpilib.Timer.getFPGATimestamp(), constants.DrivetrainConstants.k_pose_stdevs_disabled)
 
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
