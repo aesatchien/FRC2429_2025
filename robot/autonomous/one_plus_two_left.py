@@ -5,6 +5,7 @@ from commands2.waitcommand import WaitCommand
 from pathplannerlib.auto import AutoBuilder
 from pathplannerlib.commands import FollowPathCommand
 from pathplannerlib.path import PathPlannerPath
+from wpimath.geometry import Pose2d
 
 from commands.go_to_coral_station import GoToCoralStation
 from commands.go_to_reef_position import GoToReefPosition
@@ -12,10 +13,11 @@ from commands.go_to_stow import GoToStow
 from commands.move_wrist import MoveWrist
 from commands.run_intake import RunIntake
 from commands.score import Score
+from commands.drive_by_distance_swerve import DriveByVelocitySwerve
 import constants
 
 class OnePlusTwoLeft(commands2.SequentialCommandGroup):
-    def __init__(self, container, indent=0) -> None:
+    def __init__(self, container, start='center', indent=0) -> None:
         super().__init__()
 
         self.setName(f'1+2 LEFT')
@@ -23,10 +25,15 @@ class OnePlusTwoLeft(commands2.SequentialCommandGroup):
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 
         # run the path that takes us by the reef, drops the coral in the trough, and goes to human station
-        self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT A driveby preload')))
+        if start == 'center':
+            self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT CENTER A driveby preload')))
+        elif start == 'left':
+            self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT LEFT A driveby preload')))
 
         # wait for piece to come in
-        self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
+        # self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
+        self.addCommands(DriveByVelocitySwerve(self.container, self.container.swerve, Pose2d(0, 0.05, 0), timeout=4).until(container.intake.has_coral))
+
 
         # --------------- STEP B --------------
 
@@ -47,7 +54,9 @@ class OnePlusTwoLeft(commands2.SequentialCommandGroup):
 
         # wait for piece to come in
         self.addCommands(commands2.WaitUntilCommand(container.intake.has_coral))
-        #
+        self.addCommands(DriveByVelocitySwerve(self.container, self.container.swerve, Pose2d(0, 0.05, 0), timeout=4).until(container.intake.has_coral))
+
+
         # # --------------- STEP D --------------
         # drive to D
         self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n LEFT D score')).alongWith(

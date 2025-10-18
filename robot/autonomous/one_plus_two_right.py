@@ -29,7 +29,7 @@ class OnePlusTwoRight(commands2.SequentialCommandGroup):
         if start == 'center':
             self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT CENTER A driveby preload')))
         elif start == 'right':
-            self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT RIGHT driveby preload')))
+            self.addCommands(AutoBuilder.followPath(PathPlannerPath.fromPathFile('1+n RIGHT RIGHT A driveby preload')))
 
         # wait for piece to come in
         # 20251017 CJH- add a slow move left while waiting for coral
