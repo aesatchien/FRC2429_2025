@@ -272,17 +272,16 @@ class RobotContainer:
         wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
 
         self.auto_chooser = AutoBuilder.buildAutoChooser('')  # this loops through the path planner deploy directory
-        self.auto_chooser.setDefaultOption('1: Wait *CODE*', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
+        self.auto_chooser.setDefaultOption('1:  Wait *CODE*', PrintCommand("** Running wait auto **").andThen(commands2.WaitCommand(15)))
         self.auto_chooser.addOption('2a: Drive 2s Straight *CODE*', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)))
-        self.auto_chooser.addOption('2b: Drive 2s At Driver Station *CODE*', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2.5, field_relative=True)))
+        self.auto_chooser.addOption('2b: Drive 2s To Driver Station *CODE*', PrintCommand("** Running drive by velocity swerve leave auto **").andThen(DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2.5, field_relative=True)))
         self.auto_chooser.addOption('3a: 1+2 Right from Center *CODE*', OnePlusTwoRight(self, start='center'))  # the working auto that score three coral on right
         self.auto_chooser.addOption('3b: 1+2 Right from Right *CODE*', OnePlusTwoRight(self, start='right'))  # the working auto that score three coral on right
         self.auto_chooser.addOption('4a: 1+2 Left from Center *CODE*', OnePlusTwoLeft(self, start='center'))  # simulated left version of code
         self.auto_chooser.addOption('4b: 1+2 Left from Left *CODE*', OnePlusTwoLeft(self, start='left'))  # simulated left version of code
-        self.auto_chooser.addOption('5: 1+1 Left? *CODE*', OnePlusOne(self))  #  is there any reason for this?
-        self.auto_chooser.addOption('6: 1+0 l4 auto aim', L4PreloadAutoAim(self))
+        self.auto_chooser.addOption('5:  1+1 Left? *CODE*', OnePlusOne(self))  #  is there any reason for this?
+        self.auto_chooser.addOption('6:  1+0 l4 auto aim', L4PreloadAutoAim(self))
         # self.auto_chooser.addOption('7: madtwon', MadtownGlaze(self))
-
         # self.auto_chooser.addOption('1+2 trough', OnePlusTwoTrough(self))  # not a real auto
         wpilib.SmartDashboard.putData('autonomous routines', self.auto_chooser)  #
 
