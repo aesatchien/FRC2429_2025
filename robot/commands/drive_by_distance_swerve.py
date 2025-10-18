@@ -1,5 +1,5 @@
 import commands2
-from wpilib import SmartDashboard, Timer
+from wpilib import SmartDashboard, Timer, DriverStation
 from wpimath.geometry import Pose2d
 from wpimath.filter import SlewRateLimiter
 
@@ -8,7 +8,7 @@ from subsystems.swerve import Swerve
 
 class DriveByVelocitySwerve(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, swerve: Swerve, velocity: Pose2d, timeout: float, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, velocity: Pose2d, timeout: float, field_relative=False, indent=0) -> None:
         """
         all is in duty cycle, so be careful - a 1, 1, 1 pose2d floors the bot
         emergency command in case we can't get pathplanner working by the scrim
@@ -20,6 +20,7 @@ class DriveByVelocitySwerve(commands2.Command):  # change the name for your comm
         self.swerve = swerve
         self.velocity = velocity
         self.timeout = timeout
+        self.field_relative = field_relative
         self.timer = Timer()
         self.addRequirements(self.swerve)
 
@@ -44,8 +45,14 @@ class DriveByVelocitySwerve(commands2.Command):  # change the name for your comm
     def execute(self) -> None:
         x_out = self.x_drive_limiter.calculate(self.velocity.x)
         y_out = self.y_drive_limiter.calculate(self.velocity.y)
-        self.swerve.drive(x_out, y_out, self.velocity.rotation().radians(), fieldRelative=False, keep_angle=False, rate_limited=True)
-        pass
+        if self.field_relative:
+            if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+                # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
+                x_out *= -1
+                y_out *= -1
+            self.swerve.drive(x_out, y_out, self.velocity.rotation().radians(), fieldRelative=True, keep_angle=True, rate_limited=True)
+        else:
+            self.swerve.drive(x_out, y_out, self.velocity.rotation().radians(), fieldRelative=False, keep_angle=False, rate_limited=True)
 
     def isFinished(self) -> bool:
         return self.timer.hasElapsed(self.timeout)
