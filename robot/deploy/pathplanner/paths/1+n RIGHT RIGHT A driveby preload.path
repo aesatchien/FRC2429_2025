@@ -82,7 +82,7 @@
   "eventMarkers": [
     {
       "name": "go to l1",
-      "waypointRelativePos": 0,
+      "waypointRelativePos": 0.0,
       "endWaypointRelativePos": null,
       "command": {
         "type": "named",
@@ -93,7 +93,7 @@
     },
     {
       "name": "just score",
-      "waypointRelativePos": 0.8976660682226204,
+      "waypointRelativePos": 0.947935368043081,
       "endWaypointRelativePos": null,
       "command": {
         "type": "sequential",
@@ -126,7 +126,7 @@
   "folder": "1+n RIGHT",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 146.7682889320206
+    "rotation": -127.19457312775471
   },
   "useDefaultConstraints": true
 }

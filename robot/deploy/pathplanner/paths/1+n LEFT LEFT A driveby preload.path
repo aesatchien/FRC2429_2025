@@ -93,7 +93,7 @@
     },
     {
       "name": "just score",
-      "waypointRelativePos": 0.901234567901226,
+      "waypointRelativePos": 0.9515260323159772,
       "endWaypointRelativePos": null,
       "command": {
         "type": "sequential",
