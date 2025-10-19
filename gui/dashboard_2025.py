@@ -458,6 +458,10 @@ class Ui(QtWidgets.QMainWindow):
         'qlabel_cal_wrist_up_indicator': {'widget': self.qlabel_cal_wrist_up_indicator, 'nt': '/SmartDashboard/CalWristUp/running', 'command': '/SmartDashboard/CalWristUp/running'},
         'qlabel_cal_wrist_down_indicator': {'widget': self.qlabel_cal_wrist_down_indicator, 'nt': '/SmartDashboard/CalWristDown/running', 'command': '/SmartDashboard/CalWristDown/running'},
 
+
+        'qlabel_questnav_heartbeat_indicator': {'widget': self.qlabel_questnav_heartbeat_indicator, 'nt': '/SmartDashboard/QUEST_CONNECTED', 'command': None},
+        'qlabel_questnav_inbounds_indicator': {'widget': self.qlabel_questnav_inbounds_indicator, 'nt': '/SmartDashboard/QUEST_POSE_ACCEPTED', 'command': None},
+        'qlabel_questnav_tracking_indicator': {'widget': self.qlabel_questnav_tracking_indicator, 'nt': '/SmartDashboard/QUEST_TRACKING', 'command': None},
         'qlabel_questnav_sync_toggle_indicator': {'widget': self.qlabel_questnav_sync_toggle_indicator, 'nt': '/SmartDashboard/questnav_synched', 'command': '/SmartDashboard/QuestSyncToggle/running'},
         'qlabel_questnav_reset_indicator': {'widget': self.qlabel_questnav_reset_indicator, 'nt': '/SmartDashboard/QuestResetOdometry/running', 'command': '/SmartDashboard/QuestResetOdometry/running'},
         'qlabel_questnav_enabled_toggle_indicator': {'widget': self.qlabel_questnav_enabled_toggle_indicator, 'nt': '/SmartDashboard/questnav_in_use', 'command': '/SmartDashboard/QuestEnableToggle/running',

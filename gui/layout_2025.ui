@@ -1512,8 +1512,8 @@ background-color:rgb(180,180,180);</string>
      <widget class="QComboBox" name="qcombobox_autonomous_routines">
       <property name="geometry">
        <rect>
-        <x>300</x>
-        <y>360</y>
+        <x>320</x>
+        <y>350</y>
         <width>271</width>
         <height>22</height>
        </rect>
@@ -1528,8 +1528,8 @@ background-color:rgb(180,180,180);</string>
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
-        <x>300</x>
-        <y>330</y>
+        <x>360</x>
+        <y>320</y>
         <width>181</width>
         <height>20</height>
        </rect>
@@ -1798,10 +1798,10 @@ background-color:rgb(180,180,180);</string>
      <widget class="QLabel" name="label_16">
       <property name="geometry">
        <rect>
-        <x>140</x>
+        <x>170</x>
         <y>310</y>
-        <width>61</width>
-        <height>16</height>
+        <width>111</width>
+        <height>20</height>
        </rect>
       </property>
       <property name="text">
@@ -1814,7 +1814,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>130</x>
+        <x>197</x>
         <y>374</y>
         <width>91</width>
         <height>20</height>
@@ -1848,7 +1848,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>130</x>
+        <x>197</x>
         <y>396</y>
         <width>91</width>
         <height>20</height>
@@ -1882,7 +1882,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>130</x>
+        <x>197</x>
         <y>330</y>
         <width>91</width>
         <height>42</height>
@@ -1903,6 +1903,108 @@ background-color:rgb(180,180,180);</string>
       <property name="text">
        <string>ODOMETRY
 ENABLED</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel2" name="qlabel_questnav_heartbeat_indicator">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>129</x>
+        <y>330</y>
+        <width>60</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>MS Shell Dlg 2</family>
+        <pointsize>11</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgb(180,180,180);</string>
+      </property>
+      <property name="text">
+       <string>ALIVE</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel2" name="qlabel_questnav_inbounds_indicator">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>129</x>
+        <y>352</y>
+        <width>60</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>MS Shell Dlg 2</family>
+        <pointsize>11</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgb(180,180,180);</string>
+      </property>
+      <property name="text">
+       <string>VALID</string>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::AutoText</enum>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel2" name="qlabel_questnav_tracking_indicator">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>129</x>
+        <y>374</y>
+        <width>60</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>MS Shell Dlg 2</family>
+        <pointsize>11</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgb(180,180,180);</string>
+      </property>
+      <property name="text">
+       <string>TRACK</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
