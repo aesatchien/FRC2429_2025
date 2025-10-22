@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 import numpy as np
 import wpimath.geometry as geo
-from PyQt6 import QtGui, QtCore
+from PyQt6 import QtGui, QtCore, QtWidgets
 import math
 import re
 

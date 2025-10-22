@@ -186,25 +186,54 @@ class Ui(QtWidgets.QMainWindow):
             self.qt_tree_widget_nt.hide()
 
     def refresh_tree(self):
+        """  Read networktables and update tree and combo widgets
+        """
         if self.nt_manager.isConnected():
             self.nt_manager.report_nt_status()
             self.qt_tree_widget_nt.clear()
             entries = self.nt_manager.getEntries('/', 0)
             self.sorted_tree = sorted([e.getName() for e in entries])
 
+            # update the dropdown combo box with all keys
             self.filter_nt_keys_combo()
+            # self.qcombobox_nt_keys.clear()
+            # self.qcombobox_nt_keys.addItems(self.sorted_tree)
 
+            # generate the dictionary - some magic I found on the internet
             nt_dict = {}
-            for item in self.sorted_tree:
-                # ... (code to build dictionary for tree view)
-                pass # Simplified for brevity
+            levels = [s[1:].split('/') for s in self.sorted_tree]
+            for path in levels:
+                current_level = nt_dict
+                for part in path:
+                    if part not in current_level:
+                        current_level[part] = {}
+                    current_level = current_level[part]
 
-            # self.fill_item(self.qt_tree_widget_nt.invisibleRootItem(), nt_dict)
+            self.qlistwidget_commands.clear()
+            for item in self.sorted_tree:
+                # print(item)
+                if 'running' in item:  # quick test of the list view for commands
+                    # print(f'Command found: {item}')
+                    command_name = item.split('/')[2]
+                    self.qlistwidget_commands.addItem(command_name)
+                    self.command_dict.update({command_name: {'nt': item, 'entry': self.nt_manager.getEntry(item)}})
+
+                entry_value = self.nt_manager.getEntry(item).getValue()
+                value = entry_value.value()
+                age = int(time.time() - entry_value.last_change() / 1E6)
+                levels = item[1:].split('/')
+                if len(levels) == 2:
+                    nt_dict[levels[0]][levels[1]] = value, age
+                elif len(levels) == 3:
+                    nt_dict[levels[0]][levels[1]][levels[2]] = value, age
+                elif len(levels) == 4:
+                    nt_dict[levels[0]][levels[1]][levels[2]][levels[3]] = value, age
+
+            self.fill_item(self.qt_tree_widget_nt.invisibleRootItem(), nt_dict)
             self.qt_tree_widget_nt.resizeColumnToContents(0)
             self.qt_tree_widget_nt.setColumnWidth(1, 100)
         else:
             self.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Unable to connect to server')
-
     def keyPressEvent(self, event):
         self.keys_currently_pressed.append(event.key())
         self.nt_manager.getEntry("SmartDashboard/keys_pressed").setIntegerArray(self.keys_currently_pressed)
@@ -228,5 +257,43 @@ class Ui(QtWidgets.QMainWindow):
             if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
                 return True
         return super().eventFilter(obj, event)
+
+    def test(self):  # test function for checking new signals
+        print('Test was called', flush=True)
+
+    def depth(self, d):
+        if isinstance(d, dict):
+            return 1 + (max(map(self.depth, d.values())) if d else 0)
+        return 0
+
+    ## helper functions for filling the NT tree widget
+    def fill_item(self, widget, value):
+        if value is None:
+            # keep recursing until nothing is passed
+            return
+        elif isinstance(value, dict) and self.depth(value) > 1:
+            for key, val in sorted(value.items()):
+                self.new_item(parent=widget, text=str(key), val=val)
+        elif isinstance(value, dict):
+            # now we actually add the bottom level item
+            #self.new_item(parent=widget, text=str(value))
+            for key, val in sorted(value.items()):
+                child = QtWidgets.QTreeWidgetItem([str(key), str(val[0]), str(val[1])])
+                self.fill_item(child, v)
+                widget.addChild(child)
+        else:
+            pass
+
+    def new_item(self, parent, text, val=None):
+        if val is None:
+            child = QtWidgets.QTreeWidgetItem([text, 'noval'])
+        else:
+            if isinstance(val,dict):
+                child = QtWidgets.QTreeWidgetItem([text])
+            else:
+                child = QtWidgets.QTreeWidgetItem([text, str(val[0]), str(val[1])])
+        self.fill_item(child, val)
+        parent.addChild(child)
+        child.setExpanded(True)
 
 # ... (depth, fill_item, new_item methods remain the same)
