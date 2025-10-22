@@ -52,12 +52,17 @@ class PhysicsEngine:
         # vision stuff - using 2024 stuff for now (CJH)
         key = 'orange'
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        self.ringcam_table = self.inst.getTable('/Cameras/ArducamHigh')   # test cam for sim
-        self.targets_entry = self.ringcam_table.getEntry(f"{key}/targets")
-        self.distance_entry = self.ringcam_table.getEntry(f"{key}/distance")
-        self.strafe_entry = self.ringcam_table.getEntry(f"{key}/strafe")
-        self.rotation_entry = self.ringcam_table.getEntry(f"{key}/rotation")
-        self.timestamp_entry = self.ringcam_table.getEntry(f"_timestamp")
+        self.camera_dict = {}
+        self.cam_list = ['ArducamHigh', 'ArducamBack', 'GeniusLow', 'LogitechReef',]
+        for ix, cam in enumerate(self.cam_list):
+            table = self.inst.getTable(f'/Cameras/{cam}')   # test cam for sim
+            targets_entry = table.getEntry(f"{key}/targets")
+            distance_entry = table.getEntry(f"{key}/distance")
+            strafe_entry = table.getEntry(f"{key}/strafe")
+            rotation_entry = table.getEntry(f"{key}/rotation")
+            timestamp_entry = table.getEntry(f"_timestamp")
+            self.camera_dict[cam] = {'table': table, 'offset': ix, 'targets_entry': targets_entry, 'distance_entry': distance_entry,
+                                     'strafe_entry': strafe_entry, 'rotation_entry': rotation_entry, 'timestamp_entry': timestamp_entry}
 
     def update_sim(self, now, tm_diff):
 
@@ -97,11 +102,14 @@ class PhysicsEngine:
         ring_dist, ring_rot = 2.22, 3.22 #self.distance_to_ring()
         wpilib.SmartDashboard.putNumber('/sim/hub_dist', round(ring_dist, 2))
         wpilib.SmartDashboard.putNumber('/sim/hub_rot', round(ring_rot, 2))
-        self.targets_entry.setDouble(1)
-        self.distance_entry.setDouble(ring_dist)
-        self.strafe_entry.setDouble(0)
-        self.rotation_entry.setDouble(self.theta - ring_rot)
-        self.timestamp_entry.setDouble(wpilib.Timer.getFPGATimestamp())  # pretend the camera is live
+        for cam in self.cam_list:
+            offset = self.camera_dict[cam]['offset']
+            self.camera_dict[cam]['targets_entry'].setDouble(1 + offset)
+            self.camera_dict[cam]['distance_entry'].setDouble(ring_dist + offset)
+            self.camera_dict[cam]['strafe_entry'].setDouble(0)
+            self.camera_dict[cam]['rotation_entry'].setDouble(self.theta - ring_rot)
+            ts = wpilib.Timer.getFPGATimestamp() if wpilib.Timer.getFPGATimestamp() % 30 < (30/5)*(1+offset) else wpilib.Timer.getFPGATimestamp() -1  # simulate cameras dropping out
+            self.camera_dict[cam]['timestamp_entry'].setDouble(ts)  # pretend the camera is live
 
     def update_wrist(self, tm_diff):
 
