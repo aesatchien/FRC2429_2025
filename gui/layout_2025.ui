@@ -67,7 +67,7 @@
       <property name="title">
        <string>Climber</string>
       </property>
-      <widget class="QLabel2" name="qlabel_l2_indicator">
+      <widget class="ClickableQLabel" name="qlabel_l2_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -102,7 +102,7 @@ color:rgb(0, 0, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_l1_indicator">
+      <widget class="ClickableQLabel" name="qlabel_l1_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -136,7 +136,7 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_l3_indicator">
+      <widget class="ClickableQLabel" name="qlabel_l3_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -170,7 +170,7 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_climber_up_indicator">
+      <widget class="ClickableQLabel" name="qlabel_climber_up_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -234,7 +234,7 @@ background-color:rgb(0, 20, 250);</string>
         <string>Climber Position</string>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_climber_down_indicator">
+      <widget class="ClickableQLabel" name="qlabel_climber_down_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -269,7 +269,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_l4_indicator">
+      <widget class="ClickableQLabel" name="qlabel_l4_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -303,7 +303,7 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_game_piece_indicator">
+      <widget class="ClickableQLabel" name="qlabel_game_piece_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -477,7 +477,7 @@ background-color:rgb(127, 127, 127);</string>
         <enum>QLCDNumber::Filled</enum>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_elevator_up_indicator">
+      <widget class="ClickableQLabel" name="qlabel_elevator_up_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -509,7 +509,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_elevator_down_indicator">
+      <widget class="ClickableQLabel" name="qlabel_elevator_down_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -541,7 +541,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_wrist_up_indicator">
+      <widget class="ClickableQLabel" name="qlabel_wrist_up_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -573,7 +573,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_wrist_down_indicator">
+      <widget class="ClickableQLabel" name="qlabel_wrist_down_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -605,7 +605,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_pivot_up_indicator">
+      <widget class="ClickableQLabel" name="qlabel_pivot_up_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -637,7 +637,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_pivot_down_indicator">
+      <widget class="ClickableQLabel" name="qlabel_pivot_down_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -669,7 +669,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_intake_off_indicator">
+      <widget class="ClickableQLabel" name="qlabel_intake_off_indicator">
        <property name="geometry">
         <rect>
          <x>129</x>
@@ -701,7 +701,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_intake_on_indicator">
+      <widget class="ClickableQLabel" name="qlabel_intake_on_indicator">
        <property name="geometry">
         <rect>
          <x>129</x>
@@ -733,7 +733,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_intake_reverse_indicator">
+      <widget class="ClickableQLabel" name="qlabel_intake_reverse_indicator">
        <property name="geometry">
         <rect>
          <x>152</x>
@@ -765,7 +765,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_elevator_top_indicator">
+      <widget class="ClickableQLabel" name="qlabel_elevator_top_indicator">
        <property name="geometry">
         <rect>
          <x>130</x>
@@ -845,7 +845,7 @@ background-color:rgb(0, 20, 250);</string>
         <number>4</number>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_navx_reset_indicator">
+      <widget class="ClickableQLabel" name="qlabel_navx_reset_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -880,7 +880,7 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_arducam_high_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_arducam_high_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -915,7 +915,7 @@ HIGH</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_pose_indicator">
+      <widget class="ClickableQLabel" name="qlabel_pose_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -949,7 +949,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_genius_low_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_genius_low_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -984,7 +984,7 @@ LOW</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_logitech_reef_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_logitech_reef_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1019,7 +1019,7 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_photoncam_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_photoncam_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1053,7 +1053,7 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_arducam_back_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_arducam_back_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1088,7 +1088,7 @@ TBD</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_quest_pose_indicator">
+      <widget class="ClickableQLabel" name="qlabel_quest_pose_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1135,7 +1135,7 @@ background-color:rgb(180,180,180);</string>
       <property name="title">
        <string>Autonomous Commands</string>
       </property>
-      <widget class="QLabel2" name="qlabel_can_report_indicator">
+      <widget class="ClickableQLabel" name="qlabel_can_report_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1168,7 +1168,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_score_indicator">
+      <widget class="ClickableQLabel" name="qlabel_score_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1201,7 +1201,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_stow_indicator">
+      <widget class="ClickableQLabel" name="qlabel_stow_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1234,7 +1234,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_elevator_shift_up_indicator">
+      <widget class="ClickableQLabel" name="qlabel_elevator_shift_up_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1269,7 +1269,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_position_indicator">
+      <widget class="ClickableQLabel" name="qlabel_position_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -1337,7 +1337,7 @@ color:rgb(230,230,230);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_reset_flex_indicator">
+      <widget class="ClickableQLabel" name="qlabel_reset_flex_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1370,7 +1370,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_elevator_shift_down_indicator">
+      <widget class="ClickableQLabel" name="qlabel_elevator_shift_down_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1405,7 +1405,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_cal_wrist_down_indicator">
+      <widget class="ClickableQLabel" name="qlabel_cal_wrist_down_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1440,7 +1440,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_cal_wrist_up_indicator">
+      <widget class="ClickableQLabel" name="qlabel_cal_wrist_up_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1475,7 +1475,7 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="QLabel2" name="qlabel_cal_wrist_indicator">
+      <widget class="ClickableQLabel" name="qlabel_cal_wrist_indicator">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -1659,7 +1659,7 @@ background-color:rgb(127, 127, 127);
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_arducam_high_indicator">
+     <widget class="ClickableQLabel" name="qlabel_arducam_high_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1693,7 +1693,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_arducam_back_indicator">
+     <widget class="ClickableQLabel" name="qlabel_arducam_back_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1727,7 +1727,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_genius_low_indicator">
+     <widget class="ClickableQLabel" name="qlabel_genius_low_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1761,7 +1761,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_logitech_reef_indicator">
+     <widget class="ClickableQLabel" name="qlabel_logitech_reef_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1808,7 +1808,7 @@ background-color:rgb(180,180,180);</string>
        <string>QuestNav</string>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_sync_toggle_indicator">
+     <widget class="ClickableQLabel" name="qlabel_questnav_sync_toggle_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1842,7 +1842,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_reset_indicator">
+     <widget class="ClickableQLabel" name="qlabel_questnav_reset_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1876,7 +1876,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_enabled_toggle_indicator">
+     <widget class="ClickableQLabel" name="qlabel_questnav_enabled_toggle_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1911,7 +1911,7 @@ ENABLED</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_heartbeat_indicator">
+     <widget class="ClickableQLabel" name="qlabel_questnav_heartbeat_indicator">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -1945,7 +1945,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_inbounds_indicator">
+     <widget class="ClickableQLabel" name="qlabel_questnav_inbounds_indicator">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -1979,7 +1979,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QLabel2" name="qlabel_questnav_tracking_indicator">
+     <widget class="ClickableQLabel" name="qlabel_questnav_tracking_indicator">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -2421,7 +2421,7 @@ background-color:rgb(180, 180,180);</string>
      <set>Qt::AlignCenter</set>
     </property>
    </widget>
-   <widget class="QLabel2" name="qlabel_matchtime">
+   <widget class="ClickableQLabel" name="qlabel_matchtime">
     <property name="geometry">
      <rect>
       <x>583</x>
@@ -2677,14 +2677,14 @@ color:rgb(230,230,230);</string>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QLabel2</class>
+   <class>ClickableQLabel</class>
    <extends>QLabel</extends>
-   <header>qlabel2.h</header>
+   <header>widgets.clickable_qlabel.h</header>
   </customwidget>
   <customwidget>
    <class>WarningLabel</class>
    <extends>QLabel</extends>
-   <header>warning_label</header>
+   <header>widgets.warning_label.h</header>
   </customwidget>
  </customwidgets>
  <resources>

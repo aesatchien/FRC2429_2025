@@ -23,8 +23,8 @@ from PyQt6.QtCore import Qt, QTimer, QEvent, QThread, QObject, pyqtSignal
 #from PyQt6.QtWidgets import  QApplication, QTreeWidget, QTreeWidgetItem
 from PyQt6.QtWidgets import QGraphicsOpacityEffect
 
-import qlabel2
-from warning_label import WarningLabel
+from widgets.qlabel2 import QLabel2
+from widgets.warning_label import WarningLabel
 
 from ntcore import NetworkTableType, NetworkTableInstance
 import wpimath.geometry as geo
