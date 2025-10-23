@@ -63,6 +63,7 @@ class Ui(QtWidgets.QMainWindow):
 
         self.robot_timestamp_entry = self.nt_manager.getEntry('/SmartDashboard/_timestamp')
 
+        # set the colors for the warning labels
         self.qlabel_pdh_voltage_monitor.update_settings(min_val=8, max_val=12, red_high=False, display_float=True)
         self.qlabel_pdh_current_monitor.update_settings(min_val=60, max_val=160, red_high=True, display_float=False)
 
@@ -118,16 +119,16 @@ class Ui(QtWidgets.QMainWindow):
             
             nt_topic = config.get('nt_topic')
             if nt_topic:
-                new_entry['entry'] = self.nt_manager.getEntry(nt_topic)
+                new_entry['nt_entry'] = self.nt_manager.getEntry(nt_topic)
 
             command_topic = config.get('command_topic')
             if command_topic:
-                new_entry['command_entry'] = self.nt_manager.getEntry(command_topic)
+                new_entry['command_nt_entry'] = self.nt_manager.getEntry(command_topic)
 
             selected_topic = config.get('selected_topic')
             if 'selected_topic' in new_entry:
-                new_entry['selected'] = self.nt_manager.getEntry(selected_topic)
-                # print(f'{key} has selected topic: {selected_topic} with value {new_entry["selected"].getStringArray([])}')
+                new_entry['selected_nt_entry'] = self.nt_manager.getEntry(selected_topic)
+                # print(f'{key} has selected topic: {selected_topic} with value {new_entry["selected_nt_entry"].getStringArray([])}')
 
             widget_dict[key] = new_entry
         # print(widget_dict)
@@ -164,23 +165,23 @@ class Ui(QtWidgets.QMainWindow):
         return QtGui.QPixmap.fromImage(p)
 
     def update_routines(self, text):
-        entry = self.widget_dict['qcombobox_autonomous_routines']['selected']
-        entry.setString(text)
+        nt_entry = self.widget_dict['qcombobox_autonomous_routines']['selected_nt_entry']
+        nt_entry.setString(text)
         self.nt_manager.flush()
 
     def label_click(self, label):
-        command_entry = self.widget_dict[label].get('command_entry')
-        if command_entry:
-            toggled_state = not command_entry.getBoolean(True)
+        command_nt_entry = self.widget_dict[label].get('command_nt_entry')
+        if command_nt_entry:
+            toggled_state = not command_nt_entry.getBoolean(True)
             print(f'You clicked {label}. Firing command at {datetime.today().strftime("%H:%M:%S")} ...', flush=True)
-            command_entry.setBoolean(toggled_state)
+            command_nt_entry.setBoolean(toggled_state)
 
     def initialize_widgets(self):
         """Connects widget signals and populates the camera combobox."""
         # Connect clickable label signals
-        for key, d in self.widget_dict.items():
-            if d.get('command_entry') and d.get('widget'):
-                d['widget'].clicked.connect(lambda label=key: self.label_click(label))
+        for key, widget_props in self.widget_dict.items():
+            if widget_props.get('command_nt_entry') and widget_props.get('widget'):
+                widget_props['widget'].clicked.connect(lambda label=key: self.label_click(label))
         
         # Populate camera combobox
         for key in self.camera_dict.keys():

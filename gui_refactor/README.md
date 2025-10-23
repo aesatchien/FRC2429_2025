@@ -1,239 +1,112 @@
-# Dashboard 2025 README (Draft)
-### 20251015 CJH
+# FRC Dashboard 2025 (Refactored)
 
-## Step 0: PyQt6 Structure Overview
+This document describes the architecture and workflow for the 2025 FRC PyQt6 Dashboard. The project has been refactored from a single-file application into a modular structure to improve maintainability and clarity.
 
-### Application Framework
+## Project Structure
 
-* The dashboard is a **PyQt6 application** consisting of a single main window class `Ui`.
-* All widgets are created as attributes of `Ui`, such as `self.qlabel_nt_connected`.
+The application is now broken into several specialized Python modules:
 
-### UI Layout (.ui) & Designer workflow
-
-* The visual layout lives in **`layout_2025.ui`** (Qt Designer format) and is loaded at runtime:
-
-  ```python
-  uic.loadUi('layout_2025.ui', self)
-  ```
-
-  Editing the `.ui` file updates the layout without changing Python code.
-* Open/edit the file with **pyqt6-tools Designer** (or Qt Designer). Keep **objectName** values stable; the code uses them as keys in `widget_dict`.
-* **Promoted/custom widgets used in the .ui:**
-
-  * `QLabel2` → promoted from `QLabel` (header: `qlabel2.h`). These are the **clickable tiles** (e.g., `qlabel_wrist_up_indicator`, `qlabel_intake_on_indicator`).
-  * `WarningLabel` → promoted from `QLabel` (header: `warning_label`). These are **numeric monitors** (e.g., `qlabel_pdh_voltage_monitor`, `qlabel_pdh_current_monitor`).
-    Do not change their promoted class; the code relies on their behavior.
-* **Adding a new tile/monitor** (Designer checklist):
-
-  1. Place a `QLabel` and set a unique `objectName` using the existing naming patterns (`*indicator*`, `*monitor*`, etc.).
-  2. If it should be clickable, **promote** it to `QLabel2` (base: `QLabel`, class name: `QLabel2`, header: `qlabel2.h`).
-  3. If it should show a number with thresholds, **promote** to `WarningLabel` (base: `QLabel`, class name: `WarningLabel`, header: `warning_label`).
-  4. Save the `.ui`. No recompilation step is needed because we call `uic.loadUi(...)` at startup.
-  5. Add the new widget to `widget_dict` with its NT topics (see Step 2).
-
-### Event Loop and Timers
-
-* A `QTimer` drives periodic updates (`self.update_widgets()`), polling NetworkTables and refreshing the GUI.
-* No GUI painting is done in background threads; all rendering occurs in the main thread.
-
-### Signals and Slots
-
-* Widgets emit Qt signals which connect to class methods or lambdas.
-  Example:
-
-  ```python
-  combo.currentTextChanged.connect(self.update_routines)
-  ```
-* Some labels are **clickable**. A subclass emits `.clicked`, connected via:
-
-  ```python
-  label.clicked.connect(lambda key=label_key: self.label_click(key))
-  ```
-
-### Camera Thread
-
-* A `QThread` runs a `CameraWorker(QObject)` that:
-
-  * Opens an MJPEG or RTSP stream using OpenCV.
-  * Converts each frame to a `QPixmap` using `convert_cv_qt`.
-  * Emits finished/error signals when stopping or on failure.
-* The GUI thread updates labels with `setPixmap()`.
-
-### Styling and Custom Widgets
-
-* Styling uses `.setStyleSheet(css_string)` with alternating color themes for blinks or state changes.
-* `WarningLabel` is a custom class handling numeric display and color thresholding.
-
-### Key Event Publishing
-
-* The main window captures keypresses/releases and publishes pressed-key states back to NetworkTables.
+-   `main.py`: The application entry point. It initializes the QApplication and the main `Ui` window.
+-   `dashboard_2025.py`: Defines the main window class `Ui`. It orchestrates the other manager modules.
+-   `config.py`: **Central configuration file.** Contains the static `WIDGET_CONFIG` and `CAMERA_CONFIG` dictionaries that define all widget properties, NetworkTables topics, and camera streams.
+-   `nt_manager.py`: Handles all NetworkTables (NT) client logic, including connection, subscription, and data retrieval.
+-   `camera_manager.py`: Manages the camera stream, including the worker thread for fetching and decoding video frames.
+-   `ui_updater.py`: Contains the core logic for updating all GUI elements based on data from NetworkTables.
+-   `nt_tree.py`: Manages the UI and logic for the interactive NetworkTables tree viewer.
+-   `widgets/`: A directory containing custom PyQt widget classes like `ClickableQLabel` and `WarningLabel`.
+-   `layout_2025.ui`: The Qt Designer UI file that defines the visual layout of the dashboard.
 
 ---
 
-## Step 1: NetworkTables / WPILib Overview
+## Step 1: How to Add or Modify a Widget
 
-### NetworkTables Roles
+The workflow for adding a new widget (e.g., an indicator tile or a numeric display) has been streamlined.
 
-* The robot runs the **NetworkTables (NT) server**.
-* This dashboard runs as an **NT client**:
+### 1. Update the UI Layout
 
-  ```python
-  inst = ntcore.NetworkTableInstance.getDefault()
-  inst.startClient4("PyQt Dashboard")
-  inst.setServerTeam(2429)
-  ```
+-   Open `layout_2025.ui` in **Qt Designer** (or `pyqt6-tools designer`).
+-   Add a new widget (e.g., a `QLabel`).
+-   In the **Property Editor**, give it a unique and descriptive `objectName` (e.g., `qlabel_my_new_indicator`).
+-   If the widget should be clickable or have custom behavior, promote it to the appropriate class from the `widgets/` directory (e.g., `ClickableQLabel`).
+-   Save the `.ui` file. No code generation or compilation is needed.
 
-### What the Robot Must Publish
+### 2. Update the Configuration
 
-* **Telemetry:** via `SmartDashboard.putNumber`, `putBoolean`, or `putString`.
-* **Chooser (autonomous selector):** via `SendableChooser`.
-* **Commands:** via `SmartDashboard.putData("Name", command)` — publishes a Command object to NT.
+-   Open `config.py`.
+-   Add a new entry to the `WIDGET_CONFIG` dictionary. The key should be a descriptive name, and the value is a dictionary defining its properties.
+
+**Example: Adding a new command indicator tile:**
+
+```python
+# In config.py, inside WIDGET_CONFIG
+'my_new_indicator': {
+    'widget_name': 'qlabel_my_new_indicator',      # The objectName from Qt Designer
+    'nt_topic': '/SmartDashboard/MyCommand/running', # The NT topic it reads from
+    'command_topic': '/SmartDashboard/MyCommand/running' # The NT topic to write to on click
+},
+```
+
+The application will automatically find the widget by its name and bind it to the specified NetworkTables topics at startup.
+
+---
+
+## Step 2: Architectural Overview
+
+### Main Window (`dashboard_2025.py`)
+
+The `Ui` class in `dashboard_2025.py` is the central coordinator. Its responsibilities are:
+-   Loading the `.ui` file.
+-   Initializing the manager classes (`NTManager`, `CameraManager`, `UIUpdater`, `NTTreeManager`).
+-   Building the runtime `widget_dict` and `camera_dict` from the static configurations in `config.py`.
+-   Connecting UI signals (button clicks, etc.) to methods in the appropriate managers or in the `Ui` class itself.
+-   Managing key press/release events.
+
+### Configuration (`config.py`)
+
+This file decouples the widget and camera definitions from the application logic.
+-   `WIDGET_CONFIG`: Defines UI widgets. Each entry maps a widget's `objectName` to its NetworkTables topics, custom styles, and behavior flags.
+-   `CAMERA_CONFIG`: Defines the available camera streams and their associated NT topics for status monitoring.
+
+### NetworkTables Manager (`nt_manager.py`)
+
+-   Manages the `NetworkTableInstance`.
+-   Handles connecting to the robot, server switching (sim vs. robot), and reconnecting.
+-   Provides a simple interface for getting NT entries (`getEntry()`).
+
+### UI Updater (`ui_updater.py`)
+
+-   The `update_widgets()` method is called by a `QTimer` on the main thread.
+-   It iterates through the `widget_dict` and updates each widget's appearance (color, text, value) based on the latest data received from NetworkTables.
+-   This module contains all the styling logic (e.g., `style_on`, `style_off`, flashing) that was previously in the main class.
+
+### Camera Manager (`camera_manager.py`)
+
+-   Manages the `QThread` and `CameraWorker` for non-blocking video streaming.
+-   Handles starting, stopping, and restarting the camera thread.
+-   Checks for the availability of camera servers before starting the stream.
+
+---
+
+## Step 3: NetworkTables and Robot-Side Code
+
+The interaction with NetworkTables remains the same from the robot's perspective. The dashboard client expects the robot server to publish topics for telemetry and commands.
 
 ### Topic Categories
 
-| Type         | Example                                       | Description                                                    |
-| ------------ | --------------------------------------------- | -------------------------------------------------------------- |
-| Boolean      | `/SmartDashboard/MoveWristUp/running`         | Created by `putData`; True schedules, False cancels a Command. |
-| Number       | `/SmartDashboard/_pdh_voltage`                | Live numeric telemetry (voltage, angle, etc.).                 |
-| String       | `/SmartDashboard/_target`                     | Textual state labels.                                          |
-| Double Array | `/SmartDashboard/drive_pose`                  | Pose `[x, y, theta_deg]` arrays.                               |
-| Chooser      | `/SmartDashboard/autonomous routines/options` | Produced automatically by `SendableChooser`.                   |
+| Type | Example | Description |
+|---|---|---|
+| **Command** | `/SmartDashboard/MoveWristUp/running` | A boolean that the dashboard sets to `true` to run a command. Published by `SmartDashboard.putData()`. |
+| **Telemetry** | `/SmartDashboard/_pdh_voltage` | A number, boolean, or string representing robot state. Published by `SmartDashboard.putNumber()`, etc. |
+| **Chooser** | `/SmartDashboard/autonomous routines/options` | A string array for the autonomous selector. Published by `SendableChooser`. |
+| **Pose** | `/SmartDashboard/drive_pose` | A `double[]` of `[x, y, theta_deg]` for field visualization. |
 
-### Quick Robot-Side Examples
+### Robot-Side Example (Java/Python)
 
-```python
-# Basic telemetry
-SmartDashboard.putNumber("_pdh_voltage", pdh.getVoltage())
-SmartDashboard.putBoolean("gamepiece_present", sensor.get())
+```java
+// Exposing a command to the dashboard
+SmartDashboard.putData("MoveWristUp", MoveWristUpCommand());
 
-# Command exposed to dashboard
-SmartDashboard.putData("MoveWristUp", MoveWristUpCommand())
-
-# Autonomous chooser
-autoChooser = SendableChooser()
-autoChooser.setDefaultOption("DriveMiddle", "DriveMiddle")
-autoChooser.addOption("ScoreL2", "ScoreL2")
-SmartDashboard.putData("autonomous routines", autoChooser)
+// Publishing telemetry
+SmartDashboard.putNumber("_pdh_voltage", pdh.getVoltage());
+SmartDashboard.putBoolean("gamepiece_present", sensor.get());
 ```
-
----
-
-## Step 2: Widget Dictionary Architecture
-
-All widgets and their NT mappings live in a central dictionary:
-
-```python
-self.widget_dict = {
-    "<key>": {
-        "widget": <Qt widget>,
-        "nt": "<topic or None>",                 # Read topic for telemetry
-        "command": "<cmd_running_topic or None>", # Command's /running boolean (from putData)
-        "style_on": "<css>",                      # Optional ON style
-        "style_off": "<css>",                     # Optional OFF style
-        "flash": True/False,                       # Blink flag
-        "selected": "<chooser_selected_topic>",   # Chooser selection topic
-        "entry": <nt entry>,                       # NT entry for 'nt'
-        "command_entry": <nt entry>                # NT entry for 'command'
-    },
-    ...
-}
-```
-
-### Naming Conventions and Behaviors
-
-| Key Pattern                | Behavior                         | Source / Action                                |
-| -------------------------- | -------------------------------- | ---------------------------------------------- |
-| `*indicator*`              | Boolean indicator                | Reads boolean from `nt`; updates color/style.  |
-| `*monitor*`                | Numeric monitor (`WarningLabel`) | Reads double; auto-colors based on thresholds. |
-| `*lcd*`                    | QLCDNumber numeric               | Reads double; shows as integer.                |
-| `*combo*`                  | Chooser                          | Reads options array; writes selected string.   |
-| `*time*`                   | Match timer                      | Reads seconds; styles during endgame.          |
-| `drive_pose`, `quest_pose` | Pose arrays                      | Reads `[x, y, θ]`; updates field overlay.      |
-| with `command`             | Command tile                     | Writes boolean to Command’s `/running` topic.  |
-
-### Example Entries
-
-```python
-# Alliance color indicator
-"qlabel_alliance_indicator": {
-    "widget": self.qlabel_alliance_indicator,
-    "nt": "/FMSInfo/IsRedAlliance",
-    "command": None,
-    "style_on":  "background-color:rgb(225,0,0); color:rgb(200,200,200);",
-    "style_off": "background-color:rgb(0,0,225); color:rgb(200,200,200);",
-},
-
-# PDH voltage monitor
-"qlabel_pdh_voltage_monitor": {
-    "widget": self.qlabel_pdh_voltage_monitor,
-    "nt": "/SmartDashboard/_pdh_voltage",
-    "command": None
-},
-
-# Autonomous chooser
-"qcombobox_autonomous_routines": {
-    "widget": self.qcombobox_autonomous_routines,
-    "nt": r"/SmartDashboard/autonomous routines/options",
-    "selected": r"/SmartDashboard/autonomous routines/selected",
-    "command": None
-},
-
-# Command tile
-"qlabel_wrist_up_indicator": {
-    "widget": self.qlabel_wrist_up_indicator,
-    "nt": "/SmartDashboard/MoveWristUp/running",
-    "command": "/SmartDashboard/MoveWristUp/running"
-}
-```
-
-### Update Lifecycle
-
-1. **Initialization:** Create NT entries, wire clickable labels, and connect chooser updates.
-2. **Periodic Update:**
-
-   * Indicators → Boolean → style toggle.
-   * Monitors → Double → value + WarningLabel color.
-   * Combos → refresh options, sync selected.
-   * Time/Pose → specialized update.
-3. **User Actions:** Click command → toggles `command_entry`. Combo select → updates chooser’s `selected` topic.
-
----
-
-## Step 3: Advanced Logic (Pose, QuestNav, Distance)
-
-### Field Pose Rendering
-
-* Subscribes to `/SmartDashboard/drive_pose` and `/SmartDashboard/quest_pose`.
-* Each provides `[x, y, heading_deg]` in field coordinates.
-* The GUI draws robot markers scaled to the field image size.
-* Heading convention: +θ = counterclockwise degrees.
-
-### QuestNav Pose Fusion
-
-* Topics used:
-
-  * `/SmartDashboard/questnav_in_use` (boolean)
-  * `/SmartDashboard/questnav_synched` (boolean)
-  * Command toggles: `/SmartDashboard/QuestEnableToggle/running`, `/SmartDashboard/QuestSyncToggle/running`, `/SmartDashboard/QuestResetOdometry/running`
-* Indicators:
-
-  * **Enabled/In Use** (`qlabel_questnav_enabled_toggle_indicator`): reads `questnav_in_use` and writes `QuestEnableToggle/running` on click.
-  * **Synced** (`qlabel_questnav_sync_toggle_indicator`): reads `questnav_synched` and writes `QuestSyncToggle/running` on click.
-* Colors/styles:
-
-  * By default, indicators use the global **ON = green**, **OFF = red** styles from `update_widgets()`.
-  * If you uncomment the per-widget `style_on/style_off` overrides in `widget_dict`, the **Enabled** tile becomes **cyan when true** and **grey when false** (as shown in the commented CSS). There is **no yellow state** in the current code.
-* Behavior note: these are **independent booleans**; there isn’t a tri‑state (grey/yellow/green) logic unless you add it via per-widget overrides.
-
-### Shot Distance Calculation
-
-* Combines robot `drive_pose` and target pose (from `/SmartDashboard/_target` or constants).
-* Computes Euclidean distance and launch angle.
-* Displays live numeric values and warning color if outside calibrated range.
-
----
-
-### Summary
-
-This dashboard provides a general-purpose PyQt6 GUI for FRC robots using NetworkTables v4.
-It reads telemetry, allows command activation via `putData` commands, supports chooser selection, and renders live field poses and status indicators in real time.
