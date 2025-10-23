@@ -210,7 +210,10 @@ class UIUpdater:
     def _update_combo(self, props):
         """ At the moment this is just for the autonomous routines combo box but it could be for any dropdown """
         nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        if not (nt_entry and widget):
+        # print(f'found combo on {props.get("widget_name")} at {self.ui.counter} with nt_entry {nt_entry} and widget {widget}')
+        # there is a problem with using shortcut checks for validity - the combobox is not True if it is empty (len 0)
+        # so just check for None
+        if nt_entry is None or widget is None:
             return
 
         new_list = nt_entry.getStringArray([])

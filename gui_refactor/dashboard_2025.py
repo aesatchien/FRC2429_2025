@@ -60,6 +60,7 @@ class Ui(QtWidgets.QMainWindow):
         # Build the runtime dictionaries from the static config
         self.widget_dict = self.build_widget_dict()
         self.camera_dict = self.build_camera_dict()
+        # print(self.widget_dict)
 
         self.robot_timestamp_entry = self.nt_manager.getEntry('/SmartDashboard/_timestamp')
 
