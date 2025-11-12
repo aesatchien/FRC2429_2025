@@ -34,7 +34,7 @@ class Drivetrain(Subsystem):
         self.rev_resets = SparkBase.ResetMode.kResetSafeParameters if constants.k_burn_flash \
             else SparkBase.ResetMode.kNoResetSafeParameters
         self.rev_persists = SparkBase.PersistMode.kPersistParameters if constants.k_burn_flash \
-            else SparkBase.ResetMode.kNoResetSafeParameters
+            else SparkBase.PersistMode.kNoPersistParameters
 
         # put the configs in a list matching the motors list
         configs = [DriveConstants.k_right_config, DriveConstants.k_follower_config_r2,
