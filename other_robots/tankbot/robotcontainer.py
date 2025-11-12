@@ -1,12 +1,16 @@
-import time
+# RobotContainer initializes subsystems, configures joystick/button bindings,
+# and provides the autonomous command.
+
 import wpilib
 import commands2
+
 import constants
+
 from commands.drive_by_joystick import DriveByJoystick
 
 from subsystems.drivetrain import Drivetrain
 
-wpilib.DriverStation.silenceJoystickConnectionWarning(True)
+wpilib.DriverStation.silenceJoystickConnectionWarning(True)  # stop annoying "no joystick" messages
 
 class RobotContainer:
     """
@@ -18,22 +22,17 @@ class RobotContainer:
 
     def __init__(self) -> None:
 
-        self.start_time = time.time()
-
+        self.timer = wpilib.Timer()
+        
         # The robot's subsystems
-
         self.drive = Drivetrain()
 
+        # Configure joysticks and buttons
         self.configure_joysticks()
         self.bind_driver_buttons()
 
+        # set the default command for the drivetrain
         self.drive.setDefaultCommand(DriveByJoystick(self, self.driver_command_controller))
-
-    def set_start_time(self):  # call in teleopInit and autonomousInit in the robot
-        self.start_time = time.time()
-
-    def get_enabled_time(self):  # call when we want to know the start/elapsed time for status and debug messages
-        return time.time() - self.start_time
 
     def configure_joysticks(self):
         """

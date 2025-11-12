@@ -10,7 +10,6 @@ from robotcontainer import RobotContainer
 class MyRobot(commands2.TimedCommandRobot):
     """
     Our default robot class, pass it to wpilib.run
-
     Command v2 robots are encouraged to inherit from TimedCommandRobot, which
     has an implementation of robotPeriodic which runs the scheduler for you
     """
@@ -37,7 +36,8 @@ class MyRobot(commands2.TimedCommandRobot):
     def autonomousInit(self) -> None:
         """This autonomous runs the autonomous command selected by your RobotContainer class."""
 
-        self.container.set_start_time()  # putting this after the scheduler is bad
+        # reset the timer so we count time since enabled
+        self.container.timer.reset()
 
         self.autonomousCommand = self.container.get_autonomous_command()
 
@@ -49,7 +49,8 @@ class MyRobot(commands2.TimedCommandRobot):
 
     def teleopInit(self) -> None:
 
-        self.container.set_start_time()  # putting this after the scheduler is bad
+        # reset the timer so we count time since enabled
+        self.container.timer.reset()
 
         # This makes sure that the autonomous stops running when
         # teleop starts running. If you want the autonomous to
