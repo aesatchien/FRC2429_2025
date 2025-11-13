@@ -5,7 +5,7 @@ from commands2 import Subsystem
 from wpilib import SmartDashboard, DriverStation
 from ntcore import NetworkTableInstance
 import rev
-from rev import SparkBase  # trying to save some typing
+from rev import SparkBase, SparkMaxConfig  # trying to save some typing
 from wpilib.drive import DifferentialDrive
 
 import constants
@@ -37,12 +37,12 @@ class Drivetrain(Subsystem):
             else SparkBase.PersistMode.kNoPersistParameters
 
         # put the configs in a list matching the motors list
-        configs = [DriveConstants.k_right_config, DriveConstants.k_follower_config_r2,
+        self.configs = [DriveConstants.k_right_config, DriveConstants.k_follower_config_r2,
                    DriveConstants.k_left_config, DriveConstants.k_follower_config_l2]
 
         # this should be its own function later - we will call it whenever we change brake mode
         rev_errors = [motor.configure(config, self.rev_resets, self.rev_persists)
-                      for motor, config in zip(self.motors, configs)]
+                      for motor, config in zip(self.motors, self.configs)]
         print(
             f"Initialized drivetrain sparkmaxes. Controller status: \n {rev_errors}")
 
@@ -59,6 +59,24 @@ class Drivetrain(Subsystem):
 
     def arcade_drive(self, xSpeed, zRotation, square_inputs):
         self.drive.arcadeDrive(xSpeed, zRotation, square_inputs)
+
+    def set_brake_mode(self, mode='brake'):
+        # Non-persistent - just change  things temporarily - these settings leave the config untouched
+        no_resets = SparkBase.ResetMode.kNoResetSafeParameters
+        no_persists = SparkBase.PersistMode.kNoPersistParameters
+
+        # make a temporary config just to set break or coast
+        if mode == 'coast':
+            idle_mode = SparkMaxConfig.IdleMode.kCoast
+        else:
+            idle_mode = SparkMaxConfig.IdleMode.kBrake
+        tmp_config = SparkMaxConfig().idleMode(idle_mode)
+
+        # send config to motors
+        rev_errors = [motor.configure(tmp_config, no_resets, no_persists)
+                      for motor, config in zip(self.motors, self.configs)]
+        # report our results - but not the best way since there is no timestamp here
+        print(f'Setting drivetrain idle mode to {mode}: {rev_errors}')
 
     def periodic(self):
         # here we do all the checking of the robot state - read inputs, calculate outputs
