@@ -30,7 +30,7 @@ class DriveByJoystick(commands2.Command):
         right_x = self.controller.getHID().getRightX()
         #self.drive.tank_drive(-left_y, -right_y)  # could do arcade drive instead
         self.drive.arcade_drive(-left_y * speed_limit, -right_x * turn_limit, True)
-        self.counter +=1
+        self.counter += 1
         if self.counter % 100 == 0:
             pass
             # print(f'debugging: {left_y} {right_y}')

@@ -35,7 +35,7 @@ class DriveConstants:
     k_configs = [k_left_config, k_right_config]  # this will be convenient later
 
     # set the config parameters - doing them individually is dirty, but here is an example
-    [config.voltageCompensation(12) for config in k_configs]
+    _ = [config.voltageCompensation(12) for config in k_configs]
     [config.setIdleMode(SparkMaxConfig.IdleMode.kBrake) for config in k_configs]
     [config.smartCurrentLimit(40) for config in k_configs]
     #[config.encoder.positionConversionFactor(k_position_conversion_factor for config in k_configs]
@@ -44,9 +44,9 @@ class DriveConstants:
     # traditional for loop approach - this is probably more readable than multiple list comprehensions
     for config in k_configs:
         config.voltageCompensation(12)
+        #sets the drivetrain to brake mode - MH
         config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
         config.smartCurrentLimit(40)
-        config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
         config.encoder.positionConversionFactor(k_position_conversion_factor)
         config.encoder.velocityConversionFactor(k_velocity_conversion_factor)
     # these individual parameters need to be separate

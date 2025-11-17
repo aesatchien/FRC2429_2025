@@ -9,36 +9,35 @@ from rev import SparkBase, SparkMaxConfig  # trying to save some typing
 from wpilib.drive import DifferentialDrive
 
 import constants
-from constants import DriveConstants
+from constants import DriveConstants as dc
 
 
 class Drivetrain(Subsystem):
     def __init__(self) -> None:
         super().__init__()
         self.setName('Drivetrain')
-        self.counter = DriveConstants.k_counter_offset  # note this should be an offset in constants
+        self.counter = dc.k_counter_offset  # note this should be an offset in constants
 
         # --------------- add motors and drive methods ----------------
 
         # motors - this should be cleaner - seems like we are retyping code
         motor_type = rev.SparkMax.MotorType.kBrushless
-        self.drive_l1 = rev.SparkMax(DriveConstants.k_CANID_l1, motor_type)
-        self.drive_l2 = rev.SparkMax(DriveConstants.k_CANID_l2, motor_type)
-        self.drive_r1 = rev.SparkMax(DriveConstants.k_CANID_r1, motor_type)
-        self.drive_r2 = rev.SparkMax(DriveConstants.k_CANID_r2, motor_type)
+        self.drive_l1 = rev.SparkMax(dc.k_CANID_l1, motor_type)
+        self.drive_l2 = rev.SparkMax(dc.k_CANID_l2, motor_type)
+        self.drive_r1 = rev.SparkMax(dc.k_CANID_r1, motor_type)
+        self.drive_r2 = rev.SparkMax(dc.k_CANID_r2, motor_type)
 
         # convenient list of motors if we need to query or set all of them
         self.motors = [self.drive_r1, self.drive_r2, self.drive_l1, self.drive_l2]
 
         # default parameters for the sparkmaxes reset and persist modes -
-        self.rev_resets = SparkBase.ResetMode.kResetSafeParameters if constants.k_burn_flash \
-            else SparkBase.ResetMode.kNoResetSafeParameters
+        self.rev_resets = SparkBase.ResetMode.kResetSafeParameters
         self.rev_persists = SparkBase.PersistMode.kPersistParameters if constants.k_burn_flash \
             else SparkBase.PersistMode.kNoPersistParameters
 
         # put the configs in a list matching the motors list
-        self.configs = [DriveConstants.k_right_config, DriveConstants.k_follower_config_r2,
-                   DriveConstants.k_left_config, DriveConstants.k_follower_config_l2]
+        self.configs = [dc.k_right_config, dc.k_follower_config_r2,
+                   dc.k_left_config, dc.k_follower_config_l2]
 
         # this should be its own function later - we will call it whenever we change brake mode
         rev_errors = [motor.configure(config, self.rev_resets, self.rev_persists)
