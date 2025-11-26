@@ -74,7 +74,7 @@ class Drivetrain(Subsystem):
 
         # send config to motors
         rev_errors = [motor.configure(tmp_config, no_resets, no_persists)
-                      for motor, config in zip(self.motors, self.configs)]
+                      for motor in self.motors]
         # report our results - but not the best way since there is no timestamp here
         print(f'Setting drivetrain idle mode to {mode}: {rev_errors}')
 

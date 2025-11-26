@@ -55,7 +55,6 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
-
         self.triggerA.onTrue(
             commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('coast'))).onFalse(
             commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('brake')))
