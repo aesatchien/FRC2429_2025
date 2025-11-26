@@ -65,8 +65,9 @@ class RobotContainer:
 
         # METHOD CHAINING - function returns the object, creating a "fluent interface"
         # and I threw in ignoringDisable()
-        (self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed').ignoringDisable(True)).onFalse(
-            commands2.PrintCommand('trigger x released').ignoringDisable(True)))
+        # (self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed').ignoringDisable(True)).onFalse(
+        #     commands2.PrintCommand('trigger x released').ignoringDisable(True)))
+        self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed')).onFalse(commands2.PrintCommand('trigger x released'))
 
         # more things we can do with triggers
         self.triggerY.whileTrue(
@@ -75,6 +76,7 @@ class RobotContainer:
             .beforeStarting(lambda: (print(f"Y START {self.timer.get():.2f}s")))
             .finallyDo(lambda interrupted: (print(f"Y END {self.timer.get():.2f}s")))
         )
+
 
 
 

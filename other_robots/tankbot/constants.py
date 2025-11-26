@@ -16,7 +16,7 @@ class TestSubsystemConstants:
     k_my_constant = 1  # sample constant
 
 class DriveConstants:
-    k_counter_offset = 4  # we don't want the subsystems printing messages on the same tic
+    k_counter_offset = 1  # we don't want the subsystems printing messages on the same tic
 
     # example of tuple assignment for related values, especially constants or configuration parameters,
     # that are defined close together in your code
@@ -67,21 +67,21 @@ class DriveConstants:
     # k_abs_encoder_readout_when_at_ninety_deg_position = 0.455
 
 class ShooterConstants:
-    k_flywheel_counter_offset = 4
+    k_flywheel_counter_offset = 2
     k_CANID_indexer = 5
-    k_CANID_f1, k_CANID_f2 = 7, 8  # left flywheel and follower
+    k_CANID_flywheel_left_leader, k_CANID_flywheel_right_follower = 7, 8  # left flywheel and follower
     k_CANID_turret = 9
 
-    k_flywheel_left, k_flywheel_right = SparkMaxConfig(), SparkMaxConfig()
+    k_flywheel_left_leader_config, k_flywheel_right_follower_config = SparkMaxConfig(), SparkMaxConfig()
 
-    k_flywheel_configs = [k_flywheel_left, k_flywheel_right]
+    k_flywheel_configs = [k_flywheel_left_leader_config, k_flywheel_right_follower_config]
 
-    k_flywheel_left.inverted(False)
-    k_flywheel_right.inverted(False)
+    k_flywheel_left_leader_config.inverted(False)  # have to check which way it spins for positive RPM
+    # k_flywheel_right_follower.inverted(False)  # this is not necessary - it will get ignored
 
     # set up the followers
     k_follower_config_f2 = SparkMaxConfig()
-    k_follower_config_f2.follow(k_CANID_f1, invert=False)
+    k_follower_config_f2.follow(k_CANID_flywheel_left_leader, invert=True)  # always true if follower on other side
 
     #setting voltage & current limit for the flywheel motors
     _ = [config.voltageCompensation(12) for config in k_flywheel_configs]
