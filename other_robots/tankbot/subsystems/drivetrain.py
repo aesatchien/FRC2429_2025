@@ -69,7 +69,7 @@ class Drivetrain(Subsystem):
             idle_mode = SparkMaxConfig.IdleMode.kCoast
         else:
             idle_mode = SparkMaxConfig.IdleMode.kBrake
-        tmp_config = SparkMaxConfig().idleMode(idle_mode)
+        tmp_config = SparkMaxConfig().setIdleMode(idle_mode)
 
         # send config to motors
         rev_errors = [motor.configure(tmp_config, no_resets, no_persists)
