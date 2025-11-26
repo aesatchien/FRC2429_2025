@@ -3,7 +3,6 @@ from wpilib import SmartDashboard
 from commands2.button import CommandXboxController
 
 
-
 class DriveByJoystick(commands2.Command):
 
     def __init__(self, container, controller: CommandXboxController) -> None:

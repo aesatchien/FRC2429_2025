@@ -23,6 +23,7 @@ class RobotContainer:
     def __init__(self) -> None:
 
         self.timer = wpilib.Timer()
+        self.timer.start()
         
         # The robot's subsystems
         self.drive = Drivetrain()
@@ -42,7 +43,10 @@ class RobotContainer:
         """
         # The driver's controller
         self.driver_command_controller = commands2.button.CommandXboxController(constants.k_driver_controller_port)
-        # self.triggerA = self.driver_command_controller.a()
+        self.triggerA = self.driver_command_controller.a()
+        self.triggerB = self.driver_command_controller.b()
+        self.triggerX = self.driver_command_controller.x()
+        self.triggerY = self.driver_command_controller.y()
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -50,7 +54,30 @@ class RobotContainer:
         pass
 
     def bind_driver_buttons(self):
-        pass
+
+
+        self.triggerA.onTrue(
+            commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('coast'))).onFalse(
+            commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('brake')))
+
+        # easy to ready way - linear
+        self.triggerB.onTrue(commands2.PrintCommand('trigger b pushed'))
+        self.triggerB.onFalse(commands2.PrintCommand('trigger b released'))
+
+        # METHOD CHAINING - function returns the object, creating a "fluent interface"
+        # and I threw in ignoringDisable()
+        (self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed').ignoringDisable(True)).onFalse(
+            commands2.PrintCommand('trigger x released').ignoringDisable(True)))
+
+        # more things we can do with triggers
+        self.triggerY.whileTrue(
+            commands2.RunCommand(
+                lambda: self.drive.tank_drive(leftSpeed=1, rightSpeed=1),self.drive,)
+            .beforeStarting(lambda: (print(f"Y START {self.timer.get():.2f}s")))
+            .finallyDo(lambda interrupted: (print(f"Y END {self.timer.get():.2f}s")))
+        )
+
+
 
     def bind_operator_buttons(self):
         pass
