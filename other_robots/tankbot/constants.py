@@ -66,3 +66,25 @@ class DriveConstants:
     # k_config.absoluteEncoder.zeroOffset(0.45)
     # k_abs_encoder_readout_when_at_ninety_deg_position = 0.455
 
+class ShooterConstants:
+    k_flywheel_counter_offset = 4
+    k_CANID_indexer = 5
+    k_CANID_f1, k_CANID_f2 = 7, 8  # left flywheel and follower
+    k_CANID_turret = 9
+
+    k_flywheel_left, k_flywheel_right = SparkMaxConfig(), SparkMaxConfig()
+
+    k_flywheel_configs = [k_flywheel_left, k_flywheel_right]
+
+    k_flywheel_left.inverted(False)
+    k_flywheel_right.inverted(False)
+
+    # set up the followers
+    k_follower_config_f2 = SparkMaxConfig()
+    k_follower_config_f2.follow(k_CANID_f1, invert=False)
+
+    #setting voltage & current limit for the flywheel motors
+    _ = [config.voltageCompensation(12) for config in k_flywheel_configs]
+    _ = [config.setIdleMode(SparkMaxConfig.IdleMode.kBrake) for config in k_flywheel_configs]
+    _ = [config.smartCurrentLimit(40) for config in k_flywheel_configs]
+
