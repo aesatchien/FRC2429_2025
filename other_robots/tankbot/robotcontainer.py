@@ -61,6 +61,7 @@ class RobotContainer:
             commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('brake')))
 
         # easy to ready way - linear
+        # onFalse means when trigger's released
         self.triggerB.onTrue(commands2.PrintCommand('trigger b pushed'))
         self.triggerB.onFalse(commands2.PrintCommand('trigger b released'))
 

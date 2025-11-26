@@ -59,6 +59,7 @@ class Drivetrain(Subsystem):
     def arcade_drive(self, xSpeed, zRotation, square_inputs):
         self.drive.arcadeDrive(xSpeed, zRotation, square_inputs)
 
+    #mode in 'brake' by default
     def set_brake_mode(self, mode='brake'):
         # Non-persistent - just change  things temporarily - these settings leave the config untouched
         no_resets = SparkBase.ResetMode.kNoResetSafeParameters
