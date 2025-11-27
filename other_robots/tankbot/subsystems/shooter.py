@@ -51,9 +51,9 @@ class Shooter(Subsystem):
 
     def stop_shooter(self):
         # three different ways to stop the shooter
-        # self.shooter_l.set(0)  # this sets the output to zero (number between -1 and 1) - it is "dumb"
+        self.shooter_l.set(0)  # this sets the output to zero (number between -1 and 1) - it is "dumb"
         # self.shooter_l.setVoltage(0)  # this sets the voltage to zero (number between -12 and 12) - it is also "dumb"
-        self.flywheel_controller.setReference(0, SparkBase.ControlType.kSmartVelocity, 0)
+        # self.flywheel_controller.setReference(0, SparkBase.ControlType.kSmartVelocity, 0)
 
         self.shooter_on = False
         self.voltage = 0  # CJH for 2024 testing
@@ -61,7 +61,8 @@ class Shooter(Subsystem):
 
     def set_shooter_rpm(self, rpm=1000):
         # three different ways to stop the shooter
-        self.flywheel_controller.setReference(rpm, SparkBase.ControlType.kSmartVelocity, 0)
+        self.shooter_l.set(rpm)
+        # self.flywheel_controller.setReference(rpm, SparkBase.ControlType.kSmartVelocity, 0)
 
         self.shooter_on = True
         self.voltage = 12 * rpm / 5600  # Guess
@@ -82,13 +83,14 @@ class Shooter(Subsystem):
 
         # SmartDashboard.putBoolean('shooter_enable', self.shooter_enable)
         if self.counter % 20 == 0:
+            pass
             # not too often
-            SmartDashboard.putNumber('shooter_rpm', self.shooter_l.getVelocity())
-            SmartDashboard.putNumber('shooter_rpm_target', self.rpm)
-            at_velocity = math.fabs(self.get_velocity() - self.rpm) < 200  # need to figure out this tolerance
-            SmartDashboard.putBoolean('shooter_ready', at_velocity)
-            SmartDashboard.putNumber('shooter_current', self.shooter_l.getOutputCurrent())
-            SmartDashboard.putNumber('shooter_output', self.shooter_l.getAppliedOutput())
+            #SmartDashboard.putNumber('shooter_rpm', self.shooter_l.getVelocity())
+            #SmartDashboard.putNumber('shooter_rpm_target', self.rpm)
+            #at_velocity = math.fabs(self.get_velocity() - self.rpm) < 200  # need to figure out this tolerance
+            #SmartDashboard.putBoolean('shooter_ready', at_velocity)
+            #SmartDashboard.putNumber('shooter_current', self.shooter_l.getOutputCurrent())
+            #SmartDashboard.putNumber('shooter_output', self.shooter_l.getAppliedOutput())
 
 
 

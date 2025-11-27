@@ -9,6 +9,7 @@ import constants
 from commands.drive_by_joystick import DriveByJoystick
 
 from subsystems.drivetrain import Drivetrain
+from subsystems.shooter import Shooter
 
 wpilib.DriverStation.silenceJoystickConnectionWarning(True)  # stop annoying "no joystick" messages
 
@@ -27,6 +28,7 @@ class RobotContainer:
         
         # The robot's subsystems
         self.drive = Drivetrain()
+        self.shooter = Shooter()
 
         # Configure joysticks and buttons
         self.configure_joysticks()
@@ -73,11 +75,19 @@ class RobotContainer:
         # more things we can do with triggers
         self.triggerY.whileTrue(
             commands2.RunCommand(
-                lambda: self.drive.tank_drive(leftSpeed=1, rightSpeed=1),self.drive,)
+                lambda: self.drive.tank_drive(leftSpeed=0.1, rightSpeed=0.1),self.drive,)
             .beforeStarting(lambda: (print(f"Y START {self.timer.get():.2f}s")))
             .finallyDo(lambda interrupted: (print(f"Y END {self.timer.get():.2f}s")))
         )
 
+        # self.triggerB.whileTrue(
+        #     commands2.RunCommand(
+        #         lambda: self.shooter.set_shooter_rpm(0.5),self.shooter,)
+        #     .beforeStarting(lambda: (print(f"SHOOTER START {self.timer.get():.2f}s")))
+        #     .finallyDo(lambda: self.shooter.set_shooter_rpm(0))
+        # )
+        self.triggerB.onTrue(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.75),self.shooter,))
+        self.triggerB.onFalse(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
 
 
 
