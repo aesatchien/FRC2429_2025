@@ -72,19 +72,21 @@ class ShooterConstants:
     k_CANID_flywheel_left_leader, k_CANID_flywheel_right_follower = 7, 8  # left flywheel and follower
     k_CANID_turret = 9
 
+    # FLYWHEEL
     k_flywheel_left_leader_config, k_flywheel_right_follower_config = SparkMaxConfig(), SparkMaxConfig()
-
     k_flywheel_configs = [k_flywheel_left_leader_config, k_flywheel_right_follower_config]
 
     k_flywheel_left_leader_config.inverted(False)  # have to check which way it spins for positive RPM
     # k_flywheel_right_follower.inverted(False)  # this is not necessary - it will get ignored
 
     # set up the followers
-    k_follower_config_f2 = SparkMaxConfig()
-    k_follower_config_f2.follow(k_CANID_flywheel_left_leader, invert=True)  # always true if follower on other side
+    k_flywheel_right_follower_config.follow(k_CANID_flywheel_left_leader, invert=True)  # always true if follower on other side
 
     #setting voltage & current limit for the flywheel motors
     _ = [config.voltageCompensation(12) for config in k_flywheel_configs]
     _ = [config.setIdleMode(SparkMaxConfig.IdleMode.kBrake) for config in k_flywheel_configs]
     _ = [config.smartCurrentLimit(40) for config in k_flywheel_configs]
 
+    # INDEXER
+
+    # TURRET

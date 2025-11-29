@@ -53,7 +53,7 @@ class Shooter(Subsystem):
         # three different ways to stop the shooter
         self.shooter_l.set(0)  # this sets the output to zero (number between -1 and 1) - it is "dumb"
         # self.shooter_l.setVoltage(0)  # this sets the voltage to zero (number between -12 and 12) - it is also "dumb"
-        # self.flywheel_controller.setReference(0, SparkBase.ControlType.kSmartVelocity, 0)
+        # self.flywheel_controller.setReference(1000, ctrl=SparkBase.ControlType.kVelocity, slot=0, arbFeedforward=1)
 
         self.shooter_on = False
         self.voltage = 0  # CJH for 2024 testing
