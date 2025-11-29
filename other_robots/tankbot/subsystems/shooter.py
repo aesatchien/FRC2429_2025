@@ -5,7 +5,7 @@ from commands2 import Subsystem
 from wpilib import SmartDashboard, DriverStation
 from ntcore import NetworkTableInstance
 import rev
-from rev import SparkBase, SparkMaxConfig  # trying to save some typing
+from rev import SparkBase, SparkLowLevel  # trying to save some typing
 from wpilib.drive import DifferentialDrive
 
 import constants
@@ -17,19 +17,20 @@ class Shooter(Subsystem):
         super().__init__()
         self.setName('Shooter')
         self.counter = sc.k_flywheel_counter_offset  # note this should be an offset in constants
+        self.default_rpm = 3000
 
         # --------------- add motors and shooter rpm ----------------
         
         motor_type = rev.SparkMax.MotorType.kBrushless
-        self.shooter_l = rev.SparkMax(sc.k_CANID_flywheel_left_leader, motor_type)
-        self.shooter_r = rev.SparkMax(sc.k_CANID_flywheel_right_follower, motor_type)
+        self.flywheel_left_leader = rev.SparkMax(sc.k_CANID_flywheel_left_leader, motor_type)
+        self.flywheel_right_follower = rev.SparkMax(sc.k_CANID_flywheel_right_follower, motor_type)
 
         # convenient list of motors if we need to query or set all of them
-        self.motors = [self.shooter_l, self.shooter_r]
+        self.motors = [self.flywheel_left_leader, self.flywheel_right_follower]
 
         # you need a controller to set velocity
-        self.flywheel_controller = self.shooter_l.getClosedLoopController()
-        self.flywheel_encoder = self.shooter_l.getEncoder()
+        self.flywheel_controller = self.flywheel_left_leader.getClosedLoopController()
+        self.flywheel_encoder = self.flywheel_left_leader.getEncoder()
 
         # default parameters for the sparkmaxes reset and persist modes -
         self.rev_resets = SparkBase.ResetMode.kResetSafeParameters
@@ -47,36 +48,36 @@ class Shooter(Subsystem):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         self.table = self.inst.getTable("datatable")  # for example
 
-    # give access to wpilib's tankdrive and arcadedrive methods
-
     def stop_shooter(self):
         # three different ways to stop the shooter
-        self.shooter_l.set(0)  # this sets the output to zero (number between -1 and 1) - it is "dumb"
+        self.flywheel_left_leader.set(0)  # this sets the output to zero (number between -1 and 1) - it is "dumb"
         # self.shooter_l.setVoltage(0)  # this sets the voltage to zero (number between -12 and 12) - it is also "dumb"
-        # self.flywheel_controller.setReference(1000, ctrl=SparkBase.ControlType.kVelocity, slot=0, arbFeedforward=1)
+        # self.flywheel_controller.setReference(value=0, ctrl=SparkLowLevel.ControlType.kVelocity, slot=rev.ClosedLoopSlot.kSlot0, arbFeedforward=0)
 
         self.shooter_on = False
         self.voltage = 0  # CJH for 2024 testing
         SmartDashboard.putBoolean('shooter_on', self.shooter_on)
 
     def set_shooter_rpm(self, rpm=1000):
-        # three different ways to stop the shooter
-        self.shooter_l.set(rpm)
-        # self.flywheel_controller.setReference(rpm, SparkBase.ControlType.kSmartVelocity, 0)
-
+        # multiple different ways to set the shooter
+        # self.flywheel_left_leader.set(rpm)
+        feed_forward = min(12, 12 * rpm / 5600)  # if there is no gearing, then this gets you close
+        # rev is a pain in the ass - you have to pass EXACTLY the types it wants - no using "0" for the slots anymore
+        self.flywheel_controller.setReference(value=rpm, ctrl=SparkLowLevel.ControlType.kVelocity, slot=rev.ClosedLoopSlot.kSlot0, arbFeedforward=feed_forward)
+        print(f'set rpm to {rpm:.0f}')  # want to say what time it is, but can't import the container's timer easily
         self.shooter_on = True
-        self.voltage = 12 * rpm / 5600  # Guess
+        self.voltage = feed_forward  # 12 * rpm / 5600  # Guess
         SmartDashboard.putBoolean('shooter_on', self.shooter_on)
 
     def get_velocity(self):
-        return self.flywheel_left_encoder.getVelocity()
+        return self.flywheel_encoder.getVelocity()
 
     def toggle_shooter(self, rpm):
         if self.shooter_on:
             self.stop_shooter()
         else:
-            self.rpm = self.rpm if rpm is None else rpm
-            self.set_flywheel(self.rpm)
+            self.rpm = self.default_rpm if rpm is None else rpm
+            self.set_shooter_rpm(self.rpm)
 
     def periodic(self) -> None:
         self.counter += 1

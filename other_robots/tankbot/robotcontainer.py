@@ -3,6 +3,7 @@
 
 import wpilib
 import commands2
+from commands2 import PrintCommand, RunCommand, InstantCommand, ConditionalCommand
 
 import constants
 
@@ -49,6 +50,8 @@ class RobotContainer:
         self.triggerB = self.driver_command_controller.b()
         self.triggerX = self.driver_command_controller.x()
         self.triggerY = self.driver_command_controller.y()
+        self.triggerRB = self.driver_command_controller.rightBumper()
+        self.triggerLB = self.driver_command_controller.leftBumper()
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -57,38 +60,45 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
-        self.triggerA.onTrue(
-            commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('coast'))).onFalse(
-            commands2.cmd.runOnce(lambda: self.drive.set_brake_mode('brake')))
+        # easy to ready way - linear, not using method chaining
+        # onTrue / onFalse means when trigger is pressed / released
+        self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pushed'))
+        self.triggerLB.onFalse(commands2.PrintCommand('trigger lb released'))
 
-        # easy to ready way - linear
-        # onFalse means when trigger's released
-        self.triggerB.onTrue(commands2.PrintCommand('trigger b pushed'))
-        self.triggerB.onFalse(commands2.PrintCommand('trigger b released'))
-
-        # METHOD CHAINING - function returns the object, creating a "fluent interface"
-        # and I threw in ignoringDisable()
-        # (self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed').ignoringDisable(True)).onFalse(
-        #     commands2.PrintCommand('trigger x released').ignoringDisable(True)))
+        # METHOD CHAINING - function returns the object, presenting a "fluent interface"
         self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed')).onFalse(commands2.PrintCommand('trigger x released'))
+
+        # commands2.cmd.runOnce is a command factory, one shot with no overrides (InstantCommand exposes the lifecycle)
+        # One-shot brake-mode toggle; allowed while disabled - this is not an easy introduction
+        (self.triggerA
+         .onTrue(commands2.cmd.runOnce(lambda: self.drive.set_brake_mode("coast")).ignoringDisable(True))
+         .onFalse(commands2.cmd.runOnce(lambda: self.drive.set_brake_mode("brake")).ignoringDisable(True))
+        )
+
 
         # more things we can do with triggers
         self.triggerY.whileTrue(
             commands2.RunCommand(
                 lambda: self.drive.tank_drive(leftSpeed=0.1, rightSpeed=0.1),self.drive,)
-            .beforeStarting(lambda: (print(f"Y START {self.timer.get():.2f}s")))
+            .beforeStarting(lambda: (print(f"Y START {self.timer.get():.2f}s ", end='')))
             .finallyDo(lambda interrupted: (print(f"Y END {self.timer.get():.2f}s")))
         )
 
-        # self.triggerB.whileTrue(
-        #     commands2.RunCommand(
-        #         lambda: self.shooter.set_shooter_rpm(0.5),self.shooter,)
-        #     .beforeStarting(lambda: (print(f"SHOOTER START {self.timer.get():.2f}s")))
-        #     .finallyDo(lambda: self.shooter.set_shooter_rpm(0))
-        # )
-        self.triggerB.onTrue(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.75),self.shooter,))
-        self.triggerB.onFalse(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
+        # RunCommand is not what we want here - an InstantCommand is the right call
+        self.triggerB.whileTrue(
+            commands2.InstantCommand(
+                lambda: self.shooter.set_shooter_rpm(4000),self.shooter,)
+            .beforeStarting(lambda: (print(f"Shooter B: at {self.timer.get():.1f} s ... ", end='')))
+            .finallyDo(lambda interrupted: self.shooter.stop_shooter())  # this finallyDo function has to accept an "interrupted" parameter
+        )
 
+        # this is bad - it continually sets the shooter off because it's a RunCommand
+        #self.triggerRB.onTrue(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(1000),self.shooter,))
+        #self.triggerRB.onFalse(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
+        # this is the right way - question for students: why am i using a lambda instead of a PrintCommand?
+        self.triggerRB.onTrue(InstantCommand(lambda: print(f'Shooter RB: at {self.timer.get():.1f} s ...', end='')).
+                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(1000),self.shooter,)))
+        self.triggerRB.onFalse(InstantCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
 
 
     def bind_operator_buttons(self):
