@@ -52,6 +52,9 @@ class RobotContainer:
         self.triggerY = self.driver_command_controller.y()
         self.triggerRB = self.driver_command_controller.rightBumper()
         self.triggerLB = self.driver_command_controller.leftBumper()
+        self.trigger_up = self.driver_command_controller.povUp()
+        self.trigger_left = self.driver_command_controller.povLeft()
+        self.trigger_right = self.driver_command_controller.povRight()
 
     def initialize_dashboard(self):
         # wpilib.SmartDashboard.putData(MoveLowerArmByNetworkTables(container=self, crank=self.lower_crank))
@@ -60,14 +63,17 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
+        # ------------ DEMONSTRATE PRINT COMMANDS  --------------
         # easy to ready way - linear, not using method chaining
         # onTrue / onFalse means when trigger is pressed / released
-        self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pushed'))
+        self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pressed'))
         self.triggerLB.onFalse(commands2.PrintCommand('trigger lb released'))
 
+        # ------------ DEMONSTRATE METHOD CHAINING ON COMMANDS  --------------
         # METHOD CHAINING - function returns the object, presenting a "fluent interface"
-        self.triggerX.onTrue(commands2.PrintCommand('trigger x pushed')).onFalse(commands2.PrintCommand('trigger x released'))
+        self.triggerX.onTrue(commands2.PrintCommand('trigger x pressed')).onFalse(commands2.PrintCommand('trigger x released'))
 
+        # ------------ DEMONSTRATE LAMBDAS IN COMMANDS WITH THE RUNONCE FACTORY --------------
         # commands2.cmd.runOnce is a command factory, one shot with no overrides (InstantCommand exposes the lifecycle)
         # One-shot brake-mode toggle; allowed while disabled - this is not an easy introduction
         (self.triggerA
@@ -75,15 +81,16 @@ class RobotContainer:
          .onFalse(commands2.cmd.runOnce(lambda: self.drive.set_brake_mode("brake")).ignoringDisable(True))
         )
 
-
-        # more things we can do with triggers
-        self.triggerY.whileTrue(
+        # ------------ DEMONSTRATE DRIVING THE TANK WITH "RUN" COMMANDS  --------------
+        # more things we can do with triggers - RunCommand is going to execute continuously
+        self.trigger_up.whileTrue(
             commands2.RunCommand(
                 lambda: self.drive.tank_drive(leftSpeed=0.1, rightSpeed=0.1),self.drive,)
-            .beforeStarting(lambda: (print(f"Y START {self.timer.get():.2f}s ", end='')))
-            .finallyDo(lambda interrupted: (print(f"Y END {self.timer.get():.2f}s")))
+            .beforeStarting(lambda: (print(f"up pressed {self.timer.get():.2f}s ", end='')))
+            .finallyDo(lambda interrupted: (print(f"up released {self.timer.get():.2f}s")))
         )
 
+        # ------------ DEMONSTRATE INSTANT COMMANDS FOR SHOOTER TOGGLING WITH DECORATORS  --------------
         # RunCommand is not what we want here - an InstantCommand is the right call
         self.triggerB.whileTrue(
             commands2.InstantCommand(
@@ -92,6 +99,7 @@ class RobotContainer:
             .finallyDo(lambda interrupted: self.shooter.stop_shooter())  # this finallyDo function has to accept an "interrupted" parameter
         )
 
+        # ------------ DEMONSTRATE LINEAR ON/OFF TOGGLING WITH SOME MESSAGING  --------------
         # this is bad - it continually sets the shooter off because it's a RunCommand
         #self.triggerRB.onTrue(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(1000),self.shooter,))
         #self.triggerRB.onFalse(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
@@ -100,6 +108,10 @@ class RobotContainer:
                               andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(1000),self.shooter,)))
         self.triggerRB.onFalse(InstantCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
 
+    # ------------ TODO SECTION  --------------
+    # use the pov_right to rotate turret CW, and pov_left to rotate CCW (two commands)
+    # start binding to actual full-lifecycle functions that we write
+    # figure out an LED scheme
 
     def bind_operator_buttons(self):
         pass
