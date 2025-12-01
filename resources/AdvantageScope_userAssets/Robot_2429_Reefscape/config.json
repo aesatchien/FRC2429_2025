@@ -1,0 +1,14 @@
+{
+  "name": "2429_Reefbot",
+  "rotations": [
+	{
+		"axis": "x",
+		"degrees": 90
+	},
+	{
+		"axis": "z",
+		"degrees": 0
+	}
+	], 
+  "position": [0, 0, 0] 
+}
