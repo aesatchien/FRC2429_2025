@@ -4,6 +4,10 @@
 /robot/sim/data/*.pkl
 /robot/imgui.ini
 /robot/simg*
+/robot/logs/*
+
+#not ready to publish RT
+/robot.subsystems/questnav_2429.py  
 
 .vscode*
 .vscode/*
