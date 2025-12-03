@@ -5,9 +5,10 @@
 /robot/imgui.ini
 /robot/simg*
 /robot/logs/*
+/resources/AdvantageScope_userAssets/Robot_2429_Reefscape/*
 
 #not ready to publish RT
-/robot.subsystems/questnav_2429.py  
+/robot/subsystems/questnav_2429.py  
 
 .vscode*
 .vscode/*
