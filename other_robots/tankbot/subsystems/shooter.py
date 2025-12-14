@@ -24,13 +24,16 @@ class Shooter(Subsystem):
         motor_type = rev.SparkMax.MotorType.kBrushless
         self.flywheel_left_leader = rev.SparkMax(sc.k_CANID_flywheel_left_leader, motor_type)
         self.flywheel_right_follower = rev.SparkMax(sc.k_CANID_flywheel_right_follower, motor_type)
+        self.indexer_motor = rev.SparkMax(sc.k_CANID_indexer, motor_type)
 
         # convenient list of motors if we need to query or set all of them
-        self.motors = [self.flywheel_left_leader, self.flywheel_right_follower]
+        self.motors = [self.flywheel_left_leader, self.flywheel_right_follower, self.indexer_motor]
 
         # you need a controller to set velocity
         self.flywheel_controller = self.flywheel_left_leader.getClosedLoopController()
         self.flywheel_encoder = self.flywheel_left_leader.getEncoder()
+
+        self.indexer_controller = self.indexer_motor.getClosedLoopController()
 
         # default parameters for the sparkmaxes reset and persist modes -
         self.rev_resets = SparkBase.ResetMode.kResetSafeParameters
@@ -38,7 +41,7 @@ class Shooter(Subsystem):
             else SparkBase.PersistMode.kNoPersistParameters
 
         # put the configs in a list matching the motors list
-        self.configs = sc.k_flywheel_configs
+        self.configs = sc.k_flywheel_configs + [sc.k_indexer_config]  # FIXME - make this consistent
 
         # this should be its own function later - we will call it whenever we change brake mode
         rev_errors = [motor.configure(config, self.rev_resets, self.rev_persists)
@@ -47,6 +50,13 @@ class Shooter(Subsystem):
         # networktables
         self.inst = ntcore.NetworkTableInstance.getDefault()
         self.table = self.inst.getTable("datatable")  # for example
+
+        # initialize states
+        self.shooter_on = False
+        self.indexer_on = False
+        SmartDashboard.putBoolean('shooter_on', self.shooter_on)
+        SmartDashboard.putBoolean('indexer_on', self.indexer_on)
+
 
     def stop_shooter(self):
         # three different ways to stop the shooter
@@ -58,16 +68,32 @@ class Shooter(Subsystem):
         self.voltage = 0  # CJH for 2024 testing
         SmartDashboard.putBoolean('shooter_on', self.shooter_on)
 
+    def stop_indexer(self):
+        self.indexer_motor.set(0)  # this sets the output to zero (number between -1 and 1) - it is "dumb"
+
+        self.indexer_on = False
+        SmartDashboard.putBoolean('indexer_on', self.indexer_on)
+
     def set_shooter_rpm(self, rpm=1000):
         # multiple different ways to set the shooter
         # self.flywheel_left_leader.set(rpm)
         feed_forward = min(12, 12 * rpm / 5600)  # if there is no gearing, then this gets you close
         # rev is a pain in the ass - you have to pass EXACTLY the types it wants - no using "0" for the slots anymore
         self.flywheel_controller.setReference(value=rpm, ctrl=SparkLowLevel.ControlType.kVelocity, slot=rev.ClosedLoopSlot.kSlot0, arbFeedforward=feed_forward)
-        print(f'set rpm to {rpm:.0f}')  # want to say what time it is, but can't import the container's timer easily
+        print(f'set flywheel rpm to {rpm:.0f}')  # want to say what time it is, but can't import the container's timer easily
         self.shooter_on = True
         self.voltage = feed_forward  # 12 * rpm / 5600  # Guess
         SmartDashboard.putBoolean('shooter_on', self.shooter_on)
+
+    def set_indexer_rpm(self, rpm=60):
+        gear_ratio = 5
+        feed_forward = min(12, gear_ratio * 12 * rpm / 5600)  # geared down 5x
+        # rev is a pain in the ass - you have to pass EXACTLY the types it wants - no using "0" for the slots anymore
+        self.indexer_controller.setReference(value=rpm, ctrl=SparkLowLevel.ControlType.kVelocity, slot=rev.ClosedLoopSlot.kSlot0, arbFeedforward=feed_forward)
+        print(f'set indexer rpm to {rpm:.0f}')  # want to say what time it is, but can't import the container's timer easily
+        self.indexer_on = True
+        SmartDashboard.putBoolean('indexer_on', self.indexer_on)
+
 
     def get_velocity(self):
         return self.flywheel_encoder.getVelocity()

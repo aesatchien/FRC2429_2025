@@ -6,6 +6,25 @@ The constants are organized into classes for each subsystem.
 """
 import math  # use this for pi and tau, cos and sin if necessary
 from rev import SparkMaxConfig  # i think we can do SparkBaseConfig - it works for Max and Flex controllers
+from typing import Union, List
+
+
+ # ----------------  COMMON FUNCTIONS  ------------------------------------
+def set_config_defaults(configs: Union[SparkMaxConfig, List[SparkMaxConfig]]) -> None:
+    """
+    Applies default configuration settings to a single config object or a list of config objects.
+    Args:
+        configs: A single configuration object or a list of configuration objects.
+    """
+    # Check if the input is a list (or any sequence except a string/bytes)
+    if isinstance(configs, (list, tuple)):
+        config_list = configs
+    else:
+        config_list = [configs]  # If it's a single item, wrap it in a list for the loop
+    for config in config_list:
+        config.voltageCompensation(12)
+        config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
+        config.smartCurrentLimit(40)
 
 # general constants
 k_burn_flash = True  # whether to burn the configurations into the spark maxes
@@ -34,19 +53,9 @@ class DriveConstants:
     k_left_config, k_right_config  = SparkMaxConfig(), SparkMaxConfig()
     k_configs = [k_left_config, k_right_config]  # this will be convenient later
 
-    # set the config parameters - doing them individually is dirty, but here is an example
-    _ = [config.voltageCompensation(12) for config in k_configs]
-    [config.setIdleMode(SparkMaxConfig.IdleMode.kBrake) for config in k_configs]
-    [config.smartCurrentLimit(40) for config in k_configs]
-    #[config.encoder.positionConversionFactor(k_position_conversion_factor for config in k_configs]
-    #[config.encoder.velocityConversionFactor(k_velocity_conversion_factor) for config in k_configs]
-
+    set_config_defaults(k_configs)  # set all the default configs - ["DRY" = (don't repeat yourself)]
     # traditional for loop approach - this is probably more readable than multiple list comprehensions
     for config in k_configs:
-        config.voltageCompensation(12)
-        #sets the drivetrain to brake mode - MH
-        config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-        config.smartCurrentLimit(40)
         config.encoder.positionConversionFactor(k_position_conversion_factor)
         config.encoder.velocityConversionFactor(k_velocity_conversion_factor)
     # these individual parameters need to be separate
@@ -54,17 +63,12 @@ class DriveConstants:
     k_right_config.inverted(False)
 
     # set up the followers
-    k_follower_config_r2 = SparkMaxConfig()
-    k_follower_config_r2.follow(k_CANID_r1, invert=False)
+    k_follower_config_r2,  k_follower_config_l2= SparkMaxConfig(), SparkMaxConfig()
+    set_config_defaults([k_follower_config_r2, k_follower_config_l2])
 
-    k_follower_config_l2 = SparkMaxConfig()
+    k_follower_config_r2.follow(k_CANID_r1, invert=False)
     k_follower_config_l2.follow(k_CANID_l1, invert=False)
 
-    # not sure what these were for
-    # k_config.absoluteEncoder.positionConversionFactor(math.tau / k_gear_ratio)
-    # k_config.absoluteEncoder.velocityConversionFactor(math.tau / (k_gear_ratio * 60))
-    # k_config.absoluteEncoder.zeroOffset(0.45)
-    # k_abs_encoder_readout_when_at_ninety_deg_position = 0.455
 
 class ShooterConstants:
     k_flywheel_counter_offset = 2
@@ -82,11 +86,15 @@ class ShooterConstants:
     # set up the followers
     k_flywheel_right_follower_config.follow(k_CANID_flywheel_left_leader, invert=True)  # always true if follower on other side
 
-    #setting voltage & current limit for the flywheel motors
-    _ = [config.voltageCompensation(12) for config in k_flywheel_configs]
-    _ = [config.setIdleMode(SparkMaxConfig.IdleMode.kBrake) for config in k_flywheel_configs]
-    _ = [config.smartCurrentLimit(40) for config in k_flywheel_configs]
+    #setting brake, voltage compensation, and current limit for the flywheel motors
+    set_config_defaults(k_flywheel_configs)
 
     # INDEXER
+    k_indexer_config = SparkMaxConfig()
+    k_indexer_config.inverted(False)
+    set_config_defaults(k_indexer_config)
 
     # TURRET
+
+
+

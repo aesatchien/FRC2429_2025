@@ -66,8 +66,8 @@ class RobotContainer:
         # ------------ DEMONSTRATE PRINT COMMANDS  --------------
         # easy to ready way - linear, not using method chaining
         # onTrue / onFalse means when trigger is pressed / released
-        self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pressed'))
-        self.triggerLB.onFalse(commands2.PrintCommand('trigger lb released'))
+        self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pressed (using PrintCommand)'))  # print command way
+        self.triggerLB.onFalse(commands2.InstantCommand(lambda : print('trigger lb released (using InstantCommand with lambda)')))  # lambda as a print
 
         # ------------ DEMONSTRATE METHOD CHAINING ON COMMANDS  --------------
         # METHOD CHAINING - function returns the object, presenting a "fluent interface"
@@ -98,6 +98,18 @@ class RobotContainer:
             .beforeStarting(lambda: (print(f"Shooter B: at {self.timer.get():.1f} s ... ", end='')))
             .finallyDo(lambda interrupted: self.shooter.stop_shooter())  # this finallyDo function has to accept an "interrupted" parameter
         )
+        self.trigger_right.whileTrue(
+            commands2.InstantCommand(
+                lambda: self.shooter.set_indexer_rpm(60),None)
+            .beforeStarting(lambda: (print(f"Indexer PoVR: at {self.timer.get():.1f} s ... ", end='')))
+            .finallyDo(lambda interrupted: self.shooter.stop_indexer())  # this finallyDo function has to accept an "interrupted" parameter
+        )
+        self.trigger_left.onTrue(
+            commands2.InstantCommand(
+                lambda: self.shooter.set_indexer_rpm(-60),None)
+            .beforeStarting(lambda: (print(f"Indexer PoVL: at {self.timer.get():.1f} s ... ", end='')))
+        .andThen(commands2.InstantCommand(lambda: self.shooter.stop_indexer(),None)))
+
 
         # ------------ DEMONSTRATE LINEAR ON/OFF TOGGLING WITH SOME MESSAGING  --------------
         # this is bad - it continually sets the shooter off because it's a RunCommand
