@@ -92,23 +92,31 @@ class RobotContainer:
 
         # ------------ DEMONSTRATE INSTANT COMMANDS FOR SHOOTER TOGGLING WITH DECORATORS  --------------
         # RunCommand is not what we want here - an InstantCommand is the right call
-        self.triggerB.whileTrue(
-            commands2.InstantCommand(
-                lambda: self.shooter.set_shooter_rpm(4000),self.shooter,)
-            .beforeStarting(lambda: (print(f"Shooter B: at {self.timer.get():.1f} s ... ", end='')))
-            .finallyDo(lambda interrupted: self.shooter.stop_shooter())  # this finallyDo function has to accept an "interrupted" parameter
-        )
-        self.trigger_right.whileTrue(
-            commands2.InstantCommand(
-                lambda: self.shooter.set_indexer_rpm(60),None)
-            .beforeStarting(lambda: (print(f"Indexer PoVR: at {self.timer.get():.1f} s ... ", end='')))
-            .finallyDo(lambda interrupted: self.shooter.stop_indexer())  # this finallyDo function has to accept an "interrupted" parameter
-        )
-        self.trigger_left.onTrue(
-            commands2.InstantCommand(
-                lambda: self.shooter.set_indexer_rpm(-60),None)
-            .beforeStarting(lambda: (print(f"Indexer PoVL: at {self.timer.get():.1f} s ... ", end='')))
-        .andThen(commands2.InstantCommand(lambda: self.shooter.stop_indexer(),None)))
+        # self.triggerB.onTrue(
+        #     commands2.InstantCommand(
+        #         lambda: self.shooter.set_shooter_rpm(4000),self.shooter,)
+        #     .beforeStarting(lambda: (print(f"Shooter B: at {self.timer.get():.1f} s ... ", end='')))
+        #     .finallyDo(lambda interrupted: self.shooter.stop_shooter())  # this finallyDo function has to accept an "interrupted" parameter
+        # # )
+        # self.trigger_right.onTrue(
+        #     commands2.InstantCommand(
+        #         lambda: self.shooter.set_indexer_rpm(60),None)
+        #     .beforeStarting(lambda: (print(f"Indexer PoVR: at {self.timer.get():.1f} s ... ", end='')))
+        #     .finallyDo(lambda interrupted: self.shooter.stop_indexer())  # this finallyDo function has to accept an "interrupted" parameter
+        # )
+        # self.trigger_left.onTrue(
+        #     commands2.InstantCommand(
+        #         lambda: self.shooter.set_indexer_rpm(-60),None)
+        #     .beforeStarting(lambda: (print(f"Indexer PoVL: at {self.timer.get():.1f} s ... ", end='')))
+        # .andThen(commands2.InstantCommand(lambda: self.shooter.stop_indexer(),None)))
+
+        self.trigger_right.onTrue(InstantCommand(lambda: print(f'Indexer PoVR: at {self.timer.get():.1f} s ...', end='')).
+                              andThen(InstantCommand(lambda: self.shooter.set_indexer_rpm(-60),self.shooter,)))
+        self.trigger_right.onFalse(InstantCommand(lambda: self.shooter.stop_indexer(),self.shooter,))
+
+        self.trigger_left.onTrue(InstantCommand(lambda: print(f'Indexer PoVL: at {self.timer.get():.1f} s ...', end='')).
+                              andThen(InstantCommand(lambda: self.shooter.set_indexer_rpm(60),self.shooter,)))
+        self.trigger_left.onFalse(InstantCommand(lambda: self.shooter.stop_indexer(),self.shooter,))
 
 
         # ------------ DEMONSTRATE LINEAR ON/OFF TOGGLING WITH SOME MESSAGING  --------------
@@ -116,8 +124,12 @@ class RobotContainer:
         #self.triggerRB.onTrue(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(1000),self.shooter,))
         #self.triggerRB.onFalse(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
         # this is the right way - question for students: why am i using a lambda instead of a PrintCommand?
+        self.triggerB.onTrue(InstantCommand(lambda: print(f'Shooter RB: at {self.timer.get():.1f} s ...', end='')).
+                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(4000),self.shooter,)))
+        self.triggerB.onFalse(InstantCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
+
         self.triggerRB.onTrue(InstantCommand(lambda: print(f'Shooter RB: at {self.timer.get():.1f} s ...', end='')).
-                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(1000),self.shooter,)))
+                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(2000),self.shooter,)))
         self.triggerRB.onFalse(InstantCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
 
     # ------------ TODO SECTION  --------------

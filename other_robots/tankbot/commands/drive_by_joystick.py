@@ -22,8 +22,8 @@ class DriveByJoystick(commands2.Command):
         SmartDashboard.putString("alert", f"** Started {self.getName()} at {self.start_time:2.1f} s **")
 
     def execute(self) -> None:
-        speed_limit = 0.5
-        turn_limit = 0.25
+        speed_limit = 0.4
+        turn_limit = 0.45
         left_y = self.controller.getHID().getLeftY()
         right_y = self.controller.getHID().getRightY()
         right_x = self.controller.getHID().getRightX()

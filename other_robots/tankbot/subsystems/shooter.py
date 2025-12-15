@@ -40,7 +40,7 @@ class Shooter(Subsystem):
         self.rev_persists = SparkBase.PersistMode.kPersistParameters if constants.k_burn_flash \
             else SparkBase.PersistMode.kNoPersistParameters
 
-        # put the configs in a list matching the motors list
+        # put the configs in a list matching the motors
         self.configs = sc.k_flywheel_configs + [sc.k_indexer_config]  # FIXME - make this consistent
 
         # this should be its own function later - we will call it whenever we change brake mode
