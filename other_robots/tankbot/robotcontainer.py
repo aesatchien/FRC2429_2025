@@ -10,6 +10,7 @@ import constants
 from commands.drive_by_joystick import DriveByJoystick
 from commands.shooter_continuous_fire import FireShooter
 from commands.shooter_fire_once import ShooterFireOnce
+from commands.log_test import LogTest
 
 from subsystems.drivetrain import Drivetrain
 from subsystems.shooter import Shooter
@@ -55,6 +56,7 @@ class RobotContainer:
         self.triggerRB = self.driver_command_controller.rightBumper()
         self.triggerLB = self.driver_command_controller.leftBumper()
         self.trigger_up = self.driver_command_controller.povUp()
+        self.trigger_down = self.driver_command_controller.povDown()
         self.trigger_left = self.driver_command_controller.povLeft()
         self.trigger_right = self.driver_command_controller.povRight()
 
@@ -68,6 +70,9 @@ class RobotContainer:
         self.triggerA.whileTrue(FireShooter(container=self, shooter=self.shooter,))
 
         self.triggerY.onTrue(ShooterFireOnce(container=self, shooter=self.shooter))
+
+        self.trigger_down.whileTrue(LogTest(container=self, indent=0).ignoringDisable(True))
+
         # ------------ DEMONSTRATE PRINT COMMANDS  --------------
         # easy to ready way - linear, not using method chaining
         # onTrue / onFalse means when trigger is pressed / released
@@ -76,7 +81,7 @@ class RobotContainer:
 
         # ------------ DEMONSTRATE METHOD CHAINING ON COMMANDS  --------------
         # METHOD CHAINING - function returns the object, presenting a "fluent interface"
-        self.triggerX.onTrue(commands2.PrintCommand('trigger x pressed')).onFalse(commands2.PrintCommand('trigger x released'))
+        # self.triggerX.onTrue(commands2.PrintCommand('trigger x pressed')).onFalse(commands2.PrintCommand('trigger x released'))
 
         # ------------ DEMONSTRATE LAMBDAS IN COMMANDS WITH THE RUNONCE FACTORY --------------
         # commands2.cmd.runOnce is a command factory, one shot with no overrides (InstantCommand exposes the lifecycle)
