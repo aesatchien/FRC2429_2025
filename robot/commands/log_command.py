@@ -41,6 +41,8 @@ def log_command(cls=None, *, console=True, nt=False, print_init=True, print_end=
             # Set start_time for duration calculation later
             if hasattr(self, 'container') and hasattr(self.container, 'timer'):
                 self.start_time = round(self.container.timer.get(), 2)
+            elif hasattr(self, 'container') and hasattr(self.container, 'get_enabled_time'):
+                self.start_time = round(self.container.timer.get_enabled_time(), 2)
             else:
                 self.start_time = round(time.time(), 2)
 
@@ -76,6 +78,8 @@ def log_command(cls=None, *, console=True, nt=False, print_init=True, print_end=
             if print_end:
                 if hasattr(self, 'container') and hasattr(self.container, 'timer'):
                     end_time = self.container.timer.get()
+                elif hasattr(self, 'container') and hasattr(self.container, 'get_enabled_time'):
+                    end_time = round(self.container.timer.get_enabled_time(), 2)
                 else:
                     end_time = time.time()
 

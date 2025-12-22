@@ -71,7 +71,7 @@ class RobotContainer:
 
         self.triggerY.onTrue(ShooterFireOnce(container=self, shooter=self.shooter))
 
-        self.trigger_down.whileTrue(LogTest(container=self, indent=0).ignoringDisable(True))
+        self.trigger_down.onTrue(LogTest(container=self, indent=0).ignoringDisable(True))
 
         # ------------ DEMONSTRATE PRINT COMMANDS  --------------
         # easy to ready way - linear, not using method chaining
