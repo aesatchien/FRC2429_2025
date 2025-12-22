@@ -79,6 +79,10 @@ class ShooterConstants:
     # FLYWHEEL
     k_flywheel_left_leader_config, k_flywheel_right_follower_config = SparkMaxConfig(), SparkMaxConfig()
     k_flywheel_configs = [k_flywheel_left_leader_config, k_flywheel_right_follower_config]
+    k_test_speed = 2000
+    k_fastest_speed = 4000
+    k_test_rpm = 20
+    k_fastest_rpm = 60
 
     k_flywheel_left_leader_config.inverted(False)  # have to check which way it spins for positive RPM
     # k_flywheel_right_follower.inverted(False)  # this is not necessary - it will get ignored
@@ -91,8 +95,13 @@ class ShooterConstants:
 
     # INDEXER
     k_indexer_config = SparkMaxConfig()
-    k_indexer_config.inverted(False)
     set_config_defaults(k_indexer_config)
+
+    k_indexer_balls_per_rotation = 4
+    k_indexer_config.inverted(True)
+    k_indexer_gear_ratio = 5
+    k_indexer_position_conversion_factor = 1/k_indexer_gear_ratio
+    k_indexer_config.encoder.positionConversionFactor(k_indexer_position_conversion_factor)
 
     # TURRET
 

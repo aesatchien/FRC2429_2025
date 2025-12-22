@@ -8,6 +8,8 @@ from commands2 import PrintCommand, RunCommand, InstantCommand, ConditionalComma
 import constants
 
 from commands.drive_by_joystick import DriveByJoystick
+from commands.shooter_continuous_fire import FireShooter
+from commands.shooter_fire_once import ShooterFireOnce
 
 from subsystems.drivetrain import Drivetrain
 from subsystems.shooter import Shooter
@@ -63,11 +65,14 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
+        self.triggerA.whileTrue(FireShooter(container=self, shooter=self.shooter,))
+
+        self.triggerY.onTrue(ShooterFireOnce(container=self, shooter=self.shooter))
         # ------------ DEMONSTRATE PRINT COMMANDS  --------------
         # easy to ready way - linear, not using method chaining
         # onTrue / onFalse means when trigger is pressed / released
-        self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pressed (using PrintCommand)'))  # print command way
-        self.triggerLB.onFalse(commands2.InstantCommand(lambda : print('trigger lb released (using InstantCommand with lambda)')))  # lambda as a print
+        #self.triggerLB.onTrue(commands2.PrintCommand('trigger lb pressed (using PrintCommand)'))  # print command way
+        #self.triggerLB.onFalse(commands2.InstantCommand(lambda : print('trigger lb released (using InstantCommand with lambda)')))  # lambda as a print
 
         # ------------ DEMONSTRATE METHOD CHAINING ON COMMANDS  --------------
         # METHOD CHAINING - function returns the object, presenting a "fluent interface"
@@ -76,7 +81,7 @@ class RobotContainer:
         # ------------ DEMONSTRATE LAMBDAS IN COMMANDS WITH THE RUNONCE FACTORY --------------
         # commands2.cmd.runOnce is a command factory, one shot with no overrides (InstantCommand exposes the lifecycle)
         # One-shot brake-mode toggle; allowed while disabled - this is not an easy introduction
-        (self.triggerA
+        (self.triggerLB
          .onTrue(commands2.cmd.runOnce(lambda: self.drive.set_brake_mode("coast")).ignoringDisable(True))
          .onFalse(commands2.cmd.runOnce(lambda: self.drive.set_brake_mode("brake")).ignoringDisable(True))
         )

@@ -34,6 +34,8 @@ class Shooter(Subsystem):
         self.flywheel_encoder = self.flywheel_left_leader.getEncoder()
 
         self.indexer_controller = self.indexer_motor.getClosedLoopController()
+        self.indexer_encoder = self.indexer_motor.getEncoder()
+        self.indexer_encoder.setPosition(0)
 
         # default parameters for the sparkmaxes reset and persist modes -
         self.rev_resets = SparkBase.ResetMode.kResetSafeParameters
@@ -105,12 +107,15 @@ class Shooter(Subsystem):
             self.rpm = self.default_rpm if rpm is None else rpm
             self.set_shooter_rpm(self.rpm)
 
+    def get_indexer_position(self):
+        return self.indexer_encoder.getPosition()
+
     def periodic(self) -> None:
         self.counter += 1
 
         # SmartDashboard.putBoolean('shooter_enable', self.shooter_enable)
         if self.counter % 20 == 0:
-            pass
+            SmartDashboard.putNumber('indexer_position', self.indexer_encoder.getPosition())
             # not too often
             #SmartDashboard.putNumber('shooter_rpm', self.shooter_l.getVelocity())
             #SmartDashboard.putNumber('shooter_rpm_target', self.rpm)

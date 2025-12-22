@@ -17,29 +17,42 @@ This template provides a basic structure with logging to the console and SmartDa
 to aid in debugging.
 """
 import commands2
+from commands2 import InstantCommand, ConditionalCommand
+
+from constants import ShooterConstants as sc
+
+
 from wpilib import SmartDashboard
+from subsystems.shooter import Shooter
 
 
-class CommandTemplate(commands2.Command):  # change the name for your command
+class FireShooter(commands2.Command):  # change the name for your command
 
-    def __init__(self, container, indent=0) -> None:
+    def __init__(self, container, shooter: Shooter, indent=0) -> None:
         super().__init__()
-        self.setName('Sample Name')  # change this to something appropriate for this command
+        self.setName('Firing continuously')  # change this to something appropriate for this command
         self.indent = indent
         self.container = container
-        # self.addRequirements(self.container.)  # commandsv2 version of requirements
+        self.shooter = shooter
+        self.addRequirements(self.shooter)  # commandsv2 version of requirements
+        self.counter = 0
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         self.start_time = self.container.timer.get()
         print(f"{self.indent * '    '}** Started {self.getName()} at {self.start_time:.1f} s **", flush=True)
         SmartDashboard.putString("alert", f"** Started {self.getName()} at {self.start_time:2.1f} s **")
+        self.counter = 0
+        self.shooter.set_shooter_rpm(sc.k_test_speed)
 
     def execute(self) -> None:
-        pass
+        self.counter += 1
+        if (self.counter > 10):
+            self.shooter.set_indexer_rpm(sc.k_test_rpm)
+
 
     def isFinished(self) -> bool:
-        return True
+        return False
 
     def end(self, interrupted: bool) -> None:
         end_time = self.container.timer.get()
@@ -50,3 +63,5 @@ class CommandTemplate(commands2.Command):  # change the name for your command
             print(f"{self.indent * '    '}** {message} {self.getName()} at {end_time:.1f} s after {duration:.1f} s **")
             SmartDashboard.putString(f"alert",
                                      f"** {message} {self.getName()} at {end_time:.1f} s after {duration:.1f} s **")
+        self.shooter.stop_shooter()
+        self.shooter.stop_indexer()
