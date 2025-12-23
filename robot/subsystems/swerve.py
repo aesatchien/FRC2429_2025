@@ -9,6 +9,7 @@ import wpimath.filter
 from commands2 import Subsystem, InstantCommand
 
 from wpilib._wpilib import SmartDashboard
+from wpilib import DataLogManager
 from wpimath.filter import SlewRateLimiter
 from wpimath.geometry import Pose2d, Rotation2d, Translation3d, Pose3d, Rotation3d
 from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Kinematics)
@@ -217,6 +218,8 @@ class Swerve (Subsystem):
         # wpilib.SmartDashboard.putData('QuestUnSync', InstantCommand(lambda: self.quest_unsync_odometry()).ignoringDisable(True))
         wpilib.SmartDashboard.putData('QuestEnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
         wpilib.SmartDashboard.putData('QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
+
+        DataLogManager.start()  # start wpilib datalog for AdvantageScope
 
         # end of init
 
@@ -599,6 +602,7 @@ class Swerve (Subsystem):
             pose = self.get_pose()  # self.odometry.getPose()
             if True:  # wpilib.RobotBase.isReal():  # update the NT with odometry for the dashboard - sim will do its own
                 wpilib.SmartDashboard.putNumberArray('drive_pose', [pose.X(), pose.Y(), pose.rotation().degrees()])
+                wpilib.SmartDashboard.putNumberArray('drive_pose_AdvScope', [pose.x, pose.y,pose.rotation().radians()])  # for AdvantageScope
                 wpilib.SmartDashboard.putNumber('drive_x', pose.X())
                 wpilib.SmartDashboard.putNumber('drive_y', pose.Y())
                 wpilib.SmartDashboard.putNumber('drive_theta', pose.rotation().degrees())
@@ -658,13 +662,12 @@ class Swerve (Subsystem):
             else:
                 SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
 
-            SmartDashboard.putString("QUEST_POSE", str(quest_pose))
+            wpilib.SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [quest_pose.x, quest_pose.y, quest_pose.rotation().radians()])
             SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
             SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
             wpilib.SmartDashboard.putNumber("Quest_Battery_%", self.questnav.get_battery_percent())
             wpilib.SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
             wpilib.SmartDashboard.putNumber("Quest_Tracking_lost_count", self.questnav.get_tracking_lost_counter())
-            wpilib.SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
             wpilib.SmartDashboard.putNumber("Quest_frame_count", self.questnav.get_frame_count())
 
 

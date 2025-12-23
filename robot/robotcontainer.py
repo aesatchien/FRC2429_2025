@@ -32,6 +32,8 @@ from subsystems.led import Led
 from subsystems.wrist import Wrist
 from subsystems.climber import Climber
 from subsystems.vision import Vision
+# from subsystems.questnav_2429 import QuestnavModule
+from subsystems.advscope import AdvScope
 
 # 2429 "auto" commands - just an organizational division of commands
 from autonomous.one_plus_one import OnePlusOne
@@ -108,7 +110,8 @@ class RobotContainer:
         self.intake = Intake()
         self.vision = Vision()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
-        self.led = Led(self)  # may want LED last because it may want to know about other systems
+        self.advscope = AdvScope(self.pivot, self.elevator, self.climber)
+        # self.questnav_2429 = QuestnavModule()
 
         self.configure_joysticks()
         self.bind_driver_buttons()

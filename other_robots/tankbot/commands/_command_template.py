@@ -2,7 +2,7 @@
 This module serves as a template for creating new commands for the robot.
 
 To create a new command:
-1. Copy this file and rename it to something descriptive (e.g., `fire_shooter.py`).
+1. Copy this file and rename it to something descriptive (e.g., `shooter_continuous_fire.py`).
 2. Change the class name from `CommandTemplate` to a name that reflects the command's purpose (e.g., `FireShooter`).
 3. In the `__init__` method:
     - Set a descriptive name for the command using `self.setName()` - this will show up in the start/end messages.
