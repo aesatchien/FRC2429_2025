@@ -29,4 +29,4 @@ robotpy_extras = [
 ]
 
 # Other pip packages to install
-requires = ['photonlibpy', 'robotpy-playingwithfusion','protobuf==6.32.0']
+requires = ['photonlibpy', 'robotpy-playingwithfusion','protobuf==6.33.2']

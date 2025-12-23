@@ -5,7 +5,8 @@ from wpimath.units import inchesToMeters
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Pose3d, Rotation3d, Translation3d, Transform2d, Transform3d
 from ntcore import NetworkTableInstance
 
-from helpers.questnav.questnav2 import QuestNav as Metaquestnav
+from helpers.questnav.questnav import QuestNav as Metaquestnav
+from wpilib import DataLogManager
 
 import constants
 
@@ -31,6 +32,7 @@ class Questnav(SubsystemBase):
 
         self.use_quest = constants.k_use_quest_odometry
         SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
+        self.quest_pose = Pose2d(-10, -10, Rotation2d.fromDegrees(0)) # initial pose if not connected / tracking
 
         # note - have Risaku standardize these with the rest of the putDatas
         SmartDashboard.putData('QuestResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
@@ -39,23 +41,31 @@ class Questnav(SubsystemBase):
         SmartDashboard.putData('QuestEnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
         SmartDashboard.putData('QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
 
+        DataLogManager.start()  # start wpilib datalog for AdvantageScope
+
+    def set_quest_pose(self, pose: Pose2d) -> None:
+        # set the pose of the Questnav, transforming from robot center top questnav coordinate
+        self.questnav.set_pose(Pose3d(pose.transformBy(self.quest_to_robot.inverse())))
+
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
         #self.reset_pose(pose)
-        self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
+        self.set_quest_pose(pose)
 
     def quest_reset_odometry(self) -> None:
         """Reset robot odometry at the Subwoofer."""
         if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
-            self.questnav.set_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)).transformBy(self.quest_to_robot.inverse()))
+            self.set_quest_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
         else:
-            self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))
+            self.set_quest_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
         print(f"Reset questnav at {Timer.getFPGATimestamp():.1f}s")
         self.quest_unsync_odometry()
 
     def quest_sync_odometry(self) -> None:
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
-        self.questnav.set_pose(self.get_pose().transformBy(self.quest_to_robot.inverse()))
-        print(f'Synched quest at {Timer.getFPGATimestamp():.1f}s')
+        photonvision_Pose2d = Pose2d(SmartDashboard.getNumberArray('drive_pose', [10,10,10])[0], 
+                                   SmartDashboard.getNumberArray('drive_pose', [10,10,10])[1], 
+                                  Rotation2d.fromDegrees(SmartDashboard.getNumberArray('drive_pose', [10,10,10])[2]))
+        self.set_quest_pose(photonvision_Pose2d)
         SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
 
     def quest_unsync_odometry(self) -> None:
@@ -100,18 +110,30 @@ class Questnav(SubsystemBase):
         self.counter += 1
 
         self.questnav.command_periodic()
-        quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
-        self.quest_field.setRobotPose(quest_pose)
+
+        frames = self.questnav.get_all_unread_pose_frames()
+        for frame in frames:
+            if self.questnav.is_connected and self.questnav.is_tracking():
+                try:
+                    self.quest_pose = frame.quest_pose_3d.toPose2d().transformBy(self.quest_to_robot)
+                    quest_pose_old = self.quest_pose
+                except Exception as e:
+                    print(f"Error converting QuestNav Pose3d to Pose2d: {e}")
+                    self.quest_pose = quest_pose_old  # use last good pose in cases of error
+                    continue
+
+        # quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
+        self.quest_field.setRobotPose(self.quest_pose)
 
         if self.counter % 10 == 0:
             SmartDashboard.putData("QUEST_FIELD", self.quest_field)
-            if 0 < quest_pose.x < 17.658 and 0 < quest_pose.y < 8.131 and self.questnav.is_connected():
+            if 0 < self.quest_pose.x < 17.658 and 0 < self.quest_pose.y < 8.131 and self.questnav.is_connected():
                 self.quest_pose_accepted = True
             else:
                 self.quest_pose_accepted = False
             SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", self.quest_pose_accepted)
 
-            SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [quest_pose.x, quest_pose.y, quest_pose.rotation().radians()])
+            SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [self.quest_pose.x, self.quest_pose.y, self.quest_pose.rotation().radians()])
             SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
             SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
             SmartDashboard.putNumber("Quest_Battery_%", self.questnav.get_battery_percent())

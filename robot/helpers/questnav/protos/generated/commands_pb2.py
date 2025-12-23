@@ -22,10 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-import helpers.questnav.protos.generated.geometry2d_pb2 as geometry2d__pb2
+import helpers.questnav.protos.generated.geometry3d_pb2 as geometry3d__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x63ommands.proto\x12\x18questnav.protos.commands\x1a\x10geometry2d.proto\"R\n ProtobufQuestNavPoseResetPayload\x12.\n\x0btarget_pose\x18\x01 \x01(\x0b\x32\x19.wpi.proto.ProtobufPose2d\"\xcf\x01\n\x17ProtobufQuestNavCommand\x12;\n\x04type\x18\x01 \x01(\x0e\x32-.questnav.protos.commands.QuestNavCommandType\x12\x12\n\ncommand_id\x18\x02 \x01(\r\x12X\n\x12pose_reset_payload\x18\n \x01(\x0b\x32:.questnav.protos.commands.ProtobufQuestNavPoseResetPayloadH\x00\x42\t\n\x07payload\"]\n\x1fProtobufQuestNavCommandResponse\x12\x12\n\ncommand_id\x18\x01 \x01(\r\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x15\n\rerror_message\x18\x03 \x01(\t*C\n\x13QuestNavCommandType\x12\x1c\n\x18\x43OMMAND_TYPE_UNSPECIFIED\x10\x00\x12\x0e\n\nPOSE_RESET\x10\x01\x42\x43\n%gg.questnav.questnav.protos.generated\xaa\x02\x19QuestNav.Protos.Generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0e\x63ommands.proto\x12\x18questnav.protos.commands\x1a\x10geometry3d.proto\"R\n ProtobufQuestNavPoseResetPayload\x12.\n\x0btarget_pose\x18\x01 \x01(\x0b\x32\x19.wpi.proto.ProtobufPose3d\"\xcf\x01\n\x17ProtobufQuestNavCommand\x12;\n\x04type\x18\x01 \x01(\x0e\x32-.questnav.protos.commands.QuestNavCommandType\x12\x12\n\ncommand_id\x18\x02 \x01(\r\x12X\n\x12pose_reset_payload\x18\n \x01(\x0b\x32:.questnav.protos.commands.ProtobufQuestNavPoseResetPayloadH\x00\x42\t\n\x07payload\"]\n\x1fProtobufQuestNavCommandResponse\x12\x12\n\ncommand_id\x18\x01 \x01(\r\x12\x0f\n\x07success\x18\x02 \x01(\x08\x12\x15\n\rerror_message\x18\x03 \x01(\t*C\n\x13QuestNavCommandType\x12\x1c\n\x18\x43OMMAND_TYPE_UNSPECIFIED\x10\x00\x12\x0e\n\nPOSE_RESET\x10\x01\x42\x43\n%gg.questnav.questnav.protos.generated\xaa\x02\x19QuestNav.Protos.Generatedb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
