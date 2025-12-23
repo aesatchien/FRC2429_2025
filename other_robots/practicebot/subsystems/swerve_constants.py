@@ -50,23 +50,30 @@ class DriveConstants:
     k_drive_motors_inverted = True  # False for 2023 - motors below
     k_turn_motors_inverted = True  # True for 2023 - motors below
     # incorrect gyro inversion will make the pose odometry have the wrong sign on rotation
-    kGyroReversed = True  # False for 2023 (was upside down), True for 2024?
+    kGyroReversed = True  # False for 2023 (was upside down), True for 2024/2025
     # used in the swerve modules themselves to reverse the direction of the analog encoder
     # note turn motors and analog encoders must agree - or you go haywire
     k_reverse_analog_encoders = False  # False for 2024 and probably always.
 
     # max absolute encoder value on each wheel - 20230322 CJH
+    # TODO - double check this set of numbers
     k_analog_encoder_abs_max = 0.989  # determined by filtering and watching as it flips from 1 to 0
-    # we pass this next one to the analog potentiometer object t0 determine the full range
-    k_analog_encoder_scale_factor = 1 / k_analog_encoder_abs_max  # 1.011  #so have to scale back up to be b/w 0 and 1
 
-    # absolute encoder values when wheels facing forward  - 20230322 CJH
-    # NOW IN RADIANS to feed right to the AnalogPotentiometer on the module
-    k_lf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.988) # (0.532)  #  rad
-    k_rf_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.573) # (0.937)  #  rad   billet gear out on rf
-    k_lb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.937) # (0.573)  #  rad
-    k_rb_zero_offset = k_analog_encoder_scale_factor * math.tau * (0.532) # (0.988)  #  rad  billet gear out on rb
-    k_analog_encoder_offsets = {'lf':0.829, 'rf':0.783, 'lb':0.304, 'rb':0.986}  # use in sim
+    # we pass this next one to the analog potentiometer object t0 determine the full range
+    # IN RADIANS to feed right to the AnalogPotentiometer on the module
+    k_analog_encoder_scale_factor = math.tau * 1 / k_analog_encoder_abs_max  # 1.011 * 2pi  # so have to scale back up to be b/w 0 and 1
+
+    # need the absolute encoder values when wheels facing forward  - 20230322 CJH
+    analog_encoder_test_mode = False
+    if analog_encoder_test_mode:
+        # read the raw numbers from the encoders so we can write them all down for a given robot
+        k_analog_encoder_scale_factor = 1.0  # override so we get the raw reading between 0 and 1
+        [k_lf_zero_offset, k_rf_zero_offset, k_lb_zero_offset, k_rb_zero_offset] = [0, 0, 0 ,0]
+    else:
+        k_lf_zero_offset = k_analog_encoder_scale_factor  * (0.988) # (0.532)  #  rad
+        k_rf_zero_offset = k_analog_encoder_scale_factor  * (0.573) # (0.937)  #  rad  billet gear out on rf
+        k_lb_zero_offset = k_analog_encoder_scale_factor  * (0.937) # (0.573)  #  rad
+        k_rb_zero_offset = k_analog_encoder_scale_factor  * (0.532) # (0.988)  #  rad  billet gear out on rb
 
     # SPARK MAX CAN IDs  - checked for correctness 2025 0317
     kFrontLeftDrivingCanId = 27
@@ -83,21 +90,6 @@ class DriveConstants:
     kFrontRightAbsEncoderPort = 2
     kBackLeftAbsEncoderPort = 1
     kBackRightAbsEncoderPort = 0
-
-    # kFrontLeftDrivingCanId = 21
-    # kRearLeftDrivingCanId = 23
-    # kFrontRightDrivingCanId = 25
-    # kRearRightDrivingCanId = 27
-    #
-    # kFrontLeftTurningCanId = 20
-    # kRearLeftTurningCanId = 22
-    # kFrontRightTurningCanId = 24
-    # kRearRightTurningCanId = 26
-
-    # kFrontLeftAbsEncoderPort = 0
-    # kFrontRightAbsEncoderPort = 1
-    # kBackLeftAbsEncoderPort = 2
-    # kBackRightAbsEncoderPort = 3
 
 class NeoMotorConstants:
     kFreeSpeedRpm = 6784  # neo is 5676, vortex is 6784

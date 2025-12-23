@@ -12,6 +12,7 @@ from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
 from subsystems.swerve_constants import DriveConstants
 
+k_enable_logging = False  # allow logging from
 # starting position for odometry
 k_start_x = 0
 k_start_y = 0

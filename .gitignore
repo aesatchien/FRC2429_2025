@@ -1,5 +1,9 @@
 # CJH FRC gitignore
 
+/robot/logs
+/other_robots/practicebot/logs
+*.wpilog
+
 /robot/guis
 /robot/sim/data/*.pkl
 /robot/imgui.ini

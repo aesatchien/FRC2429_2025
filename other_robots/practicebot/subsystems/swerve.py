@@ -4,7 +4,7 @@ import typing
 import navx
 import ntcore
 
-from commands2 import Subsystem, InstantCommand
+from commands2 import Subsystem
 
 from wpilib import SmartDashboard, DataLogManager, DriverStation, Field2d, PowerDistribution, Timer, RobotBase
 from wpimath.filter import SlewRateLimiter
@@ -13,8 +13,6 @@ from wpimath.kinematics import (ChassisSpeeds, SwerveModuleState, SwerveDrive4Ki
 from wpimath.estimator import SwerveDrive4PoseEstimator
 from wpimath.controller import PIDController
 
-
-from pathplannerlib.controller import PPHolonomicDriveController
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
 from pathplannerlib.config import ModuleConfig, RobotConfig
 
@@ -140,7 +138,8 @@ class Swerve (Subsystem):
 
 
         # ------------- Advantagescope section -------------
-        DataLogManager.start()  # start wpilib datalog for AdvantageScope
+        if constants.k_enable_logging:
+            DataLogManager.start()  # start wpilib datalog for AdvantageScope
 
         # Optimization: Load the field layout once on boot, not every time we ask for a tag
         self.field_layout = ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded)
