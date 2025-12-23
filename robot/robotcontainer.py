@@ -110,7 +110,6 @@ class RobotContainer:
         self.intake = Intake()
         self.vision = Vision()
         self.robot_state = RobotState(self)  # currently has a callback that LED can register, but
-        self.led = Led(self)  # may want LED last because it may want to know about other systems
         self.advscope = AdvScope(self.pivot, self.elevator, self.climber)
         # self.questnav_2429 = QuestnavModule()
 
