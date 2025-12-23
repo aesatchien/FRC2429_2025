@@ -24,44 +24,15 @@ class SwerveModule:
         self.drivingSparkFlex = SparkFlex(drivingCANId, SparkFlex.MotorType.kBrushless)
         self.turningSparkFlex = SparkFlex(turningCANId, SparkFlex.MotorType.kBrushless)
 
-        if wpilib.RobotBase.isSimulation():  # check in sim to see if we are reacting to inputs
-            pass
-            # self.dummy_motor_driving = wpilib.PWMSparkFlex(drivingCANId-16)
-            # self.dummy_motor_turning = wpilib.PWMSparkFlex(turningCANId-16)
-
         #  ---------------- DRIVING  SPARKMAX  ------------------
-
-        this_module_driving_config = SparkFlexConfig()
-        # ModuleConstants.k_driving_config.apply(this_module_driving_config) # BUG: this copies settings from the empty this module driving config. reverse which one is calling on which.
-
-        this_module_driving_config.apply(ModuleConstants.k_driving_config)
-        this_module_driving_config.inverted(driving_inverted)
-        if constants.k_burn_flash:
-            if constants.k_reset_sparks_to_default:         # Factory reset, so we get the SPARKS MAX to a known state before configuring them
-                drive_controller_revlib_error = self.drivingSparkFlex.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-            else:
-                drive_controller_revlib_error = self.drivingSparkFlex.configure(config=this_module_driving_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-            print(f"Reconfigured sparkmax {drivingCANId}. Controller status: {drive_controller_revlib_error}")
+        self._configure_spark(self.drivingSparkFlex, ModuleConstants.k_driving_config, driving_inverted, drivingCANId)
 
         # Get driving encoder from the sparkflex
         self.drivingEncoder = self.drivingSparkFlex.getEncoder()
         self.drivingClosedLoopController = self.drivingSparkFlex.getClosedLoopController()
 
         #  ---------------- TURNING SPARKMAX  ------------------
-
-        this_module_turning_config = SparkFlexConfig()
-
-        this_module_turning_config.apply(ModuleConstants.k_turning_config)
-        this_module_turning_config.inverted(turning_inverted)
-
-        if constants.k_burn_flash:
-            if constants.k_reset_sparks_to_default:
-                turn_controller_revlib_error = self.turningSparkFlex.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-            else:
-                turn_controller_revlib_error = self.turningSparkFlex.configure(config=this_module_turning_config, resetMode=SparkFlex.ResetMode.kNoResetSafeParameters, persistMode=SparkFlex.PersistMode.kPersistParameters)
-            print(f"Reconfigured sparkmax {turningCANId}. Controller status: {turn_controller_revlib_error}")
-
-        # self.turningSparkFlex.setInverted(turning_inverted)
+        self._configure_spark(self.turningSparkFlex, ModuleConstants.k_turning_config, turning_inverted, turningCANId)
 
         # Setup encoders for the turning SPARKMAX - just to watch it if we need to for velocities, etc.
         # WE DO NOT USE THIS FOR ANYTHING - THE ABSOLUTE ENCODER IS USED FOR TURNING AND GOES INTO THE RIO ANALOG PORT
@@ -82,6 +53,19 @@ class SwerveModule:
 
         # self.chassisAngularOffset = chassisAngularOffset  # not yet
         self.desiredState.angle = Rotation2d(self.get_turn_encoder())
+
+    def _configure_spark(self, spark: SparkFlex, config_template: SparkFlexConfig, inverted: bool, can_id: int):
+        """ Applies a config to a sparkmax. """
+        config = SparkFlexConfig()
+        config.apply(config_template)
+        config.inverted(inverted)
+        
+        if constants.k_burn_flash:
+            reset_mode = SparkFlex.ResetMode.kResetSafeParameters if constants.k_reset_sparks_to_default else SparkFlex.ResetMode.kNoResetSafeParameters
+            persist_mode = SparkFlex.PersistMode.kPersistParameters
+            
+            error = spark.configure(config=config, resetMode=reset_mode, persistMode=persist_mode)
+            print(f"Reconfigured sparkmax {can_id}. Controller status: {error}")
 
     def get_turn_encoder(self):
         # how we invert the absolute encoder if necessary (which it probably isn't in the standard mk4i config)
@@ -120,7 +104,7 @@ class SwerveModule:
         correctedDesiredState.speed = desiredState.speed
         correctedDesiredState.angle = desiredState.angle
 
-        # ------vvvvv------ this is the problem
+        # Optimize the reference state to avoid spinning further than 90 degrees
         correctedDesiredState.optimize(Rotation2d(self.get_turn_encoder()))
 
         # don't let wheels servo back if we aren't asking the module to move
@@ -138,7 +122,7 @@ class SwerveModule:
         self.turning_output = 0 if math.fabs(self.turning_output) < 0.01 else self.turning_output
         self.turningSparkFlex.set(self.turning_output)
 
-        if False: # wpilib.RobotBase.isSimulation():
+        if False: # wpilib.RobotBase.isSimulation():  # can we delete this yet?
             SmartDashboard.putNumberArray(f'{self.label}_target_vel_angle',
                                 [correctedDesiredState.speed, correctedDesiredState.angle.radians()])
             SmartDashboard.putNumberArray(f'{self.label}_actual_vel_angle',
@@ -149,9 +133,7 @@ class SwerveModule:
         self.desiredState = desiredState
 
     def resetEncoders(self) -> None:
-        """
-        Zeroes all the SwerveModule encoders.
-        """
+        """ Zeroes all the SwerveModule encoders. """
         self.drivingEncoder.setPosition(0)
 
     def stop(self):
