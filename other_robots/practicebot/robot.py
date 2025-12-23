@@ -56,10 +56,10 @@ class MyRobot(commands2.TimedCommandRobot):
             # check on the questnav - auto synch it if we have been up more than 10s and have not synched yet
             # but attempt to see if we have a good starting tag (logitech reef)
             if ( wpilib.Timer.getFPGATimestamp() > 10 and
-                    not self.container.quest.quest_has_synched and
-                    self.container.quest.logitech_reef_count_subscriber.get() > 0):
-                self.container.swerve.quest_sync_odometry()  # this will mark that we have synched
-            print(f"quest sync:{self.container.swerve.quest_has_synched} logitec tag count is:{self.container.swerve.logitech_reef_count_subscriber.get()} at {self.container.timer.get():.1f}s")
+                    not self.container.questnav.quest_has_synched and
+                    (self.container.swerve.count_subscribers[3]).get() > 0):
+                self.container.swerve.questnav.quest_sync_odometry()  # this will mark that we have synched
+            print(f"quest sync:{self.container.questnav.quest_has_synched} logitec tag count is:{self.container.swerve.count_subscribers[3].get()} at {self.container.timer.get():.1f}s")
         self.disabled_counter += 1
 
     def autonomousInit(self) -> None:
