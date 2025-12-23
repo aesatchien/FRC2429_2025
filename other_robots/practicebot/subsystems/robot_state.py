@@ -1,7 +1,7 @@
 import math
 from enum import Enum
 import commands2
-from wpilib import SmartDashboard
+from wpilib import SmartDashboard, Timer
 from wpimath.geometry import Rotation2d
 import constants
 from constants import LedConstants
@@ -64,10 +64,9 @@ class RobotState(commands2.Subsystem):
         LEFT = {'name': "LEFT", }
         NONE = {'name': "NONE", }
 
-    def __init__(self, container):
+    def __init__(self):
         super().__init__()
         self.setName('Mode')
-        self.container = container  # at the moment LED may want to query other subsystems, but this is not clean
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
         self.counter = constants.RobotStateConstants.k_counter_offset
 
@@ -117,7 +116,7 @@ class RobotState(commands2.Subsystem):
     def set_reef_goal(self, reef_goal: ReefGoal) -> None:
         self.reef_goal = reef_goal
         # self._notify_callbacks()  # Call all registered callbacks
-        print(f'ReefGoal set to {self.reef_goal.value["name"]} at {self.container.timer.get():.1f}s')
+        print(f'ReefGoal set to {self.reef_goal.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
         SmartDashboard.putString('_reef_goal', self.reef_goal.value['name'])
 
     def set_reef_goal_cmd(self, reef_goal: ReefGoal) -> commands2.InstantCommand:
@@ -136,7 +135,7 @@ class RobotState(commands2.Subsystem):
         self.prev_target = self.target
         self.target = target
         self._notify_callbacks()  # Call all registered callbacks
-        print(f'Target set to {target.value["name"]} at {self.container.timer.get():.1f}s')
+        print(f'Target set to {target.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
         SmartDashboard.putString('_target', self.target.value['name'])
 
     def get_target(self):
@@ -145,7 +144,7 @@ class RobotState(commands2.Subsystem):
     def set_side(self, side: Side) -> None:
         self.side = side
         self._notify_callbacks()  # Call all registered callbacks
-        print(f'Side set to {side.value["name"]} at {self.container.timer.get():.1f}s')
+        print(f'Side set to {side.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
         SmartDashboard.putString('_side', self.side.value['name'])
 
     def get_side(self):

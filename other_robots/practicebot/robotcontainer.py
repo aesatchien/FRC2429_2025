@@ -51,8 +51,8 @@ class RobotContainer:
         self.questnav = Questnav()  # going to break the silo convention and let the Swerve see the quest for now
         self.swerve = Swerve(questnav=self.questnav)
         self.vision = Vision()
-        self.robot_state = RobotState(self)  # currently has a callback that LED can register
-        self.led = Led(self)  # may want LED last because it may want to know about other systems
+        self.robot_state = RobotState()  # currently has a callback that LED can register
+        self.led = Led(robot_state=self.robot_state)  # may want LED last because it may want to know about other systems
         # self.questnav_2429 = QuestnavModule()
 
         self.configure_joysticks()
