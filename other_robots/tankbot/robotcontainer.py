@@ -8,8 +8,7 @@ from commands2 import PrintCommand, RunCommand, InstantCommand, ConditionalComma
 import constants
 
 from commands.drive_by_joystick import DriveByJoystick
-from commands.shooter_continuous_fire import FireShooter
-from commands.shooter_fire_once import ShooterFireOnce
+from commands.shooting_command import ShootingCommand
 from commands.log_test import LogTest
 
 from subsystems.drivetrain import Drivetrain
@@ -67,9 +66,10 @@ class RobotContainer:
 
     def bind_driver_buttons(self):
 
-        self.triggerA.whileTrue(FireShooter(container=self, shooter=self.shooter,))
 
-        self.triggerY.onTrue(ShooterFireOnce(container=self, shooter=self.shooter))
+        self.triggerA.whileTrue(ShootingCommand(container=self, shooter=self.shooter, continuous=True))
+
+        self.triggerY.onTrue(ShootingCommand(container=self, shooter=self.shooter, continuous=False))
 
         self.trigger_down.onTrue(LogTest(container=self, indent=0).ignoringDisable(True))
 

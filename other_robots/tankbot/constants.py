@@ -97,6 +97,7 @@ class ShooterConstants:
     k_indexer_config = SparkMaxConfig()
     set_config_defaults(k_indexer_config)
 
+    k_delay_between_balls = 1/5 * 50 # we want 200 milliseconds which is 1/5 of a second, setting it to 1/5 of our loop rate every second
     k_indexer_balls_per_rotation = 4
     k_indexer_config.inverted(True)
     k_indexer_gear_ratio = 5
