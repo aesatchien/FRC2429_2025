@@ -22,10 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-import helpers.questnav.protos.generated.geometry2d_pb2 as geometry2d__pb2
+import helpers.questnav.protos.generated.geometry3d_pb2 as geometry3d__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndata.proto\x12\x14questnav.protos.data\x1a\x10geometry2d.proto\"n\n\x19ProtobufQuestNavFrameData\x12\x13\n\x0b\x66rame_count\x18\x01 \x01(\x05\x12\x11\n\ttimestamp\x18\x02 \x01(\x01\x12)\n\x06pose2d\x18\x03 \x01(\x0b\x32\x19.wpi.proto.ProtobufPose2d\"p\n\x1aProtobufQuestNavDeviceData\x12\x1d\n\x15tracking_lost_counter\x18\x01 \x01(\x05\x12\x1a\n\x12\x63urrently_tracking\x18\x02 \x01(\x08\x12\x17\n\x0f\x62\x61ttery_percent\x18\x03 \x01(\x05\x42\x43\n%gg.questnav.questnav.protos.generated\xaa\x02\x19QuestNav.Protos.Generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\ndata.proto\x12\x14questnav.protos.data\x1a\x10geometry3d.proto\"n\n\x19ProtobufQuestNavFrameData\x12\x13\n\x0b\x66rame_count\x18\x01 \x01(\x05\x12\x11\n\ttimestamp\x18\x02 \x01(\x01\x12)\n\x06pose3d\x18\x03 \x01(\x0b\x32\x19.wpi.proto.ProtobufPose3d\"p\n\x1aProtobufQuestNavDeviceData\x12\x1d\n\x15tracking_lost_counter\x18\x01 \x01(\x05\x12\x1a\n\x12\x63urrently_tracking\x18\x02 \x01(\x08\x12\x17\n\x0f\x62\x61ttery_percent\x18\x03 \x01(\x05\x42\x43\n%gg.questnav.questnav.protos.generated\xaa\x02\x19QuestNav.Protos.Generatedb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)

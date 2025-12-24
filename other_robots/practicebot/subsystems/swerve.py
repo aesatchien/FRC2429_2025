@@ -331,6 +331,7 @@ class Swerve (Subsystem):
             self._update_dashboard(current_pose, ts)
 
     def _update_vision_measurements(self, current_pose, ts):
+        """
         # QuestNav Logic
         if self.questnav.use_quest and self.questnav.quest_has_synched and self.counter % 5 == 0:
             quest_accepted = self.questnav.is_pose_accepted()
@@ -338,6 +339,7 @@ class Swerve (Subsystem):
             delta_pos = Translation2d.distance(current_pose.translation(), quest_pose.translation())
             if delta_pos < 5 and quest_accepted:  # if the quest is way off, we don't want to update from it
                 self.pose_estimator.addVisionMeasurement(quest_pose, ts, constants.DrivetrainConstants.k_pose_stdevs_disabled)
+        """
         
         # AprilTag Logic
         if self.use_CJH_apriltags:

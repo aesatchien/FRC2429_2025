@@ -29,7 +29,7 @@ import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 
-from helpers.questnav.questnav2 import QuestNav
+from helpers.questnav.questnav import QuestNav
 from wpimath.geometry import Transform2d
 from wpimath.units import inchesToMeters
 from wpilib import DriverStation, Field2d
@@ -199,8 +199,8 @@ class Swerve (Subsystem):
                 drive_subsystem=self
         )
 
-        self.automated_path = None
-
+        self.automated_path = None      
+  
         # QuestNav - eventually we will push all of this out to a class
         self.questnav = QuestNav()
         self.quest_to_robot = Transform2d(inchesToMeters(-8.35), inchesToMeters(-10.50), Rotation2d().fromDegrees(270)) #10.50 -8.35
@@ -211,6 +211,8 @@ class Swerve (Subsystem):
         SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
         self.use_quest = constants.k_use_quest_odometry
         SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
+        self.quest_pose = Pose2d(-10, -10, Rotation2d.fromDegrees(0)) #initial pose if not connected/tracking
+    
 
         # note - have Risaku standardize these with the rest of the putDatas
         wpilib.SmartDashboard.putData('QuestResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
@@ -550,15 +552,16 @@ class Swerve (Subsystem):
                     wpilib.SmartDashboard.putNumber('photoncam_ambiguity', ambiguity)
                 else:
                     wpilib.SmartDashboard.putNumber('photoncam_ambiguity', 997)
-
+        
+        """
         if self.use_quest and  self.quest_has_synched and self.counter % 5 == 0:
             #print('quest pose synced')
             quest_accepted = SmartDashboard.getBoolean("QUEST_POSE_ACCEPTED", False)
-            quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
-            delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), quest_pose.translation())
+            self.quest_pose = self.get_quest_pose()
+            delta_pos = wpimath.geometry.Translation2d.distance(self.get_pose().translation(), self.quest_pose.translation())
             if delta_pos < 5 and quest_accepted:  # if the quest is way off, we don't want to update from it
-                self.pose_estimator.addVisionMeasurement(quest_pose, wpilib.Timer.getFPGATimestamp(), constants.DrivetrainConstants.k_pose_stdevs_disabled)
-
+                self.pose_estimator.addVisionMeasurement(self.quest_pose, wpilib.Timer.getFPGATimestamp(), constants.DrivetrainConstants.k_pose_stdevs_disabled)
+        """
 
         if self.use_CJH_apriltags:  # loop through all of our subscribers above
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
@@ -645,47 +648,55 @@ class Swerve (Subsystem):
 
     def quest_periodic(self) -> None:
         self.questnav.command_periodic()
-        quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
-        self.quest_field.setRobotPose(quest_pose)
+
+        frames = self.questnav.get_all_unread_pose_frames()
+        for frame in frames:
+            if self.questnav.is_connected and self.questnav.is_tracking():
+                try:
+                    self.quest_pose = frame.quest_pose_3d.toPose2d().transformBy(self.quest_to_robot)
+                    quest_pose_old = self.quest_pose
+                except Exception as e:
+                    print(f"Error converting QuestNav Pose3d to Pose2d: {e}")
+                    self.quest_pose = quest_pose_old  # use last good pose in cases of error
+                    continue
+            
+        self.quest_field.setRobotPose(self.quest_pose)
 
         if self.counter % 10 == 0:
             SmartDashboard.putData("QUEST_FIELD", self.quest_field)
-            if 0 < quest_pose.x < 17.658 and 0 < quest_pose.y < 8.131 and self.questnav.is_connected():
+            if 0 < self.quest_pose.x < 17.658 and 0 < self.quest_pose.y < 8.131 and self.questnav.is_connected():
                 SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", True)
-                # print("Quest Timestamp: " + str(self.questnav.get_app_timestamp()))
-                # print("System Timestamp: " + str(utils.get_system_time_seconds()))
-                # if abs(self.questnav.get_data_timestamp() - utils.get_current_time_seconds()) < 5:
-                #     print("Timestamp in correct epoch.")
-                #self.add_vision_measurement(quest_pose,
-                #                            utils.fpga_to_current_time(self.questnav.get_data_timestamp()),
-                #                            (0.02, 0.02, 0.035))
+
             else:
                 SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", False)
 
-            wpilib.SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [quest_pose.x, quest_pose.y, quest_pose.rotation().radians()])
+            wpilib.SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [self.quest_pose.x, self.quest_pose.y, self.quest_pose.rotation().radians()])
             SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
             SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
             wpilib.SmartDashboard.putNumber("Quest_Battery_%", self.questnav.get_battery_percent())
             wpilib.SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
             wpilib.SmartDashboard.putNumber("Quest_Tracking_lost_count", self.questnav.get_tracking_lost_counter())
             wpilib.SmartDashboard.putNumber("Quest_frame_count", self.questnav.get_frame_count())
-
+        
+    def set_quest_pose(self, pose: Pose2d) -> None:
+        # set the pose of the QuestNav, transforming from robot center to questnav coordinate
+        self.questnav.set_pose(Pose3d(pose.transformBy(self.quest_to_robot.inverse())))
 
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
         #self.reset_pose(pose)
-        self.questnav.set_pose(pose.transformBy(self.quest_to_robot.inverse()))
+        self.set_quest_pose(pose)
 
     def quest_reset_odometry(self) -> None:
         """Reset robot odometry at the Subwoofer."""
         if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
             #self.reset_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
             #self.set_operator_perspective_forward(Rotation2d.fromDegrees(180))
-            self.questnav.set_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)).transformBy(self.quest_to_robot.inverse()))
+            self.set_quest_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
             #print("reset to red")
         else:
             #self.reset_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
             #self.set_operator_perspective_forward(Rotation2d.fromDegrees(0))
-            self.questnav.set_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)).transformBy(self.quest_to_robot.inverse()))
+            self.set_quest_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
             #print(self.questnav.get_pose())
         print(f"Reset questnav at {wpilib.Timer.getFPGATimestamp():.1f}s")
         self.quest_unsync_odometry()
@@ -693,7 +704,7 @@ class Swerve (Subsystem):
     def quest_sync_odometry(self) -> None:
         #self.questnav.set_pose(self.get_pose())
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
-        self.questnav.set_pose(self.get_pose().transformBy(self.quest_to_robot.inverse()))
+        self.set_quest_pose(self.get_pose())
         print(f'Synched quest at {wpilib.Timer.getFPGATimestamp():.1f}s')
         SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
 
