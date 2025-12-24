@@ -168,6 +168,7 @@ class QuestNav:
                         
                         self._frame_count = frame_data.frame_count
                         self._last_frame_timestamp = current_time
+                        self._tracking = frame_data.isTracking # This was changed in ver. 2025.2.2.0 beta
                         
                         # Extract Pose3d
                         pose_proto = frame_data.pose3d
@@ -198,7 +199,7 @@ class QuestNav:
                         device_data.ParseFromString(raw_data)
                         
                         self._battery_percent = device_data.battery_percent
-                        self._tracking = device_data.currently_tracking
+                        # self._tracking = device_data.currently_tracking  # This worked for ver. 2025.2.1.0 beta
                         self._tracking_lost_counter = device_data.tracking_lost_counter
                 
                 # Parse command responses

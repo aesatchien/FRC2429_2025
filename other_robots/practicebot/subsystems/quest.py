@@ -41,7 +41,8 @@ class Questnav(SubsystemBase):
         SmartDashboard.putData('QuestEnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
         SmartDashboard.putData('QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
 
-        DataLogManager.start()  # start wpilib datalog for AdvantageScope
+        if not wpilib.RobotBase.isSimulation():
+            DataLogManager.start()  # start wpilib datalog for AdvantageScope
 
     def set_quest_pose(self, pose: Pose2d) -> None:
         # set the pose of the Questnav, transforming from robot center top questnav coordinate
