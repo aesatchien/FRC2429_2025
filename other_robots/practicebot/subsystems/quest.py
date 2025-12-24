@@ -133,7 +133,6 @@ class Questnav(SubsystemBase):
             else:
                 self.quest_pose_accepted = False
             SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", self.quest_pose_accepted)
-
             SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [self.quest_pose.x, self.quest_pose.y, self.quest_pose.rotation().radians()])
             SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
             SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())

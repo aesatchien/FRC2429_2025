@@ -12,7 +12,11 @@ from pathplannerlib.config import DCMotor, PIDConstants
 class DriveConstants:
     # Driving Parameters - Note that these are not the maximum capable speeds of
     # the robot, rather the allowed maximum speeds
-    k_drive_controller_type = SparkFlex
+    k_robot_id = 'practice'  # used to switch between the two configs
+    if k_robot_id == 'practice':
+        k_drive_controller_type = SparkMax
+    else:
+        k_drive_controller_type = SparkFlex
     kMaxSpeedMetersPerSecond = 4.75  # Sanjith started at 3.7, 4.25 was Haochen competition, 4.8 is full out on NEOs
     kMaxAngularSpeed = 0.75 * math.tau # 0.5 * math.tau  # radians per second was 0.5 tau through AVR - too slow
     # TODO: actually figure out what the total max speed should be - vector sum?
@@ -57,39 +61,55 @@ class DriveConstants:
 
     # max absolute encoder value on each wheel - 20230322 CJH
     # TODO - double check this set of numbers
-    k_analog_encoder_abs_max = 0.989  # determined by filtering and watching as it flips from 1 to 0
+    k_analog_encoder_abs_max = 1.0 # 0.990  # determined by filtering and watching as it flips from 1 to 0
 
     # we pass this next one to the analog potentiometer object t0 determine the full range
     # IN RADIANS to feed right to the AnalogPotentiometer on the module
     k_analog_encoder_scale_factor = math.tau * 1 / k_analog_encoder_abs_max  # 1.011 * 2pi  # so have to scale back up to be b/w 0 and 1
+    sf = k_analog_encoder_scale_factor
+
+    # SPARK controller  settings and CAN IDs  - checked for correctness 2025 0317
+    # turning offset needs to be in radians, so it uses the 2pi scaling factor
+    comp_bot_dict = {'LF':{'driving_can': 27, 'turning_can': 26, 'port': 3, 'turning_offset': sf * 0.532},
+                    'LB':{'driving_can': 25, 'turning_can': 24, 'port': 1, 'turning_offset': sf * 0.573},
+                    'RF':{'driving_can': 23, 'turning_can': 22, 'port': 2, 'turning_offset': sf *  0.937},
+                    'RB':{'driving_can': 21, 'turning_can': 20, 'port': 0, 'turning_offset': sf *  0.988}}
+    practice_bot_dict = {'LF':{'driving_can': 21, 'turning_can': 20, 'port': 3, 'turning_offset': sf *  0.841},
+                    'LB':{'driving_can': 23, 'turning_can': 22, 'port': 1, 'turning_offset': sf *  0.718},
+                    'RF':{'driving_can': 25, 'turning_can': 24, 'port': 2, 'turning_offset': sf *  0.745},
+                    'RB':{'driving_can': 27, 'turning_can': 26, 'port': 0, 'turning_offset': sf *  0.869}}
+
+    swerve_dict = practice_bot_dict if k_robot_id == 'practice' else  comp_bot_dict # set this to one or the other
 
     # need the absolute encoder values when wheels facing forward  - 20230322 CJH
     analog_encoder_test_mode = False
     if analog_encoder_test_mode:
+        print(f'YOU ARE IN ENCODER TEST MODE -- DO NOT DRIVE!!!')
         # read the raw numbers from the encoders so we can write them all down for a given robot
         k_analog_encoder_scale_factor = 1.0  # override so we get the raw reading between 0 and 1
         [k_lf_zero_offset, k_rf_zero_offset, k_lb_zero_offset, k_rb_zero_offset] = [0, 0, 0 ,0]
     else:
-        k_lf_zero_offset = k_analog_encoder_scale_factor  * (0.988) # (0.532)  #  rad
-        k_rf_zero_offset = k_analog_encoder_scale_factor  * (0.573) # (0.937)  #  rad  billet gear out on rf
-        k_lb_zero_offset = k_analog_encoder_scale_factor  * (0.937) # (0.573)  #  rad
-        k_rb_zero_offset = k_analog_encoder_scale_factor  * (0.532) # (0.988)  #  rad  billet gear out on rb
+        k_lf_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['LF']['turning_offset']  #  rad
+        k_lb_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['LB']['turning_offset']  #  rad
+        k_rf_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['RF']['turning_offset']  #  rad  billet gear out on rf
+        k_rb_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['RB']['turning_offset']  #  rad  billet gear out on rb
+        # practicebot 20251224 CJH:  LF: 0.841  LB: 0.718  RF:  0.745  RB: 0.865
 
-    # SPARK MAX CAN IDs  - checked for correctness 2025 0317
-    kFrontLeftDrivingCanId = 27
-    kRearLeftDrivingCanId = 25
-    kFrontRightDrivingCanId = 23
-    kRearRightDrivingCanId = 21
+    # TODO - this is redundant.  get rid of it
+    kFrontLeftDrivingCanId = swerve_dict['LF']['driving_can']
+    kRearLeftDrivingCanId = swerve_dict['LB']['driving_can']
+    kFrontRightDrivingCanId = swerve_dict['RF']['driving_can']
+    kRearRightDrivingCanId = swerve_dict['RB']['driving_can']
 
-    kFrontLeftTurningCanId = 26
-    kRearLeftTurningCanId = 24
-    kFrontRightTurningCanId = 22
-    kRearRightTurningCanId = 20
+    kFrontLeftTurningCanId = swerve_dict['LF']['turning_can']
+    kRearLeftTurningCanId = swerve_dict['LB']['turning_can']
+    kFrontRightTurningCanId = swerve_dict['RF']['turning_can']
+    kRearRightTurningCanId = swerve_dict['RB']['turning_can']
 
-    kFrontLeftAbsEncoderPort = 3
-    kFrontRightAbsEncoderPort = 2
-    kBackLeftAbsEncoderPort = 1
-    kBackRightAbsEncoderPort = 0
+    kFrontLeftAbsEncoderPort = swerve_dict['LF']['port']
+    kBackLeftAbsEncoderPort = swerve_dict['LB']['port']
+    kFrontRightAbsEncoderPort = swerve_dict['RF']['port']
+    kBackRightAbsEncoderPort = swerve_dict['RB']['port']
 
 class NeoMotorConstants:
     kFreeSpeedRpm = 6784  # neo is 5676, vortex is 6784
@@ -145,7 +165,7 @@ class ModuleConstants:
     # note: we don't use any spark pid or ff for turning
     k_turning_config = SparkMaxConfig()
     k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_turning_config.smartCurrentLimit(stallLimit=0)
+    k_turning_config.smartCurrentLimit(stallLimit=40, freeLimit=40, limitRpm=5700)
     k_turning_config.voltageCompensation(12)
 
     # nor do we use this encoder-- we configure it "just to watch it if we need to for velocities, etc."

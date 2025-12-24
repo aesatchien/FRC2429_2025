@@ -20,9 +20,9 @@ class SwerveModule:
         self.desiredState = SwerveModuleState(0.0, Rotation2d())  # initialize desired state
         self.turning_output = 0
 
-        # get our two motor controllers and a simulation dummy  TODO: set motor types in swerve_constants?
-        self.drivingSparkFlex = SparkFlex(drivingCANId, SparkFlex.MotorType.kBrushless)
-        self.turningSparkFlex = SparkFlex(turningCANId, SparkFlex.MotorType.kBrushless)
+        # get our two motor controllers and a simulation dummy
+        self.drivingSparkFlex = dc.k_drive_controller_type(drivingCANId, SparkFlex.MotorType.kBrushless)
+        self.turningSparkFlex = dc.k_drive_controller_type(turningCANId, SparkFlex.MotorType.kBrushless)
 
         #  ---------------- DRIVING  SPARKMAX  ------------------
         self._configure_spark(self.drivingSparkFlex, ModuleConstants.k_driving_config, driving_inverted, drivingCANId)
@@ -43,7 +43,7 @@ class SwerveModule:
         # automatically always in radians and the turnover offset is built in, so the PID is easier
         # TODO: double check that the scale factor is the same on the new thrifty potentiometers
         self.absolute_encoder = AnalogPotentiometer(channel=encoder_analog_port,
-                                fullRange=dc.k_analog_encoder_scale_factor * math.tau, offset= -turning_encoder_offset)
+                                fullRange=dc.k_analog_encoder_scale_factor, offset= -turning_encoder_offset)
         self.turning_PID_controller = PIDController(Kp=ModuleConstants.kTurningP, Ki=ModuleConstants.kTurningI, Kd=ModuleConstants.kTurningD)
         self.turning_PID_controller.enableContinuousInput(minimumInput=-math.pi, maximumInput=math.pi)
 
