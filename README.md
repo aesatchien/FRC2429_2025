@@ -11,11 +11,11 @@ FRC robot code for the 2025 robot using robotpy-commands-v2.  Note, there has be
 * gui  - 2025 version of the python dashboard(s)
 * resources
    * sim  - utilities for the simulation (field images, etc)
-* tests - simple one-file robots for testing a system using wpilib.TimedRobot
+* tests_robots - simple one-file robots for testing a system using wpilib.TimedRobot
   * distance sensors, drivetrain, elevator/turret/wrist/arm, pneumatics
 * other_robots  - code for practice bots, characterization, etc
-   * swerve_base - stripped-down swerve base
-   * wcd_bot - stripped-down WCD base
+   * practicebot - stripped-down swerve base
+   * tankbot - stripped-down WCD base, now with a shooter
 
 
 ---
@@ -27,7 +27,7 @@ FRC robot code for the 2025 robot using robotpy-commands-v2.  Note, there has be
 Clone the git and install on your own machine:
 Use "git clone https://github.com/aesatchien/FRC2429_2025.git" from the git bash (or any git aware) shell to download.  If you don't have git and you just want to look at the code, you can download the repository from the links on the right.
 
-[Read our Team Git Rules here](./resources/git_guidelines.md)
+Need some help with git?   [Read our Team Git Rules here](./resources/git_guidelines.md)
 
 Notes on how to install python and the necessary accessories (particularly the robotpy libraries) that will get all of this running:
 [2025 Python Installation](https://docs.google.com/document/d/17hmov_FAXwbJdad-m56ibuYFLzUg6PLvJjhuGWcnYeQ/edit?usp=sharing) but may be a bit cryptic.  I'll help if you need it.
