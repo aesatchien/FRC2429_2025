@@ -1,9 +1,10 @@
 # Team 2429: Git & Branching Rules
-
+![Build Status](https://github.com/aesatchien/FRC2429_2025/actions/workflows/build.yml/badge.svg)
 ## 1. The Golden Rule
 * main is sacred. It must always be deployable to the robot.
 * No Direct Pushes. All code enters main via a Pull Request (PR). 
 * (unless Cory says it's ok)
+* that badge above tells us if our code is kinda safe (python allows a lot)
 
 ---
 
@@ -60,5 +61,3 @@ If GitHub says "This branch has conflicts," do not use the web editor.
 4. `git add .`
 5. `git commit -m "Fix merge conflicts"`
 6. `git push origin your-branch`
-
-![Build Status](https://github.com/aesatchien/FRC2429_2025/actions/workflows/build.yml/badge.svg)

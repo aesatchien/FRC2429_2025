@@ -1,3 +1,4 @@
+![Build Status](https://github.com/aesatchien/FRC2429_2025/actions/workflows/build.yml/badge.svg)
 ## FRC2429_2025
 
 ### Code repo for 2025 using robotpy

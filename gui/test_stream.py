@@ -22,7 +22,7 @@ fps = 20
 
 def capture_frames():
     """ Continuously capture frames from the webcam """
-    global frame
+    # global frame  # not needed - only if you write to it
     while True:
         ret, img = cap.read()
         if ret:
@@ -36,7 +36,7 @@ def stream():
     """ Stream video frames as an MJPEG feed """
 
     def generate():
-        global frame
+        # global frame  # not needed - only if you write to it
         while True:
             with lock:
                 if frame is None:
@@ -55,3 +55,4 @@ if __name__ == '__main__':
 
     # Start the Flask server
     app.run(host='127.0.0.1', port=1186, debug=False, threaded=True)
+	

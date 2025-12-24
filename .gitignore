@@ -1,38 +1,46 @@
 # CJH FRC gitignore
 
-/robot/logs
-/other_robots/practicebot/logs
+
+# -----  don't allow any logs - CJH
+**/logs
 *.wpilog
 
-/robot/guis
-/robot/sim/data/*.pkl
-/robot/imgui.ini
-/robot/simg*
-/robot/logs/*
-/resources/AdvantageScope_userAssets/Robot_2429_Reefscape/*
+# -----  in case we decide to store and serialize our own logs  - CJH
+*.pkl
 
-#not ready to publish RT
-/robot/subsystems/questnav_2429.py  
-
-.vscode*
-.vscode/*
-
-
-# too many ini files for the gui
+# -----  sim gui leaves a lot of stuff  - CJH
+# looks like all the old ini files are jsons now
+**/sim/data/*.pkl
+**/simg*
 *.ini
 
-# all the gui and deploy stuff
+# -----  advantage scope stuff  - CJH
+**/AdvantageScope_userAssets/Robot_2429_Reefscape/*
+
+# -----  not ready to publish RT
+/robot/subsystems/questnav_2429.py  
+
+# ----  ignore .vscode dir anywhere in the base
+**/.vscode/
+
+
+# ----- all the gui and deploy stuff
 *eploy_cfg
 *nstaller_config
-simg*
+networktables.json
 
+# ----  IDES  ------
 
-#pycharm directory
-.idea/
-#jupyter stuff
-.ipynb_checkpoints
+# ignore .vscode dir anywhere in the base
+**/.vscode/
 
-#pycache stuff
+# pycharm directory
+**/.idea/
+
+# jupyter stuff
+**/.ipynb_checkpoints
+
+# pycache stuff
 __pycache__/
 *.py[cod]
 
@@ -53,8 +61,3 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-robot/input_log.txt
-robot/input_log.json
-other_robots/swerve_base/autonomous/swerve_trajectory_planner.py
-other_robots/swerve_base/autonomous/ramsete_controller_trajectory_planner.py
-other_robots/swerve_base/autonomous/Autonomous-Pathing-Notes.md
