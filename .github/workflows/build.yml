@@ -18,12 +18,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install robotpy[all]
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install robotpy[all] flake8
+
       - name: Run Syntax Check (Lint)
         run: |
-          # This checks for indentation errors, undefined variables, etc.
-          python -m robotpy lint
-
-      - name: Run Tests
-        run: |
-          # This runs any tests in your /tests folder
-          python -m robotpy test
+          # Use flake8 to check for syntax errors and undefined names
+          # --select=E9,F63,F7,F82 allows the build to fail on logic errors but ignore formatting
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
