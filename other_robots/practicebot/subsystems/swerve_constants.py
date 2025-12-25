@@ -12,11 +12,12 @@ from pathplannerlib.config import DCMotor, PIDConstants
 class DriveConstants:
     # Driving Parameters - Note that these are not the maximum capable speeds of
     # the robot, rather the allowed maximum speeds
-    k_robot_id = 'practice'  # used to switch between the two configs
+    k_robot_id = 'comp'  # used to switch between the two configs
     if k_robot_id == 'practice':
         k_drive_controller_type = SparkMax
     else:
         k_drive_controller_type = SparkFlex
+
     kMaxSpeedMetersPerSecond = 4.75  # Sanjith started at 3.7, 4.25 was Haochen competition, 4.8 is full out on NEOs
     kMaxAngularSpeed = 0.75 * math.tau # 0.5 * math.tau  # radians per second was 0.5 tau through AVR - too slow
     # TODO: actually figure out what the total max speed should be - vector sum?
@@ -70,16 +71,17 @@ class DriveConstants:
 
     # SPARK controller  settings and CAN IDs  - checked for correctness 2025 0317
     # turning offset needs to be in radians, so it uses the 2pi scaling factor
-    comp_bot_dict = {'LF':{'driving_can': 27, 'turning_can': 26, 'port': 3, 'turning_offset': sf * 0.532},
-                    'LB':{'driving_can': 25, 'turning_can': 24, 'port': 1, 'turning_offset': sf * 0.573},
-                    'RF':{'driving_can': 23, 'turning_can': 22, 'port': 2, 'turning_offset': sf *  0.937},
-                    'RB':{'driving_can': 21, 'turning_can': 20, 'port': 0, 'turning_offset': sf *  0.988}}
+    comp_bot_dict = {'LF':{'driving_can': 27, 'turning_can': 26, 'port': 3, 'turning_offset': sf * 0.988},
+                    'LB':{'driving_can': 25, 'turning_can': 24, 'port': 1, 'turning_offset': sf * 0.937},
+                    'RF':{'driving_can': 23, 'turning_can': 22, 'port': 2, 'turning_offset': sf *  0.573},
+                    'RB':{'driving_can': 21, 'turning_can': 20, 'port': 0, 'turning_offset': sf *  0.532}}
     practice_bot_dict = {'LF':{'driving_can': 21, 'turning_can': 20, 'port': 3, 'turning_offset': sf *  0.841},
                     'LB':{'driving_can': 23, 'turning_can': 22, 'port': 1, 'turning_offset': sf *  0.718},
                     'RF':{'driving_can': 25, 'turning_can': 24, 'port': 2, 'turning_offset': sf *  0.745},
                     'RB':{'driving_can': 27, 'turning_can': 26, 'port': 0, 'turning_offset': sf *  0.869}}
 
     swerve_dict = practice_bot_dict if k_robot_id == 'practice' else  comp_bot_dict # set this to one or the other
+    print(f'swerve_dict: {swerve_dict}')
 
     # need the absolute encoder values when wheels facing forward  - 20230322 CJH
     analog_encoder_test_mode = False
@@ -148,6 +150,10 @@ class ModuleConstants:
 
     # todo: put common constants across controllers into constants.py
 
+    # 2024 0414 CJH - 80A allows the drive motors to pull WAY too much and we brown out (AVR)
+    kDrivingMotorCurrentLimit = 60  # amp - set to 50 for worlds to make sure no brownouts - maybe 60 will still be safe
+    kTurningMotorCurrentLimit = 40  # amp
+
     k_driving_config = SparkFlexConfig()
     k_driving_config.closedLoop.pidf(p=0, i=0, d=0, ff=1/kDriveWheelFreeSpeedRps)
     k_driving_config.closedLoop.minOutput(-0.96)
@@ -156,7 +162,7 @@ class ModuleConstants:
     k_driving_config.closedLoop.maxMotion.maxVelocity(3)
     k_driving_config.closedLoop.maxMotion.maxAcceleration(2)
     k_driving_config.setIdleMode(idleMode=SparkFlexConfig.IdleMode.kBrake)
-    k_driving_config.smartCurrentLimit(stallLimit=60, freeLimit=60, limitRpm=5700)
+    k_driving_config.smartCurrentLimit(stallLimit=kDrivingMotorCurrentLimit, freeLimit=kDrivingMotorCurrentLimit, limitRpm=5700)
     k_driving_config.voltageCompensation(12)
     k_driving_config.encoder.positionConversionFactor((kWheelDiameterMeters * math.pi) / kDrivingMotorReduction) # meters
     k_driving_config.encoder.velocityConversionFactor((kWheelDiameterMeters * math.pi) / ( kDrivingMotorReduction * 60)) # meters per second
@@ -165,7 +171,7 @@ class ModuleConstants:
     # note: we don't use any spark pid or ff for turning
     k_turning_config = SparkMaxConfig()
     k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
-    k_turning_config.smartCurrentLimit(stallLimit=40, freeLimit=40, limitRpm=5700)
+    k_turning_config.smartCurrentLimit(stallLimit=kTurningMotorCurrentLimit, freeLimit=kTurningMotorCurrentLimit, limitRpm=5700)
     k_turning_config.voltageCompensation(12)
 
     # nor do we use this encoder-- we configure it "just to watch it if we need to for velocities, etc."
@@ -187,9 +193,6 @@ class ModuleConstants:
     kDrivingMotorIdleMode = DriveConstants.k_drive_controller_type.IdleMode.kBrake
     kTurningMotorIdleMode = SparkMax.IdleMode.kCoast  # for now it's easier to move by hand when testing
 
-    # 2024 0414 CJH - 80A allows the drive motors to pull WAY too much and we brown out (AVR)
-    kDrivingMotorCurrentLimit = 60  # amp - set to 50 for worlds to make sure no brownouts - maybe 60 will still be safe
-    kTurningMotorCurrentLimit = 40  # amp
 
 class AutoConstants:
 
