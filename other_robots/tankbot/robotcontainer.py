@@ -67,9 +67,9 @@ class RobotContainer:
     def bind_driver_buttons(self):
 
 
-        self.triggerA.whileTrue(ShootingCommand(container=self, shooter=self.shooter, continuous=True))
+        self.triggerA.whileTrue(ShootingCommand(container=self, shooter=self.shooter, continuous=True, balls=0))
 
-        self.triggerY.onTrue(ShootingCommand(container=self, shooter=self.shooter, continuous=False))
+        self.triggerY.onTrue(ShootingCommand(container=self, shooter=self.shooter, continuous=False, balls=1))
 
         self.trigger_down.onTrue(LogTest(container=self, indent=0).ignoringDisable(True))
 
