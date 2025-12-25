@@ -15,8 +15,6 @@ from wpimath.controller import PIDController
 from pathplannerlib.auto import AutoBuilder, PathPlannerAuto, PathPlannerPath
 from pathplannerlib.config import ModuleConfig, RobotConfig
 
-import robotpy_apriltag as ra
-
 import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
@@ -29,23 +27,22 @@ class Swerve (Subsystem):
         self.questnav = questnav  #  pass in the questnav subsystem so we can query it in periodic
         self.pdh = PowerDistribution(1, PowerDistribution.ModuleType.kRev)  # check power and other issues
 
-        # Initialize Swerve Modules
+        # ----------  initialize swerve modules  ----------
         self.swerve_modules = []
-        module_config = [
-            (dc.kFrontLeftDrivingCanId, dc.kFrontLeftTurningCanId, dc.kFrontLeftAbsEncoderPort, dc.k_lf_zero_offset, 'lf'),
-            (dc.kFrontRightDrivingCanId, dc.kFrontRightTurningCanId, dc.kFrontRightAbsEncoderPort, dc.k_rf_zero_offset, 'rf'),
-            (dc.kRearLeftDrivingCanId, dc.kRearLeftTurningCanId, dc.kBackLeftAbsEncoderPort, dc.k_lb_zero_offset, 'lb'),
-            (dc.kRearRightDrivingCanId, dc.kRearRightTurningCanId, dc.kBackRightAbsEncoderPort, dc.k_rb_zero_offset, 'rb')
-        ]
+        sd = dc.swerve_dict
+        module_config = ([  # has to be LF, RF, LB, RB in that order
+            [sd['LF']['driving_can'], sd['LF']['turning_can'], sd['LF']['port'], sd['LF']['turning_offset'], 'lf'],
+            [sd['RF']['driving_can'], sd['RF']['turning_can'], sd['RF']['port'], sd['RF']['turning_offset'], 'rf'],
+            [sd['LB']['driving_can'], sd['LB']['turning_can'], sd['LB']['port'], sd['LB']['turning_offset'], 'lb'],
+            [sd['RB']['driving_can'], sd['RB']['turning_can'], sd['RB']['port'], sd['RB']['turning_offset'], 'rb'],
+        ])
         for drive_id, turn_id, enc_port, offset, label in module_config:
             self.swerve_modules.append(SwerveModule(
                 drivingCANId=drive_id, turningCANId=turn_id, encoder_analog_port=enc_port,
-                turning_encoder_offset=offset, driving_inverted=dc.k_drive_motors_inverted,
-                turning_inverted=dc.k_turn_motors_inverted, label=label
-            ))
+                turning_encoder_offset=offset, label=label))
         self.frontLeft, self.frontRight, self.rearLeft, self.rearRight = self.swerve_modules
 
-        # The gyro sensor
+        # ---------- set up gyro   ----------
         self.gyro = navx.AHRS.create_spi()
         if self.gyro.isCalibrating():
             # schedule a command to reset the navx
@@ -56,7 +53,7 @@ class Swerve (Subsystem):
         self.gyro.zeroYaw()  # we boot up at zero degrees  - note - you can't reset this while calibrating
         self.gyro_calibrated = False
 
-        # timer and variables for checking if we should be using pid on rotation
+        # ---------- timer and variables for checking if we should be using pid on rotation ----------
         self.keep_angle = 0.0  # the heading we try to maintain when not rotating
         self.keep_angle_timer = Timer()
         self.keep_angle_timer.start()
@@ -68,31 +65,29 @@ class Swerve (Subsystem):
         self.last_drive_time = 0
         self.time_since_drive = 0
 
+        # ---------- rate limiters  ----------  # TODO - centralize all tis
         self.fwd_magLimiter = SlewRateLimiter(0.9 * dc.kMagnitudeSlewRate)
         self.strafe_magLimiter = SlewRateLimiter(dc.kMagnitudeSlewRate)
         self.rotLimiter = SlewRateLimiter(dc.kRotationalSlewRate)
 
-        # see if the asymmetry in the controllers is an issue for AJ  - 20250311 CJH
+        # ---------- see if the asymmetry in the controllers is an issue for AJ  - 20250311 CJH ----------
         # update this in calibrate_joystick, and use in drive_by_joystick
         self.thrust_calibration_offset = 0
         self.strafe_calibration_offset = 0
 
-        # Pose Estimator
+        # ---------- pose estimator  ----------
         self.pose_estimator = SwerveDrive4PoseEstimator(dc.kDriveKinematics,
-                                                        Rotation2d.fromDegrees(self.get_gyro_angle()),
-                                                        self.get_module_positions(),
-            initialPose=Pose2d(constants.k_start_x, constants.k_start_y, Rotation2d.fromDegrees(self.get_gyro_angle())))
+                                 Rotation2d.fromDegrees(self.get_gyro_angle()),                                                        self.get_module_positions(),
+                                    initialPose=Pose2d(constants.k_start_x, constants.k_start_y,
+                                    Rotation2d.fromDegrees(self.get_gyro_angle())))
 
-        # Vision / NT
+        # ---------- Vision / NT  ----------
         self.inst = ntcore.NetworkTableInstance.getDefault()
         self.use_CJH_apriltags = constants.k_use_CJH_tags  # down below we decide which one to use in the periodic method
         
         self.camera_names = ['ArducamBack', 'ArducamHigh', 'GeniusLow', 'LogitechReef']
         self.pose_subscribers = [self.inst.getDoubleArrayTopic(f"/Cameras/{cam}/poses/tag1").subscribe([0] * 8) for cam in self.camera_names]
         self.count_subscribers = [self.inst.getDoubleTopic(f"/Cameras/{cam}/tags/targets").subscribe(0) for cam in self.camera_names]
-
-        self.desired_tags = constants.VisionConstants.k_valid_tags
-
 
         # -------------  Pathplanner section --------------
         robot_config = RobotConfig.fromGUISettings()
@@ -114,9 +109,7 @@ class Swerve (Subsystem):
         if constants.k_enable_logging:
             DataLogManager.start()  # start wpilib datalog for AdvantageScope
 
-        # Optimization: Load the field layout once on boot, not every time we ask for a tag
-        self.field_layout = ra.AprilTagFieldLayout.loadField(ra.AprilTagField.k2025ReefscapeWelded)
-
+    # ----------  pose and odometry function definitions ----------
     def get_pose(self) -> Pose2d:
         # return the pose of the robot  TODO: update the dashboard here?
         return self.pose_estimator.getEstimatedPosition()
@@ -161,25 +154,7 @@ class Swerve (Subsystem):
             module.setDesiredState(state)
 
 
-    #  -------------  THINGS PATHPLANNER NEEDS
-    def get_relative_speeds(self):
-        return dc.kDriveKinematics.toChassisSpeeds(self.get_module_states())
-
-    def drive_robot_relative(self, chassis_speeds: ChassisSpeeds, feedforwards):
-        # required for the pathplanner lib's pathfollowing based on chassis speeds
-        # idk if we need the feedforwards
-        swerveModuleStates = dc.kDriveKinematics.toSwerveModuleStates(chassis_speeds)
-        swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, dc.kMaxTotalSpeed)
-        for state, module in zip(swerveModuleStates, self.swerve_modules):
-            module.setDesiredState(state)
-
-    def flip_path(self):  # pathplanner needs a function to see if it should mirror a path
-        if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
-            return False
-        else:
-            return True
-    # -------------- END PATHPLANNER STUFF
-
+    # ----------  keepangle function definitions ----------
     def reset_keep_angle(self):
         self.last_rotation_time = self.keep_angle_timer.get()  # reset the rotation time
         self.last_drive_time = self.keep_angle_timer.get()  # reset the drive time
@@ -224,17 +199,9 @@ class Swerve (Subsystem):
         for idx, m in enumerate(self.swerve_modules):
             m.setDesiredState(desiredStates[idx])
 
-
     def resetEncoders(self) -> None:
         """Resets the drive encoders to currently read a position of 0."""
         [m.resetEncoders() for m in self.swerve_modules]
-
-    def zeroHeading(self) -> None:
-        """Zeroes the heading of the robot."""
-        self.gyro.reset()
-
-    def getTurnRate(self) -> float:
-        return self.gyro.getRate() * (-1.0 if dc.kGyroReversed else 1.0)
 
     def get_module_positions(self):
         """ CJH-added helper function to clean up some calls above"""
@@ -245,6 +212,8 @@ class Swerve (Subsystem):
         """ CJH-added helper function to clean up some calls above"""
         # note lots of the calls want tuples, so _could_ convert if we really want to
         return [m.getState() for m in self.swerve_modules]
+
+    #  -------------  gyro functions  ----------
 
     def get_raw_angle(self):  # never reversed value for using PIDs on the heading
         return self.gyro.getAngle()
@@ -278,40 +247,8 @@ class Swerve (Subsystem):
             # make sure there is no adjustment
             self.gyro.setAngleAdjustment(0)
         self.reset_keep_angle()
-    
-    # figure out the nearest stage - or any tag, I suppose if we pass in a list
-    def get_nearest_tag(self, destination='stage'):
-        # get a field so we can query the tags
-        current_pose = self.get_pose()
 
-        if destination == 'reef':
-            # get all distances to the stage tags
-            tags = [6,7,8,9,10,11,17,18,19,20,21,22]  # the ones we can see from driver's station - does not matter if red or blue
-            x_offset, y_offset = -0.10, 0.10  # subtracting translations below makes +x INTO the tage, +y LEFT of tag
-            robot_offset = Pose2d(Translation2d(x_offset, y_offset), Rotation2d(0))
-            face_tag = True  # do we want to face the tag?
-        else:
-            raise ValueError('  location for get_nearest tag must be in ["stage", "amp"] etc')
-
-        poses = [self.field_layout.getTagPose(tag).toPose2d() for tag in tags]
-        distances = [current_pose.translation().distance(pose.translation()) for pose in poses]
-
-        # sort the distances
-        combined = list(zip(tags, distances))
-        combined.sort(key=lambda x: x[1])  # sort on the distances
-        sorted_tags, sorted_distances = zip(*combined)
-        nearest_pose = self.field_layout.getTagPose(sorted_tags[0])  # get the pose of the nearest stage tag
-
-        # transform the tag pose to our specific needs
-        tag_pose = nearest_pose.toPose2d()  # work with a 2D pose
-        tag_rotation = tag_pose.rotation()  # we are either going to match this or face opposite
-        robot_offset_corrected = robot_offset.rotateBy(tag_rotation)  # rotate our offset so we align with the tag
-        updated_translation = tag_pose.translation() - robot_offset_corrected.translation()  # careful with these signs
-        updated_rotation = tag_rotation + Rotation2d(math.pi) if face_tag else tag_rotation  # choose if we flip
-        updated_pose = Pose2d(translation=updated_translation, rotation=updated_rotation)  # drive to here
-
-        return sorted_tags[0]  # changed this in 2025 instead of updated_pose
-
+    #  -------------  simulation helpers  ----------
     def get_desired_swerve_module_states(self) -> list[SwerveModuleState]:
         """
         what it says on the wrapper; it's for physics.py because I don't like relying on an NT entry
@@ -319,6 +256,27 @@ class Swerve (Subsystem):
         """
         return [module.getDesiredState() for module in self.swerve_modules]
 
+
+    #  -------------  METHODS PATHPLANNER NEEDS  ----------
+    def get_relative_speeds(self):
+        return dc.kDriveKinematics.toChassisSpeeds(self.get_module_states())
+
+    def drive_robot_relative(self, chassis_speeds: ChassisSpeeds, feedforwards):
+        # required for the pathplanner lib's pathfollowing based on chassis speeds
+        # idk if we need the feedforwards
+        swerveModuleStates = dc.kDriveKinematics.toSwerveModuleStates(chassis_speeds)
+        swerveModuleStates = SwerveDrive4Kinematics.desaturateWheelSpeeds(swerveModuleStates, dc.kMaxTotalSpeed)
+        for state, module in zip(swerveModuleStates, self.swerve_modules):
+            module.setDesiredState(state)
+
+    def flip_path(self):  # pathplanner needs a function to see if it should mirror a path
+        if DriverStation.getAlliance() == DriverStation.Alliance.kBlue:
+            return False
+        else:
+            return True
+    # -------------- END PATHPLANNER STUFF  --------------
+
+    # -------------- periodic and periodic helpers --------------
     def periodic(self) -> None:
         self.counter += 1
         ts = Timer.getFPGATimestamp()
@@ -362,7 +320,7 @@ class Swerve (Subsystem):
             self.pose_estimator.updateWithTime(ts, Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
 
     def _update_dashboard(self, pose, ts):
-        SmartDashboard.putNumber('_timestamp', ts)
+        SmartDashboard.putNumber('_timestamp', ts)  # TODO - see if NT is already doing this
         SmartDashboard.putNumberArray('drive_pose', [pose.X(), pose.Y(), pose.rotation().degrees()])
         SmartDashboard.putNumberArray('drive_pose_AdvScope', [pose.x, pose.y, pose.rotation().radians()])
         SmartDashboard.putNumber('drive_x', pose.X())

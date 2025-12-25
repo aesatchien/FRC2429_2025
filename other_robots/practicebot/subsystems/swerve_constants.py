@@ -10,14 +10,11 @@ from rev import SparkMax, SparkFlex, SparkFlexConfig, SparkMaxConfig
 from pathplannerlib.config import DCMotor, PIDConstants
 
 class DriveConstants:
-    # Driving Parameters - Note that these are not the maximum capable speeds of
-    # the robot, rather the allowed maximum speeds
-    k_robot_id = 'comp'  # used to switch between the two configs
-    if k_robot_id == 'practice':
-        k_drive_controller_type = SparkMax
-    else:
-        k_drive_controller_type = SparkFlex
 
+    k_robot_id = 'comp'  # used to switch between the two configs
+    k_drive_controller_type = SparkMax if k_robot_id == 'practice' else SparkFlex
+
+    # ---- Driving Parameters - Note that these are not the maximum possible speeds, rather the allowed maximum speeds
     kMaxSpeedMetersPerSecond = 4.75  # Sanjith started at 3.7, 4.25 was Haochen competition, 4.8 is full out on NEOs
     kMaxAngularSpeed = 0.75 * math.tau # 0.5 * math.tau  # radians per second was 0.5 tau through AVR - too slow
     # TODO: actually figure out what the total max speed should be - vector sum?
@@ -29,9 +26,11 @@ class DriveConstants:
     k_outer_deadband = 0.95  # above this you just set it to 1 - makes going diagonal easier
     # k_minimum_rotation = kMaxAngularSpeed * k_inner_deadband
 
+    # ---- reporting  parameters
     k_swerve_state_messages = True # these currently send the pose data to the sim - keep them on
 
-    # Chassis configuration - not sure it even matters if we're square because wpilib accounts for it
+    # ------------- KINEMATICS -------------
+    # Chassis configuration - not sure if it even matters if we're square because wpilib accounts for it
     # MK4i modules have the centers of the wheels 2.5" from the edge, so this is robot length (or width) minus 5
     kTrackWidth = units.inchesToMeters(23.0)  # Distance between centers of right and left wheels on robot
     kWheelBase = units.inchesToMeters(23.0)   # Distance between front and back wheels on robot
@@ -47,24 +46,26 @@ class DriveConstants:
         Translation2d(swerve_orientation[2][0]*kWheelBase / 2, swerve_orientation[2][1]*kTrackWidth / 2),
         Translation2d(swerve_orientation[3][0]*kWheelBase / 2, swerve_orientation[3][1]*kTrackWidth / 2),
     ]
-
     # set up kinematics object for swerve subsystem
     kDriveKinematics = SwerveDrive4Kinematics(*kModulePositions)
 
-    # which motors need to be inverted - depends on if on top or bottom
-    k_drive_motors_inverted = True  # False for 2023 - motors below
+    #  ----------------   THIS IS TRIAL AND ERROR - USE BLOCKS UNDER CHASSIS   ---------------
+    # which motors need to be inverted - depends on if mounted on top (True) or bottom (False)
+    # THIS IS THE FIRST CHECK - DRIVE WITH DPAD (robot relative) AND MAKE SURE DIRECTION IS CORRECT
+    k_drive_motors_inverted = True  # drive forward and reverse correct?  If not, invert this.
+    # THIS IS THE SECOND CHECK - HOW DO YOU TEST IT?
     k_turn_motors_inverted = True  # True for 2023 - motors below
     # incorrect gyro inversion will make the pose odometry have the wrong sign on rotation
+    # IF DRIVE MOTORS ARE CORRECT AND TURN MOTORS ARE CORRECT, THEN CCW IS POSITIVE OR YOU REVERSE GYRO?
     kGyroReversed = True  # False for 2023 (was upside down), True for 2024/2025
     # used in the swerve modules themselves to reverse the direction of the analog encoder
     # note turn motors and analog encoders must agree - or you go haywire
     k_reverse_analog_encoders = False  # False for 2024 and probably always.
 
-    # max absolute encoder value on each wheel - 20230322 CJH
-    # TODO - double check this set of numbers
-    k_analog_encoder_abs_max = 1.0 # 0.990  # determined by filtering and watching as it flips from 1 to 0
+    # max absolute encoder value on each wheel they seem to stop at 0.99 for some reason - 20230322 CJH
+    k_analog_encoder_abs_max = 1.0 # 0.990  # can we just leave it as 1?
 
-    # we pass this next one to the analog potentiometer object t0 determine the full range
+    # we pass this next one to the analog potentiometer object to determine the full range
     # IN RADIANS to feed right to the AnalogPotentiometer on the module
     k_analog_encoder_scale_factor = math.tau * 1 / k_analog_encoder_abs_max  # 1.011 * 2pi  # so have to scale back up to be b/w 0 and 1
     sf = k_analog_encoder_scale_factor
@@ -84,7 +85,7 @@ class DriveConstants:
     print(f'swerve_dict: {swerve_dict}')
 
     # need the absolute encoder values when wheels facing forward  - 20230322 CJH
-    analog_encoder_test_mode = False
+    analog_encoder_test_mode = False  #  set this to test the wheel alignment
     if analog_encoder_test_mode:
         print(f'YOU ARE IN ENCODER TEST MODE -- DO NOT DRIVE!!!')
         # read the raw numbers from the encoders so we can write them all down for a given robot
@@ -97,24 +98,9 @@ class DriveConstants:
         k_rb_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['RB']['turning_offset']  #  rad  billet gear out on rb
         # practicebot 20251224 CJH:  LF: 0.841  LB: 0.718  RF:  0.745  RB: 0.865
 
-    # TODO - this is redundant.  get rid of it
-    kFrontLeftDrivingCanId = swerve_dict['LF']['driving_can']
-    kRearLeftDrivingCanId = swerve_dict['LB']['driving_can']
-    kFrontRightDrivingCanId = swerve_dict['RF']['driving_can']
-    kRearRightDrivingCanId = swerve_dict['RB']['driving_can']
-
-    kFrontLeftTurningCanId = swerve_dict['LF']['turning_can']
-    kRearLeftTurningCanId = swerve_dict['LB']['turning_can']
-    kFrontRightTurningCanId = swerve_dict['RF']['turning_can']
-    kRearRightTurningCanId = swerve_dict['RB']['turning_can']
-
-    kFrontLeftAbsEncoderPort = swerve_dict['LF']['port']
-    kBackLeftAbsEncoderPort = swerve_dict['LB']['port']
-    kFrontRightAbsEncoderPort = swerve_dict['RF']['port']
-    kBackRightAbsEncoderPort = swerve_dict['RB']['port']
 
 class NeoMotorConstants:
-    kFreeSpeedRpm = 6784  # neo is 5676, vortex is 6784
+    kFreeSpeedRpm = 5676 if DriveConstants.k_robot_id == 'practice' else 6784   # neo is 5676, vortex is 6784
 
 class ModuleConstants:
 
@@ -125,11 +111,6 @@ class ModuleConstants:
     # 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15 teeth on the bevel pinion
     kDrivingMotorReduction = 6.75 #8.14 #6.75  # From MK4i website, L2  #  From (45.0 * 22) / (kDrivingMotorPinionTeeth * 15)
     kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters) / kDrivingMotorReduction
-
-    k_wheel_cof = 1 # (https://www.vexrobotics.com/colsonperforma.html)
-    k_drive_motor = DCMotor.neoVortex(1).withReduction(kDrivingMotorReduction)
-    k_max_current_amps = 60 # (https://www.chiefdelphi.com/t/current-limiting-on-swerve/ first post)
-
 
     kDrivingEncoderPositionFactor = (kWheelDiameterMeters * math.pi) / kDrivingMotorReduction  # meters
     kDrivingEncoderVelocityFactor = kDrivingEncoderPositionFactor / 60.0  # meters per second
@@ -186,13 +167,6 @@ class ModuleConstants:
     kTurningMinOutput = -1
     kTurningMaxOutput = 1
 
-    # used for configuring and burning the flash - I think we only need slot 0 - we only do velocity control?
-    k_PID_dict_vel = {'kP': kDrivingP, 'kI': kDrivingI, 'kD': kDrivingD, 'kIz': 0.001, 'kFF': kDrivingFF, 'kArbFF':0, 'kMaxOutput': kDrivingMaxOutput,
-                'kMinOutput': kDrivingMinOutput, 'SM_MaxVel':k_smartmotion_max_velocity, 'SM_MaxAccel':k_smartmotion_max_accel}
-
-    kDrivingMotorIdleMode = DriveConstants.k_drive_controller_type.IdleMode.kBrake
-    kTurningMotorIdleMode = SparkMax.IdleMode.kCoast  # for now it's easier to move by hand when testing
-
 
 class AutoConstants:
 
@@ -204,6 +178,7 @@ class AutoConstants:
             rotation_constants=k_pathplanner_rotation_pid_constants,
     )
 
+    # is this used anywhere?
     k_pathfinding_constraints = PathConstraints(
             maxVelocityMps=3,
             maxAccelerationMpsSq=6,  # this was at 6 for all comps - CJH lowered it to 4 for old batteries 20251006

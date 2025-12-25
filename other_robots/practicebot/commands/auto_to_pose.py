@@ -14,6 +14,7 @@ from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
 from subsystems.led import Led
 from commands.log_command import log_command
+from helpers.utilities import get_nearest_tag
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=True)
@@ -59,7 +60,8 @@ class AutoToPose(commands2.Command):  #
 
         # if we want to run this on the fly, we need to pass it a pose
         if self.nearest:
-            nearest_tag = self.container.swerve.get_nearest_tag(destination='reef')
+            current_pose = self.container.swerve.get_pose()
+            nearest_tag = get_nearest_tag(current_pose=current_pose, destination='reef')
             self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
         elif self.from_robot_state:

@@ -1,11 +1,12 @@
 import math
+import typing
 
-import wpilib
+
+from wpilib import AnalogPotentiometer, SmartDashboard
 from wpimath.geometry import Rotation2d
 from wpimath.kinematics import SwerveModuleState, SwerveModulePosition
-from wpilib import AnalogPotentiometer, SmartDashboard
 from wpimath.controller import PIDController
-from rev import SparkFlexConfig, SparkFlex
+from rev import SparkFlexConfig, SparkFlex, SparkMaxConfig, SparkMax, SparkBase, SparkBaseConfig
 
 import constants
 from .swerve_constants import ModuleConstants
@@ -13,30 +14,30 @@ from .swerve_constants import DriveConstants as dc
 
 
 class SwerveModule:
-    def __init__(self, drivingCANId: int, turningCANId: int, encoder_analog_port: int, turning_encoder_offset: float,
-                 driving_inverted=False, turning_inverted=False, label='') -> None:
+    def __init__(self, drivingCANId: int, turningCANId: int, encoder_analog_port: int,
+                 turning_encoder_offset: float, label='') -> None:
 
         self.label = label
         self.desiredState = SwerveModuleState(0.0, Rotation2d())  # initialize desired state
         self.turning_output = 0
 
         # get our two motor controllers and a simulation dummy
-        self.drivingSparkFlex = dc.k_drive_controller_type(drivingCANId, SparkFlex.MotorType.kBrushless)
-        self.turningSparkFlex = dc.k_drive_controller_type(turningCANId, SparkFlex.MotorType.kBrushless)
+        self.drivingSpark = dc.k_drive_controller_type(drivingCANId, SparkFlex.MotorType.kBrushless)
+        self.turningSpark = dc.k_drive_controller_type(turningCANId, SparkFlex.MotorType.kBrushless)
 
-        #  ---------------- DRIVING  SPARKMAX  ------------------
-        self._configure_spark(self.drivingSparkFlex, ModuleConstants.k_driving_config, driving_inverted, drivingCANId)
+        #  ---------------- DRIVING SPARKMAX  ------------------
+        self._configure_spark(self.drivingSpark, ModuleConstants.k_driving_config, drivingCANId)
 
         # Get driving encoder from the sparkflex
-        self.drivingEncoder = self.drivingSparkFlex.getEncoder()
-        self.drivingClosedLoopController = self.drivingSparkFlex.getClosedLoopController()
+        self.drivingEncoder = self.drivingSpark.getEncoder()
+        self.drivingClosedLoopController = self.drivingSpark.getClosedLoopController()
 
         #  ---------------- TURNING SPARKMAX  ------------------
-        self._configure_spark(self.turningSparkFlex, ModuleConstants.k_turning_config, turning_inverted, turningCANId)
+        self._configure_spark(self.turningSpark, ModuleConstants.k_turning_config, turningCANId)
 
         # Setup encoders for the turning SPARKMAX - just to watch it if we need to for velocities, etc.
         # WE DO NOT USE THIS FOR ANYTHING - THE ABSOLUTE ENCODER IS USED FOR TURNING AND GOES INTO THE RIO ANALOG PORT
-        self.turningEncoder = self.turningSparkFlex.getEncoder()
+        self.turningEncoder = self.turningSpark.getEncoder()
 
         #  ---------------- ABSOLUTE ENCODER AND PID FOR TURNING  ------------------
         # create the AnalogPotentiometer with the offset.  TODO: this probably has to be 5V hardware but need to check
@@ -54,18 +55,16 @@ class SwerveModule:
         # self.chassisAngularOffset = chassisAngularOffset  # not yet
         self.desiredState.angle = Rotation2d(self.get_turn_encoder())
 
-    def _configure_spark(self, spark: SparkFlex, config_template: SparkFlexConfig, inverted: bool, can_id: int):
+    def _configure_spark(self, spark: typing.Union[SparkMax, SparkFlex],
+                         config_template: typing.Union[SparkMaxConfig, SparkFlexConfig], can_id: int):
         """ Applies a config to a sparkmax. """
-        config = SparkFlexConfig()
-        config.apply(config_template)
-        config.inverted(inverted)
-        
-        if constants.k_burn_flash:
-            reset_mode = SparkFlex.ResetMode.kResetSafeParameters if constants.k_reset_sparks_to_default else SparkFlex.ResetMode.kNoResetSafeParameters
-            persist_mode = SparkFlex.PersistMode.kPersistParameters
-            
-            error = spark.configure(config=config, resetMode=reset_mode, persistMode=persist_mode)
-            print(f"Reconfigured sparkmax {can_id}. Controller status: {error}")
+        # we already passed in a config template - just use it here
+        config = config_template
+
+        reset_mode = SparkFlex.ResetMode.kResetSafeParameters  # always use a clean slate
+        persist_mode = SparkFlex.PersistMode.kPersistParameters if constants.k_burn_flash else SparkFlex.PersistMode.kNoPersistParameters
+        error = spark.configure(config=config, resetMode=reset_mode, persistMode=persist_mode)
+        print(f"Reconfigured sparkmax {can_id}. Controller status: {error}")
 
     def get_turn_encoder(self):
         # how we invert the absolute encoder if necessary (which it probably isn't in the standard mk4i config)
@@ -96,7 +95,6 @@ class SwerveModule:
     def setDesiredState(self, desiredState: SwerveModuleState) -> None:
         """Sets the desired state for the module.
         :param desiredState: Desired state with speed and angle.
-
         """
 
         # Apply chassis angular offset to the desired state.
@@ -120,15 +118,7 @@ class SwerveModule:
         self.turning_output = self.turning_PID_controller.calculate(self.get_turn_encoder(), correctedDesiredState.angle.radians())
         # clean up the turning Spark LEDs by cleaning out the noise - 20240226 CJH
         self.turning_output = 0 if math.fabs(self.turning_output) < 0.01 else self.turning_output
-        self.turningSparkFlex.set(self.turning_output)
-
-        if False: # wpilib.RobotBase.isSimulation():  # can we delete this yet?
-            SmartDashboard.putNumberArray(f'{self.label}_target_vel_angle',
-                                [correctedDesiredState.speed, correctedDesiredState.angle.radians()])
-            SmartDashboard.putNumberArray(f'{self.label}_actual_vel_angle',
-                                [self.drivingEncoder.getVelocity(), self.turningEncoder.getPosition()])
-            SmartDashboard.putNumberArray(f'{self.label}_volts',
-                                [self.drivingSparkFlex.getAppliedOutput(), self.turningSparkFlex.getAppliedOutput()])
+        self.turningSpark.set(self.turning_output)
 
         self.desiredState = desiredState
 

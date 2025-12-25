@@ -24,14 +24,11 @@ k_co_driver_controller_port = 1
 k_robot_mass_kg = 56
 k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
 
-k_reset_sparks_to_default = True  # So far, only used in swerve
-# only send and persist new parameters when something is new or goes wrong - addresses intermittent sparkflex CAN losses on boot
-# must be true for sim
-# also making it true because I don't think this is the issue LHACK 3/19/2025
+# should be fine to burn on every reboot, but we can turn this off
 k_burn_flash = True
 
 k_swerve_debugging_messages = True
-# multiple attempts at tags this year - TODO - use l/r/ or up/down tilted cameras again, gives better data
+# multiple attempts at tags this year - TODO - use l/r or up/down tilted cameras again, gives better data
 k_use_apriltag_odometry = False
 k_use_quest_odometry = True
 k_use_photontags = False  # take tags from photonvision camera
