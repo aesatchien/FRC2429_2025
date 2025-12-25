@@ -28,6 +28,8 @@ from wpimath.units import inchesToMeters
 import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
+from helpers.utilities import compare_motors
+
 
 from helpers.questnav.questnav import QuestNav
 from wpimath.geometry import Transform2d
@@ -60,6 +62,9 @@ class Swerve (Subsystem):
 
         # let's make this pythonic so we can do things quickly and with readability
         self.swerve_modules = [self.frontLeft, self.frontRight, self.rearLeft, self.rearRight]
+
+        # let's make sure we're getting the right properties in the swerves
+        compare_motors(self.frontLeft.drivingSparkFlex, self.frontLeft.turningSparkFlex, name_a='LF DRIVE', name_b='LF TURN')
 
         # The gyro sensor
         #self.gyro = wpilib.ADIS16470_IMU()

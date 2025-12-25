@@ -82,12 +82,12 @@ class DriveConstants:
                     'RB':{'driving_can': 27, 'turning_can': 26, 'port': 0, 'turning_offset': sf *  0.869}}
 
     swerve_dict = practice_bot_dict if k_robot_id == 'practice' else  comp_bot_dict # set this to one or the other
-    print(f'swerve_dict: {swerve_dict}')
+    # print(f'swerve_dict: {swerve_dict}')
 
     # need the absolute encoder values when wheels facing forward  - 20230322 CJH
     analog_encoder_test_mode = False  #  set this to test the wheel alignment
     if analog_encoder_test_mode:
-        print(f'YOU ARE IN ENCODER TEST MODE -- DO NOT DRIVE!!!')
+        print(f'YOU ARE IN ENCODER ALIGNMENT TEST MODE -- DO NOT DRIVE!!!')
         # read the raw numbers from the encoders so we can write them all down for a given robot
         k_analog_encoder_scale_factor = 1.0  # override so we get the raw reading between 0 and 1
         [k_lf_zero_offset, k_rf_zero_offset, k_lb_zero_offset, k_rb_zero_offset] = [0, 0, 0 ,0]
@@ -136,6 +136,7 @@ class ModuleConstants:
     kTurningMotorCurrentLimit = 40  # amp
 
     k_driving_config = SparkFlexConfig()
+    k_driving_config.inverted(DriveConstants.k_drive_motors_inverted)
     k_driving_config.closedLoop.pidf(p=0, i=0, d=0, ff=1/kDriveWheelFreeSpeedRps)
     k_driving_config.closedLoop.minOutput(-0.96)
     k_driving_config.closedLoop.maxOutput(0.96)
@@ -151,6 +152,7 @@ class ModuleConstants:
 
     # note: we don't use any spark pid or ff for turning
     k_turning_config = SparkMaxConfig()
+    k_turning_config.inverted(DriveConstants.k_turn_motors_inverted)
     k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
     k_turning_config.smartCurrentLimit(stallLimit=kTurningMotorCurrentLimit, freeLimit=kTurningMotorCurrentLimit, limitRpm=5700)
     k_turning_config.voltageCompensation(12)
@@ -160,12 +162,16 @@ class ModuleConstants:
     k_turning_config.encoder.positionConversionFactor(math.tau/k_turning_motor_gear_ratio) # radian
     k_turning_config.encoder.velocityConversionFactor(math.tau/(k_turning_motor_gear_ratio * 60)) # radians per second
 
-    kTurningP = 0.3 #  CJH tested this 3/19/2023  and 0.25 was good
+    kTurningP = 0.3 #  CJH tested this 3/19/2023  and 0.25 was good.  Used in the wpilib PID controller, not rev
     kTurningI = 0.0
     kTurningD = 0.0
     kTurningFF = 0
     kTurningMinOutput = -1
     kTurningMaxOutput = 1
+
+    # does no good ...
+    #print(f'driving cfg: {k_driving_config.flatten()}')
+    #print(f'turing cfg: {k_turning_config.flatten()}')
 
 
 class AutoConstants:

@@ -18,7 +18,7 @@ from pathplannerlib.config import ModuleConfig, RobotConfig
 import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
-
+from helpers.utilities import compare_motors
 
 class Swerve (Subsystem):
     def __init__(self, questnav) -> None:
@@ -41,6 +41,9 @@ class Swerve (Subsystem):
                 drivingCANId=drive_id, turningCANId=turn_id, encoder_analog_port=enc_port,
                 turning_encoder_offset=offset, label=label))
         self.frontLeft, self.frontRight, self.rearLeft, self.rearRight = self.swerve_modules
+
+        # let's make sure we're getting the right properties in the swerves
+        compare_motors(self.frontLeft.drivingSpark, self.frontLeft.turningSpark, name_a='LF DRIVE', name_b='LF TURN')
 
         # ---------- set up gyro   ----------
         self.gyro = navx.AHRS.create_spi()
