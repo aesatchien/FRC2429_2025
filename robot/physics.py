@@ -1,5 +1,5 @@
 import math
-from rev import SparkFlex, SparkFlexSim, SparkMaxSim
+from rev import SparkFlexSim, SparkMaxSim
 import wpilib
 import wpilib.simulation as simlib  # 2021 name for the simulation library
 import wpimath.geometry as geo
@@ -9,7 +9,7 @@ import ntcore
 
 from robot import MyRobot
 import constants
-import simmech as sm
+from helpers.blockhead_mech import BlockheadMech
 from subsystems.swerve_constants import DriveConstants as dc
 
 class PhysicsEngine:
@@ -19,35 +19,13 @@ class PhysicsEngine:
         self.physics_controller = physics_controller  # must have for simulation
         self.robot = robot
 
-        # if we want to add an armsim see test_robots/sparksim_test/
-        self.mech = wpilib.Mechanism2d(3, 3)
-        self.mech.setBackgroundColor(wpilib.Color8Bit(40, 40, 60))
-        self.root = self.mech.getRoot("chassis", 1, 0)
-        self.mech2d_elevator = self.root.appendLigament("elevator", length=constants.ElevatorConstants.k_sim_starting_height, 
-                                                        angle=90,
-                                                        color=wpilib.Color8Bit(red=150, green=255, blue=160))
-        self.mech2d_shoulder = self.mech2d_elevator.appendLigament("shoulder", length=constants.ShoulderConstants.k_length_meters, 
-                                                                   angle=math.degrees(constants.ShoulderConstants.k_starting_angle),
-                                                                   color=wpilib.Color8Bit(red=30, green=200, blue=250))
-
-        self.mech2d_wrist = self.mech2d_shoulder.appendLigament("wrist", length=constants.WristConstants.k_sim_length_meters, 
-                                                                angle=constants.WristConstants.k_starting_angle,
-                                                                color=wpilib.Color8Bit(red=255, green=160, blue=150))
-
-        self.mech2d_intake = self.mech2d_wrist.appendLigament("intake", length=constants.IntakeConstants.k_sim_length, 
-                                                              angle=0, color=wpilib.Color8Bit(0, 0, 0))
-        
-        self.mech2d_climber = self.root.appendLigament("climber", length=constants.ClimberConstants.k_length_meters, 
-                                                       angle=constants.ClimberConstants.k_climber_motor_stowed_angle,
-                                                       color=wpilib.Color8Bit(0, 0, 0))
-
-        wpilib.SmartDashboard.putData("the mech", self.mech)
-
         self.initialize_swerve()
         self.initialize_wrist()
         self.initialize_shoulder()
         self.initialize_elevator()
         self.initialize_climber()
+        
+        self.mech = BlockheadMech()
 
         # vision stuff - using 2024 stuff for now (CJH)
         key = 'orange'
@@ -92,9 +70,7 @@ class PhysicsEngine:
                                      dt=tm_diff)
         self.climber_follower_spark_sim.setPosition(self.climber_sim.getAngle())
         self.climber_follower_spark_sim.iterate(self.climber_sim.getVelocity(), 12, tm_diff)
-        cimber_angle = math.degrees(self.climber_sim.getAngle())
-        self.mech2d_climber.setAngle(cimber_angle - 90)
-        sm.side_elevator.components["climber"]["ligament"].setAngle(cimber_angle - 90)
+        self.mech.update_climber(self.climber_sim.getAngle())
         return self.climber_sim.getCurrentDraw()
     
     def update_vision(self):
@@ -119,7 +95,6 @@ class PhysicsEngine:
         self.wrist_spark_sim.setPosition(self.wrist_sim.getAngle())
         self.wrist_spark_sim.iterate(velocity=self.wrist_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-        self.mech2d_wrist.setAngle(math.degrees(self.wrist_sim.getAngle()) - self.mech2d_shoulder.getAngle())
         return self.wrist_sim.getCurrentDraw()
 
     def update_shoulder(self, tm_diff):
@@ -132,9 +107,7 @@ class PhysicsEngine:
                                      dt=tm_diff)
         self.shoulder_follower_spark_sim.iterate(velocity=self.shoulder_sim.getVelocity(), vbus=12, # simlib.RoboRioSim.getVInVoltage(),
                                      dt=tm_diff)
-        shoulder_pivot_degrees = 180 - math.degrees(self.shoulder_sim.getAngle())
-        self.mech2d_shoulder.setAngle(shoulder_pivot_degrees - 90)
-        sm.side_elevator.components["shoulder"]["ligament"].setAngle(shoulder_pivot_degrees - 90)  # CJH added
+        self.mech.update_shoulder(self.shoulder_sim.getAngle())
         return self.shoulder_sim.getCurrentDraw()
 
     def update_intake(self, tm_diff):
@@ -143,7 +116,6 @@ class PhysicsEngine:
 
         intake_redness = max(-255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
         intake_greenness = max(255 * self.robot.container.intake.spark_flex_sim.getAppliedOutput(), 0)
-        self.mech2d_intake.setColor(wpilib.Color8Bit(red=10 * int(intake_redness), green=10 * int(intake_greenness), blue=0))
 
     def update_elevator_positions(self, tm_diff):
 
@@ -158,14 +130,7 @@ class PhysicsEngine:
         if self.robot is None:
             raise ValueError("Robot is not defined")
 
-        self.mech2d_elevator.setLength(self.elevator_sim.getPosition())
-        elevator_height_sim = self.robot.container.elevator.get_height() * (constants.ElevatorConstants.k_elevator_sim_max_height / constants.ElevatorConstants.k_max_height)
-
-        sm.front_elevator.components["elevator_right"]["ligament"].setLength(elevator_height_sim)
-        sm.front_elevator.components["elevator_left"]["ligament"].setLength(elevator_height_sim)
-        sm.side_elevator.components["elevator_side"]["ligament"].setLength(elevator_height_sim)
-        sm.side_elevator.components["elevator_bar_left"]["ligament"].setLength(elevator_height_sim + 5)
-        sm.side_elevator.components["elevator_bar_right"]["ligament"].setLength(elevator_height_sim + 5)
+        self.mech.update_elevator(self.robot.container.elevator.get_height())
         return self.elevator_sim.getCurrentDraw()
 
     def update_swerve(self, tm_diff):
