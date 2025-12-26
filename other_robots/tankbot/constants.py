@@ -103,6 +103,7 @@ class ShooterConstants:
     k_indexer_gear_ratio = 5
     k_indexer_position_conversion_factor = 1/k_indexer_gear_ratio
     k_indexer_config.encoder.positionConversionFactor(k_indexer_position_conversion_factor)
+    k_indexer_config.encoder.velocityConversionFactor(k_indexer_position_conversion_factor)  # currently RPM
 
     # TURRET
 

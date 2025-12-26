@@ -4,7 +4,10 @@ import wpilib.simulation as simlib  # 2021 name for the simulation library
 import wpimath.geometry as geo
 from wpimath.kinematics._kinematics import SwerveDrive4Kinematics, SwerveModuleState, SwerveModulePosition
 import wpimath.kinematics as kin
+import wpimath.system.plant as plant
+import rev
 from pyfrc.physics.core import PhysicsInterface
+from wpilib.simulation import FlywheelSim, DCMotorSim, SimDeviceSim
 
 from robot import MyRobot
 import constants
@@ -17,6 +20,7 @@ class PhysicsEngine:
         self.physics_controller = physics_controller  # must have for simulation
         self.robot = robot
         self.container = robot.container
+        self.counter = 0
 
         # Teaching constants
         self.track_width = 0.6  # meters
@@ -24,8 +28,23 @@ class PhysicsEngine:
 
         self.kin = kin.DifferentialDriveKinematics(self.track_width)
 
+        # ------------------- SHOOTER SIMULATION -------------------
+        # Flywheel: Velocity is the primary concern. FlywheelSim is optimized for this.
+        # 2025 Update: Use LinearSystemId to create the plant (Motor, MOI, Gearing)
+        self.flywheel_plant = plant.LinearSystemId.flywheelSystem(plant.DCMotor.NEO(1), 0.01, 1.0)
+        self.flywheel_sim = FlywheelSim(self.flywheel_plant, plant.DCMotor.NEO(1))
+        self.flywheel_spark = rev.SparkMaxSim(self.container.shooter.flywheel_left_leader, plant.DCMotor.NEO(1))
+        
+        # Access internal SimDevice to read 'Reference' for closed-loop simulation
+        self.flywheel_sim_device = SimDeviceSim(f"SPARK MAX [{self.container.shooter.flywheel_left_leader.getDeviceId()}]")
+
+        # Indexer:
+        self.indexer_spark = rev.SparkMaxSim(self.container.shooter.indexer_motor, plant.DCMotor.NEO(1))
+        self.indexer_sim_device = SimDeviceSim(f"SPARK MAX [{self.container.shooter.indexer_motor.getDeviceId()}]")
+
     def update_sim(self, now, dt):
 
+        self.counter += 1
         # 1. Read SparkMax commands
         # CANSparkMax.get() returns the last commanded value in [-1, 1]
         left_cmd = self.container.drive.drive_l1.get()
@@ -48,3 +67,18 @@ class PhysicsEngine:
         # 4. Move the robot
         self.physics_controller.drive(speeds, dt)
 
+        self.update_shooter(dt)
+
+
+    def update_shooter(self, dt):
+        # ------------------- SHOOTER UPDATE -------------------
+        # setReference(kVelocity, value=rpm, ...) in the robot code changes this
+        cmd_rpm = self.indexer_spark.getSetpoint()  # "setpoint sent to device" and we told it RPM
+        # Spark sim expects motor velocity here and updates internal state/encoder
+        self.indexer_spark.iterate(cmd_rpm,12, dt)
+
+        if self.counter % 200 == 0:
+            pass
+            # print(f'applied output: {applied_volts}')
+
+# -------------------   SIM COMPONENTS  --------------------

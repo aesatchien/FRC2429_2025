@@ -1,12 +1,9 @@
 import wpilib
-import navx
 import ntcore
 from commands2 import Subsystem
 from wpilib import SmartDashboard, DriverStation
-from ntcore import NetworkTableInstance
 import rev
 from rev import SparkBase, SparkLowLevel  # trying to save some typing
-from wpilib.drive import DifferentialDrive
 
 import constants
 from constants import ShooterConstants as sc
