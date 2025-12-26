@@ -86,11 +86,7 @@ class BlockheadMech:
         self.lig_side_chassis = root_chassis.appendLigament("chassis", self.chassis_len, 0, 12, Color8Bit(Color.kGray))
 
         # Climber (Attached to Chassis Base)
-        # Note: In simmech, climber_base was attached to chassisBase root, but here we can attach to the ligament or root.
-        # simmech: climber_base = side_elevator.appendLigament("chassisBase", "climber_base", ...)
-        # Since chassisBase is a root, we append to the root's existing ligament or create a new one? 
-        # Mechanism2d roots can have multiple ligaments.
-        self.lig_climber_base = self.lig_side_chassis.appendLigament("climber_base", 5, 90, 12, Color8Bit(Color.kGray))
+        self.lig_climber_base = root_chassis.appendLigament("climber_base", 5, 90, 12, Color8Bit(Color.kGray))
         self.lig_climber = self.lig_climber_base.appendLigament("climber", constants.ClimberConstants.k_length_meters * 39.3701, 90, 12, Color8Bit(Color.kGray))
 
         # Root: Elevator Main
