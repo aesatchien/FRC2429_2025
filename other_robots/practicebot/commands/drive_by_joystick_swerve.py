@@ -3,9 +3,10 @@ import math
 import typing
 import commands2
 import wpilib
+import ntcore
 
+import constants
 from subsystems.swerve import Swerve  # allows us to access the definitions
-from wpilib import SmartDashboard
 from commands2.button import CommandXboxController
 from wpimath.geometry import Rotation2d, Transform2d, Translation2d
 from wpimath.filter import Debouncer, SlewRateLimiter
@@ -50,6 +51,18 @@ class DriveByJoystickSwerve(commands2.Command):
 
         self.prev_commanded_vector = Translation2d(0, 0) # we should start stationary so this should be valid
 
+        self._init_networktables()
+
+    def _init_networktables(self):
+        self.inst = ntcore.NetworkTableInstance.getDefault()
+        status_prefix = constants.status_prefix
+        # Simulation Debugging Publishers
+        self.js_dv1_x_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv1_x").publish()
+        self.js_dv1_y_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv1_y").publish()
+        self.js_dv_norm_x_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv_norm_x").publish()
+        self.js_dv_norm_y_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv_norm_y").publish()
+        self.commanded_values_pub = self.inst.getDoubleArrayTopic(f"{status_prefix}/commanded values").publish()
+
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
         pass
@@ -91,8 +104,8 @@ class DriveByJoystickSwerve(commands2.Command):
 
         trace = True  # CJH watching the joystick values so we can plot them - need to get AJ better low end control
         if trace and wpilib.RobotBase.isSimulation():
-            wpilib.SmartDashboard.putNumber('_js_dv1_x', math.fabs(desired_vector.X()))
-            wpilib.SmartDashboard.putNumber('_js_dv1_y', math.fabs(desired_vector.Y()))
+            self.js_dv1_x_pub.set(math.fabs(desired_vector.X()))
+            self.js_dv1_y_pub.set(math.fabs(desired_vector.Y()))
 
         # clipping should happen first (the below if statement is clipping)
         # we clip rotation above
@@ -119,9 +132,9 @@ class DriveByJoystickSwerve(commands2.Command):
         desired_strafe = self.strafe_limiter.calculate(desired_strafe)
 
         if trace and wpilib.RobotBase.isSimulation():
-            wpilib.SmartDashboard.putNumber('_js_dv_norm_x', math.fabs(desired_fwd))
-            wpilib.SmartDashboard.putNumber('_js_dv_norm_y', math.fabs(desired_strafe))
-            SmartDashboard.putNumberArray('commanded values', [desired_fwd, desired_strafe, desired_rot])
+            self.js_dv_norm_x_pub.set(math.fabs(desired_fwd))
+            self.js_dv_norm_y_pub.set(math.fabs(desired_strafe))
+            self.commanded_values_pub.set([desired_fwd, desired_strafe, desired_rot])
 
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed and self.field_oriented:
             # Since our angle is now always 0 when facing away from blue driver station, we have to appropriately reverse translation commands
@@ -136,4 +149,3 @@ class DriveByJoystickSwerve(commands2.Command):
     def end(self, interrupted: bool) -> None:
         # probably should leave the wheels where they are?
         self.swerve.drive(0, 0, 0, fieldRelative=self.field_oriented, rate_limited=True)
-

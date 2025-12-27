@@ -3,6 +3,7 @@ from enum import Enum
 import commands2
 from wpilib import SmartDashboard, Timer
 from wpimath.geometry import Rotation2d
+import ntcore
 import constants
 from constants import LedConstants
 
@@ -70,6 +71,8 @@ class RobotState(commands2.Subsystem):
         # try to start all the subsystems on a different count so they don't all do the periodic updates at the same time
         self.counter = constants.RobotStateConstants.k_counter_offset
 
+        self._init_networktables()
+
         self._callbacks = []  # Store functions to notify
 
         # initialize modes and indicators
@@ -88,6 +91,12 @@ class RobotState(commands2.Subsystem):
         self.targets_dict = {target.value["name"]: target for target in self.Target}
         self.sides_dict = {side.value["name"]: side for side in self.Side}
         self.reef_goal_dict = {reef_goal.value["name"]: reef_goal for reef_goal in self.ReefGoal}
+
+    def _init_networktables(self):
+        self.inst = ntcore.NetworkTableInstance.getDefault()
+        self.reef_goal_pub = self.inst.getStringTopic(f"{constants.status_prefix}/_reef_goal").publish()
+        self.target_pub = self.inst.getStringTopic(f"{constants.status_prefix}/_target").publish()
+        self.side_pub = self.inst.getStringTopic(f"{constants.status_prefix}/_side").publish()
 
     def set_reef_goal_by_tag(self, tag):
         if tag in [7,18]:
@@ -117,7 +126,7 @@ class RobotState(commands2.Subsystem):
         self.reef_goal = reef_goal
         # self._notify_callbacks()  # Call all registered callbacks
         print(f'ReefGoal set to {self.reef_goal.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
-        SmartDashboard.putString('_reef_goal', self.reef_goal.value['name'])
+        self.reef_goal_pub.set(self.reef_goal.value['name'])
 
     def set_reef_goal_cmd(self, reef_goal: ReefGoal) -> commands2.InstantCommand:
         return commands2.InstantCommand(lambda: self.set_reef_goal(reef_goal)).ignoringDisable(True)
@@ -136,7 +145,7 @@ class RobotState(commands2.Subsystem):
         self.target = target
         self._notify_callbacks()  # Call all registered callbacks
         print(f'Target set to {target.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
-        SmartDashboard.putString('_target', self.target.value['name'])
+        self.target_pub.set(self.target.value['name'])
 
     def get_target(self):
         return self.target
@@ -145,7 +154,7 @@ class RobotState(commands2.Subsystem):
         self.side = side
         self._notify_callbacks()  # Call all registered callbacks
         print(f'Side set to {side.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
-        SmartDashboard.putString('_side', self.side.value['name'])
+        self.side_pub.set(self.side.value['name'])
 
     def get_side(self):
         return self.side

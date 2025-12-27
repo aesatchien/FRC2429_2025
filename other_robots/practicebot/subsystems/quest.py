@@ -50,6 +50,7 @@ class Questnav(SubsystemBase):
         
         # Use StructPublisher for Pose2d - matches Swerve implementation and works with AdvantageScope
         self.quest_pose_pub = self.inst.getStructTopic(f"{quest_prefix}/Quest_Pose2D_AdvScope", Pose2d).publish()
+        self.pose_pub = self.inst.getDoubleArrayTopic(f"{quest_prefix}/QUEST_POSE").publish()  # legacy GUI dashboard
         
         self.quest_battery_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Battery_%").publish()
         self.quest_latency_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Latency").publish()
@@ -169,6 +170,7 @@ class Questnav(SubsystemBase):
             
             self.quest_accepted_pub.set(self.quest_pose_accepted)
             self.quest_pose_pub.set(self.quest_pose)
+            self.pose_pub.set([self.quest_pose.X(), self.quest_pose.Y(), self.quest_pose.rotation().degrees()])  # legacy GUI version
             self.quest_connected_pub.set(self.questnav.is_connected())
             self.quest_tracking_pub.set(self.questnav.is_tracking())
             self.quest_battery_pub.set(self.questnav.get_battery_percent())

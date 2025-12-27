@@ -23,21 +23,41 @@ class PhysicsEngine:
 
         self.initialize_swerve()
 
+        self._init_networktables()
 
-        # vision stuff - using 2024 stuff for now (CJH)
-        key = 'orange'
+    def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
+        sim_prefix = constants.sim_prefix
+        camera_prefix = constants.camera_prefix
+        
+        # Vision Sim Publishers
+        self.sim_hub_dist_pub = self.inst.getDoubleTopic(f"{sim_prefix}/hub_dist").publish()
+        self.sim_hub_rot_pub = self.inst.getDoubleTopic(f"{sim_prefix}/hub_rot").publish()
+
         self.camera_dict = {}
-        self.cam_list = ['ArducamHigh', 'ArducamBack', 'GeniusLow', 'LogitechReef',]
+        self.cam_list = ['ArducamHigh', 'ArducamBack', 'GeniusLow', 'LogitechReef']
+
+        # vision stuff - using 2024 stuff for now (CJH).  This could easily be extended to make fake tags as well
+        # then you could use more of the tag stuff in vision, and the tag faking could be here instead of there
+        key = 'orange'
+        
         for ix, cam in enumerate(self.cam_list):
-            table = self.inst.getTable(f'/Cameras/{cam}')   # test cam for sim
-            targets_entry = table.getEntry(f"{key}/targets")
-            distance_entry = table.getEntry(f"{key}/distance")
-            strafe_entry = table.getEntry(f"{key}/strafe")
-            rotation_entry = table.getEntry(f"{key}/rotation")
-            timestamp_entry = table.getEntry(f"_timestamp")
-            self.camera_dict[cam] = {'table': table, 'offset': ix, 'targets_entry': targets_entry, 'distance_entry': distance_entry,
-                                     'strafe_entry': strafe_entry, 'rotation_entry': rotation_entry, 'timestamp_entry': timestamp_entry}
+            base = f'/Cameras/{cam}'
+            self.camera_dict[cam] = {
+                'offset': ix,
+                'targets_pub': self.inst.getDoubleTopic(f"{base}/{key}/targets").publish(),
+                'distance_pub': self.inst.getDoubleTopic(f"{base}/{key}/distance").publish(),
+                'strafe_pub': self.inst.getDoubleTopic(f"{base}/{key}/strafe").publish(),
+                'rotation_pub': self.inst.getDoubleTopic(f"{base}/{key}/rotation").publish(),
+                'timestamp_pub': self.inst.getDoubleTopic(f"{base}/_timestamp").publish()
+            }
+
+        # Swerve Debugging
+        self.target_angles_pub = self.inst.getDoubleArrayTopic("/SmartDashboard/target_angles").publish()
+        
+        # Swerve Target Subscribers
+        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
+        self.swerve_target_subs = [self.inst.getDoubleArrayTopic(f"/SmartDashboard/{v}").subscribe([0, 0]) for v in dash_values]
 
     def update_sim(self, now, tm_diff):
 
@@ -57,26 +77,26 @@ class PhysicsEngine:
     def update_vision(self):
         # update the vision - using 2024 stuff for now (CJH)
         ring_dist, ring_rot = 2.22, 3.22 #self.distance_to_ring()
-        wpilib.SmartDashboard.putNumber('/sim/hub_dist', round(ring_dist, 2))
-        wpilib.SmartDashboard.putNumber('/sim/hub_rot', round(ring_rot, 2))
+        self.sim_hub_dist_pub.set(round(ring_dist, 2))
+        self.sim_hub_rot_pub.set(round(ring_rot, 2))
+        
         for cam in self.cam_list:
             offset = self.camera_dict[cam]['offset']
-            self.camera_dict[cam]['targets_entry'].setDouble(1 + offset)
-            self.camera_dict[cam]['distance_entry'].setDouble(ring_dist + offset)
-            self.camera_dict[cam]['strafe_entry'].setDouble(0)
-            self.camera_dict[cam]['rotation_entry'].setDouble(self.theta - ring_rot)
+            self.camera_dict[cam]['targets_pub'].set(1 + offset)
+            self.camera_dict[cam]['distance_pub'].set(ring_dist + offset)
+            self.camera_dict[cam]['strafe_pub'].set(0)
+            self.camera_dict[cam]['rotation_pub'].set(self.theta - ring_rot)
             ts = wpilib.Timer.getFPGATimestamp() if wpilib.Timer.getFPGATimestamp() % 30 < (30/5)*(1+offset) else wpilib.Timer.getFPGATimestamp() -1  # simulate cameras dropping out
-            self.camera_dict[cam]['timestamp_entry'].setDouble(ts)  # pretend the camera is live
+            self.camera_dict[cam]['timestamp_pub'].set(ts)  # pretend the camera is live
 
 
     def update_swerve(self, tm_diff):
 
-        dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
-        target_angles = [wpilib.SmartDashboard.getNumberArray(dash_value, [0, 0])[1] for dash_value in dash_values]
+        target_angles = [sub.get()[1] for sub in self.swerve_target_subs]
         for spark_turn, target_angle in zip(self.spark_turns, target_angles):
             self.spark_dict[spark_turn]['position'].set(target_angle)  # this works to update the simulated spark
         if constants.k_swerve_debugging_messages:
-            wpilib.SmartDashboard.putNumberArray('target_angles', target_angles)
+            self.target_angles_pub.set(target_angles)
 
         # send the speeds and positions from the spark sim devices to the fourmotorswervedrivetrain
         module_states = []
@@ -115,6 +135,7 @@ class PhysicsEngine:
         # create a dictionary so we can refer to the sparks by name and get their relevant parameters
         self.spark_dict = {}
         # kinematics chassis speeds wants them in same order as in original definition - unfortunate ordering
+        # TODO - get these from swerve_constants
         self.spark_drives = ['lf_drive', 'rf_drive', 'lb_drive', 'rb_drive']
         self.spark_drive_ids = [21, 25, 23, 27]  # keep in this order - based on our kinematics definition
         self.spark_turns = ['lf_turn', 'rf_turn', 'lb_turn', 'rb_turn']

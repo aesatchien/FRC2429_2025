@@ -12,11 +12,12 @@ class Vision(SubsystemBase):
     def __init__(self) -> None:
         super().__init__()
         self.setName('Vision')
-        self.counter = constants.VisionConstants.k_counter_offset
+        self.counter = constants.SimConstants.k_counter_offset
         self.ntinst = NetworkTableInstance.getDefault()
 
         # set up a dictionary of cams to go through
         # Note: Order matters if we zip, but we will use explicit mapping below
+        # todo - make one source of truth, and that should be vision.py or constants.py
         self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, 'genius_low_tags': {}, 'logi_reef_tags': {}}
         self.camera_values = {}
 
@@ -47,7 +48,8 @@ class Vision(SubsystemBase):
             'ardu_high_tags': '/Cameras/ArducamHigh',
             'ardu_back_tags': '/Cameras/ArducamBack',
             'genius_low_tags': '/Cameras/GeniusLow',
-            'logi_reef_tags': '/Cameras/LogitechReef'
+            'logi_reef_tags': '/Cameras/LogitechReef',
+            # 'orange': '/Cameras/Orange'  # <--- You must add this for the code below to work
         }
 
         for key, table_path in table_map.items():

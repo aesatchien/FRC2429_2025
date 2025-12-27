@@ -23,7 +23,7 @@ from helpers.utilities import compare_motors
 class Swerve (Subsystem):
     def __init__(self, questnav) -> None:
         super().__init__()
-        self.counter = 0
+        self.counter = constants.DrivetrainConstants.k_counter_offset
         self.questnav = questnav  #  pass in the questnav subsystem so we can query it in periodic
         self.pdh = PowerDistribution(1, PowerDistribution.ModuleType.kRev)  # check power and other issues
 
@@ -327,32 +327,34 @@ class Swerve (Subsystem):
             self.pose_estimator.updateWithTime(ts, Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
 
     def _init_networktables(self):
-        prefix = constants.swerve_prefix
+        swerve_prefix = constants.swerve_prefix
+        status_prefix = constants.status_prefix
+
         # ------------- NetworkTables Publishers (Efficiency) -------------
         # Pre-allocate publishers to avoid hash lookups and string creation in periodic loops
         self.timestamp_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_timestamp").publish()
 
         # Use StructPublisher for Pose2d - extremely efficient and works natively with AdvantageScope
-        self.pose2d_pub = self.inst.getStructTopic(f"{prefix}/drive_pose2d", Pose2d).publish()
-        self.pose_pub = self.inst.getDoubleArrayTopic(f"{prefix}/drive_pose").publish()  # legacy
+        self.pose2d_pub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose2d", Pose2d).publish()
+        self.pose_pub = self.inst.getDoubleArrayTopic(f"{swerve_prefix}/drive_pose").publish()  # legacy GUI dashboard
 
-        self.drive_x_pub = self.inst.getDoubleTopic(f"{prefix}/drive_x").publish()
-        self.drive_y_pub = self.inst.getDoubleTopic(f"{prefix}/drive_y").publish()
-        self.drive_theta_pub = self.inst.getDoubleTopic(f"{prefix}/drive_theta").publish()
+        self.drive_x_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/drive_x").publish()
+        self.drive_y_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/drive_y").publish()
+        self.drive_theta_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/drive_theta").publish()
 
-        self.navx_angle_pub = self.inst.getDoubleTopic(f"{prefix}/_navx_angle").publish()
-        self.navx_yaw_pub = self.inst.getDoubleTopic(f"{prefix}/_navx_yaw").publish()
-        self.navx_raw_pub = self.inst.getDoubleTopic(f"{prefix}/_navx").publish()
-        self.keep_angle_pub = self.inst.getDoubleTopic(f"{prefix}/keep_angle").publish()
-        self.ypr_pub = self.inst.getDoubleArrayTopic(f"{prefix}/_navx_YPR").publish()
+        self.navx_angle_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/_navx_angle").publish()
+        self.navx_yaw_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/_navx_yaw").publish()
+        self.navx_raw_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/_navx").publish()
+        self.keep_angle_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/keep_angle").publish()
+        self.ypr_pub = self.inst.getDoubleArrayTopic(f"{swerve_prefix}/_navx_YPR").publish()
 
         # Debugging publishers - pre-allocate list to avoid f-string creation in loop
-        self.abs_enc_pubs = [self.inst.getDoubleTopic(f"{prefix}/absolute {i}").publish() for i in range(4)]
-        self.angles_pub = self.inst.getDoubleArrayTopic(f"{prefix}/_angles").publish()
+        self.abs_enc_pubs = [self.inst.getDoubleTopic(f"{swerve_prefix}/absolute {i}").publish() for i in range(4)]
+        self.angles_pub = self.inst.getDoubleArrayTopic(f"{swerve_prefix}/_angles").publish()
 
         # TODO - these don't really belong in Swerve
-        self.pdh_volt_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_pdh_voltage").publish()
-        self.pdh_current_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_pdh_current").publish()
+        self.pdh_volt_pub = self.inst.getDoubleTopic(f"{status_prefix}/_pdh_voltage").publish()
+        self.pdh_current_pub = self.inst.getDoubleTopic(f"{status_prefix}/_pdh_current").publish()
 
     def _update_dashboard(self, pose, ts):
         self.timestamp_pub.set(ts)  # TODO - see how to use the one that NT puts on every update anyway

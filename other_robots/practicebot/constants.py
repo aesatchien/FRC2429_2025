@@ -24,12 +24,16 @@ k_co_driver_controller_port = 1
 k_burn_flash = True
 
 #  ----------  network tables organization - one source for truth in publishing
-camera_prefix = r'/Camera'  # from the pis
+# systems outside the robot
+camera_prefix = r'/Cameras'  # from the pis
 quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
 
+# systems inside/from the robot
+status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status message
 vision_prefix = r'/SmartDashboard/Vision'  # from the robot
 swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
-command_prefix = r'/Command'  # the putData auto prepends /SmartDashboard to the key
+sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
+command_prefix = r'/Command'  # SPECIAL CASE: the SmartDashboard.putData auto prepends /SmartDashboard to the key
 
 
 k_swerve_debugging_messages = True
@@ -40,6 +44,7 @@ k_use_CJH_tags = True  # take tags from the pis
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True  # is there any reason for this at all?
+
 
 
 # TODO - this whole apriltag section belongs somewhere else - maybe in helpers/utilities.py
@@ -98,9 +103,12 @@ for tag_id in range(17, 23):
 # ----------   END APRILTAG HELPERS  -----------
 
 
+class SimConstants:
+    k_counter_offset = 1
+
 class VisionConstants:
 
-    k_counter_offset = 6
+    k_counter_offset = 2
     k_nt_debugging = False  # print extra values to NT for debugging
     k_pi_names = ["top_pi"]
 
@@ -109,7 +117,7 @@ class VisionConstants:
 
 class LedConstants:
 
-    k_counter_offset = 7
+    k_counter_offset = 3
     k_nt_debugging = False  # print extra values to NT for debugging
     k_led_count = 40  # correct as of 2025 0305
     k_led_count_ignore = 4  # flat ones not for the height indicator
@@ -117,12 +125,12 @@ class LedConstants:
 
 class RobotStateConstants:
 
-    k_counter_offset = 8
+    k_counter_offset = 4
     k_nt_debugging = False  # print extra values to NT for debugging
 
 class DrivetrainConstants:
 
-    k_counter_offset = 9
+    k_counter_offset = 5
     k_nt_debugging = False  # print extra values to NT for debugging
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13

@@ -85,14 +85,16 @@ class UIUpdater:
 
         # Update Quest Pose Text and Graphic
         quest_pose_entry = self.ui.widget_dict['quest_pose'].get('nt_entry')
-        quest_pose_str = quest_pose_entry.getString('No quest pose')
-        match = re.search(r"x=(?P<x>-?\d+\.\d+).*y=(?P<y>-?\d+\.\d+).*Rotation2d\((?P<rotation>-?\d+\.\d+)\)", quest_pose_str)
-        if match:
-            quest_x, quest_y, quest_rot = float(match.group("x")), float(match.group("y")), math.degrees(float(match.group("rotation")))
-        else:
-            quest_x, quest_y, quest_rot = -1, -1, -1
+        self.quest_pose = quest_pose_entry.getDoubleArray([0.5, 0.5, 0])
+        quest_x, quest_y, quest_rot = self.quest_pose
+        #quest_pose_str = quest_pose_entry.getString('No quest pose')
+        #match = re.search(r"x=(?P<x>-?\d+\.\d+).*y=(?P<y>-?\d+\.\d+).*Rotation2d\((?P<rotation>-?\d+\.\d+)\)", quest_pose_str)
+        #if match:
+        #    quest_x, quest_y, quest_rot = float(match.group("x")), float(match.group("y")), math.degrees(float(match.group("rotation")))
+        #else:
+        #    quest_x, quest_y, quest_rot = -1, -1, -1
         
-        quest_pose_msg = f'QUEST POSE\n{" " * x_pad}{quest_x:>5.2f}m {quest_y:>4.2f}m {" " * theta_pad}{quest_rot:>4.0f}°'
+        quest_pose_msg = f'QUEST POSE\n{" " * x_pad}{self.quest_pose[0]:>5.2f}m {self.quest_pose[1]:>4.2f}m {" " * theta_pad}{self.quest_pose[2]:>4.0f}°'
         self.ui.qlabel_quest_pose_indicator.setText(quest_pose_msg)
 
         quest_pixmap_rotated = self.ui.quest_pixmap.transformed(QtGui.QTransform().rotate(90 - quest_rot), QtCore.Qt.TransformationMode.SmoothTransformation)

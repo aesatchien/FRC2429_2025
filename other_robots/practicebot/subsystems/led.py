@@ -3,6 +3,7 @@ import time  # import time for precise timing
 import commands2
 from wpilib import AddressableLED
 from wpilib import SmartDashboard, Timer
+import ntcore
 import constants
 from subsystems.robot_state import RobotState
 
@@ -72,6 +73,8 @@ class Led(commands2.Subsystem):
         self.led_strip.setData(self.led_data)
         self.led_strip.start()
 
+        self._init_networktables()
+
         # initialize modes and indicators
         self.mode = self.Mode.kNONE
         self.prev_mode = self.Mode.kNONE
@@ -79,6 +82,11 @@ class Led(commands2.Subsystem):
 
         self.set_mode(self.Mode.kNONE)
         self.set_indicator(self.Indicator.kNONE)
+
+    def _init_networktables(self):
+        self.inst = ntcore.NetworkTableInstance.getDefault()
+        self.led_mode_pub = self.inst.getStringTopic(f"{constants.status_prefix}/_led_mode").publish()
+        self.led_indicator_pub = self.inst.getStringTopic(f"{constants.status_prefix}/_led_indicator").publish()
 
     def update_from_robot_state(self, target, side):
         """ Update LED mode based on RobotState changes. """
@@ -95,14 +103,14 @@ class Led(commands2.Subsystem):
     def set_mode(self, mode) -> None:
         self.prev_mode = self.mode
         self.mode = mode
-        SmartDashboard.putString('led_mode', self.mode.value['name'])
+        self.led_mode_pub.set(self.mode.value['name'])
 
     def get_mode(self):
         return self.mode
 
     def set_indicator(self, indicator) -> None:
         self.indicator = indicator
-        SmartDashboard.putString('led_indicator', self.indicator.value['name'])
+        self.led_indicator_pub.set(self.indicator.value['name'])
 
     def set_indicator_with_timeout(self, indicator: Indicator, timeout: float) -> commands2.ParallelRaceGroup:
         return commands2.StartEndCommand(
