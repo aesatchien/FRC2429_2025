@@ -138,19 +138,25 @@ class Questnav(SubsystemBase):
 
         self.questnav.command_periodic()
 
-        frames = self.questnav.get_all_unread_pose_frames()
-        for frame in frames:
-            if self.questnav.is_connected and self.questnav.is_tracking():
-                try:
-                    self.quest_pose = frame.quest_pose_3d.toPose2d().transformBy(self.quest_to_robot)
-                    quest_pose_old = self.quest_pose
-                except Exception as e:
-                    print(f"Error converting QuestNav Pose3d to Pose2d: {e}")
-                    self.quest_pose = quest_pose_old  # use last good pose in cases of error
-                    continue
-
+        if wpilib.RobotBase.isReal():
+            frames = self.questnav.get_all_unread_pose_frames()
+            for frame in frames:
+                if self.questnav.is_connected and self.questnav.is_tracking():
+                    try:
+                        self.quest_pose = frame.quest_pose_3d.toPose2d().transformBy(self.quest_to_robot)
+                        quest_pose_old = self.quest_pose
+                    except Exception as e:
+                        print(f"Error converting QuestNav Pose3d to Pose2d: {e}")
+                        self.quest_pose = quest_pose_old  # use last good pose in cases of error
+                        continue
+        else:  # simulate a pose - for now just grab the one the serve is publishing
+            current_pose = self.drive_pose2d_sub.get()
+            new_translation = current_pose.translation() + Translation2d(0.25, 0.25)  # TODO - add some randomness
+            self.quest_pose = Pose2d(new_translation, current_pose.rotation())
         # quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
-        self.quest_field.setRobotPose(self.quest_pose)
+
+        # why do we need more than one field?
+        # self.quest_field.setRobotPose(self.quest_pose)
 
         if self.counter % 10 == 0:
             if 0 < self.quest_pose.x < 17.658 and 0 < self.quest_pose.y < 8.131 and self.questnav.is_connected():
