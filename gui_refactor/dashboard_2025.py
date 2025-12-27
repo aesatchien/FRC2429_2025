@@ -173,9 +173,12 @@ class Ui(QtWidgets.QMainWindow):
     def label_click(self, label):
         command_nt_entry = self.widget_dict[label].get('command_nt_entry')
         if command_nt_entry:
-            toggled_state = not command_nt_entry.getBoolean(True)
-            print(f'You clicked {label}. Firing command at {datetime.today().strftime("%H:%M:%S")} ...', flush=True)
-            command_nt_entry.setBoolean(toggled_state)
+            if command_nt_entry.exists():
+                toggled_state = not command_nt_entry.getBoolean(False)
+                print(f'You clicked {label}. Firing command at {datetime.today().strftime("%H:%M:%S")} ...', flush=True)
+                command_nt_entry.setBoolean(toggled_state)
+            else:
+                print(f'Warning: {label} clicked but NT Publisher does not exist for {command_nt_entry}.', flush=True)
 
     def initialize_widgets(self):
         """Connects widget signals and populates the camera combobox."""

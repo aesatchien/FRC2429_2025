@@ -52,8 +52,11 @@ class PhysicsEngine:
                 'timestamp_pub': self.inst.getDoubleTopic(f"{base}/_timestamp").publish()
             }
 
+        # ground truth Publisher for Simulating Sensors
+        self.ground_truth_pub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).publish()
+
         # Swerve Debugging
-        self.target_angles_pub = self.inst.getDoubleArrayTopic("/SmartDashboard/target_angles").publish()
+        self.target_angles_pub = self.inst.getDoubleArrayTopic(f"{sim_prefix}/target_angles").publish()
         
         # Swerve Target Subscribers
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
@@ -111,6 +114,9 @@ class PhysicsEngine:
 
         # update the sim's robot
         self.physics_controller.drive(speeds, tm_diff)
+
+        # Publish ground truth for Questnav Sim - TODO: use this as the only sim pose
+        self.ground_truth_pub.set(self.physics_controller.get_pose())
 
         self.robot.container.swerve.pose_estimator.resetPosition(gyroAngle=self.physics_controller.get_pose().rotation(), wheelPositions=[SwerveModulePosition()] * 4, pose=self.physics_controller.get_pose())
 

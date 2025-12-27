@@ -77,73 +77,85 @@ CAMERA_CONFIG = {
     'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg'},
 }
 
+camera_prefix = r'/Cameras'  # from the pis
+quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
+# systems inside/from the robot
+status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status message
+vision_prefix = r'/SmartDashboard/Vision'  # from the robot
+swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
+sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
+command_prefix = r'/SmartDashboard/Command'  # DIFFERENT FROM ROBOT CODE: the robot SmartDashboard.putData auto prepends /SmartDashboard to the key
+base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
+
 WIDGET_CONFIG = {
-    # GUI UPDATES - NEED THIS PART FOR EVERY YEAR
-    'drive_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': '/SmartDashboard/Swerve/drive_pose', 'update_style': 'pose'},
-    'qcombobox_autonomous_routines': {'widget_name': 'qcombobox_autonomous_routines', 'nt_topic': r'/SmartDashboard/autonomous routines/options',
-                                      'selected_topic': r'/SmartDashboard/autonomous routines/selected', 'update_style': 'combo'},
+    # GUI UPDATES - NEED THIS PART FOR EVERY YEAR  - AT THE MOMENT I AM LEAVING A FEW OF THEM AS THE BASE PREFIX
+    'drive_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': f'{swerve_prefix}/drive_pose', 'update_style': 'pose'},
+    'qcombobox_autonomous_routines': {'widget_name': 'qcombobox_autonomous_routines', 'nt_topic': rf'{base_prefix}/autonomous routines/options',
+                                      'selected_topic': rf'{base_prefix}/autonomous routines/selected', 'update_style': 'combo'},
     'qlabel_nt_connected': {'widget_name': 'qlabel_nt_connected', 'update_style': 'connection'},
-    'qlabel_matchtime': {'widget_name': 'qlabel_matchtime', 'nt_topic': '/SmartDashboard/match_time', 'update_style': 'time'},
+    'qlabel_matchtime': {'widget_name': 'qlabel_matchtime', 'nt_topic': f'{base_prefix}/match_time', 'update_style': 'time'},
     'qlabel_alliance_indicator': {'widget_name': 'qlabel_alliance_indicator', 'nt_topic': '/FMSInfo/IsRedAlliance', 'update_style': 'indicator',
                                         'style_on': "border: 7px; border-radius: 7px; background-color:rgb(225, 0, 0); color:rgb(200, 200, 200);",
                                         'style_off': "border: 7px; border-radius: 7px; background-color:rgb(0, 0, 225); color:rgb(200, 200, 200);"},
     # 'qlabel_camera_view': {'widget_name': 'qlabel_camera_view'},  # this isn't necessary, is it?
-    'qlabel_pdh_voltage_monitor': {'widget_name': 'qlabel_pdh_voltage_monitor', 'nt_topic': '/SmartDashboard/_pdh_voltage', 'update_style': 'monitor'},
-    'qlabel_pdh_current_monitor': {'widget_name': 'qlabel_pdh_current_monitor', 'nt_topic': '/SmartDashboard/_pdh_current', 'update_style': 'monitor'},
 
-    # QUESTNAV STUFF
-    'quest_pose': {'widget_name': 'qlabel_quest_pose_indicator', 'nt_topic': '/QuestNav/QUEST_POSE', 'update_style': 'pose'},
-    'qlabel_questnav_heartbeat_indicator': {'widget_name': 'qlabel_questnav_heartbeat_indicator', 'nt_topic': '/QuestNav/QUEST_CONNECTED', 'update_style': 'indicator'},
-    'qlabel_questnav_inbounds_indicator': {'widget_name': 'qlabel_questnav_inbounds_indicator', 'nt_topic': '/QuestNav/QUEST_POSE_ACCEPTED', 'update_style': 'indicator'},
-    'qlabel_questnav_tracking_indicator': {'widget_name': 'qlabel_questnav_tracking_indicator', 'nt_topic': '/QuestNav/QUEST_TRACKING', 'update_style': 'indicator'},
-    'qlabel_questnav_sync_toggle_indicator': {'widget_name': 'qlabel_questnav_sync_toggle_indicator', 'nt_topic': '/QuestNav/questnav_synched', 'command_topic': '/SmartDashboard/QuestSyncToggle/running', 'update_style': 'indicator'},
-    'qlabel_questnav_reset_indicator': {'widget_name': 'qlabel_questnav_reset_indicator', 'nt_topic': '/QuestNav/QuestResetOdometry/running', 'command_topic': '/SmartDashboard/QuestResetOdometry/running', 'update_style': 'indicator'},
-    'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': '/QuestNav/questnav_in_use', 'command_topic': '/SmartDashboard/QuestEnableToggle/running', 'update_style': 'indicator'},
+    # ROBOT STATUS
+    'qlabel_pdh_voltage_monitor': {'widget_name': 'qlabel_pdh_voltage_monitor', 'nt_topic': f'{status_prefix}/_pdh_voltage', 'update_style': 'monitor'},
+    'qlabel_pdh_current_monitor': {'widget_name': 'qlabel_pdh_current_monitor', 'nt_topic': f'{status_prefix}/_pdh_current', 'update_style': 'monitor'},
 
-    # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE
+    # QUESTNAV STUFF  TODO - decide if quest commands should live in robot tree or questnav tree
+    'quest_pose': {'widget_name': 'qlabel_quest_pose_indicator', 'nt_topic': f'{quest_prefix}/QUEST_POSE', 'update_style': 'pose'},
+    'qlabel_questnav_heartbeat_indicator': {'widget_name': 'qlabel_questnav_heartbeat_indicator', 'nt_topic': f'{quest_prefix}/QUEST_CONNECTED', 'update_style': 'indicator'},
+    'qlabel_questnav_inbounds_indicator': {'widget_name': 'qlabel_questnav_inbounds_indicator', 'nt_topic': f'{quest_prefix}/QUEST_POSE_ACCEPTED', 'update_style': 'indicator'},
+    'qlabel_questnav_tracking_indicator': {'widget_name': 'qlabel_questnav_tracking_indicator', 'nt_topic': f'{quest_prefix}/QUEST_TRACKING', 'update_style': 'indicator'},
+    'qlabel_questnav_sync_toggle_indicator': {'widget_name': 'qlabel_questnav_sync_toggle_indicator', 'nt_topic': f'{quest_prefix}/questnav_synched', 'command_topic': f'{command_prefix}/QuestSyncToggle/running', 'update_style': 'indicator'},
+    'qlabel_questnav_reset_indicator': {'widget_name': 'qlabel_questnav_reset_indicator', 'nt_topic': f'{quest_prefix}/QuestResetOdometry/running', 'command_topic': f'{command_prefix}/QuestResetOdometry/running', 'update_style': 'indicator'},
+    'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': f'{quest_prefix}/questnav_in_use', 'command_topic': f'{command_prefix}/QuestEnableToggle/running', 'update_style': 'indicator'},
+
+    # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE  -  THESE HAVE NO NT TOPICS BECAUSE WE DO IT IN _update_camera_indicators
     'qlabel_arducam_high_indicator': {'widget_name': 'qlabel_arducam_high_indicator', 'update_style': 'camera_indicator'},
     'qlabel_logitech_reef_indicator': {'widget_name': 'qlabel_logitech_reef_indicator', 'update_style': 'camera_indicator'},
     'qlabel_genius_low_indicator': {'widget_name': 'qlabel_genius_low_indicator', 'update_style': 'camera_indicator'},
     'qlabel_arducam_back_indicator': {'widget_name': 'qlabel_arducam_back_indicator', 'update_style': 'camera_indicator'},
 
-    'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_arducam_high_target_indicator', 'nt_topic': '/SmartDashboard/Vision/arducam_high_targets_exist', 'update_style': 'indicator'},
-    'qlabel_arducam_back_target_indicator': {'widget_name': 'qlabel_arducam_back_target_indicator', 'nt_topic': '/SmartDashboard/Vision/arducam_back_targets_exist', 'update_style': 'indicator'},
-    'qlabel_logitech_reef_target_indicator': {'widget_name': 'qlabel_logitech_reef_target_indicator', 'nt_topic': '/SmartDashboard/Vision/logitech_reef_targets_exist', 'update_style': 'indicator'},
-    'qlabel_genius_low_target_indicator': {'widget_name': 'qlabel_genius_low_target_indicator', 'nt_topic': '/SmartDashboard/Vision/genius_low_targets_exist', 'update_style': 'indicator'},
-    'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': '/SmartDashboard/Vision/photoncam_targets_exist', 'update_style': 'indicator'},
+    'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_arducam_high_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_high_targets_exist', 'update_style': 'indicator'},
+    'qlabel_arducam_back_target_indicator': {'widget_name': 'qlabel_arducam_back_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_back_targets_exist', 'update_style': 'indicator'},
+    'qlabel_logitech_reef_target_indicator': {'widget_name': 'qlabel_logitech_reef_target_indicator', 'nt_topic': f'{vision_prefix}/logitech_reef_targets_exist', 'update_style': 'indicator'},
+    'qlabel_genius_low_target_indicator': {'widget_name': 'qlabel_genius_low_target_indicator', 'nt_topic': f'{vision_prefix}/genius_low_targets_exist', 'update_style': 'indicator'},
+    'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': f'{vision_prefix}/photoncam_targets_exist', 'update_style': 'indicator'},
 
 
-    # COMMANDS  - MOST LIKELY WILL CHANGE EVERY YEAR
-    'qlabel_elevator_top_indicator': {'widget_name': 'qlabel_elevator_top_indicator', 'nt_topic': '/SmartDashboard/MoveElevatorTop/running', 'command_topic': '/SmartDashboard/MoveElevatorTop/running', 'update_style': 'indicator'},
-    'qlabel_elevator_up_indicator': {'widget_name': 'qlabel_elevator_up_indicator', 'nt_topic': '/SmartDashboard/MoveElevatorUp/running', 'command_topic': '/SmartDashboard/MoveElevatorUp/running', 'update_style': 'indicator'},
-    'qlabel_elevator_down_indicator': {'widget_name': 'qlabel_elevator_down_indicator', 'nt_topic': '/SmartDashboard/MoveElevatorDown/running', 'command_topic': '/SmartDashboard/MoveElevatorDown/running', 'update_style': 'indicator'},
-    'qlabel_pivot_up_indicator': {'widget_name': 'qlabel_pivot_up_indicator', 'nt_topic': '/SmartDashboard/MovePivotUp/running', 'command_topic': '/SmartDashboard/MovePivotUp/running', 'update_style': 'indicator'},
-    'qlabel_pivot_down_indicator': {'widget_name': 'qlabel_pivot_down_indicator', 'nt_topic': '/SmartDashboard/MovePivotDown/running', 'command_topic': '/SmartDashboard/MovePivotDown/running', 'update_style': 'indicator'},
-    'qlabel_wrist_up_indicator': {'widget_name': 'qlabel_wrist_up_indicator', 'nt_topic': '/SmartDashboard/MoveWristUp/running', 'command_topic': '/SmartDashboard/MoveWristUp/running', 'update_style': 'indicator'},
-    'qlabel_wrist_down_indicator': {'widget_name': 'qlabel_wrist_down_indicator', 'nt_topic': '/SmartDashboard/MoveWristDown/running', 'command_topic': '/SmartDashboard/MoveWristDown/running', 'update_style': 'indicator'},
-    'qlabel_intake_on_indicator': {'widget_name': 'qlabel_intake_on_indicator', 'nt_topic': '/SmartDashboard/IntakeOn/running', 'command_topic': '/SmartDashboard/IntakeOn/running', 'update_style': 'indicator'},
-    'qlabel_intake_off_indicator': {'widget_name': 'qlabel_intake_off_indicator', 'nt_topic': '/SmartDashboard/IntakeOff/running','command_topic': '/SmartDashboard/IntakeOff/running', 'update_style': 'indicator'},
-    'qlabel_intake_reverse_indicator': {'widget_name': 'qlabel_intake_reverse_indicator', 'nt_topic': '/SmartDashboard/IntakeReverse/running','command_topic': '/SmartDashboard/IntakeReverse/running', 'update_style': 'indicator'},
-    'qlabel_climber_down_indicator': {'widget_name': 'qlabel_climber_down_indicator', 'nt_topic': '/SmartDashboard/Move climber down/running', 'command_topic': '/SmartDashboard/Move climber down/running', 'update_style': 'indicator'},
-    'qlabel_climber_up_indicator': {'widget_name': 'qlabel_climber_up_indicator', 'nt_topic': '/SmartDashboard/Move climber up/running', 'command_topic': '/SmartDashboard/Move climber up/running', 'update_style': 'indicator'},
-    'qlabel_stow_indicator': {'widget_name': 'qlabel_stow_indicator', 'nt_topic': '/SmartDashboard/GoToStow/running', 'command_topic': '/SmartDashboard/GoToStow/running', 'update_style': 'indicator'},
-    'qlabel_score_indicator': {'widget_name': 'qlabel_score_indicator', 'nt_topic': '/SmartDashboard/Score/running', 'command_topic': '/SmartDashboard/Score/running', 'flash':True, 'update_style': 'indicator'},
-    'qlabel_l1_indicator': {'widget_name': 'qlabel_l1_indicator', 'nt_topic': '/SmartDashboard/GoToL1/running', 'command_topic': '/SmartDashboard/GoToL1/running', 'update_style': 'indicator'},
-    'qlabel_l2_indicator': {'widget_name': 'qlabel_l2_indicator', 'nt_topic': '/SmartDashboard/GoToL2/running', 'command_topic': '/SmartDashboard/GoToL2/running', 'update_style': 'indicator'},
-    'qlabel_l3_indicator': {'widget_name': 'qlabel_l3_indicator', 'nt_topic': '/SmartDashboard/GoToL3/running', 'command_topic': '/SmartDashboard/GoToL3/running', 'update_style': 'indicator'},
-    'qlabel_l4_indicator': {'widget_name': 'qlabel_l4_indicator', 'nt_topic': '/SmartDashboard/GoToL4/running', 'command_topic': '/SmartDashboard/GoToL4/running', 'update_style': 'indicator'},
-    'qlabel_can_report_indicator': {'widget_name': 'qlabel_can_report_indicator', 'nt_topic': '/SmartDashboard/CANStatus/running', 'command_topic': '/SmartDashboard/CANStatus/running', 'update_style': 'indicator'},
-    'qlabel_reset_flex_indicator': {'widget_name': 'qlabel_reset_flex_indicator', 'nt_topic': '/SmartDashboard/ResetFlex/running', 'command_topic': '/SmartDashboard/ResetFlex/running', 'update_style': 'indicator'},
-    'qlabel_elevator_shift_up_indicator': {'widget_name': 'qlabel_elevator_shift_up_indicator', 'nt_topic': '/SmartDashboard/CalElevatorUp/running', 'command_topic': '/SmartDashboard/CalElevatorUp/running', 'update_style': 'indicator'},
-    'qlabel_elevator_shift_down_indicator': {'widget_name': 'qlabel_elevator_shift_down_indicator', 'nt_topic': '/SmartDashboard/CalElevatorDown/running', 'command_topic': '/SmartDashboard/CalElevatorDown/running', 'update_style': 'indicator'},
-    'qlabel_cal_wrist_indicator': {'widget_name': 'qlabel_cal_wrist_indicator', 'nt_topic': '/SmartDashboard/RecalWrist/running', 'command_topic': '/SmartDashboard/RecalWrist/running', 'update_style': 'indicator'},
-    'qlabel_cal_wrist_up_indicator': {'widget_name': 'qlabel_cal_wrist_up_indicator', 'nt_topic': '/SmartDashboard/CalWristUp/running', 'command_topic': '/SmartDashboard/CalWristUp/running', 'update_style': 'indicator'},
-    'qlabel_cal_wrist_down_indicator': {'widget_name': 'qlabel_cal_wrist_down_indicator', 'nt_topic': '/SmartDashboard/CalWristDown/running', 'command_topic': '/SmartDashboard/CalWristDown/running', 'update_style': 'indicator'},
+    # COMMANDS  - MOST LIKELY WILL CHANGE EVERY YEAR BUT GOOD TO GROUP IN ONE PLACE
+    'qlabel_elevator_top_indicator': {'widget_name': 'qlabel_elevator_top_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorTop/running', 'command_topic': f'{command_prefix}/MoveElevatorTop/running', 'update_style': 'indicator'},
+    'qlabel_elevator_up_indicator': {'widget_name': 'qlabel_elevator_up_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorUp/running', 'command_topic': f'{command_prefix}/MoveElevatorUp/running', 'update_style': 'indicator'},
+    'qlabel_elevator_down_indicator': {'widget_name': 'qlabel_elevator_down_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorDown/running', 'command_topic': f'{command_prefix}/MoveElevatorDown/running', 'update_style': 'indicator'},
+    'qlabel_pivot_up_indicator': {'widget_name': 'qlabel_pivot_up_indicator', 'nt_topic': f'{command_prefix}/MovePivotUp/running', 'command_topic': f'{command_prefix}/MovePivotUp/running', 'update_style': 'indicator'},
+    'qlabel_pivot_down_indicator': {'widget_name': 'qlabel_pivot_down_indicator', 'nt_topic': f'{command_prefix}/MovePivotDown/running', 'command_topic': f'{command_prefix}/MovePivotDown/running', 'update_style': 'indicator'},
+    'qlabel_wrist_up_indicator': {'widget_name': 'qlabel_wrist_up_indicator', 'nt_topic': f'{command_prefix}/MoveWristUp/running', 'command_topic': f'{command_prefix}/MoveWristUp/running', 'update_style': 'indicator'},
+    'qlabel_wrist_down_indicator': {'widget_name': 'qlabel_wrist_down_indicator', 'nt_topic': f'{command_prefix}/MoveWristDown/running', 'command_topic': f'{command_prefix}/MoveWristDown/running', 'update_style': 'indicator'},
+    'qlabel_intake_on_indicator': {'widget_name': 'qlabel_intake_on_indicator', 'nt_topic': f'{command_prefix}/IntakeOn/running', 'command_topic': f'{command_prefix}/IntakeOn/running', 'update_style': 'indicator'},
+    'qlabel_intake_off_indicator': {'widget_name': 'qlabel_intake_off_indicator', 'nt_topic': f'{command_prefix}/IntakeOff/running','command_topic': f'{command_prefix}/IntakeOff/running', 'update_style': 'indicator'},
+    'qlabel_intake_reverse_indicator': {'widget_name': 'qlabel_intake_reverse_indicator', 'nt_topic': f'{command_prefix}/IntakeReverse/running','command_topic': f'{command_prefix}/IntakeReverse/running', 'update_style': 'indicator'},
+    'qlabel_climber_down_indicator': {'widget_name': 'qlabel_climber_down_indicator', 'nt_topic': f'{command_prefix}/Move climber down/running', 'command_topic': f'{command_prefix}/Move climber down/running', 'update_style': 'indicator'},
+    'qlabel_climber_up_indicator': {'widget_name': 'qlabel_climber_up_indicator', 'nt_topic': f'{command_prefix}/Move climber up/running', 'command_topic': f'{command_prefix}/Move climber up/running', 'update_style': 'indicator'},
+    'qlabel_stow_indicator': {'widget_name': 'qlabel_stow_indicator', 'nt_topic': f'{command_prefix}/GoToStow/running', 'command_topic': f'{command_prefix}/GoToStow/running', 'update_style': 'indicator'},
+    'qlabel_score_indicator': {'widget_name': 'qlabel_score_indicator', 'nt_topic': f'{command_prefix}/Score/running', 'command_topic': f'{command_prefix}/Score/running', 'flash':True, 'update_style': 'indicator'},
+    'qlabel_l1_indicator': {'widget_name': 'qlabel_l1_indicator', 'nt_topic': f'{command_prefix}/GoToL1/running', 'command_topic': f'{command_prefix}/GoToL1/running', 'update_style': 'indicator'},
+    'qlabel_l2_indicator': {'widget_name': 'qlabel_l2_indicator', 'nt_topic': f'{command_prefix}/GoToL2/running', 'command_topic': f'{command_prefix}/GoToL2/running', 'update_style': 'indicator'},
+    'qlabel_l3_indicator': {'widget_name': 'qlabel_l3_indicator', 'nt_topic': f'{command_prefix}/GoToL3/running', 'command_topic': f'{command_prefix}/GoToL3/running', 'update_style': 'indicator'},
+    'qlabel_l4_indicator': {'widget_name': 'qlabel_l4_indicator', 'nt_topic': f'{command_prefix}/GoToL4/running', 'command_topic': f'{command_prefix}/GoToL4/running', 'update_style': 'indicator'},
+    'qlabel_can_report_indicator': {'widget_name': 'qlabel_can_report_indicator', 'nt_topic': f'{command_prefix}/CANStatus/running', 'command_topic': f'{command_prefix}/CANStatus/running', 'update_style': 'indicator'},
+    'qlabel_reset_flex_indicator': {'widget_name': 'qlabel_reset_flex_indicator', 'nt_topic': f'{command_prefix}/ResetFlex/running', 'command_topic': f'{command_prefix}/ResetFlex/running', 'update_style': 'indicator'},
+    'qlabel_elevator_shift_up_indicator': {'widget_name': 'qlabel_elevator_shift_up_indicator', 'nt_topic': f'{command_prefix}/CalElevatorUp/running', 'command_topic': f'{command_prefix}/CalElevatorUp/running', 'update_style': 'indicator'},
+    'qlabel_elevator_shift_down_indicator': {'widget_name': 'qlabel_elevator_shift_down_indicator', 'nt_topic': f'{command_prefix}/CalElevatorDown/running', 'command_topic': f'{command_prefix}/CalElevatorDown/running', 'update_style': 'indicator'},
+    'qlabel_cal_wrist_indicator': {'widget_name': 'qlabel_cal_wrist_indicator', 'nt_topic': f'{command_prefix}/RecalWrist/running', 'command_topic': f'{command_prefix}/RecalWrist/running', 'update_style': 'indicator'},
+    'qlabel_cal_wrist_up_indicator': {'widget_name': 'qlabel_cal_wrist_up_indicator', 'nt_topic': f'{command_prefix}/CalWristUp/running', 'command_topic': f'{command_prefix}/CalWristUp/running', 'update_style': 'indicator'},
+    'qlabel_cal_wrist_down_indicator': {'widget_name': 'qlabel_cal_wrist_down_indicator', 'nt_topic': f'{command_prefix}/CalWristDown/running', 'command_topic': f'{command_prefix}/CalWristDown/running', 'update_style': 'indicator'},
 
-    'qlabel_game_piece_indicator': {'widget_name': 'qlabel_game_piece_indicator', 'nt_topic': '/SmartDashboard/gamepiece_present', 'command_topic': '/SmartDashboard/LedToggle/running', 'update_style': 'indicator',
+    'qlabel_game_piece_indicator': {'widget_name': 'qlabel_game_piece_indicator', 'nt_topic': f'{command_prefix}/gamepiece_present', 'command_topic': f'{command_prefix}/LedToggle/running', 'update_style': 'indicator',
                                         'style_on': "border: 7px; border-radius: 7px; background-color:rgb(0, 220, 220); color:rgb(250, 250, 250);",
                                         'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
-    'qlabel_navx_reset_indicator': {'widget_name': 'qlabel_navx_reset_indicator', 'nt_topic': '/SmartDashboard/GyroReset/running', 'command_topic': '/SmartDashboard/GyroReset/running', 'update_style': 'indicator'},
+    'qlabel_navx_reset_indicator': {'widget_name': 'qlabel_navx_reset_indicator', 'nt_topic': f'{command_prefix}/GyroReset/running', 'command_topic': f'{command_prefix}/GyroReset/running', 'update_style': 'indicator'},
 
 
     # NUMERIC INDICATORS - I HAVE BEEN USING THE LCD FOR THIS BUT THERE BUST BE A BETTER WAY TO SHOW NUMBERS

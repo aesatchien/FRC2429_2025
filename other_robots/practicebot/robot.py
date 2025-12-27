@@ -59,8 +59,8 @@ class MyRobot(commands2.TimedCommandRobot):
                     not self.container.questnav.quest_has_synched and
                     (self.container.swerve.count_subscribers[3]).get() > 0):
                 self.container.swerve.questnav.quest_sync_odometry()  # this will mark that we have synched
-            if wpilib.RobotBase.isReal():
-                print(f"quest sync:{self.container.questnav.quest_has_synched} logitec tag count is:{self.container.swerve.count_subscribers[3].get()} at {self.container.timer.get():.1f}s")
+            if wpilib.RobotBase.isReal() or wpilib.RobotBase.isSimulation():  # redundant to show we covered both cases
+                print(f"quest sync:{self.container.questnav.quest_has_synched} logitech tag count is:{self.container.swerve.count_subscribers[3].get()} at {self.container.timer.get():.1f}s")
         self.disabled_counter += 1
 
     def autonomousInit(self) -> None:

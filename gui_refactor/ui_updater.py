@@ -38,7 +38,7 @@ class UIUpdater:
 
         # Functions with dependencies are called in a specific order
         self._update_pose_and_field()  # Must be called first to get latest pose
-        self._update_camera_indicators()  # Check cameara connection states
+        self._update_camera_indicators()  # Check camera connection states
         self._update_shot_calculations()  # Depends on pose data
 
         # Use the dispatcher for all other standard widgets based on their update style

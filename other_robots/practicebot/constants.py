@@ -33,7 +33,7 @@ status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status mes
 vision_prefix = r'/SmartDashboard/Vision'  # from the robot
 swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
 sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
-command_prefix = r'/Command'  # SPECIAL CASE: the SmartDashboard.putData auto prepends /SmartDashboard to the key
+command_prefix = r'Command'  # SPECIAL CASE: the SmartDashboard.putData auto prepends /SmartDashboard to the key
 
 
 k_swerve_debugging_messages = True

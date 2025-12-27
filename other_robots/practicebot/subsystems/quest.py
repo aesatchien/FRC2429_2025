@@ -1,4 +1,5 @@
 import wpilib
+import random
 from commands2 import SubsystemBase, InstantCommand
 from wpilib import SmartDashboard, DriverStation, Timer, Field2d
 from wpimath.units import inchesToMeters
@@ -30,6 +31,13 @@ class Questnav(SubsystemBase):
         self.use_quest = constants.k_use_quest_odometry
         self.quest_pose = Pose2d(-10, -10, Rotation2d.fromDegrees(0)) # initial pose if not connected / tracking
 
+        # Simulation variables
+        # Start with a large error to verify syncing works (e.g., Quest thinks world origin off by x=2, y=2)
+        self.sim_error = Pose2d(Translation2d(2, 2), Rotation2d.fromDegrees(30))
+        # random walk - using uniform distribution, so sigma step ~ a/sqrt(3) and in n steps magnitude is sqrt n * sigma step
+        self.walk_xy = 0.005  # meters per loop, 0.005 per step at 50x/second should be 0.02 m/sec
+        self.walk_deg = 0.1  # degrees per loop
+
         self._init_networktables()
 
         if not wpilib.RobotBase.isSimulation():
@@ -39,6 +47,7 @@ class Questnav(SubsystemBase):
         self.inst = NetworkTableInstance.getDefault()
         quest_prefix = constants.quest_prefix
         swerve_prefix = constants.swerve_prefix
+        sim_prefix = constants.sim_prefix
 
         # ------------- Publishers (Efficiency) -------------
         self.quest_synched_pub = self.inst.getBooleanTopic(f"{quest_prefix}/questnav_synched").publish()
@@ -61,16 +70,19 @@ class Questnav(SubsystemBase):
         # Subscribe to the drive_pose published by Swerve (now a Struct)
         self.drive_pose2d_sub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose2d", Pose2d).subscribe(Pose2d())
 
+        # Subscribe to ground truth from Physics (for Sim) - doesn't really matter if it doesn't exist when real
+        self.ground_truth_sub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).subscribe(Pose2d())
+
         # ------------- Initial Values & Buttons -------------
         self.quest_synched_pub.set(self.quest_has_synched)
         self.quest_in_use_pub.set(self.use_quest)
 
         # note - may not want these buried one deeper.  TBD
         command_prefix = constants.command_prefix
-        SmartDashboard.putData(f'{command_prefix}/Quest/ResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
-        SmartDashboard.putData(f'{command_prefix}/Quest/SyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
-        SmartDashboard.putData(f'{command_prefix}/Quest/EnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
-        SmartDashboard.putData(f'{command_prefix}/Quest/SyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/QuestResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/QuestSyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/QuestEnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
         
         # Put Field2d once (*** it updates itself internally ***)
         SmartDashboard.putData("Quest/Field", self.quest_field)
@@ -78,17 +90,33 @@ class Questnav(SubsystemBase):
     def set_quest_pose(self, pose: Pose2d) -> None:
         # set the pose of the Questnav, transforming from robot center top questnav coordinate
         self.questnav.set_pose(Pose3d(pose.transformBy(self.quest_to_robot.inverse())))
+        
+        if wpilib.RobotBase.isSimulation():
+            # In Sim, "setting the pose" means we are now synced to the ground truth
+            self.sim_error = Pose2d(Translation2d(0, 0), Rotation2d.fromDegrees(0))
 
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
+        # this came over from swerve, maybe we don't need it anymore
         #self.reset_pose(pose)
         self.set_quest_pose(pose)
 
     def quest_reset_odometry(self) -> None:
         """Reset robot odometry at the Subwoofer."""
+        red_pose = Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0))
+        blue_pose = Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180))
+
         if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
-            self.set_quest_pose(Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0)))
+            new_pose = red_pose
         else:
-            self.set_quest_pose(Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180)))
+            new_pose = blue_pose
+
+        if wpilib.RobotBase.isReal():
+                self.set_quest_pose(new_pose)
+        else:
+            # put us back at the red/blue locations: find the pose error
+            self.sim_error = new_pose.relativeTo(self.ground_truth_sub.get())
+
+
         print(f"Reset questnav at {Timer.getFPGATimestamp():.1f}s")
         self.quest_unsync_odometry()
 
@@ -97,6 +125,9 @@ class Questnav(SubsystemBase):
         
         # Efficiently get the pose from the subscriber (returns a Pose2d object)
         self.set_quest_pose(self.drive_pose2d_sub.get())
+        if wpilib.RobotBase.isSimulation():
+            self.sim_error = Pose2d(0, 0, 0) # reset the quest's sim error
+
         self.quest_synched_pub.set(self.quest_has_synched)
 
     def quest_unsync_odometry(self) -> None:
@@ -153,11 +184,25 @@ class Questnav(SubsystemBase):
                         print(f"Error converting QuestNav Pose3d to Pose2d: {e}")
                         self.quest_pose = quest_pose_old  # use last good pose in cases of error
                         continue
-        else:  # simulate a pose - for now just grab the one the serve is publishing
-            current_pose = self.drive_pose2d_sub.get()
-            new_translation = current_pose.translation() + Translation2d(0.25, 0.25)  # TODO - add some randomness
-            self.quest_pose = Pose2d(new_translation, current_pose.rotation())
-        # quest_pose = self.questnav.get_pose().transformBy(self.quest_to_robot)
+
+        else:  # simulate a pose read ground truth from sim and apply the current "drift/error" of the Quest
+            
+            # Add a random walk to the error to simulate drift
+            self.sim_error = Pose2d(
+                self.sim_error.X() + (random.random() - 0.5) * 2 * self.walk_xy,
+                self.sim_error.Y() + (random.random() - 0.5) * 2 * self.walk_xy,
+                Rotation2d.fromDegrees(self.sim_error.rotation().degrees() + (random.random() - 0.5) * 2 * self.walk_deg)
+            )
+
+            ground_truth:Pose2d = self.ground_truth_sub.get()
+            # Since we are giving it a field relative transform (not robot relative)
+            self.quest_pose = Pose2d(
+                ground_truth.translation() + self.sim_error.translation(),
+                ground_truth.rotation() + self.sim_error.rotation()
+            )
+
+        # does this belong here?  not sure what it's for - CJH
+        # self.quest_pose = self.get_pose().transformBy(self.quest_to_robot)
 
         # why do we need more than one field?
         # self.quest_field.setRobotPose(self.quest_pose)
