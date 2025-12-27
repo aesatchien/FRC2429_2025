@@ -1,5 +1,5 @@
 # 2429 FRC code for 2025 season - Reefscape
-
+from sys import prefix
 
 import wpilib
 from wpimath.geometry import Pose2d
@@ -131,22 +131,22 @@ class RobotContainer:
     def initialize_dashboard(self):
         # lots of putdatas for testing on the dash
         # COMMANDS FOR GUI (ROBOT DEBUGGING) - 20250224 CJH
-
+        command_prefix = constants.command_prefix
         # --------------   TESTING LEDS ----------------
         self.led_mode_chooser = wpilib.SendableChooser()
         [self.led_mode_chooser.addOption(key, value) for key, value in self.led.modes_dict.items()]  # add all the indicators
         self.led_mode_chooser.onChange(listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(SetLEDs(container=self, led=self.led, mode=selected_value)))
-        wpilib.SmartDashboard.putData('LED Mode', self.led_mode_chooser)
+        wpilib.SmartDashboard.putData(f'{command_prefix}/LED Mode', self.led_mode_chooser)
 
         self.led_indicator_chooser = wpilib.SendableChooser()
         [self.led_indicator_chooser.addOption(key, value) for key, value in self.led.indicators_dict.items()]  # add all the indicators
         self.led_indicator_chooser.onChange(listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
             SetLEDs(container=self, led=self.led, indicator=selected_value)))
-        wpilib.SmartDashboard.putData('LED Indicator', self.led_indicator_chooser)
+        wpilib.SmartDashboard.putData(f'{command_prefix}/LED Indicator', self.led_indicator_chooser)
 
 
         # experimental, not used on dash
-        wpilib.SmartDashboard.putData('SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
+        wpilib.SmartDashboard.putData(f'{command_prefix}/SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
 
         # commands for pyqt dashboard - please do not remove
 
@@ -158,7 +158,7 @@ class RobotContainer:
         self.score_test_chooser.onChange(
             listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
                 commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=selected_value))))
-        wpilib.SmartDashboard.putData('RobotScoringMode', self.score_test_chooser)
+        wpilib.SmartDashboard.putData(f'{command_prefix}/RobotScoringMode', self.score_test_chooser)
 
         # self.auto_chooser = AutoBuilder.buildAutoChooser('')  # this loops through the path planner deploy directory
         self.auto_chooser = wpilib.SendableChooser()  #  use this if you don't have any pathplanner autos defined

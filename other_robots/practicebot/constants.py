@@ -1,6 +1,4 @@
-from enum import Enum
 import math
-from typing import Dict
 import rev
 import robotpy_apriltag
 import wpilib
@@ -12,38 +10,45 @@ from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
 from subsystems.swerve_constants import DriveConstants
 
-k_enable_logging = False  # allow logging from
+# TODO - organize this better
+k_enable_logging = False  # allow logging from Advantagescope (in swerve.py), but really we may as well start it here
+
 # starting position for odometry
-k_start_x = 0
-k_start_y = 0
-# joysticks and other input
+k_start_x, k_start_y  = 0, 0
+
+# ------------  joysticks and other input ------------
 k_driver_controller_port = 0
 k_co_driver_controller_port = 1
-
-# robot characteristics - should be near driveconstants, not here
-k_robot_mass_kg = 56
-k_robot_moi = 1/12 * k_robot_mass_kg * (DriveConstants.kWheelBase**2 + DriveConstants.kWheelBase**2) # (https://choreo.autos/usage/estimating-moi/) 
 
 # should be fine to burn on every reboot, but we can turn this off
 k_burn_flash = True
 
+#  ----------  network tables organization - one source for truth in publishing
+camera_prefix = r'/Camera'  # from the pis
+quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
+
+vision_prefix = r'/SmartDashboard/Vision'  # from the robot
+swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
+command_prefix = r'/Command'  # the putData auto prepends /SmartDashboard to the key
+
+
 k_swerve_debugging_messages = True
 # multiple attempts at tags this year - TODO - use l/r or up/down tilted cameras again, gives better data
-k_use_apriltag_odometry = False
 k_use_quest_odometry = True
 k_use_photontags = False  # take tags from photonvision camera
 k_use_CJH_tags = True  # take tags from the pis
 k_swerve_only = False
 k_swerve_rate_limited = True
-k_field_oriented = True
+k_field_oriented = True  # is there any reason for this at all?
 
 
+# TODO - this whole apriltag section belongs somewhere else - maybe in helpers/utilities.py
+# ----------   APRILTAG HELPERS  -----------
 # Load the AprilTag field layout
 layout = robotpy_apriltag.AprilTagFieldLayout.loadField(robotpy_apriltag.AprilTagField.k2025ReefscapeWelded)
 
 # Dictionary to store robot poses
 k_useful_robot_poses_blue = {}
-
 # Tag-to-branch name mapping
 branch_names = ["cd", "ab", "kl", "ij", "gh", "ef"]
 
@@ -90,6 +95,7 @@ for tag_id in range(17, 23):
         # print(f'tag:{tag_id}: Trans: {tag_translation}  Theta: {tag_yaw}')  # CJH trying to debug this stuff - this is correct
         # print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
 
+# ----------   END APRILTAG HELPERS  -----------
 
 
 class VisionConstants:

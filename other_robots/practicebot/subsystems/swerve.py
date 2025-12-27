@@ -327,7 +327,7 @@ class Swerve (Subsystem):
             self.pose_estimator.updateWithTime(ts, Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
 
     def _init_networktables(self):
-        prefix = r'/SmartDashboard/Swerve'
+        prefix = constants.swerve_prefix
         # ------------- NetworkTables Publishers (Efficiency) -------------
         # Pre-allocate publishers to avoid hash lookups and string creation in periodic loops
         self.timestamp_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_timestamp").publish()

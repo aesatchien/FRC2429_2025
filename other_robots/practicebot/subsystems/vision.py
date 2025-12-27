@@ -28,17 +28,17 @@ class Vision(SubsystemBase):
 
     def _init_networktables(self):
         self.inst = NetworkTableInstance.getDefault()
-        prefix = r'/SmartDashboard/Vision'
+        vision_prefix = constants.vision_prefix
         # ------------- Publishers (Efficiency) -------------
         self.match_time_pub = self.inst.getDoubleTopic(f"/SmartDashboard/match_time").publish()
         
         # Status Publishers - Map internal keys to dashboard names
         self.status_pubs = {
-            'ardu_high_tags': self.inst.getBooleanTopic(f"{prefix}/arducam_high_targets_exist").publish(),
-            'genius_low_tags': self.inst.getBooleanTopic(f"{prefix}/genius_low_targets_exist").publish(),
-            'ardu_back_tags': self.inst.getBooleanTopic(f"{prefix}/arducam_back_targets_exist").publish(),
-            'logi_reef_tags': self.inst.getBooleanTopic(f"{prefix}/logitech_reef_targets_exist").publish(),
-            'photoncam': self.inst.getBooleanTopic(f"{prefix}/photoncam_targets_exist").publish() # Used in sim
+            'ardu_high_tags': self.inst.getBooleanTopic(f"{vision_prefix}/arducam_high_targets_exist").publish(),
+            'genius_low_tags': self.inst.getBooleanTopic(f"{vision_prefix}/genius_low_targets_exist").publish(),
+            'ardu_back_tags': self.inst.getBooleanTopic(f"{vision_prefix}/arducam_back_targets_exist").publish(),
+            'logi_reef_tags': self.inst.getBooleanTopic(f"{vision_prefix}/logitech_reef_targets_exist").publish(),
+            'photoncam': self.inst.getBooleanTopic(f"{vision_prefix}/photoncam_targets_exist").publish() # Used in sim
         }
 
         # ------------- Subscribers -------------

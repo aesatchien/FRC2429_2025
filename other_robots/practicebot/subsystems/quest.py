@@ -37,36 +37,39 @@ class Questnav(SubsystemBase):
 
     def _init_networktables(self):
         self.inst = NetworkTableInstance.getDefault()
+        quest_prefix = constants.quest_prefix
+        swerve_prefix = constants.swerve_prefix
 
         # ------------- Publishers (Efficiency) -------------
-        self.quest_synched_pub = self.inst.getBooleanTopic("/QuestNav/questnav_synched").publish()
-        self.quest_in_use_pub = self.inst.getBooleanTopic("/QuestNav/questnav_in_use").publish()
+        self.quest_synched_pub = self.inst.getBooleanTopic(f"{quest_prefix}/questnav_synched").publish()
+        self.quest_in_use_pub = self.inst.getBooleanTopic(f"{quest_prefix}/questnav_in_use").publish()
         
-        self.quest_accepted_pub = self.inst.getBooleanTopic("/QuestNav/QUEST_POSE_ACCEPTED").publish()
-        self.quest_connected_pub = self.inst.getBooleanTopic("/QuestNav/QUEST_CONNECTED").publish()
-        self.quest_tracking_pub = self.inst.getBooleanTopic("/QuestNav/QUEST_TRACKING").publish()
+        self.quest_accepted_pub = self.inst.getBooleanTopic(f"{quest_prefix}/QUEST_POSE_ACCEPTED").publish()
+        self.quest_connected_pub = self.inst.getBooleanTopic(f"{quest_prefix}/QUEST_CONNECTED").publish()
+        self.quest_tracking_pub = self.inst.getBooleanTopic(f"{quest_prefix}/QUEST_TRACKING").publish()
         
         # Use StructPublisher for Pose2d - matches Swerve implementation and works with AdvantageScope
-        self.quest_pose_pub = self.inst.getStructTopic("/QuestNav/Quest_Pose2D_AdvScope", Pose2d).publish()
+        self.quest_pose_pub = self.inst.getStructTopic(f"{quest_prefix}/Quest_Pose2D_AdvScope", Pose2d).publish()
         
-        self.quest_battery_pub = self.inst.getDoubleTopic("/QuestNav/Quest_Battery_%").publish()
-        self.quest_latency_pub = self.inst.getDoubleTopic("/QuestNav/Quest_Latency").publish()
-        self.quest_lost_count_pub = self.inst.getDoubleTopic("/QuestNav/Quest_Tracking_lost_count").publish()
-        self.quest_frame_count_pub = self.inst.getDoubleTopic("/QuestNav/Quest_frame_count").publish()
+        self.quest_battery_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Battery_%").publish()
+        self.quest_latency_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Latency").publish()
+        self.quest_lost_count_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Tracking_lost_count").publish()
+        self.quest_frame_count_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_frame_count").publish()
 
         # ------------- Subscribers -------------
         # Subscribe to the drive_pose published by Swerve (now a Struct)
-        self.drive_pose2d_sub = self.inst.getStructTopic("/SmartDashboard/Swerve/drive_pose2d", Pose2d).subscribe(Pose2d())
+        self.drive_pose2d_sub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose2d", Pose2d).subscribe(Pose2d())
 
         # ------------- Initial Values & Buttons -------------
         self.quest_synched_pub.set(self.quest_has_synched)
         self.quest_in_use_pub.set(self.use_quest)
 
-        # note - have Risaku standardize these with the rest of the putDatas
-        SmartDashboard.putData('Quest/ResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
-        SmartDashboard.putData('Quest/SyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
-        SmartDashboard.putData('Quest/EnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
-        SmartDashboard.putData('Quest/SyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
+        # note - may not want these buried one deeper.  TBD
+        command_prefix = constants.command_prefix
+        SmartDashboard.putData(f'{command_prefix}/Quest/ResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/Quest/SyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/Quest/EnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
+        SmartDashboard.putData(f'{command_prefix}/Quest/SyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
         
         # Put Field2d once (*** it updates itself internally ***)
         SmartDashboard.putData("Quest/Field", self.quest_field)
