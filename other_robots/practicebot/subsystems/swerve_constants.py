@@ -11,7 +11,10 @@ from pathplannerlib.config import DCMotor, PIDConstants
 
 class DriveConstants:
 
-    k_robot_id = 'comp'  # used to switch between the two configs
+    k_robot_id = 'practice'  # used to switch between the two configs - different controllers, IDs, and abs encoder offsets
+    if k_robot_id not in ['practice', 'comp']:
+        raise ValueError(f'robot_id "{k_robot_id}" must be one of [comp, practice]')
+
     k_drive_controller_type = SparkMax if k_robot_id == 'practice' else SparkFlex
 
     # ---- Driving Parameters - Note that these are not the maximum possible speeds, rather the allowed maximum speeds
@@ -52,7 +55,7 @@ class DriveConstants:
     #  ----------------   THIS IS TRIAL AND ERROR - USE BLOCKS UNDER CHASSIS   ---------------
     # which motors need to be inverted - depends on if mounted on top (True) or bottom (False)
     # THIS IS THE FIRST CHECK - DRIVE WITH DPAD (robot relative) AND MAKE SURE DIRECTION IS CORRECT
-    k_drive_motors_inverted = True  # drive forward and reverse correct?  If not, invert this.
+    k_drive_motors_inverted = False  # drive forward and reverse correct?  If not, invert this.
     # THIS IS THE SECOND CHECK - HOW DO YOU TEST IT?
     k_turn_motors_inverted = True  # True for 2023 - motors below
     # incorrect gyro inversion will make the pose odometry have the wrong sign on rotation
@@ -72,14 +75,15 @@ class DriveConstants:
 
     # SPARK controller  settings and CAN IDs  - checked for correctness 2025 0317
     # turning offset needs to be in radians, so it uses the 2pi scaling factor
-    comp_bot_dict = {'LF':{'driving_can': 27, 'turning_can': 26, 'port': 3, 'turning_offset': sf * 0.988},
-                    'LB':{'driving_can': 25, 'turning_can': 24, 'port': 1, 'turning_offset': sf * 0.937},
-                    'RF':{'driving_can': 23, 'turning_can': 22, 'port': 2, 'turning_offset': sf *  0.573},
-                    'RB':{'driving_can': 21, 'turning_can': 20, 'port': 0, 'turning_offset': sf *  0.532}}
+    # I meant to have billet out on the right side, but it looks like i had that opposite for reefbot
+    comp_bot_dict = {'LF':{'driving_can': 27, 'turning_can': 26, 'port': 3, 'turning_offset': sf * 0.484},
+                    'LB':{'driving_can': 25, 'turning_can': 24, 'port': 1, 'turning_offset': sf * 0.437},
+                    'RF':{'driving_can': 23, 'turning_can': 22, 'port': 2, 'turning_offset': sf *  0.068},
+                    'RB':{'driving_can': 21, 'turning_can': 20, 'port': 0, 'turning_offset': sf *  0.030}}
     practice_bot_dict = {'LF':{'driving_can': 21, 'turning_can': 20, 'port': 3, 'turning_offset': sf *  0.841},
                     'LB':{'driving_can': 23, 'turning_can': 22, 'port': 1, 'turning_offset': sf *  0.718},
-                    'RF':{'driving_can': 25, 'turning_can': 24, 'port': 2, 'turning_offset': sf *  0.745},
-                    'RB':{'driving_can': 27, 'turning_can': 26, 'port': 0, 'turning_offset': sf *  0.869}}
+                    'RF':{'driving_can': 25, 'turning_can': 24, 'port': 2, 'turning_offset': sf *  0.745},  # billet out
+                    'RB':{'driving_can': 27, 'turning_can': 26, 'port': 0, 'turning_offset': sf *  0.869}}  # billet out
 
     swerve_dict = practice_bot_dict if k_robot_id == 'practice' else  comp_bot_dict # set this to one or the other
     # print(f'swerve_dict: {swerve_dict}')
@@ -90,12 +94,11 @@ class DriveConstants:
         print(f'YOU ARE IN ENCODER ALIGNMENT TEST MODE -- DO NOT DRIVE!!!')
         # read the raw numbers from the encoders so we can write them all down for a given robot
         k_analog_encoder_scale_factor = 1.0  # override so we get the raw reading between 0 and 1
-        [k_lf_zero_offset, k_rf_zero_offset, k_lb_zero_offset, k_rb_zero_offset] = [0, 0, 0 ,0]
+        for key in ['LF', 'RF', 'LB', 'RB'] :
+            swerve_dict[key]['turning_offset'] = 0
     else:
-        k_lf_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['LF']['turning_offset']  #  rad
-        k_lb_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['LB']['turning_offset']  #  rad
-        k_rf_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['RF']['turning_offset']  #  rad  billet gear out on rf
-        k_rb_zero_offset = 1 / k_analog_encoder_abs_max * swerve_dict['RB']['turning_offset']  #  rad  billet gear out on rb
+        # these aren't used anymore!
+        pass
         # practicebot 20251224 CJH:  LF: 0.841  LB: 0.718  RF:  0.745  RB: 0.865
 
 
@@ -135,7 +138,7 @@ class ModuleConstants:
     kDrivingMotorCurrentLimit = 60  # amp - set to 50 for worlds to make sure no brownouts - maybe 60 will still be safe
     kTurningMotorCurrentLimit = 40  # amp
 
-    k_driving_config = SparkFlexConfig()
+    k_driving_config = SparkFlexConfig() if DriveConstants.k_robot_id == 'comp' else SparkMaxConfig()
     k_driving_config.inverted(DriveConstants.k_drive_motors_inverted)
     k_driving_config.closedLoop.pidf(p=0, i=0, d=0, ff=1/kDriveWheelFreeSpeedRps)
     k_driving_config.closedLoop.minOutput(-0.96)
@@ -151,7 +154,7 @@ class ModuleConstants:
     # k_driving_config.closedLoop.pidf(0, 0, 0, 0.01)
 
     # note: we don't use any spark pid or ff for turning
-    k_turning_config = SparkMaxConfig()
+    k_turning_config = SparkFlexConfig() if DriveConstants.k_robot_id == 'comp' else SparkMaxConfig()
     k_turning_config.inverted(DriveConstants.k_turn_motors_inverted)
     k_turning_config.setIdleMode(SparkMaxConfig.IdleMode.kBrake)
     k_turning_config.smartCurrentLimit(stallLimit=kTurningMotorCurrentLimit, freeLimit=kTurningMotorCurrentLimit, limitRpm=5700)
