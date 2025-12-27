@@ -69,7 +69,7 @@ class RobotContainer:
 
         self.triggerA.whileTrue(ShootingCommandLogging(container=self, shooter=self.shooter, continuous=True, balls=0))
 
-        self.triggerY.onTrue(ShootingCommandLogging(container=self, shooter=self.shooter, continuous=False, balls=1))
+        self.triggerY.onTrue(ShootingCommandLogging(container=self, shooter=self.shooter, continuous=False, balls=2))
 
         self.trigger_down.onTrue(LogTest(container=self, indent=0).ignoringDisable(True))
 

@@ -11,6 +11,7 @@ from wpilib.simulation import FlywheelSim, DCMotorSim, SimDeviceSim
 
 from robot import MyRobot
 import constants
+from helpers.blockhead_mech import BlockheadMech
 
 
 class PhysicsEngine:
@@ -41,6 +42,9 @@ class PhysicsEngine:
         # Indexer:
         self.indexer_spark = rev.SparkMaxSim(self.container.shooter.indexer_motor, plant.DCMotor.NEO(1))
         self.indexer_sim_device = SimDeviceSim(f"SPARK MAX [{self.container.shooter.indexer_motor.getDeviceId()}]")
+
+        # Visualization
+        self.mech = BlockheadMech()
 
     def update_sim(self, now, dt):
 
@@ -76,6 +80,9 @@ class PhysicsEngine:
         cmd_rpm = self.indexer_spark.getSetpoint()  # "setpoint sent to device" and we told it RPM
         # Spark sim expects motor velocity here and updates internal state/encoder
         self.indexer_spark.iterate(cmd_rpm,12, dt)
+
+        pos = self.indexer_spark.getPosition()
+        self.mech.update_indexer(pos)
 
         if self.counter % 200 == 0:
             pass
