@@ -34,7 +34,7 @@ from commands.pid_to_point import PIDToPoint
 from commands.reset_field_centric import ResetFieldCentric
 from commands.rumble_command import RumbleCommand
 from commands.set_leds import SetLEDs
-from commands.swerve_test import SwerveTest
+# from commands.swerve_test import SwerveTest
 
 
 class RobotContainer:
@@ -175,7 +175,7 @@ class RobotContainer:
 
         # test a setting of the swerve modules straight before running the auto to tag
         # self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
-        self.triggerA.whileTrue(SwerveTest(self, self.swerve))
+        # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right
         self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
@@ -193,8 +193,8 @@ class RobotContainer:
         self.triggerLeft.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, dpad_output, 0), timeout=10))
         self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
 
-        self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.5, left_rumble=True, right_rumble=False, rumble_time=0.5))
-        self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.5, left_rumble=False, right_rumble=True, rumble_time=0.5))
+        self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
+        self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
 
     def bind_codriver_buttons(self):
         print("Binding codriver buttons")

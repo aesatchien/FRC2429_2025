@@ -21,12 +21,8 @@ class RumbleCommand(commands2.Command):  # change the name for your command
 
         self.rumble_time = rumble_time
 
-        if left_rumble:
-            self.rumble_type = GenericHID.RumbleType.kLeftRumble
-        if right_rumble:
-            self.rumble_type = GenericHID.RumbleType.kRightRumble
-        if left_rumble and right_rumble:
-            self.rumble_type = GenericHID.RumbleType.kBothRumble
+        self.left_rumble = left_rumble
+        self.right_rumble = right_rumble
 
         if (not left_rumble) and (not right_rumble):
             raise ValueError("why are you making a rumblecommand with no rumble")
@@ -39,7 +35,10 @@ class RumbleCommand(commands2.Command):  # change the name for your command
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
 
-        self.container.driver_command_controller.setRumble(self.rumble_type, self.rumble_amount)
+        if self.left_rumble:
+            self.container.driver_command_controller.getHID().setRumble(GenericHID.RumbleType.kLeftRumble, self.rumble_amount)
+        if self.right_rumble:
+            self.container.driver_command_controller.getHID().setRumble(GenericHID.RumbleType.kRightRumble, self.rumble_amount)
 
     def execute(self) -> None:
         pass
@@ -53,5 +52,5 @@ class RumbleCommand(commands2.Command):  # change the name for your command
     def end(self, interrupted: bool) -> None:
 
         if self.rumble_time:
-            self.container.driver_command_controller.setRumble(GenericHID.RumbleType.kBothRumble, 0.0)
-
+            self.container.driver_command_controller.getHID().setRumble(GenericHID.RumbleType.kLeftRumble, 0.0)
+            self.container.driver_command_controller.getHID().setRumble(GenericHID.RumbleType.kRightRumble, 0.0)
