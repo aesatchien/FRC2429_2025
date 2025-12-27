@@ -79,7 +79,7 @@ CAMERA_CONFIG = {
 
 WIDGET_CONFIG = {
     # GUI UPDATES - NEED THIS PART FOR EVERY YEAR
-    'drive_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': '/SmartDashboard/drive_pose', 'update_style': 'pose'},
+    'drive_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': '/SmartDashboard/Swerve/drive_pose', 'update_style': 'pose'},
     'qcombobox_autonomous_routines': {'widget_name': 'qcombobox_autonomous_routines', 'nt_topic': r'/SmartDashboard/autonomous routines/options',
                                       'selected_topic': r'/SmartDashboard/autonomous routines/selected', 'update_style': 'combo'},
     'qlabel_nt_connected': {'widget_name': 'qlabel_nt_connected', 'update_style': 'connection'},
@@ -92,13 +92,13 @@ WIDGET_CONFIG = {
     'qlabel_pdh_current_monitor': {'widget_name': 'qlabel_pdh_current_monitor', 'nt_topic': '/SmartDashboard/_pdh_current', 'update_style': 'monitor'},
 
     # QUESTNAV STUFF
-    'quest_pose': {'widget_name': 'qlabel_quest_pose_indicator', 'nt_topic': '/SmartDashboard/QUEST_POSE', 'update_style': 'pose'},
-    'qlabel_questnav_heartbeat_indicator': {'widget_name': 'qlabel_questnav_heartbeat_indicator', 'nt_topic': '/SmartDashboard/QUEST_CONNECTED', 'update_style': 'indicator'},
-    'qlabel_questnav_inbounds_indicator': {'widget_name': 'qlabel_questnav_inbounds_indicator', 'nt_topic': '/SmartDashboard/QUEST_POSE_ACCEPTED', 'update_style': 'indicator'},
-    'qlabel_questnav_tracking_indicator': {'widget_name': 'qlabel_questnav_tracking_indicator', 'nt_topic': '/SmartDashboard/QUEST_TRACKING', 'update_style': 'indicator'},
-    'qlabel_questnav_sync_toggle_indicator': {'widget_name': 'qlabel_questnav_sync_toggle_indicator', 'nt_topic': '/SmartDashboard/questnav_synched', 'command_topic': '/SmartDashboard/QuestSyncToggle/running', 'update_style': 'indicator'},
-    'qlabel_questnav_reset_indicator': {'widget_name': 'qlabel_questnav_reset_indicator', 'nt_topic': '/SmartDashboard/QuestResetOdometry/running', 'command_topic': '/SmartDashboard/QuestResetOdometry/running', 'update_style': 'indicator'},
-    'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': '/SmartDashboard/questnav_in_use', 'command_topic': '/SmartDashboard/QuestEnableToggle/running', 'update_style': 'indicator'},
+    'quest_pose': {'widget_name': 'qlabel_quest_pose_indicator', 'nt_topic': '/QuestNav/QUEST_POSE', 'update_style': 'pose'},
+    'qlabel_questnav_heartbeat_indicator': {'widget_name': 'qlabel_questnav_heartbeat_indicator', 'nt_topic': '/QuestNav/QUEST_CONNECTED', 'update_style': 'indicator'},
+    'qlabel_questnav_inbounds_indicator': {'widget_name': 'qlabel_questnav_inbounds_indicator', 'nt_topic': '/QuestNav/QUEST_POSE_ACCEPTED', 'update_style': 'indicator'},
+    'qlabel_questnav_tracking_indicator': {'widget_name': 'qlabel_questnav_tracking_indicator', 'nt_topic': '/QuestNav/QUEST_TRACKING', 'update_style': 'indicator'},
+    'qlabel_questnav_sync_toggle_indicator': {'widget_name': 'qlabel_questnav_sync_toggle_indicator', 'nt_topic': '/QuestNav/questnav_synched', 'command_topic': '/SmartDashboard/QuestSyncToggle/running', 'update_style': 'indicator'},
+    'qlabel_questnav_reset_indicator': {'widget_name': 'qlabel_questnav_reset_indicator', 'nt_topic': '/QuestNav/QuestResetOdometry/running', 'command_topic': '/SmartDashboard/QuestResetOdometry/running', 'update_style': 'indicator'},
+    'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': '/QuestNav/questnav_in_use', 'command_topic': '/SmartDashboard/QuestEnableToggle/running', 'update_style': 'indicator'},
 
     # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE
     'qlabel_arducam_high_indicator': {'widget_name': 'qlabel_arducam_high_indicator', 'update_style': 'camera_indicator'},
@@ -106,11 +106,11 @@ WIDGET_CONFIG = {
     'qlabel_genius_low_indicator': {'widget_name': 'qlabel_genius_low_indicator', 'update_style': 'camera_indicator'},
     'qlabel_arducam_back_indicator': {'widget_name': 'qlabel_arducam_back_indicator', 'update_style': 'camera_indicator'},
 
-    'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_arducam_high_target_indicator', 'nt_topic': '/SmartDashboard/arducam_high_targets_exist', 'update_style': 'indicator'},
-    'qlabel_arducam_back_target_indicator': {'widget_name': 'qlabel_arducam_back_target_indicator', 'nt_topic': '/SmartDashboard/arducam_back_targets_exist', 'update_style': 'indicator'},
-    'qlabel_logitech_reef_target_indicator': {'widget_name': 'qlabel_logitech_reef_target_indicator', 'nt_topic': '/SmartDashboard/logitech_reef_targets_exist', 'update_style': 'indicator'},
-    'qlabel_genius_low_target_indicator': {'widget_name': 'qlabel_genius_low_target_indicator', 'nt_topic': '/SmartDashboard/genius_low_targets_exist', 'update_style': 'indicator'},
-    'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': '/SmartDashboard/photoncam_targets_exist', 'update_style': 'indicator'},
+    'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_arducam_high_target_indicator', 'nt_topic': '/SmartDashboard/Vision/arducam_high_targets_exist', 'update_style': 'indicator'},
+    'qlabel_arducam_back_target_indicator': {'widget_name': 'qlabel_arducam_back_target_indicator', 'nt_topic': '/SmartDashboard/Vision/arducam_back_targets_exist', 'update_style': 'indicator'},
+    'qlabel_logitech_reef_target_indicator': {'widget_name': 'qlabel_logitech_reef_target_indicator', 'nt_topic': '/SmartDashboard/Vision/logitech_reef_targets_exist', 'update_style': 'indicator'},
+    'qlabel_genius_low_target_indicator': {'widget_name': 'qlabel_genius_low_target_indicator', 'nt_topic': '/SmartDashboard/Vision/genius_low_targets_exist', 'update_style': 'indicator'},
+    'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': '/SmartDashboard/Vision/photoncam_targets_exist', 'update_style': 'indicator'},
 
 
     # COMMANDS  - MOST LIKELY WILL CHANGE EVERY YEAR

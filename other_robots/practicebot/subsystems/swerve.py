@@ -112,6 +112,10 @@ class Swerve (Subsystem):
         if constants.k_enable_logging:
             DataLogManager.start()  # start wpilib datalog for AdvantageScope
 
+        # pre-allocate all the keys for speed
+        self._init_networktables()
+
+
     # ----------  pose and odometry function definitions ----------
     def get_pose(self) -> Pose2d:
         # return the pose of the robot  TODO: update the dashboard here?
@@ -322,30 +326,64 @@ class Swerve (Subsystem):
         if RobotBase.isReal():
             self.pose_estimator.updateWithTime(ts, Rotation2d.fromDegrees(self.get_gyro_angle()), self.get_module_positions(),)
 
-    def _update_dashboard(self, pose, ts):
-        SmartDashboard.putNumber('_timestamp', ts)  # TODO - see if NT is already doing this
-        SmartDashboard.putNumberArray('drive_pose', [pose.X(), pose.Y(), pose.rotation().degrees()])
-        SmartDashboard.putNumberArray('drive_pose_AdvScope', [pose.x, pose.y, pose.rotation().radians()])
-        SmartDashboard.putNumber('drive_x', pose.X())
-        SmartDashboard.putNumber('drive_y', pose.Y())
-        SmartDashboard.putNumber('drive_theta', pose.rotation().degrees())
+    def _init_networktables(self):
+        prefix = r'/SmartDashboard/Swerve'
+        # ------------- NetworkTables Publishers (Efficiency) -------------
+        # Pre-allocate publishers to avoid hash lookups and string creation in periodic loops
+        self.timestamp_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_timestamp").publish()
 
-        SmartDashboard.putNumber('_navx', self.get_angle())
-        SmartDashboard.putNumber('_navx_yaw', self.get_yaw())
-        SmartDashboard.putNumber('_navx_angle', self.get_gyro_angle())
-        SmartDashboard.putNumber('keep_angle', self.keep_angle)
+        # Use StructPublisher for Pose2d - extremely efficient and works natively with AdvantageScope
+        self.pose2d_pub = self.inst.getStructTopic(f"{prefix}/drive_pose2d", Pose2d).publish()
+        self.pose_pub = self.inst.getDoubleArrayTopic(f"{prefix}/drive_pose").publish()  # legacy
+
+        self.drive_x_pub = self.inst.getDoubleTopic(f"{prefix}/drive_x").publish()
+        self.drive_y_pub = self.inst.getDoubleTopic(f"{prefix}/drive_y").publish()
+        self.drive_theta_pub = self.inst.getDoubleTopic(f"{prefix}/drive_theta").publish()
+
+        self.navx_angle_pub = self.inst.getDoubleTopic(f"{prefix}/_navx_angle").publish()
+        self.navx_yaw_pub = self.inst.getDoubleTopic(f"{prefix}/_navx_yaw").publish()
+        self.navx_raw_pub = self.inst.getDoubleTopic(f"{prefix}/_navx").publish()
+        self.keep_angle_pub = self.inst.getDoubleTopic(f"{prefix}/keep_angle").publish()
+        self.ypr_pub = self.inst.getDoubleArrayTopic(f"{prefix}/_navx_YPR").publish()
+
+        # Debugging publishers - pre-allocate list to avoid f-string creation in loop
+        self.abs_enc_pubs = [self.inst.getDoubleTopic(f"{prefix}/absolute {i}").publish() for i in range(4)]
+        self.angles_pub = self.inst.getDoubleArrayTopic(f"{prefix}/_angles").publish()
+
+        # TODO - these don't really belong in Swerve
+        self.pdh_volt_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_pdh_voltage").publish()
+        self.pdh_current_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_pdh_current").publish()
+
+    def _update_dashboard(self, pose, ts):
+        self.timestamp_pub.set(ts)  # TODO - see how to use the one that NT puts on every update anyway
+        
+        # Send the struct (replaces the arrays). AdvantageScope detects this automatically.
+        self.pose2d_pub.set(pose)
+        self.pose_pub.set([pose.X(), pose.Y(), pose.rotation().degrees()])  # legacy version
+        
+        # Scalars (if you still need them for a specific dashboard layout)
+        self.drive_x_pub.set(pose.X())
+        self.drive_y_pub.set(pose.Y())
+        self.drive_theta_pub.set(pose.rotation().degrees())
+
+        self.navx_raw_pub.set(self.get_angle())
+        self.navx_yaw_pub.set(self.get_yaw())
+        self.navx_angle_pub.set(self.get_gyro_angle())
+        self.keep_angle_pub.set(self.keep_angle)
 
         # post yaw, pitch, roll so we can see what is going on with the climb
         ypr = [self.gyro.getYaw(), self.get_pitch(), self.gyro.getRoll(), self.gyro.getRotation2d().degrees()]
-        SmartDashboard.putNumberArray('_navx_YPR', ypr)
+        self.ypr_pub.set(ypr)
 
         # Monitor Power
-        SmartDashboard.putNumber('_pdh_voltage', self.pdh.getVoltage())
-        SmartDashboard.putNumber('_pdh_current', self.pdh.getTotalCurrent())
+        self.pdh_volt_pub.set(self.pdh.getVoltage())
+        self.pdh_current_pub.set(self.pdh.getTotalCurrent())
 
         if constants.k_swerve_debugging_messages:
             angles = [m.turningEncoder.getPosition() for m in self.swerve_modules]
             absolutes = [m.get_turn_encoder() for m in self.swerve_modules]
-            for idx, absolute in enumerate(absolutes):
-                SmartDashboard.putNumber(f"absolute {idx}", absolute)
-            SmartDashboard.putNumberArray(f'_angles', angles)
+            
+            for pub, val in zip(self.abs_enc_pubs, absolutes):
+                pub.set(val)
+            
+            self.angles_pub.set(angles)

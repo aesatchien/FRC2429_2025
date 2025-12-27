@@ -16,7 +16,6 @@ class Questnav(SubsystemBase):
         super().__init__()
         self.setName('Quest')
         self.counter = constants.VisionConstants.k_counter_offset
-        self.ntinst = NetworkTableInstance.getDefault()
 
         self.questnav = Metaquestnav()
 
@@ -28,21 +27,49 @@ class Questnav(SubsystemBase):
         self.quest_field = Field2d()
 
         self.quest_has_synched = False  # use this to check in disabled whether to update the quest with the robot odometry
-        SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
-
         self.use_quest = constants.k_use_quest_odometry
-        SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
         self.quest_pose = Pose2d(-10, -10, Rotation2d.fromDegrees(0)) # initial pose if not connected / tracking
 
-        # note - have Risaku standardize these with the rest of the putDatas
-        SmartDashboard.putData('QuestResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
-        SmartDashboard.putData('QuestSyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
-        # SmartDashboard.putData('QuestUnSync', InstantCommand(lambda: self.quest_unsync_odometry()).ignoringDisable(True))
-        SmartDashboard.putData('QuestEnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
-        SmartDashboard.putData('QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
+        self._init_networktables()
 
         if not wpilib.RobotBase.isSimulation():
             DataLogManager.start()  # start wpilib datalog for AdvantageScope
+
+    def _init_networktables(self):
+        self.inst = NetworkTableInstance.getDefault()
+
+        # ------------- Publishers (Efficiency) -------------
+        self.quest_synched_pub = self.inst.getBooleanTopic("/QuestNav/questnav_synched").publish()
+        self.quest_in_use_pub = self.inst.getBooleanTopic("/QuestNav/questnav_in_use").publish()
+        
+        self.quest_accepted_pub = self.inst.getBooleanTopic("/QuestNav/QUEST_POSE_ACCEPTED").publish()
+        self.quest_connected_pub = self.inst.getBooleanTopic("/QuestNav/QUEST_CONNECTED").publish()
+        self.quest_tracking_pub = self.inst.getBooleanTopic("/QuestNav/QUEST_TRACKING").publish()
+        
+        # Use StructPublisher for Pose2d - matches Swerve implementation and works with AdvantageScope
+        self.quest_pose_pub = self.inst.getStructTopic("/QuestNav/Quest_Pose2D_AdvScope", Pose2d).publish()
+        
+        self.quest_battery_pub = self.inst.getDoubleTopic("/QuestNav/Quest_Battery_%").publish()
+        self.quest_latency_pub = self.inst.getDoubleTopic("/QuestNav/Quest_Latency").publish()
+        self.quest_lost_count_pub = self.inst.getDoubleTopic("/QuestNav/Quest_Tracking_lost_count").publish()
+        self.quest_frame_count_pub = self.inst.getDoubleTopic("/QuestNav/Quest_frame_count").publish()
+
+        # ------------- Subscribers -------------
+        # Subscribe to the drive_pose published by Swerve (now a Struct)
+        self.drive_pose2d_sub = self.inst.getStructTopic("/SmartDashboard/Swerve/drive_pose2d", Pose2d).subscribe(Pose2d())
+
+        # ------------- Initial Values & Buttons -------------
+        self.quest_synched_pub.set(self.quest_has_synched)
+        self.quest_in_use_pub.set(self.use_quest)
+
+        # note - have Risaku standardize these with the rest of the putDatas
+        SmartDashboard.putData('Quest/ResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
+        SmartDashboard.putData('Quest/SyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
+        SmartDashboard.putData('Quest/EnableToggle', InstantCommand(lambda: self.quest_enabled_toggle()).ignoringDisable(True))
+        SmartDashboard.putData('Quest/SyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
+        
+        # Put Field2d once (*** it updates itself internally ***)
+        SmartDashboard.putData("Quest/Field", self.quest_field)
 
     def set_quest_pose(self, pose: Pose2d) -> None:
         # set the pose of the Questnav, transforming from robot center top questnav coordinate
@@ -63,16 +90,15 @@ class Questnav(SubsystemBase):
 
     def quest_sync_odometry(self) -> None:
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
-        photonvision_Pose2d = Pose2d(SmartDashboard.getNumberArray('drive_pose', [10,10,10])[0], 
-                                   SmartDashboard.getNumberArray('drive_pose', [10,10,10])[1], 
-                                  Rotation2d.fromDegrees(SmartDashboard.getNumberArray('drive_pose', [10,10,10])[2]))
-        self.set_quest_pose(photonvision_Pose2d)
-        SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
+        
+        # Efficiently get the pose from the subscriber (returns a Pose2d object)
+        self.set_quest_pose(self.drive_pose2d_sub.get())
+        self.quest_synched_pub.set(self.quest_has_synched)
 
     def quest_unsync_odometry(self) -> None:
         self.quest_has_synched = False  # let the robot know we have been synched so we don't automatically do it again
         print(f'Unsynched quest at {Timer.getFPGATimestamp():.1f}s')
-        SmartDashboard.putBoolean('questnav_synched', self.quest_has_synched)
+        self.quest_synched_pub.set(self.quest_has_synched)
 
     def quest_enabled_toggle(self, force=None):  # allow us to stop using quest if it is a problem - 20251014 CJH
         if force is None:
@@ -85,7 +111,7 @@ class Questnav(SubsystemBase):
             self.use_quest = False
 
         print(f'swerve use_quest updated to {self.use_quest} at {Timer.getFPGATimestamp():.1f}s')
-        SmartDashboard.putBoolean('questnav_in_use', self.use_quest)
+        self.quest_in_use_pub.set(self.use_quest)
 
     def quest_sync_toggle(self, force=None):  # toggle sync state for dashboard - 20251014 CJH
         current_state = self.quest_has_synched
@@ -127,20 +153,19 @@ class Questnav(SubsystemBase):
         self.quest_field.setRobotPose(self.quest_pose)
 
         if self.counter % 10 == 0:
-            SmartDashboard.putData("QUEST_FIELD", self.quest_field)
             if 0 < self.quest_pose.x < 17.658 and 0 < self.quest_pose.y < 8.131 and self.questnav.is_connected():
                 self.quest_pose_accepted = True
             else:
                 self.quest_pose_accepted = False
-            SmartDashboard.putBoolean("QUEST_POSE_ACCEPTED", self.quest_pose_accepted)
-            SmartDashboard.putNumberArray("Quest_Pose2D_AdvScope", [self.quest_pose.x, self.quest_pose.y, self.quest_pose.rotation().radians()])
-            SmartDashboard.putBoolean("QUEST_CONNECTED", self.questnav.is_connected())
-            SmartDashboard.putBoolean("QUEST_TRACKING", self.questnav.is_tracking())
-            SmartDashboard.putNumber("Quest_Battery_%", self.questnav.get_battery_percent())
-            SmartDashboard.putNumber("Quest_Latency", self.questnav.get_latency())
-            SmartDashboard.putNumber("Quest_Tracking_lost_count", self.questnav.get_tracking_lost_counter())
-            SmartDashboard.putNumber("Quest_frame_count", self.questnav.get_frame_count())
+            
+            self.quest_accepted_pub.set(self.quest_pose_accepted)
+            self.quest_pose_pub.set(self.quest_pose)
+            self.quest_connected_pub.set(self.questnav.is_connected())
+            self.quest_tracking_pub.set(self.questnav.is_tracking())
+            self.quest_battery_pub.set(self.questnav.get_battery_percent())
+            self.quest_latency_pub.set(self.questnav.get_latency())
+            self.quest_lost_count_pub.set(self.questnav.get_tracking_lost_counter())
+            self.quest_frame_count_pub.set(self.questnav.get_frame_count())
 
     def is_pose_accepted(self):
         return self.quest_pose_accepted
-
