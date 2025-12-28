@@ -28,6 +28,7 @@ from subsystems.vision import Vision
 # 2429 commands
 from commands.auto_to_pose import AutoToPose
 from commands.auto_strafe_to_tag import AutoStrafeToTag
+from commands.can_status import CANStatus
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
 from commands.pid_to_point import PIDToPoint
@@ -149,6 +150,7 @@ class RobotContainer:
         wpilib.SmartDashboard.putData(f'{command_prefix}/SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
 
         # commands for pyqt dashboard - please do not remove
+        wpilib.SmartDashboard.putData(f'{command_prefix}/CANStatus', CANStatus(container=self))
 
         # end pyqt dashboard section
 
