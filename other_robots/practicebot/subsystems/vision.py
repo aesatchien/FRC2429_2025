@@ -17,8 +17,8 @@ class Vision(SubsystemBase):
 
         # set up a dictionary of cams to go through
         # Note: Order matters if we zip, but we will use explicit mapping below
-        # todo - make one source of truth, and that should be vision.py or constants.py
-        self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, 'genius_low_tags': {}, 'logi_reef_tags': {}}
+        # will look like self.camera_dict = {'ardu_high_tags': {}, 'ardu_back_tags': {}, ...}
+        self.camera_dict = {key: {} for key in constants.k_cameras.keys()}
         self.camera_values = {}
 
         for key in self.camera_dict.keys():
@@ -33,26 +33,19 @@ class Vision(SubsystemBase):
         # ------------- Publishers (Efficiency) -------------
         self.match_time_pub = self.inst.getDoubleTopic(f"/SmartDashboard/match_time").publish()
         
-        # Status Publishers - Map internal keys to dashboard names
-        self.status_pubs = {
-            'ardu_high_tags': self.inst.getBooleanTopic(f"{vision_prefix}/arducam_high_targets_exist").publish(),
-            'genius_low_tags': self.inst.getBooleanTopic(f"{vision_prefix}/genius_low_targets_exist").publish(),
-            'ardu_back_tags': self.inst.getBooleanTopic(f"{vision_prefix}/arducam_back_targets_exist").publish(),
-            'logi_reef_tags': self.inst.getBooleanTopic(f"{vision_prefix}/logitech_reef_targets_exist").publish(),
-            'photoncam': self.inst.getBooleanTopic(f"{vision_prefix}/photoncam_targets_exist").publish() # Used in sim
-        }
+        # Status Publishers - Map internal keys to dashboard names for all the allowed cameras
+        self.status_pubs = {}
+        for ix, key in enumerate (constants.k_cameras.keys()):
+            self.status_pubs[key] = self.inst.getBooleanTopic(f"{vision_prefix}/{key}_targets_exist").publish()
+            print(f"vision's status pubs {ix}: {key}: {self.status_pubs[key]}")
+        # in case we're messing around with photonvision
+        self.status_pubs['photoncam'] = self.inst.getBooleanTopic(f"{vision_prefix}/photoncam_targets_exist").publish() # Used in sim
+
 
         # ------------- Subscribers -------------
         # Explicit mapping of camera keys to NetworkTable paths
-        table_map = {
-            'ardu_high_tags': '/Cameras/ArducamHigh',
-            'ardu_back_tags': '/Cameras/ArducamBack',
-            'genius_low_tags': '/Cameras/GeniusLow',
-            'logi_reef_tags': '/Cameras/LogitechReef',
-            # 'orange': '/Cameras/Orange'  # <--- You must add this for the code below to work
-        }
-
-        for key, table_path in table_map.items():
+        for key, cam_name in constants.k_cameras.items():
+            table_path = f"{constants.camera_prefix}/{cam_name}"
             nt_key = 'orange' if key == 'orange' else 'tags'
             base_topic = f"{table_path}/{nt_key}"
             
@@ -140,11 +133,12 @@ class Vision(SubsystemBase):
                         
             else:  # test the keys
                 # Simulation test pattern  - again for the GUI
-                self.status_pubs['ardu_high_tags'].set(0 < self.counter % 600 < 110)
-                self.status_pubs['genius_low_tags'].set(100 < self.counter % 600 < 210)
-                self.status_pubs['ardu_back_tags'].set(200 < self.counter % 600 < 310)
-                self.status_pubs['logi_reef_tags'].set(300 < self.counter % 600 < 410)
+                # Just cycle through them based on the counter
+                for i, key in enumerate(constants.k_cameras.keys()):
+                    self.status_pubs[key].set(i * 100 < self.counter % 600 < (i + 1) * 100 + 10)
                 self.status_pubs['photoncam'].set(400 < self.counter % 600 < 510)
+
+                self.status_pubs[list(constants.k_cameras.keys())[0]].set(True)
 
             if constants.VisionConstants.k_nt_debugging:  # extra debugging info for NT
                 pass

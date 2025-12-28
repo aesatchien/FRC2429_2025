@@ -1,7 +1,6 @@
 import commands2
-from wpilib import SmartDashboard
 from wpilib.interfaces import GenericHID
-from commands.log_command import log_command
+from helpers.log_command import log_command
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=True)  # note this sets self.start_time for you

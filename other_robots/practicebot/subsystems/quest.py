@@ -16,7 +16,7 @@ class Questnav(SubsystemBase):
     def __init__(self) -> None:
         super().__init__()
         self.setName('Quest')
-        self.counter = constants.VisionConstants.k_counter_offset
+        self.counter = constants.QuestConstants.k_counter_offset
 
         self.questnav = Metaquestnav()
 
@@ -39,9 +39,6 @@ class Questnav(SubsystemBase):
         self.walk_deg = 0.1  # degrees per loop
 
         self._init_networktables()
-
-        if not wpilib.RobotBase.isSimulation():
-            DataLogManager.start()  # start wpilib datalog for AdvantageScope
 
     def _init_networktables(self):
         self.inst = NetworkTableInstance.getDefault()
@@ -77,7 +74,7 @@ class Questnav(SubsystemBase):
         self.quest_synched_pub.set(self.quest_has_synched)
         self.quest_in_use_pub.set(self.use_quest)
 
-        # note - may not want these buried one deeper.  TBD
+        # note - may not want these buried one deeper.  Also,, we may want to put them in robotcontainer instead of here
         command_prefix = constants.command_prefix
         SmartDashboard.putData(f'{command_prefix}/QuestResetOdometry', InstantCommand(lambda: self.quest_reset_odometry()).ignoringDisable(True))
         SmartDashboard.putData(f'{command_prefix}/QuestSyncOdometry', InstantCommand(lambda: self.quest_sync_odometry()).ignoringDisable(True))
@@ -85,14 +82,16 @@ class Questnav(SubsystemBase):
         SmartDashboard.putData(f'{command_prefix}/QuestSyncToggle', InstantCommand(lambda: self.quest_sync_toggle()).ignoringDisable(True))
         
         # Put Field2d once (*** it updates itself internally ***)
+        # TODO - this needs to be broadcast based on the prefixes in constants
         SmartDashboard.putData("Quest/Field", self.quest_field)
 
     def set_quest_pose(self, pose: Pose2d) -> None:
         # set the pose of the Questnav, transforming from robot center top questnav coordinate
         self.questnav.set_pose(Pose3d(pose.transformBy(self.quest_to_robot.inverse())))
         
-        if wpilib.RobotBase.isSimulation():
+        if wpilib.RobotBase.isSimulation() and not self.questnav.is_connected():
             # In Sim, "setting the pose" means we are now synced to the ground truth
+            # Only force this if we aren't talking to a real Quest - which can happen in the sim
             self.sim_error = Pose2d(Translation2d(0, 0), Rotation2d.fromDegrees(0))
 
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
@@ -110,7 +109,7 @@ class Questnav(SubsystemBase):
         else:
             new_pose = blue_pose
 
-        if wpilib.RobotBase.isReal():
+        if wpilib.RobotBase.isReal() or self.questnav.is_connected():
                 self.set_quest_pose(new_pose)
         else:
             # put us back at the red/blue locations: find the pose error
@@ -125,7 +124,7 @@ class Questnav(SubsystemBase):
         
         # Efficiently get the pose from the subscriber (returns a Pose2d object)
         self.set_quest_pose(self.drive_pose2d_sub.get())
-        if wpilib.RobotBase.isSimulation():
+        if wpilib.RobotBase.isSimulation() and not self.questnav.is_connected():
             self.sim_error = Pose2d(0, 0, 0) # reset the quest's sim error
 
         self.quest_synched_pub.set(self.quest_has_synched)
@@ -173,10 +172,11 @@ class Questnav(SubsystemBase):
 
         self.questnav.command_periodic()
 
-        if wpilib.RobotBase.isReal():
+        # todo - this should be simplified
+        if wpilib.RobotBase.isReal() or self.questnav.is_connected():
             frames = self.questnav.get_all_unread_pose_frames()
             for frame in frames:
-                if self.questnav.is_connected and self.questnav.is_tracking():
+                if self.questnav.is_connected() and self.questnav.is_tracking():  # i think RT had a typo here and was checking True vs self.questnav.is_connected (the fn, not the return val)
                     try:
                         self.quest_pose = frame.quest_pose_3d.toPose2d().transformBy(self.quest_to_robot)
                         quest_pose_old = self.quest_pose
@@ -204,8 +204,8 @@ class Questnav(SubsystemBase):
         # does this belong here?  not sure what it's for - CJH
         # self.quest_pose = self.get_pose().transformBy(self.quest_to_robot)
 
-        # why do we need more than one field?
-        # self.quest_field.setRobotPose(self.quest_pose)
+        # why do we need more than one field?  does this get read by the quest itself
+        self.quest_field.setRobotPose(self.quest_pose)
 
         if self.counter % 10 == 0:
             if 0 < self.quest_pose.x < 17.658 and 0 < self.quest_pose.y < 8.131 and self.questnav.is_connected():
@@ -213,11 +213,14 @@ class Questnav(SubsystemBase):
             else:
                 self.quest_pose_accepted = False
             
-            self.quest_accepted_pub.set(self.quest_pose_accepted)
+            # poses used in gui and advantagescope
             self.quest_pose_pub.set(self.quest_pose)
             self.pose_pub.set([self.quest_pose.X(), self.quest_pose.Y(), self.quest_pose.rotation().degrees()])  # legacy GUI version
-            self.quest_connected_pub.set(self.questnav.is_connected())
-            self.quest_tracking_pub.set(self.questnav.is_tracking())
+
+            self.quest_accepted_pub.set(self.quest_pose_accepted)  # GUI uses as VALID
+            self.quest_connected_pub.set(self.questnav.is_connected())  # GUI uses as heartbeat
+            self.quest_tracking_pub.set(self.questnav.is_tracking())  # GUI follows to see if tracking
+
             self.quest_battery_pub.set(self.questnav.get_battery_percent())
             self.quest_latency_pub.set(self.questnav.get_latency())
             self.quest_lost_count_pub.set(self.questnav.get_tracking_lost_counter())

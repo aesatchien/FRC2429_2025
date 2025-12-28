@@ -2,7 +2,6 @@
 
 import time
 import math
-import re
 import numpy as np
 import wpimath.geometry as geo
 from PyQt6 import QtGui, QtCore, QtWidgets
@@ -59,16 +58,16 @@ class UIUpdater:
     def _update_connection_status(self):
         """Updates the NT connection status indicator."""
         widget = self.ui.widget_dict['qlabel_nt_connected']['widget']
-        style = self.STYLE_ON if self.ui.nt_manager.isConnected() else self.STYLE_DISCONNECTED
+        style = self.STYLE_ON if self.ui.ntinst.isConnected() else self.STYLE_DISCONNECTED
         widget.setStyleSheet(style)
 
     def _update_pose_and_field(self):
         """Updates the robot and quest pose on the field graphic."""
-        drive_pose_entry = self.ui.widget_dict['drive_pose'].get('nt_entry')
-        if not drive_pose_entry:
+        drive_pose_sub = self.ui.widget_dict['drive_pose'].get('subscriber')
+        if not drive_pose_sub:
             return
 
-        self.drive_pose = drive_pose_entry.getDoubleArray([0, 0, 0])
+        self.drive_pose = drive_pose_sub.get()
         width, height = self.ui.qgroupbox_field.width(), self.ui.qgroupbox_field.height()
 
         # Update Robot Pose Text and Graphic
@@ -84,15 +83,9 @@ class UIUpdater:
         self.ui.qlabel_robot.move(int(-new_size / 2 + width * self.drive_pose[0] / 17.6), int(-new_size / 2 + height * (1 - self.drive_pose[1] / 8.2)))
 
         # Update Quest Pose Text and Graphic
-        quest_pose_entry = self.ui.widget_dict['quest_pose'].get('nt_entry')
-        self.quest_pose = quest_pose_entry.getDoubleArray([0.5, 0.5, 0])
+        quest_pose_sub = self.ui.widget_dict['quest_pose'].get('subscriber')
+        self.quest_pose = quest_pose_sub.get()
         quest_x, quest_y, quest_rot = self.quest_pose
-        #quest_pose_str = quest_pose_entry.getString('No quest pose')
-        #match = re.search(r"x=(?P<x>-?\d+\.\d+).*y=(?P<y>-?\d+\.\d+).*Rotation2d\((?P<rotation>-?\d+\.\d+)\)", quest_pose_str)
-        #if match:
-        #    quest_x, quest_y, quest_rot = float(match.group("x")), float(match.group("y")), math.degrees(float(match.group("rotation")))
-        #else:
-        #    quest_x, quest_y, quest_rot = -1, -1, -1
         
         quest_pose_msg = f'QUEST POSE\n{" " * x_pad}{self.quest_pose[0]:>5.2f}m {self.quest_pose[1]:>4.2f}m {" " * theta_pad}{self.quest_pose[2]:>4.0f}°'
         self.ui.qlabel_quest_pose_indicator.setText(quest_pose_msg)
@@ -106,13 +99,13 @@ class UIUpdater:
     def _update_camera_indicators(self):
         """Updates the status indicators for all cameras."""
         allowed_delay = 0.5
-        timestamp = self.ui.robot_timestamp_entry.getDouble(1)
+        timestamp = self.ui.robot_timestamp_sub.get()
 
         for cam_props in self.ui.camera_dict.values():
-            if 'TIMESTAMP_ENTRY' in cam_props:
-                is_alive = (timestamp - cam_props['TIMESTAMP_ENTRY'].getDouble(-1)) < allowed_delay
+            if 'TIMESTAMP_SUB' in cam_props:
+                is_alive = (timestamp - cam_props['TIMESTAMP_SUB'].get()) < allowed_delay
                 cam_props['IS_ALIVE'] = is_alive
-                connections = int(cam_props['CONNECTIONS_ENTRY'].getDouble(0))
+                connections = int(cam_props['CONNECTIONS_SUB'].get())
                 style = self.STYLE_ON if is_alive else self.STYLE_OFF
                 indicator = cam_props['INDICATOR']
                 if indicator:
@@ -121,11 +114,11 @@ class UIUpdater:
 
     def _update_shot_calculations(self):
         """ Calculates and displays shot distance and angle to speaker - legacy from 2024. """
-        alliance_entry = self.ui.widget_dict['qlabel_alliance_indicator'].get('nt_entry')
-        if not alliance_entry:
+        alliance_sub = self.ui.widget_dict['qlabel_alliance_indicator'].get('subscriber')
+        if not alliance_sub:
             return
 
-        is_red_alliance = alliance_entry.getBoolean(False)
+        is_red_alliance = alliance_sub.get()
         k_speaker = [16.5, 5.555, 0] if is_red_alliance else [0, 5.55, 180]
         speaker_coords = (16.54, 5.56) if is_red_alliance else (0, 5.56)
 
@@ -155,9 +148,9 @@ class UIUpdater:
         """Updates the background color of the command list widget in the NT tree - which is currently broken"""
         green, white = QtGui.QColor(227, 255, 227), QtGui.QColor(255, 255, 255)
         for i, props in enumerate(self.ui.command_dict.values()):
-            nt_entry = props.get('nt_entry')
-            if nt_entry:
-                is_running = nt_entry.getBoolean(False)
+            sub = props.get('subscriber')
+            if sub:
+                is_running = sub.get()
                 self.ui.qlistwidget_commands.item(i).setBackground(green if is_running else white)
 
     def _update_fps_counter(self):
@@ -179,11 +172,11 @@ class UIUpdater:
     def _update_indicator(self, props):
         """ Updates a label with a style based on state of the boolean tied to it """
         # TODO - maybe separate this based on whether it's monitoring a robot state boolean vs a command currently running
-        nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        if not (nt_entry and widget):
+        sub, widget = props.get('subscriber'), props.get('widget')
+        if not (sub and widget):
             return
 
-        is_on = nt_entry.getBoolean(False)
+        is_on = sub.get()
         style_flash = self.STYLE_FLASH_ON if self.ui.counter % 30 < 15 else self.STYLE_FLASH_OFF
 
         if 'style_on' in props:  # allow a custom style for each indicator
@@ -197,28 +190,28 @@ class UIUpdater:
     def _update_lcd(self, props):
         """ Updates a numeric LCD widget with an integer """
         # TODO - replace these with a better custom LCD-font widget
-        nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        if nt_entry and widget:
-            value = int(nt_entry.getDouble(0))
+        sub, widget = props.get('subscriber'), props.get('widget')
+        if sub and widget:
+            value = int(sub.get())
             widget.display(str(value))
 
     def _update_monitor(self, props):
         """ Updates a warninglabel with "good" and "bad" colors (set in UI's init) based on the value """
-        nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        if nt_entry and widget:
-            value = nt_entry.getDouble(0)
+        sub, widget = props.get('subscriber'), props.get('widget')
+        if sub and widget:
+            value = sub.get()
             widget.set_value(value)
 
     def _update_combo(self, props):
         """ At the moment this is just for the autonomous routines combo box but it could be for any dropdown """
-        nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        # print(f'found combo on {props.get("widget_name")} at {self.ui.counter} with nt_entry {nt_entry} and widget {widget}')
+        sub, widget = props.get('subscriber'), props.get('widget')
+        # print(f'found combo on {props.get("widget_name")} at {self.ui.counter} with sub {sub} and widget {widget}')
         # there is a problem with using shortcut checks for validity - the combobox is not True if it is empty (len 0)
         # so just check for None
-        if nt_entry is None or widget is None:
+        if sub is None or widget is None:
             return
 
-        new_list = nt_entry.getStringArray([])
+        new_list = sub.get()
         if new_list != self.ui.autonomous_list:
             widget.blockSignals(True)
             widget.clear()
@@ -226,9 +219,9 @@ class UIUpdater:
             widget.blockSignals(False)
             self.ui.autonomous_list = new_list
 
-        selected_nt_entry = props.get('selected_nt_entry')
-        if selected_nt_entry:
-            selected_routine = selected_nt_entry.getString('')
+        selected_sub = props.get('selected_subscriber')
+        if selected_sub:
+            selected_routine = selected_sub.get()
             if selected_routine != widget.currentText():
                 widget.blockSignals(True)
                 widget.setCurrentText(selected_routine)
@@ -236,11 +229,11 @@ class UIUpdater:
 
     def _update_time(self, props):
         """ This is for the match time remaining widget - lame in sim but correct for matches """
-        nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        if not (nt_entry and widget):
+        sub, widget = props.get('subscriber'), props.get('widget')
+        if not (sub and widget):
             return
 
-        match_time = nt_entry.getDouble(0)
+        match_time = sub.get()
         style_flash = self.STYLE_FLASH_ON if self.ui.counter % 30 < 15 else self.STYLE_FLASH_OFF
         if match_time < 30:
             widget.setText(f'* {int(match_time)} *')
@@ -250,12 +243,12 @@ class UIUpdater:
             widget.setStyleSheet(self.STYLE_HIGH)
 
     def _update_position(self, props):
-        """  This was specific for CrankSinatra's shot position"""
-        nt_entry, widget = props.get('nt_entry'), props.get('widget')
-        if not (nt_entry and widget):
+        """  This was specific for CrankSinatra's shot position """
+        sub, widget = props.get('subscriber'), props.get('widget')
+        if not (sub and widget):
             return
 
-        config = nt_entry.getString('?')
+        config = sub.get()
         # This logic seems to always result in STYLE_ON, may need review
         position_style = self.STYLE_ON if config.upper() not in ['LOW_SHOOT', 'INTAKE'] else self.STYLE_ON
         widget.setText(f'POS: {config.upper()}')
@@ -263,13 +256,13 @@ class UIUpdater:
 
     def _update_hub(self, props):
         """Legacy hub update logic from 2023. May need removal."""
-        hub_targets_entry = self.ui.widget_dict['hub_targets'].get('nt_entry')
-        if not hub_targets_entry:
+        hub_targets_sub = self.ui.widget_dict['hub_targets'].get('subscriber')
+        if not hub_targets_sub:
             return
 
-        hub_targets = hub_targets_entry.getDouble(0)
+        hub_targets = hub_targets_sub.get()
         if hub_targets > 0:
-            hub_rotation = self.ui.widget_dict['hub_rotation']['nt_entry'].getDouble(0) - 5
+            hub_rotation = self.ui.widget_dict['hub_rotation']['subscriber'].get() - 5
             shooter_rpm = 2000
             shooter_distance = shooter_rpm * 0.00075
             center_offset = shooter_distance * -np.sin(hub_rotation * 3.14159 / 180)

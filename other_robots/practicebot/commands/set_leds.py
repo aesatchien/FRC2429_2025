@@ -1,10 +1,8 @@
 import commands2
-import wpilib
 import typing
 
-from wpilib import SmartDashboard
 from subsystems.led import Led
-from commands.log_command import log_command
+from helpers.log_command import log_command
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=False)
