@@ -1,9 +1,7 @@
-import math
 import commands2
-from wpilib import SmartDashboard
 from subsystems.swerve import Swerve
 from wpimath.geometry import Pose2d
-from commands.log_command import log_command
+from helpers.log_command import log_command
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=True)
