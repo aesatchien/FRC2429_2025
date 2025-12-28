@@ -138,5 +138,7 @@ class Vision(SubsystemBase):
                     self.status_pubs[key].set(i * 100 < self.counter % 600 < (i + 1) * 100 + 10)
                 self.status_pubs['photoncam'].set(400 < self.counter % 600 < 510)
 
+                self.status_pubs[list(constants.k_cameras.keys())[0]].set(True)
+
             if constants.VisionConstants.k_nt_debugging:  # extra debugging info for NT
                 pass

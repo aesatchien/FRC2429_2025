@@ -29,11 +29,12 @@ camera_prefix = r'/Cameras'  # from the pis
 quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
 
 # Dictionary mapping Logical Name -> NetworkTables Camera Name in /Cameras
+# TODO - make these work with the vision code
 k_cameras = {
-    'ardu_high_tags': 'ArducamHigh',
-    'ardu_back_tags': 'ArducamBack',
-    'genius_low_tags': 'GeniusLow',
-    'logi_reef_tags': 'LogitechReef',
+    'arducam_high': 'ArducamHigh',
+    'arducam_back': 'ArducamBack',
+    'genius_low': 'GeniusLow',
+    'logitech_reef': 'LogitechReef',
 }
 
 # systems inside/from the robot
