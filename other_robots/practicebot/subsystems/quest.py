@@ -172,10 +172,11 @@ class Questnav(SubsystemBase):
 
         self.questnav.command_periodic()
 
+        # todo - this should be simplified
         if wpilib.RobotBase.isReal() or self.questnav.is_connected():
             frames = self.questnav.get_all_unread_pose_frames()
             for frame in frames:
-                if self.questnav.is_connected() and self.questnav.is_tracking():
+                if self.questnav.is_connected() and self.questnav.is_tracking():  # i think RT had a typo here and was checking True vs self.questnav.is_connected (the fn, not the return val)
                     try:
                         self.quest_pose = frame.quest_pose_3d.toPose2d().transformBy(self.quest_to_robot)
                         quest_pose_old = self.quest_pose
