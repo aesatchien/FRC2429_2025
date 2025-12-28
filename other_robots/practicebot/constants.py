@@ -115,9 +115,13 @@ class VisionConstants:
     k_valid_tags = list(range(1, 23))
 
 
+class QuestConstants:
+    k_counter_offset = 3
+
+
 class LedConstants:
 
-    k_counter_offset = 3
+    k_counter_offset = 4
     k_nt_debugging = False  # print extra values to NT for debugging
     k_led_count = 40  # correct as of 2025 0305
     k_led_count_ignore = 4  # flat ones not for the height indicator
@@ -125,12 +129,12 @@ class LedConstants:
 
 class RobotStateConstants:
 
-    k_counter_offset = 4
+    k_counter_offset = 5
     k_nt_debugging = False  # print extra values to NT for debugging
 
 class DrivetrainConstants:
 
-    k_counter_offset = 5
+    k_counter_offset = 6
     k_nt_debugging = False  # print extra values to NT for debugging
     # these are for the apriltags.  For the most part, you want to trust the gyro, not the tags for angle
     # based on https://www.chiefdelphi.com/t/swerve-drive-pose-estimator-and-add-vision-measurement-using-limelight-is-very-jittery/453306/13
