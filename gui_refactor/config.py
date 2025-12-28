@@ -49,6 +49,7 @@ Each widget property dictionary can contain the following keys:
 # This file should not import any runtime modules like PyQt or ntcore.
 
 # this config will be used to bind the NT topics to entries we can use later
+# todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
 CAMERA_CONFIG = {
     'GeniusLow': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
                   'TIMESTAMP_TOPIC': '/Cameras/GeniusLow/_timestamp',

@@ -88,7 +88,7 @@ class Swerve (Subsystem):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         self.use_CJH_apriltags = constants.k_use_CJH_tags  # down below we decide which one to use in the periodic method
         
-        self.camera_names = ['ArducamBack', 'ArducamHigh', 'GeniusLow', 'LogitechReef']
+        self.camera_names = list(constants.k_cameras.values())
         self.pose_subscribers = [self.inst.getDoubleArrayTopic(f"/Cameras/{cam}/poses/tag1").subscribe([0] * 8) for cam in self.camera_names]
         self.count_subscribers = [self.inst.getDoubleTopic(f"/Cameras/{cam}/tags/targets").subscribe(0) for cam in self.camera_names]
 

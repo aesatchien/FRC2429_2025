@@ -28,6 +28,14 @@ k_burn_flash = True
 camera_prefix = r'/Cameras'  # from the pis
 quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
 
+# Dictionary mapping Logical Name -> NetworkTables Camera Name in /Cameras
+k_cameras = {
+    'ardu_high_tags': 'ArducamHigh',
+    'ardu_back_tags': 'ArducamBack',
+    'genius_low_tags': 'GeniusLow',
+    'logi_reef_tags': 'LogitechReef',
+}
+
 # systems inside/from the robot
 status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status message
 vision_prefix = r'/SmartDashboard/Vision'  # from the robot

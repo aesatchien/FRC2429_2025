@@ -35,20 +35,20 @@ class PhysicsEngine:
         self.sim_hub_rot_pub = self.inst.getDoubleTopic(f"{sim_prefix}/hub_rot").publish()
 
         self.camera_dict = {}
-        self.cam_list = ['ArducamHigh', 'ArducamBack', 'GeniusLow', 'LogitechReef']
+        self.cam_list = list(constants.k_cameras.values())
 
         # vision stuff - using 2024 stuff for now (CJH).  This could easily be extended to make fake tags as well
         # then you could use more of the tag stuff in vision, and the tag faking could be here instead of there
-        key = 'orange'
         
-        for ix, cam in enumerate(self.cam_list):
+        for ix, (key, cam) in enumerate(constants.k_cameras.items()):
+            nt_key = 'orange' if key == 'orange' else 'tags'
             base = f'/Cameras/{cam}'
             self.camera_dict[cam] = {
                 'offset': ix,
-                'targets_pub': self.inst.getDoubleTopic(f"{base}/{key}/targets").publish(),
-                'distance_pub': self.inst.getDoubleTopic(f"{base}/{key}/distance").publish(),
-                'strafe_pub': self.inst.getDoubleTopic(f"{base}/{key}/strafe").publish(),
-                'rotation_pub': self.inst.getDoubleTopic(f"{base}/{key}/rotation").publish(),
+                'targets_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/targets").publish(),
+                'distance_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/distance").publish(),
+                'strafe_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/strafe").publish(),
+                'rotation_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/rotation").publish(),
                 'timestamp_pub': self.inst.getDoubleTopic(f"{base}/_timestamp").publish()
             }
 
