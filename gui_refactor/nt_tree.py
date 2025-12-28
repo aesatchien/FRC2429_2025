@@ -3,27 +3,37 @@
 import time
 from datetime import datetime
 from PyQt6 import QtWidgets
+import ntcore
 from ntcore import NetworkTableType
 
 class NTTreeManager:
     def __init__(self, ui):
         self.ui = ui
+        self.popup = None
 
     def toggle_network_tables(self):
-        """Shows or hides the NetworkTables tree widget."""
-        if self.ui.qt_tree_widget_nt.isHidden():
+        """Shows or hides the NetworkTables tree widget in a separate window."""
+        if self.popup is None:
+            self.popup = QtWidgets.QDialog(self.ui)
+            self.popup.setWindowTitle("NetworkTables Viewer")
+            layout = QtWidgets.QVBoxLayout(self.popup)
+            layout.addWidget(self.ui.qt_tree_widget_nt)
+
+        if self.popup.isHidden():
             self.refresh_tree()
             self.ui.qt_tree_widget_nt.show()
+            self.popup.resize(self.ui.size())
+            self.popup.show()
         else:
-            self.ui.qt_tree_widget_nt.hide()
+            self.popup.hide()
 
     def refresh_tree(self):
         """Reads networktables and updates tree and combo widgets."""
-        if self.ui.nt_manager.isConnected():
+        if self.ui.ntinst.isConnected():
             self.ui.nt_manager.report_nt_status()
             self.ui.qt_tree_widget_nt.clear()
-            entries = self.ui.nt_manager.getEntries('/', 0)
-            self.ui.sorted_tree = sorted([e.getName() for e in entries])
+            topics = self.ui.ntinst.getTopics()
+            self.ui.sorted_tree = sorted([t.getName() for t in topics])
 
             self.filter_nt_keys_combo()
 
@@ -40,14 +50,20 @@ class NTTreeManager:
             self.ui.command_dict.clear() # Clear old commands
             for item in self.ui.sorted_tree:
                 if 'running' in item:
-                    command_name = item.split('/')[2]
-                    self.ui.qlistwidget_commands.addItem(command_name)
-                    self.ui.command_dict.update({command_name: {'nt_topic': item, 'nt_entry': self.ui.nt_manager.getEntry(item)}})
+                    parts = item.split('/')
+                    # Robustly find the command name (the part before 'running')
+                    if 'running' in parts:
+                        idx = parts.index('running')
+                        if idx > 0:
+                            command_name = parts[idx-1]
+                            self.ui.qlistwidget_commands.addItem(command_name)
+                            self.ui.command_dict.update({command_name: {'nt_topic': item, 'nt_entry': self.ui.ntinst.getEntry(item)}})
 
-                entry_value = self.ui.nt_manager.getEntry(item).getValue()
-                if entry_value is not None:
+                entry_value = self.ui.ntinst.getEntry(item).getValue()
+                if entry_value is not None and entry_value.value() is not None:
                     value = entry_value.value()
-                    age = int(time.time() - entry_value.last_change() / 1E6)
+                    # NT4 timestamps are in microseconds (server time)
+                    age = int((ntcore._now() - entry_value.time()) / 1000000.0)
                     levels = item[1:].split('/')
                     if len(levels) == 2:
                         nt_dict[levels[0]][levels[1]] = value, age
@@ -73,7 +89,7 @@ class NTTreeManager:
     def update_key(self):
         """Used to modify an nt key value from the TUNING tab."""
         key = self.ui.qcombobox_nt_keys.currentText()
-        nt_entry = self.ui.nt_manager.getEntry(key)
+        nt_entry = self.ui.ntinst.getEntry(key)
         entry_type = nt_entry.getType()
         new_val_str = self.ui.qt_text_new_value.toPlainText()
         print(f'Update key was called on {key}, which is a {entry_type}. Setting it to {new_val_str}', flush=True)
@@ -94,9 +110,9 @@ class NTTreeManager:
     def update_selected_key(self):
         """Updates the display with the current value of the selected NT key."""
         key = self.ui.qcombobox_nt_keys.currentText()
-        nt_entry = self.ui.nt_manager.getEntry(key)
+        nt_entry = self.ui.ntinst.getEntry(key)
         value = nt_entry.getValue()
-        if value is not None:
+        if value is not None and value.value() is not None:
             self.ui.qt_text_current_value.setPlainText(str(value.value()))
 
     def qt_tree_widget_nt_clicked(self, item):

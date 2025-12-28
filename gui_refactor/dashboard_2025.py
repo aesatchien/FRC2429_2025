@@ -11,6 +11,7 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from PyQt6.QtCore import Qt, QTimer, QEvent
 from PyQt6.QtWidgets import QGraphicsOpacityEffect
+import ntcore
 
 # logical chunking of the gui's functional components
 from config import WIDGET_CONFIG, CAMERA_CONFIG
@@ -53,20 +54,26 @@ class Ui(QtWidgets.QMainWindow):
         self.previous_frames = 0
         self.widget_dict = {}
         self.command_dict = {}
-        self.camera_enabled = False
+
+        # camera stuff - probably not needed
         self.worker = None
-        self.thread = None
+        # self.camera_enabled = False
+        # self.thread = None
 
         # Build the runtime dictionaries from the static config
         self.widget_dict = self.build_widget_dict()
         self.camera_dict = self.build_camera_dict()
         # print(self.widget_dict)
 
-        self.robot_timestamp_entry = self.nt_manager.getEntry('/SmartDashboard/_timestamp')
+        self.robot_timestamp_sub = self.ntinst.getDoubleTopic('/SmartDashboard/_timestamp').subscribe(0)
 
         # set the colors for the warning labels
         self.qlabel_pdh_voltage_monitor.update_settings(min_val=8, max_val=12, red_high=False, display_float=True)
         self.qlabel_pdh_current_monitor.update_settings(min_val=60, max_val=160, red_high=True, display_float=False)
+
+        # Publishers for key presses
+        self.keys_pressed_pub = self.ntinst.getIntegerArrayTopic("/SmartDashboard/keys_pressed").publish()
+        self.key_pressed_pub = self.ntinst.getIntegerTopic("/SmartDashboard/key_pressed").publish()
 
         self.initialize_widgets()
 
@@ -84,8 +91,8 @@ class Ui(QtWidgets.QMainWindow):
         self.qt_text_entry_filter.installEventFilter(self)
         self.qt_text_new_value.installEventFilter(self)
 
-        self.robot_pixmap = QtGui.QPixmap("png\\blockhead.png")
-        self.quest_pixmap = QtGui.QPixmap("png\\quest.png")
+        self.robot_pixmap = QtGui.QPixmap(f"{self.png_dir}\\blockhead.png")
+        self.quest_pixmap = QtGui.QPixmap(f"{self.png_dir}\\quest.png")
         opacity_effect = QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0.5)
         self.qlabel_quest.setGraphicsEffect(opacity_effect)
@@ -118,19 +125,32 @@ class Ui(QtWidgets.QMainWindow):
             if widget_name:
                 new_entry['widget'] = getattr(self, widget_name, None)
             
+            # Determine Topic Type based on update_style
+            style = config.get('update_style')
             nt_topic = config.get('nt_topic')
+            
             if nt_topic:
-                new_entry['nt_entry'] = self.nt_manager.getEntry(nt_topic)
+                if style == 'indicator':
+                    new_entry['subscriber'] = self.ntinst.getBooleanTopic(nt_topic).subscribe(False)
+                elif style in ['lcd', 'monitor', 'time', 'hub']:
+                    new_entry['subscriber'] = self.ntinst.getDoubleTopic(nt_topic).subscribe(0.0)
+                elif style == 'pose':
+                    new_entry['subscriber'] = self.ntinst.getDoubleArrayTopic(nt_topic).subscribe([0, 0, 0])
+                elif style == 'combo':
+                    new_entry['subscriber'] = self.ntinst.getStringArrayTopic(nt_topic).subscribe([])
+                elif style == 'position':
+                    new_entry['subscriber'] = self.ntinst.getStringTopic(nt_topic).subscribe("")
 
             command_topic = config.get('command_topic')
             if command_topic:
-                new_entry['command_nt_entry'] = self.nt_manager.getEntry(command_topic)
+                new_entry['publisher'] = self.ntinst.getBooleanTopic(command_topic).publish()
+                new_entry['command_subscriber'] = self.ntinst.getBooleanTopic(command_topic).subscribe(False)
 
             selected_topic = config.get('selected_topic')
-            if 'selected_topic' in new_entry:
-                new_entry['selected_nt_entry'] = self.nt_manager.getEntry(selected_topic)
-                # print(f'{key} has selected topic: {selected_topic} with value {new_entry["selected_nt_entry"].getStringArray([])}')
-
+            if selected_topic:
+                new_entry['selected_subscriber'] = self.ntinst.getStringTopic(selected_topic).subscribe("")
+                new_entry['selected_publisher'] = self.ntinst.getStringTopic(selected_topic).publish()
+                # print(f'{key} has selected topic: {selected_topic} with value {new_entry[selected_subscriber].get()'}
             widget_dict[key] = new_entry
         # print(widget_dict)
         return widget_dict
@@ -148,11 +168,11 @@ class Ui(QtWidgets.QMainWindow):
             timestamp_topic = config.get('TIMESTAMP_TOPIC')
             if timestamp_topic:
                 new_entry['IS_ALIVE'] = False
-                new_entry['TIMESTAMP_ENTRY'] = self.nt_manager.getEntry(timestamp_topic)
+                new_entry['TIMESTAMP_SUB'] = self.ntinst.getDoubleTopic(timestamp_topic).subscribe(-1)
 
             connections_topic = config.get('CONNECTIONS_TOPIC')
             if connections_topic:
-                new_entry['CONNECTIONS_ENTRY'] = self.nt_manager.getEntry(connections_topic)
+                new_entry['CONNECTIONS_SUB'] = self.ntinst.getDoubleTopic(connections_topic).subscribe(0)
 
             camera_dict[key] = new_entry
         return camera_dict
@@ -166,25 +186,36 @@ class Ui(QtWidgets.QMainWindow):
         return QtGui.QPixmap.fromImage(p)
 
     def update_routines(self, text):
-        nt_entry = self.widget_dict['qcombobox_autonomous_routines']['selected_nt_entry']
-        nt_entry.setString(text)
-        self.nt_manager.flush()
+        pub = self.widget_dict['qcombobox_autonomous_routines'].get('selected_publisher')
+        if pub:
+            pub.set(text)
+        self.ntinst.flush()
 
     def label_click(self, label):
-        command_nt_entry = self.widget_dict[label].get('command_nt_entry')
-        if command_nt_entry:
-            if command_nt_entry.exists():
-                toggled_state = not command_nt_entry.getBoolean(False)
-                print(f'You clicked {label}. Firing command at {datetime.today().strftime("%H:%M:%S")} ...', flush=True)
-                command_nt_entry.setBoolean(toggled_state)
-            else:
-                print(f'Warning: {label} clicked but NT Publisher does not exist for {command_nt_entry}.', flush=True)
+        props = self.widget_dict[label]
+        pub = props.get('publisher')
+        sub = props.get('command_subscriber')
+        
+        if pub and sub:
+            # Check if the topic has data. If time is 0, it means no value has been set (by robot or us).
+            atomic_val = sub.getAtomic()
+            if atomic_val.time == 0:
+                print(f'Warning: {label} clicked but NT topic {sub.getTopic().getName()} has no value (Robot not connected?).', flush=True)
+                return
+
+            # Toggle based on current state of the command topic
+            toggled_state = not atomic_val.value
+            print(f'You clicked {label}. Firing command at {datetime.today().strftime("%H:%M:%S")} ...', flush=True)
+            pub.set(toggled_state)
+        else:
+            print(f'Warning: {label} clicked but NT Publisher or Subscriber is missing.', flush=True)
+
 
     def initialize_widgets(self):
         """Connects widget signals and populates the camera combobox."""
         # Connect clickable label signals
         for key, widget_props in self.widget_dict.items():
-            if widget_props.get('command_nt_entry') and widget_props.get('widget'):
+            if widget_props.get('publisher') and widget_props.get('widget'):
                 widget_props['widget'].clicked.connect(lambda label=key: self.label_click(label))
         
         # Populate camera combobox
@@ -193,8 +224,8 @@ class Ui(QtWidgets.QMainWindow):
 
     def keyPressEvent(self, event):
         self.keys_currently_pressed.append(event.key())
-        self.nt_manager.getEntry("SmartDashboard/keys_pressed").setIntegerArray(self.keys_currently_pressed)
-        self.nt_manager.getEntry("SmartDashboard/key_pressed").setInteger(event.key())
+        self.keys_pressed_pub.set(self.keys_currently_pressed)
+        self.key_pressed_pub.set(event.key())
 
     def keyReleaseEvent(self, event):
         try:
@@ -202,12 +233,12 @@ class Ui(QtWidgets.QMainWindow):
                 self.keys_currently_pressed.remove(event.key())
         except ValueError:
             pass
-        self.nt_manager.getEntry("SmartDashboard/key_pressed").setInteger(-999)
-        self.nt_manager.getEntry("SmartDashboard/keys_pressed").setIntegerArray(self.keys_currently_pressed)
+        self.key_pressed_pub.set(-999)
+        self.keys_pressed_pub.set(self.keys_currently_pressed)
 
     def focusOutEvent(self, event):
         self.keys_currently_pressed = []
-        self.nt_manager.getEntry("SmartDashboard/keys_pressed").setIntegerArray(self.keys_currently_pressed)
+        self.keys_pressed_pub.set(self.keys_currently_pressed)
 
     def eventFilter(self, obj, event):
         if (obj is self.qt_text_entry_filter or obj is self.qt_text_new_value) and event.type() == QEvent.Type.KeyPress:
