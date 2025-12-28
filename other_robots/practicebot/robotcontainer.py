@@ -34,7 +34,7 @@ from commands.pid_to_point import PIDToPoint
 from commands.reset_field_centric import ResetFieldCentric
 from commands.rumble_command import RumbleCommand
 from commands.set_leds import SetLEDs
-# from commands.swerve_test import SwerveTest
+from commands.swerve_test import SwerveTest
 
 
 class RobotContainer:
@@ -175,7 +175,7 @@ class RobotContainer:
 
         # test a setting of the swerve modules straight before running the auto to tag
         # self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
-        # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
+        self.triggerA.whileTrue(SwerveTest(self, self.swerve))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right
         self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
