@@ -105,8 +105,20 @@ class UIUpdater:
         for cam_props in self.ui.camera_dict.values():
             if 'TIMESTAMP_SUB' in cam_props:
                 is_alive = (timestamp - cam_props['TIMESTAMP_SUB'].get()) < allowed_delay
+                
+                # Check for rising edge (False -> True) to count reconnections
+                if is_alive and not cam_props['IS_ALIVE']:
+                    cam_props['RECONNECTION_COUNT'] += 1
+
                 cam_props['IS_ALIVE'] = is_alive
-                connections = int(cam_props['CONNECTIONS_SUB'].get())
+
+                # if we ever start serving _connections from the robot, then this will override the local count
+                connections = cam_props['RECONNECTION_COUNT']
+                if 'CONNECTIONS_SUB' in cam_props:
+                    atomic_conn = cam_props['CONNECTIONS_SUB'].getAtomic()
+                    if atomic_conn.time != 0:
+                        connections = int(atomic_conn.value)
+
                 style = self.STYLE_ON if is_alive else self.STYLE_OFF
                 indicator = cam_props.get('INDICATOR')  # switch to safe access since we can have cameras w/o heartbeat indicators
                 if indicator:

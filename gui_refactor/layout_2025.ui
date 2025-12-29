@@ -1507,7 +1507,7 @@ background-color:rgb(180,180,180);</string>
      <widget class="QLabel" name="label_13">
       <property name="geometry">
        <rect>
-        <x>30</x>
+        <x>37</x>
         <y>310</y>
         <width>61</width>
         <height>16</height>
@@ -1627,7 +1627,7 @@ background-color:rgb(127, 127, 127);
        <rect>
         <x>10</x>
         <y>330</y>
-        <width>100</width>
+        <width>105</width>
         <height>20</height>
        </rect>
       </property>
@@ -1661,7 +1661,7 @@ background-color:rgb(180,180,180);</string>
        <rect>
         <x>10</x>
         <y>396</y>
-        <width>100</width>
+        <width>105</width>
         <height>20</height>
        </rect>
       </property>
@@ -1695,7 +1695,7 @@ background-color:rgb(180,180,180);</string>
        <rect>
         <x>10</x>
         <y>374</y>
-        <width>100</width>
+        <width>105</width>
         <height>20</height>
        </rect>
       </property>
@@ -1729,7 +1729,7 @@ background-color:rgb(180,180,180);</string>
        <rect>
         <x>10</x>
         <y>352</y>
-        <width>100</width>
+        <width>105</width>
         <height>20</height>
        </rect>
       </property>
@@ -1758,7 +1758,7 @@ background-color:rgb(180,180,180);</string>
      <widget class="QLabel" name="label_16">
       <property name="geometry">
        <rect>
-        <x>170</x>
+        <x>186</x>
         <y>310</y>
         <width>111</width>
         <height>20</height>
@@ -1774,7 +1774,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>197</x>
+        <x>207</x>
         <y>374</y>
         <width>91</width>
         <height>20</height>
@@ -1808,7 +1808,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>197</x>
+        <x>207</x>
         <y>396</y>
         <width>91</width>
         <height>20</height>
@@ -1842,7 +1842,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>197</x>
+        <x>207</x>
         <y>330</y>
         <width>91</width>
         <height>42</height>
@@ -1877,7 +1877,7 @@ ENABLED</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>129</x>
+        <x>139</x>
         <y>330</y>
         <width>60</width>
         <height>20</height>
@@ -1911,7 +1911,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>129</x>
+        <x>139</x>
         <y>352</y>
         <width>60</width>
         <height>20</height>
@@ -1945,7 +1945,7 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="geometry">
        <rect>
-        <x>129</x>
+        <x>139</x>
         <y>374</y>
         <width>60</width>
         <height>20</height>

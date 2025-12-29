@@ -36,6 +36,7 @@ class PhysicsEngine:
 
         self.camera_dict = {}
         self.cam_list = list(constants.k_cameras.keys())
+        self.physical_cameras = sorted(list(set(c['topic_name'] for c in constants.k_cameras.values())))
 
         # vision stuff - using 2024 stuff for now (CJH).  This could easily be extended to make fake tags as well
         # then you could use more of the tag stuff in vision, and the tag faking could be here instead of there
@@ -91,18 +92,26 @@ class PhysicsEngine:
         self.sim_hub_dist_pub.set(round(ring_dist, 2))
         self.sim_hub_rot_pub.set(round(ring_rot, 2))
         
-        for key in self.cam_list:
-            cam_data = self.camera_dict[key]
-            offset = cam_data['offset']
-            # simulate cameras dropping out
-            if wpilib.Timer.getFPGATimestamp() % 30 < (30/5)*(1+offset):
-                ts = wpilib.Timer.getFPGATimestamp()
-            else:
-                ts = wpilib.Timer.getFPGATimestamp() -1
-            cam_data['timestamp_pub'].set(ts)  # pretend the pi camera is "live"
+        self.update_simulated_cameras(ring_dist, ring_rot)
 
-            cam_data['targets_pub'].set(1 + offset)
-            cam_data['distance_pub'].set(ring_dist + offset)
+    def update_simulated_cameras(self, ring_dist, ring_rot):
+        now = wpilib.Timer.getFPGATimestamp()
+        
+        # Rotate which physical camera is disconnected (15s per camera)
+        topic_off = self.physical_cameras[int(now / 15.0) % len(self.physical_cameras)]
+        
+        # Rotate which logical camera sees targets (2s per camera) - ONE ON AT A TIME
+        key_target_on = self.cam_list[int(now / 2.0) % len(self.cam_list)]
+
+        for key, cam_data in self.camera_dict.items():
+            topic = constants.k_cameras[key]['topic_name']
+            is_connected = (topic != topic_off)
+            
+            # Publish timestamp (stale if disconnected) and targets (0 if disconnected or not the active target)
+            cam_data['timestamp_pub'].set(now if is_connected else now - 5)
+            cam_data['targets_pub'].set((1 + cam_data['offset']) if is_connected and key == key_target_on else 0)
+            
+            cam_data['distance_pub'].set(ring_dist + cam_data['offset'])
             cam_data['strafe_pub'].set(0)
             cam_data['rotation_pub'].set(self.theta - ring_rot)
 

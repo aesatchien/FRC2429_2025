@@ -115,24 +115,11 @@ class Vision(SubsystemBase):
                 self.camera_values[key]['rotation'] = self.camera_dict[key]['rotation_entry'].get()
                 self.camera_values[key]['strafe'] = self.camera_dict[key]['strafe_entry'].get()
 
-            if wpilib.RobotBase.isReal():
-                # Update publishers based on target availability - this is for the GUI
-                for key, pub in self.status_pubs.items():
-                    if key in self.camera_dict:
-                        pub.set(self.target_available(key))
-
-            else:  # test the keys
-                # Simulation test pattern  - again for the GUI - cycle through them based on the counter
-                period, overlap, gap = 100, 30, 100  # in loops
-                keys = list(constants.k_cameras.keys())
-                cycle_len = len(keys) * period + overlap + gap
-                loop_count = self.counter % cycle_len
-
-                for i, key in enumerate(keys):
-                    self.status_pubs[key].set(i * period < loop_count < (i + 1) * period + overlap)
-                
-                # Blink photoncam in the gap
-                self.status_pubs['photoncam'].set(cycle_len - gap < loop_count < cycle_len)
+            # Update publishers based on target availability - this is for the GUI
+            # Works for both Real (actual data) and Sim (physics.py data)
+            for key, pub in self.status_pubs.items():
+                if key in self.camera_dict:
+                    pub.set(self.target_available(key))
 
             if constants.VisionConstants.k_nt_debugging:  # extra debugging info for NT
                 pass

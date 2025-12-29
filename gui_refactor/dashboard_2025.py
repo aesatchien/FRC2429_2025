@@ -178,6 +178,7 @@ class Ui(QtWidgets.QMainWindow):
             timestamp_topic = config.get('TIMESTAMP_TOPIC')
             if timestamp_topic:
                 new_entry['IS_ALIVE'] = False
+                new_entry['RECONNECTION_COUNT'] = 0
                 new_entry['TIMESTAMP_SUB'] = self.ntinst.getDoubleTopic(timestamp_topic).subscribe(-1)
 
             connections_topic = config.get('CONNECTIONS_TOPIC')
