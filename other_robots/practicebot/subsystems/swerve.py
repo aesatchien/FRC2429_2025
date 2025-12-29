@@ -311,6 +311,11 @@ class Swerve (Subsystem):
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
                 if count_subscriber.get() > 0:  # use this camera's tag
                     tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                    
+                    # Check for stale tags (e.g. > 0.5s latency)  # TODO - switch this all to NT's truth number
+                    if ts - tag_data[0] > 0.5:
+                        continue
+
                     tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
                     rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
@@ -352,12 +357,13 @@ class Swerve (Subsystem):
         self.abs_enc_pubs = [self.inst.getDoubleTopic(f"{swerve_prefix}/absolute {i}").publish() for i in range(4)]
         self.angles_pub = self.inst.getDoubleArrayTopic(f"{swerve_prefix}/_angles").publish()
 
-        # TODO - these don't really belong in Swerve
+        # TODO - these don't really belong in Swerve - but where do they belong?
         self.pdh_volt_pub = self.inst.getDoubleTopic(f"{status_prefix}/_pdh_voltage").publish()
         self.pdh_current_pub = self.inst.getDoubleTopic(f"{status_prefix}/_pdh_current").publish()
 
     def _update_dashboard(self, pose, ts):
-        self.timestamp_pub.set(ts)  # TODO - see how to use the one that NT puts on every update anyway
+        # TODO - this should not be the source of truth for the pi - start using the timer kept by nt
+        self.timestamp_pub.set(ts)
         
         # Send the struct (replaces the arrays). AdvantageScope detects this automatically.
         self.pose2d_pub.set(pose)
