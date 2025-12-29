@@ -48,36 +48,7 @@ Each widget property dictionary can contain the following keys:
 """
 # This file should not import any runtime modules like PyQt or ntcore.
 
-# this config will be used to bind the NT topics to entries we can use later
-# todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
-CAMERA_CONFIG = {
-    'GeniusLow': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
-                  'TIMESTAMP_TOPIC': '/Cameras/GeniusLow/_timestamp',
-                  'CONNECTIONS_TOPIC': '/Cameras/GeniusLow/_connections',
-                  'NICKNAME': 'GENIUS LO',
-                  'INDICATOR_NAME': 'qlabel_genius_low_indicator'},
-    'ArducamBack': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
-                    'TIMESTAMP_TOPIC': '/Cameras/ArducamBack/_timestamp',
-                    'CONNECTIONS_TOPIC': '/Cameras/ArducamBack/_connections',
-                    'NICKNAME': 'ARDU BACK',
-                    'INDICATOR_NAME': 'qlabel_arducam_back_indicator'},
-    'LogitechReef': {'URL': 'http://10.24.29.13:1186/stream.mjpg',
-                     'TIMESTAMP_TOPIC': '/Cameras/LogitechReef/_timestamp',
-                     'CONNECTIONS_TOPIC': '/Cameras/LogitechReef/_connections',
-                     'NICKNAME': 'LOGI REEF',
-                     'INDICATOR_NAME': 'qlabel_logitech_reef_indicator'},
-    'ArducamHigh': {'URL': 'http://10.24.29.13:1187/stream.mjpg',
-                    'TIMESTAMP_TOPIC': '/Cameras/ArducamHigh/_timestamp',
-                    'CONNECTIONS_TOPIC': '/Cameras/ArducamHigh/_connections',
-                    'NICKNAME': 'ARDU HI',
-                    'INDICATOR_NAME': 'qlabel_arducam_high_indicator'},
-    'Raw GeniusLow': {'URL': 'http://10.24.29.12:1181/stream.mjpg'},
-    'Raw ArduBack': {'URL': 'http://10.24.29.12:1182/stream.mjpg'},
-    'Raw LogiReef': {'URL': 'http://10.24.29.13:1181/stream.mjpg'},
-    'Raw ArduHigh': {'URL': 'http://10.24.29.13:1182/stream.mjpg'},
-    'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg'},
-}
-
+# NT PREFIXES WE MAY NEED
 camera_prefix = r'/Cameras'  # from the pis
 quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
 # systems inside/from the robot
@@ -87,6 +58,58 @@ swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
 sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
 command_prefix = r'/SmartDashboard/Command'  # DIFFERENT FROM ROBOT CODE: the robot SmartDashboard.putData auto prepends /SmartDashboard to the key
 base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
+
+# this config will be used to bind the NT topics to entries we can use later
+# todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
+CAMERA_BASE_CONFIG = {
+    'genius_low': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+                   'BASE_TOPIC': 'GeniusLow',
+                  'NICKNAME': 'GENIUS LO',
+                  'INDICATOR_INDEX': 0},
+    'arducam_back': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
+                    'BASE_TOPIC': 'ArducamBack',
+                    'NICKNAME': 'ARDU BACK',
+                  'INDICATOR_INDEX': 1},
+    'logitech_reef': {'URL': 'http://10.24.29.13:1186/stream.mjpg',
+                   'BASE_TOPIC': 'LogitechReef',
+                     'NICKNAME': 'LOGI REEF',
+                      'INDICATOR_INDEX': 2},
+    'logitech_reef_hsv': {'URL': 'http://10.24.29.13:1186/stream.mjpg',  # has no index, so no duplicate heartbeat
+                   'BASE_TOPIC': 'LogitechReef',
+                     'NICKNAME': 'LOGI HSV',
+                      'TARGET_INDICATOR_NAME': 'qlabel_hsv_target_indicator'},  # has custom target indicator
+    'arducam_high': {'URL': 'http://10.24.29.13:1187/stream.mjpg',
+                   'BASE_TOPIC': 'ArducamHigh',
+                    'NICKNAME': 'ARDU HI',
+                    'INDICATOR_INDEX': 3},
+    'Raw genius_low': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
+    'Raw arducam_back': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
+    'Raw logitech_reef': {'URL': 'http://10.24.29.13:1181/stream.mjpg', 'skip':True},
+    'Raw arducam_high': {'URL': 'http://10.24.29.13:1182/stream.mjpg', 'skip':True},
+    'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg', 'skip':True},
+}
+
+# Add timestamp topics, connection topics, and set indicators if not provided above
+# This is so i don't have to redo the frigging camera indicators all the time below
+CAMERA_CONFIG = {}
+for key, value in CAMERA_BASE_CONFIG.items():
+    # print(f"{key}  {value.get('TIMESTAMP_TOPIC')}  {value.get('INDICATOR_NAME')}  {value.get('INDICATOR_INDEX')}")
+    d = {key:value.copy()}  # don't forget the copy
+    base_topic = d[key].get('BASE_TOPIC')
+    if not d[key].get('TIMESTAMP_TOPIC') and not 'skip' in d[key]:
+        d[key]['TIMESTAMP_TOPIC'] = fr'{camera_prefix}/{base_topic}/_timestamp'
+        # print(f' *  updating timestamp topic for {key}')
+    if not d[key].get('CONNECTIONS_TOPIC') and not 'skip' in d[key]:
+        d[key]['CONNECTIONS_TOPIC'] = fr'{camera_prefix}/{base_topic}/_connections'
+        # print(f' *  updating connections topic for {key}')
+    if not d[key].get('HEARTBEAT_INDICATOR_NAME') and 'INDICATOR_INDEX' in d[key]:
+        index = d[key]['INDICATOR_INDEX']
+        d[key]['HEARTBEAT_INDICATOR_NAME'] = f'qlabel_cam{index}_indicator'
+    if not d[key].get('TARGET_INDICATOR_NAME') and 'INDICATOR_INDEX' in d[key]:
+        index = d[key]['INDICATOR_INDEX']
+        d[key]['TARGET_INDICATOR_NAME'] = f'qlabel_cam{index}_target_indicator'
+        # print(f' ** updating indicator index topic for {key}')
+    CAMERA_CONFIG.update(d)
 
 WIDGET_CONFIG = {
     # GUI UPDATES - NEED THIS PART FOR EVERY YEAR  - AT THE MOMENT I AM LEAVING A FEW OF THEM AS THE BASE PREFIX
@@ -112,21 +135,6 @@ WIDGET_CONFIG = {
     'qlabel_questnav_sync_toggle_indicator': {'widget_name': 'qlabel_questnav_sync_toggle_indicator', 'nt_topic': f'{quest_prefix}/questnav_synched', 'command_topic': f'{command_prefix}/QuestSyncToggle/running', 'update_style': 'indicator'},
     'qlabel_questnav_reset_indicator': {'widget_name': 'qlabel_questnav_reset_indicator', 'nt_topic': f'{quest_prefix}/QuestResetOdometry/running', 'command_topic': f'{command_prefix}/QuestResetOdometry/running', 'update_style': 'indicator'},
     'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': f'{quest_prefix}/questnav_in_use', 'command_topic': f'{command_prefix}/QuestEnableToggle/running', 'update_style': 'indicator'},
-
-    # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE  -  THESE HAVE NO NT TOPICS BECAUSE WE DO IT IN _update_camera_indicators
-    # HEARTBEATS
-    'qlabel_arducam_high_indicator': {'widget_name': 'qlabel_arducam_high_indicator', 'update_style': 'camera_indicator'},
-    'qlabel_logitech_reef_indicator': {'widget_name': 'qlabel_logitech_reef_indicator', 'update_style': 'camera_indicator'},
-    'qlabel_genius_low_indicator': {'widget_name': 'qlabel_genius_low_indicator', 'update_style': 'camera_indicator'},
-    'qlabel_arducam_back_indicator': {'widget_name': 'qlabel_arducam_back_indicator', 'update_style': 'camera_indicator'},
-
-    # TARGETS AVAILABLE
-    'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_arducam_high_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_high_targets_exist', 'update_style': 'indicator'},
-    'qlabel_arducam_back_target_indicator': {'widget_name': 'qlabel_arducam_back_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_back_targets_exist', 'update_style': 'indicator'},
-    'qlabel_logitech_reef_target_indicator': {'widget_name': 'qlabel_logitech_reef_target_indicator', 'nt_topic': f'{vision_prefix}/logitech_reef_targets_exist', 'update_style': 'indicator'},
-    'qlabel_genius_low_target_indicator': {'widget_name': 'qlabel_genius_low_target_indicator', 'nt_topic': f'{vision_prefix}/genius_low_targets_exist', 'update_style': 'indicator'},
-    'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': f'{vision_prefix}/photoncam_targets_exist', 'update_style': 'indicator'},
-
 
     # COMMANDS  - MOST LIKELY WILL CHANGE EVERY YEAR BUT GOOD TO GROUP IN ONE PLACE
     'qlabel_elevator_top_indicator': {'widget_name': 'qlabel_elevator_top_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorTop/running', 'command_topic': f'{command_prefix}/MoveElevatorTop/running', 'update_style': 'indicator'},
@@ -160,6 +168,8 @@ WIDGET_CONFIG = {
                                         'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
     'qlabel_navx_reset_indicator': {'widget_name': 'qlabel_navx_reset_indicator', 'nt_topic': f'{command_prefix}/GyroReset/running', 'command_topic': f'{command_prefix}/GyroReset/running', 'update_style': 'indicator'},
 
+    # orphaned test camera
+    'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': f'{vision_prefix}/photoncam_targets_exist', 'update_style': 'indicator'},
 
     # NUMERIC INDICATORS - I HAVE BEEN USING THE LCD FOR THIS BUT THERE BUST BE A BETTER WAY TO SHOW NUMBERS
     # TODO - write a pretty custom indicator for these numbers using a robot font, black background, and red numbers
@@ -176,3 +186,32 @@ WIDGET_CONFIG = {
     'hub_rotation': {'widget_name': None, 'nt_topic': '/arducam_high//orange/rotation', 'update_style': 'hub'},
     'hub_distance': {'widget_name': None, 'nt_topic': '/arducam_high//orange/distance', 'update_style': 'hub'},
 }
+
+# ------------  THIS SHOULD BE GENERATED AUTOMATICALLY NOW  IF CAMERA_BASE
+# CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE - THESE HAVE NO NT TOPICS BECAUSE WE DO IT IN _update_camera_indicators
+# TODO - give the heartbeats NT topics
+# HEARTBEATS
+for key, value in CAMERA_CONFIG.items():
+    if 'HEARTBEAT_INDICATOR_NAME' in CAMERA_CONFIG[key]:
+        # 'qlabel_arducam_high_indicator': {'widget_name': 'qlabel_cam2_indicator', 'update_style': 'camera_indicator'},
+        d = {key + '_heartbeat_indicator': {'widget_name': value['HEARTBEAT_INDICATOR_NAME'], 'update_style': 'camera_indicator'}, }
+        WIDGET_CONFIG.update(d)
+
+# TARGETS AVAILABLE
+for key, value in CAMERA_CONFIG.items():
+    if 'TARGET_INDICATOR_NAME' in CAMERA_CONFIG[key]:
+        # 'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_cam2_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_high_targets_exist', 'update_style': 'indicator'},
+        d = {key + '_target_indicator': {'widget_name': value['TARGET_INDICATOR_NAME'], 'nt_topic': f'{vision_prefix}/{key}_targets_exist', 'update_style': 'indicator'}, }
+        WIDGET_CONFIG.update(d)
+
+if __name__ == "__main__":
+    import pprint
+    print("\n" + "="*80)
+    print(f"CAMERA CONFIG ({len(CAMERA_CONFIG)} items)")
+    print("="*80)
+    pprint.pprint(CAMERA_CONFIG, width=120, sort_dicts=False)
+    
+    print("\n" + "="*80)
+    print(f"WIDGET CONFIG ({len(WIDGET_CONFIG)} items)")
+    print("="*80)
+    pprint.pprint(WIDGET_CONFIG, width=120, sort_dicts=False)

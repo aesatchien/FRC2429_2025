@@ -161,9 +161,19 @@ class Ui(QtWidgets.QMainWindow):
         for key, config in CAMERA_CONFIG.items():
             new_entry = config.copy()
             
-            indicator_name = config.get('INDICATOR_NAME')
+            indicator_name = config.get('HEARTBEAT_INDICATOR_NAME')
             if indicator_name:
                 new_entry['INDICATOR'] = getattr(self, indicator_name, None)
+
+            # update the text on the target indicators when we start - now we don't have to edit UI if we change names
+            target_indicator_name = config.get('TARGET_INDICATOR_NAME')
+            if target_indicator_name:
+                target_widget = getattr(self, target_indicator_name, None)
+                if target_widget:
+                    nickname = config.get('NICKNAME', key)
+                    if target_widget.width() < 100:
+                        nickname = nickname.replace(' ', '\n')
+                    target_widget.setText(nickname)
 
             timestamp_topic = config.get('TIMESTAMP_TOPIC')
             if timestamp_topic:

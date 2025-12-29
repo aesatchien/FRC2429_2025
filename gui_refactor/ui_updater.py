@@ -108,7 +108,7 @@ class UIUpdater:
                 cam_props['IS_ALIVE'] = is_alive
                 connections = int(cam_props['CONNECTIONS_SUB'].get())
                 style = self.STYLE_ON if is_alive else self.STYLE_OFF
-                indicator = cam_props['INDICATOR']
+                indicator = cam_props.get('INDICATOR')  # switch to safe access since we can have cameras w/o heartbeat indicators
                 if indicator:
                     indicator.setStyleSheet(style)
                     indicator.setText(f'{cam_props["NICKNAME"]}: {connections:2d}')

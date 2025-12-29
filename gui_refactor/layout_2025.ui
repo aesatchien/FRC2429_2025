@@ -67,41 +67,6 @@
       <property name="title">
        <string>Climber</string>
       </property>
-      <widget class="ClickableQLabel" name="qlabel_l2_indicator">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>123</y>
-         <width>161</width>
-         <height>31</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>14</pointsize>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 7px;
-border-radius: 7px;
-background-color:rgb(80, 235, 0);
-color:rgb(0, 0, 0);</string>
-       </property>
-       <property name="text">
-        <string>L2</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::AutoText</enum>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
       <widget class="ClickableQLabel" name="qlabel_l1_indicator">
        <property name="enabled">
         <bool>false</bool>
@@ -127,7 +92,7 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>L1</string>
+        <string>TBD</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -143,7 +108,7 @@ background-color:rgb(80, 235, 0);</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>158</y>
+         <y>156</y>
          <width>161</width>
          <height>31</height>
         </rect>
@@ -161,7 +126,7 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>L3</string>
+        <string>TBD</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -276,7 +241,7 @@ background-color:rgb(0, 20, 250);</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>192</y>
+         <y>191</y>
          <width>161</width>
          <height>31</height>
         </rect>
@@ -294,7 +259,7 @@ border-radius: 7px;
 background-color:rgb(80, 235, 0);</string>
        </property>
        <property name="text">
-        <string>L4</string>
+        <string>TBD</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -328,6 +293,40 @@ background-color:rgb(127, 127, 127);</string>
        </property>
        <property name="text">
         <string>&lt;GAMEPIECE&gt;</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::AutoText</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+      <widget class="ClickableQLabel" name="qlabel_l2_indicator">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>121</y>
+         <width>161</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>14</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgb(80, 235, 0);</string>
+       </property>
+       <property name="text">
+        <string>TBD</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -407,52 +406,11 @@ background-color:rgb(127, 127, 127);</string>
         <string>Arm Angle</string>
        </property>
       </widget>
-      <widget class="QLCDNumber" name="qlcd_wrist_angle">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>180</y>
-         <width>100</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>Comic Sans MS</family>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="lineWidth">
-        <number>1</number>
-       </property>
-       <property name="digitCount">
-        <number>4</number>
-       </property>
-       <property name="segmentStyle">
-        <enum>QLCDNumber::Filled</enum>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label">
-       <property name="geometry">
-        <rect>
-         <x>20</x>
-         <y>160</y>
-         <width>131</width>
-         <height>16</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Wrist Angle</string>
-       </property>
-      </widget>
       <widget class="QLabel" name="label_10">
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>230</y>
+         <y>152</y>
          <width>131</width>
          <height>16</height>
         </rect>
@@ -468,7 +426,7 @@ background-color:rgb(127, 127, 127);</string>
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>250</y>
+         <y>172</y>
          <width>100</width>
          <height>41</height>
         </rect>
@@ -532,76 +490,6 @@ background-color:rgb(0, 20, 250);</string>
         <rect>
          <x>130</x>
          <y>70</y>
-         <width>41</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>10</pointsize>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 7px;
-border-radius: 7px;
-color:rgb(255, 255, 255);
-background-color:rgb(0, 20, 250);</string>
-       </property>
-       <property name="text">
-        <string>DOWN</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::AutoText</enum>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-      <widget class="ClickableQLabel" name="qlabel_wrist_up_indicator">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>130</x>
-         <y>178</y>
-         <width>41</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>MS Shell Dlg 2</family>
-         <pointsize>10</pointsize>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border: 7px;
-border-radius: 7px;
-color:rgb(255, 255, 255);
-background-color:rgb(0, 20, 250);</string>
-       </property>
-       <property name="text">
-        <string>UP</string>
-       </property>
-       <property name="textFormat">
-        <enum>Qt::AutoText</enum>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
-       </property>
-      </widget>
-      <widget class="ClickableQLabel" name="qlabel_wrist_down_indicator">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>130</x>
-         <y>201</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -706,7 +594,7 @@ background-color:rgb(0, 20, 250);</string>
        <property name="geometry">
         <rect>
          <x>129</x>
-         <y>270</y>
+         <y>192</y>
          <width>41</width>
          <height>21</height>
         </rect>
@@ -741,7 +629,7 @@ background-color:rgb(0, 20, 250);</string>
        <property name="geometry">
         <rect>
          <x>129</x>
-         <y>246</y>
+         <y>168</y>
          <width>21</width>
          <height>21</height>
         </rect>
@@ -776,7 +664,7 @@ background-color:rgb(0, 20, 250);</string>
        <property name="geometry">
         <rect>
          <x>152</x>
-         <y>246</y>
+         <y>168</y>
          <width>21</width>
          <height>21</height>
         </rect>
@@ -839,30 +727,11 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-     </widget>
-     <widget class="QGroupBox" name="groupBox_2">
-      <property name="geometry">
-       <rect>
-        <x>180</x>
-        <y>6</y>
-        <width>181</width>
-        <height>301</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>MS Shell Dlg 2</family>
-        <bold>true</bold>
-       </font>
-      </property>
-      <property name="title">
-       <string>Sensors</string>
-      </property>
       <widget class="QLabel" name="label_11">
        <property name="geometry">
         <rect>
-         <x>10</x>
-         <y>11</y>
+         <x>19</x>
+         <y>220</y>
          <width>131</width>
          <height>16</height>
         </rect>
@@ -871,30 +740,14 @@ background-color:rgb(0, 20, 250);</string>
         <string>navX Heading</string>
        </property>
       </widget>
-      <widget class="QLCDNumber" name="qlcd_navx_heading">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>32</y>
-         <width>100</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="digitCount">
-        <number>4</number>
-       </property>
-      </widget>
       <widget class="ClickableQLabel" name="qlabel_navx_reset_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
-         <x>121</x>
-         <y>42</y>
+         <x>126</x>
+         <y>251</y>
          <width>51</width>
          <height>21</height>
         </rect>
@@ -922,14 +775,49 @@ background-color:rgb(0, 20, 250);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="ClickableQLabel" name="qlabel_arducam_high_target_indicator">
+      <widget class="QLCDNumber" name="qlcd_navx_heading">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>241</y>
+         <width>100</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="digitCount">
+        <number>4</number>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>6</y>
+        <width>181</width>
+        <height>301</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>MS Shell Dlg 2</family>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="title">
+       <string>Odometry and Cameras</string>
+      </property>
+      <widget class="ClickableQLabel" name="qlabel_cam0_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>78</y>
+         <y>24</y>
          <width>75</width>
          <height>50</height>
         </rect>
@@ -944,11 +832,10 @@ background-color:rgb(0, 20, 250);</string>
        <property name="styleSheet">
         <string notr="true">border: 7px;
 border-radius: 7px;
-background-color:rgb(80, 235, 0);</string>
+background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>ARDU
-HIGH</string>
+        <string>CAM 0</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -964,7 +851,7 @@ HIGH</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>213</y>
+         <y>207</y>
          <width>151</width>
          <height>41</height>
         </rect>
@@ -991,14 +878,14 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="ClickableQLabel" name="qlabel_genius_low_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_cam2_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>133</y>
+         <y>79</y>
          <width>75</width>
          <height>50</height>
         </rect>
@@ -1013,11 +900,10 @@ background-color:rgb(180,180,180);</string>
        <property name="styleSheet">
         <string notr="true">border: 7px;
 border-radius: 7px;
-background-color:rgb(80, 235, 0);</string>
+background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>GENIUS
-LOW</string>
+        <string>CAM 2</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1026,14 +912,14 @@ LOW</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="ClickableQLabel" name="qlabel_logitech_reef_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_cam1_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>78</y>
+         <y>24</y>
          <width>75</width>
          <height>50</height>
         </rect>
@@ -1048,11 +934,10 @@ LOW</string>
        <property name="styleSheet">
         <string notr="true">border: 7px;
 border-radius: 7px;
-background-color:rgb(80, 235, 0);</string>
+background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>LOGI
- HI REEF</string>
+        <string>CAM 1</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1068,7 +953,7 @@ background-color:rgb(80, 235, 0);</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>188</y>
+         <y>181</y>
          <width>151</width>
          <height>21</height>
         </rect>
@@ -1083,7 +968,7 @@ background-color:rgb(80, 235, 0);</string>
        <property name="styleSheet">
         <string notr="true">border: 7px;
 border-radius: 7px;
-background-color:rgb(80, 235, 0);</string>
+background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
         <string>PHOTON TAGS</string>
@@ -1095,14 +980,14 @@ background-color:rgb(80, 235, 0);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
-      <widget class="ClickableQLabel" name="qlabel_arducam_back_target_indicator">
+      <widget class="ClickableQLabel" name="qlabel_cam3_target_indicator">
        <property name="enabled">
         <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>134</y>
+         <y>80</y>
          <width>75</width>
          <height>50</height>
         </rect>
@@ -1117,11 +1002,10 @@ background-color:rgb(80, 235, 0);</string>
        <property name="styleSheet">
         <string notr="true">border: 7px;
 border-radius: 7px;
-background-color:rgb(80, 235, 0);</string>
+background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>ARDU
-TBD</string>
+        <string>CAM 2</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1137,7 +1021,7 @@ TBD</string>
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>256</y>
+         <y>252</y>
          <width>151</width>
          <height>41</height>
         </rect>
@@ -1164,6 +1048,40 @@ background-color:rgb(180,180,180);</string>
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
+      <widget class="ClickableQLabel" name="qlabel_hsv_target_indicator">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>135</y>
+         <width>151</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>MS Shell Dlg 2</family>
+         <pointsize>11</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border: 7px;
+border-radius: 7px;
+background-color:rgb(180,180,180);</string>
+       </property>
+       <property name="text">
+        <string>HSV TARGET</string>
+       </property>
+       <property name="textFormat">
+        <enum>Qt::AutoText</enum>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
      </widget>
      <widget class="QGroupBox" name="groupBox_3">
       <property name="geometry">
@@ -1175,7 +1093,7 @@ background-color:rgb(180,180,180);</string>
        </rect>
       </property>
       <property name="title">
-       <string>Autonomous Commands</string>
+       <string> Commands and Status</string>
       </property>
       <widget class="ClickableQLabel" name="qlabel_can_report_indicator">
        <property name="enabled">
@@ -1234,7 +1152,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>SCORE</string>
+        <string>TBD1</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1267,7 +1185,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>STOW</string>
+        <string>TBD0</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1381,7 +1299,7 @@ color:rgb(230,230,230);</string>
       </widget>
       <widget class="ClickableQLabel" name="qlabel_reset_flex_indicator">
        <property name="enabled">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
        <property name="geometry">
         <rect>
@@ -1541,7 +1459,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
        </property>
        <property name="text">
-        <string>CAL WRIST</string>
+        <string>TBD2</string>
        </property>
        <property name="textFormat">
         <enum>Qt::AutoText</enum>
@@ -1646,7 +1564,7 @@ background-color:rgb(180,180,180);</string>
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>18</pointsize>
+        <pointsize>16</pointsize>
         <bold>true</bold>
        </font>
       </property>
@@ -1681,7 +1599,7 @@ background-color:rgb(127, 127, 127);
       <property name="font">
        <font>
         <family>Arial</family>
-        <pointsize>18</pointsize>
+        <pointsize>16</pointsize>
         <bold>true</bold>
        </font>
       </property>
@@ -1701,7 +1619,7 @@ background-color:rgb(127, 127, 127);
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="ClickableQLabel" name="qlabel_arducam_high_indicator">
+     <widget class="ClickableQLabel" name="qlabel_cam0_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1726,7 +1644,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>ARDU HIGH: 0</string>
+       <string>CAM 0: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -1735,7 +1653,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="ClickableQLabel" name="qlabel_arducam_back_indicator">
+     <widget class="ClickableQLabel" name="qlabel_cam3_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1760,7 +1678,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>ARDU BACK: 0</string>
+       <string>CAM 3: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -1769,7 +1687,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="ClickableQLabel" name="qlabel_genius_low_indicator">
+     <widget class="ClickableQLabel" name="qlabel_cam2_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1794,7 +1712,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>GENIUS LO: 0</string>
+       <string>CAM 2: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -1803,7 +1721,7 @@ background-color:rgb(180,180,180);</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="ClickableQLabel" name="qlabel_logitech_reef_indicator">
+     <widget class="ClickableQLabel" name="qlabel_cam1_indicator">
       <property name="enabled">
        <bool>true</bool>
       </property>
@@ -1828,7 +1746,7 @@ border-radius: 7px;
 background-color:rgb(180,180,180);</string>
       </property>
       <property name="text">
-       <string>LOGI REEF: 0</string>
+       <string>CAM 1: 0</string>
       </property>
       <property name="textFormat">
        <enum>Qt::AutoText</enum>
@@ -1967,8 +1885,8 @@ ENABLED</string>
       </property>
       <property name="font">
        <font>
-        <family>MS Shell Dlg 2</family>
-        <pointsize>11</pointsize>
+        <family>Segoe UI</family>
+        <pointsize>10</pointsize>
         <bold>true</bold>
        </font>
       </property>
@@ -2001,8 +1919,8 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="font">
        <font>
-        <family>MS Shell Dlg 2</family>
-        <pointsize>11</pointsize>
+        <family>Segoe UI</family>
+        <pointsize>10</pointsize>
         <bold>true</bold>
        </font>
       </property>
@@ -2035,8 +1953,8 @@ background-color:rgb(180,180,180);</string>
       </property>
       <property name="font">
        <font>
-        <family>MS Shell Dlg 2</family>
-        <pointsize>11</pointsize>
+        <family>Segoe UI</family>
+        <pointsize>10</pointsize>
         <bold>true</bold>
        </font>
       </property>

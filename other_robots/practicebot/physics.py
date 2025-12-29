@@ -39,7 +39,7 @@ class PhysicsEngine:
 
         # vision stuff - using 2024 stuff for now (CJH).  This could easily be extended to make fake tags as well
         # then you could use more of the tag stuff in vision, and the tag faking could be here instead of there
-        
+        # this mimics what the pis would send if they were live  TODO - allow live pis for testing
         for ix, (key, config) in enumerate(constants.k_cameras.items()):
             cam_topic = config['topic_name']
             cam_type = config['type']
@@ -94,8 +94,12 @@ class PhysicsEngine:
         for key in self.cam_list:
             cam_data = self.camera_dict[key]
             offset = cam_data['offset']
-            ts = wpilib.Timer.getFPGATimestamp() if wpilib.Timer.getFPGATimestamp() % 30 < (30/5)*(1+offset) else wpilib.Timer.getFPGATimestamp() -1  # simulate cameras dropping out
-            cam_data['timestamp_pub'].set(ts)  # pretend the camera is live
+            # simulate cameras dropping out
+            if wpilib.Timer.getFPGATimestamp() % 30 < (30/5)*(1+offset):
+                ts = wpilib.Timer.getFPGATimestamp()
+            else:
+                ts = wpilib.Timer.getFPGATimestamp() -1
+            cam_data['timestamp_pub'].set(ts)  # pretend the pi camera is "live"
 
             cam_data['targets_pub'].set(1 + offset)
             cam_data['distance_pub'].set(ring_dist + offset)

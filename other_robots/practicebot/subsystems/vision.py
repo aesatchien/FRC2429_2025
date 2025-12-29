@@ -37,7 +37,9 @@ class Vision(SubsystemBase):
         self.status_pubs = {}
         for ix, key in enumerate(constants.k_cameras.keys()):
             self.status_pubs[key] = self.inst.getBooleanTopic(f"{vision_prefix}/{key}_targets_exist").publish()
-            print(f"vision's status pubs {ix}: {key}: {self.status_pubs[key]}")
+            if constants.VisionConstants.k_print_config:
+                print(f"vision's status pubs {ix}: {key}: {self.status_pubs[key]}")
+
         # in case we're messing around with photonvision
         self.status_pubs['photoncam'] = self.inst.getBooleanTopic(
             f"{vision_prefix}/photoncam_targets_exist").publish()  # Used in sim
@@ -51,7 +53,7 @@ class Vision(SubsystemBase):
             base_topic = f"{table_path}/{cam_type}"
 
             # Timestamp is the camera heartbeat returned by the pi, located at the camera root
-            # other topics fall under a /tags or /orange subfolder.  
+            # other topics fall under a /tags or /orange subfolder.
             self.camera_dict[key]['timestamp_entry'] = self.inst.getDoubleTopic(f"{table_path}/_timestamp").subscribe(0)
             self.camera_dict[key]['id_entry'] = self.inst.getDoubleTopic(f"{base_topic}/id").subscribe(0)
             self.camera_dict[key]['targets_entry'] = self.inst.getDoubleTopic(f"{base_topic}/targets").subscribe(0)
@@ -120,13 +122,17 @@ class Vision(SubsystemBase):
                         pub.set(self.target_available(key))
 
             else:  # test the keys
-                # Simulation test pattern  - again for the GUI
-                # Just cycle through them based on the counter
-                for i, key in enumerate(constants.k_cameras.keys()):
-                    self.status_pubs[key].set(i * 100 < self.counter % 600 < (i + 1) * 100 + 10)
-                self.status_pubs['photoncam'].set(400 < self.counter % 600 < 510)
+                # Simulation test pattern  - again for the GUI - cycle through them based on the counter
+                period, overlap, gap = 100, 30, 100  # in loops
+                keys = list(constants.k_cameras.keys())
+                cycle_len = len(keys) * period + overlap + gap
+                loop_count = self.counter % cycle_len
 
-                self.status_pubs[list(constants.k_cameras.keys())[0]].set(True)
+                for i, key in enumerate(keys):
+                    self.status_pubs[key].set(i * period < loop_count < (i + 1) * period + overlap)
+                
+                # Blink photoncam in the gap
+                self.status_pubs['photoncam'].set(cycle_len - gap < loop_count < cycle_len)
 
             if constants.VisionConstants.k_nt_debugging:  # extra debugging info for NT
                 pass
