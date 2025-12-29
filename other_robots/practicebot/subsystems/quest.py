@@ -27,6 +27,10 @@ class Questnav(SubsystemBase):
         # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
         self.quest_field = Field2d()
 
+        # ping the quest - it seems to respond to is_connected only after you get frames ~ 2s after we connect
+        # and although the headset says it is connected to the sim, is_connected() stays False unless you get frames
+        self._ping_connection()
+
         self.quest_has_synched = False  # use this to check in disabled whether to update the quest with the robot odometry
         self.use_quest = constants.k_use_quest_odometry
         self.quest_pose = Pose2d(-10, -10, Rotation2d.fromDegrees(0)) # initial pose if not connected / tracking
@@ -39,6 +43,12 @@ class Questnav(SubsystemBase):
         self.walk_deg = 0.1  # degrees per loop
 
         self._init_networktables()
+
+    def _ping_connection(self):
+        connected_before = self.questnav.is_connected()
+        frames = self.questnav.get_all_unread_pose_frames()  # this causes a networked to quest to ACK
+        connected_after = self.questnav.is_connected()
+        print(f'*** {Timer.getFPGATimestamp():04.1f}s: Questnav connection status {connected_before} before ping and {connected_after} after  ***')
 
     def _init_networktables(self):
         self.inst = NetworkTableInstance.getDefault()
@@ -168,6 +178,9 @@ class Questnav(SubsystemBase):
     def is_quest_enabled(self):
         return self.use_quest
 
+    def is_pose_accepted(self):
+        return self.quest_pose_accepted
+
     def periodic(self) -> None:
         self.counter += 1
 
@@ -227,5 +240,7 @@ class Questnav(SubsystemBase):
             self.quest_lost_count_pub.set(self.questnav.get_tracking_lost_counter())
             self.quest_frame_count_pub.set(self.questnav.get_frame_count())
 
-    def is_pose_accepted(self):
-        return self.quest_pose_accepted
+        # ping the quest every few seconds in sim to check to get a connection to physical hardware
+        if wpilib.RobotBase.isSimulation() and self.counter % 200 == 0 and not self.questnav.is_connected():
+            self._ping_connection()
+
