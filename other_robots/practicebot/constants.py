@@ -29,12 +29,14 @@ camera_prefix = r'/Cameras'  # from the pis
 quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
 
 # Dictionary mapping Logical Name -> NetworkTables Camera Name in /Cameras
-# TODO - make these work with the vision code
+# Each camera has a purpose, which can be 'tags' (apriltags) or 'orange' (hsv-filtered objects)
+# If one physical camera does both, we treat it as two cameras but with the same topic
 k_cameras = {
-    'arducam_high': 'ArducamHigh',
-    'arducam_back': 'ArducamBack',
-    'genius_low': 'GeniusLow',
-    'logitech_reef': 'LogitechReef',
+    'arducam_high': {'topic_name': 'ArducamHigh', 'type': 'tags'},
+    'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags'},
+    'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags'},
+    'logitech_reef': {'topic_name': 'LogitechReef', 'type': 'tags'},
+    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'orange'},
 }
 
 # systems inside/from the robot
@@ -115,6 +117,8 @@ for tag_id in range(17, 23):
 class SimConstants:
     k_counter_offset = 1
 
+    k_print_config = True  # use for debugging the camera config
+
 class VisionConstants:
 
     k_counter_offset = 2
@@ -123,6 +127,7 @@ class VisionConstants:
 
     k_valid_tags = list(range(1, 23))
 
+    k_print_config = True  # use for debugging the camera config
 
 class QuestConstants:
     k_counter_offset = 3

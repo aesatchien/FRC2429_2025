@@ -97,7 +97,8 @@ class UIUpdater:
         self.ui.qlabel_quest.move(int(-quest_new_size/2 + width * quest_x / 17.6), int(-quest_new_size/2 + height * (1 - quest_y / 8.2)))
 
     def _update_camera_indicators(self):
-        """Updates the status indicators for all cameras."""
+        """Updates the status indicators for all cameras.
+        We check the timestamp from the robot vs the timestamp coming back from the cameras"""
         allowed_delay = 0.5
         timestamp = self.ui.robot_timestamp_sub.get()
 

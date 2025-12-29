@@ -47,45 +47,16 @@ class CANStatus(commands2.Command):  # change the name for your command
         self.write_log = False
 
         # Set up NT4 publishers for efficiency and organization
-        self.inst = ntcore.NetworkTableInstance.getDefault()
-        self.can_status_pubs = {key: self.inst.getStringTopic(f"/SmartDashboard/CAN/CANID {key:02d}").publish()
-                                for key in self.can_ids.keys()}
+        #self.inst = ntcore.NetworkTableInstance.getDefault()
+        #self.can_status_pubs = {key: self.inst.getStringTopic(f"/SmartDashboard/CAN/CANID {key:02d}").publish()
+        #                       for key in self.can_ids.keys()}
 
     def runsWhenDisabled(self) -> bool:
         return True
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""
-
-        for key in self.can_ids.keys():
-            motor: rev.SparkBase = self.can_ids[key]['motor']
-            sticky_faults_mask = 0
-
-            # In the 2025 REV library, getStickyFaults() returns an object.
-            # We must use .rawBits to get the integer bitmask.
-            if wpilib.RobotBase.isSimulation():
-                sticky_faults_mask = random.randint(0, 2048) # Simulate random faults
-            else:
-                sticky_faults_mask = motor.getStickyFaults().rawBits
-
-            motor.clearFaults()  # This clears active (non-sticky) faults.
-
-            set_bits = []
-            binary_string = bin(sticky_faults_mask)[2:]  # convert to binary and ignore the initial two 0b characters
-            for i, bit in enumerate(reversed(binary_string), start=0):
-                # Check if the bit is set (i.e., equals '1')
-                if bit == '1':
-                    # Add the position (0-based indexing) of the set bit to the list
-                    set_bits.append(i)
-
-            fault_codes = [self.fault_ids[id] for id in set_bits if id in self.fault_ids]
-            self.can_ids[key].update({'sticky_faults': sticky_faults_mask})
-            self.can_ids[key].update({'set_bits': set_bits})
-            self.can_ids[key].update({'fault_codes': fault_codes})
-
-            status_string = f"{self.can_ids[key]['name']:13} sticky_faults: {sticky_faults_mask} {set_bits} {fault_codes}"
-            print(f"CANID {key:02d}: {status_string}")
-            self.can_status_pubs[key].set(status_string)
+        pass  # put in execute so log_command can send the time
 
         # if self.write_log:
         #     try:
@@ -118,7 +89,36 @@ class CANStatus(commands2.Command):  # change the name for your command
         #     df
 
     def execute(self) -> None:
-        pass
+        # single execution and end
+        for key in self.can_ids.keys():
+            motor: rev.SparkBase = self.can_ids[key]['motor']
+            sticky_faults_mask = 0
+
+            # In the 2025 REV library, getStickyFaults() returns an object.
+            # We must use .rawBits to get the integer bitmask.
+            if wpilib.RobotBase.isSimulation():
+                sticky_faults_mask = random.randint(0, 2048) # Simulate random faults
+            else:
+                sticky_faults_mask = motor.getStickyFaults().rawBits
+
+            motor.clearFaults()  # This clears active (non-sticky) faults.
+
+            set_bits = []
+            binary_string = bin(sticky_faults_mask)[2:]  # convert to binary and ignore the initial two 0b characters
+            for i, bit in enumerate(reversed(binary_string), start=0):
+                # Check if the bit is set (i.e., equals '1')
+                if bit == '1':
+                    # Add the position (0-based indexing) of the set bit to the list
+                    set_bits.append(i)
+
+            fault_codes = [self.fault_ids[id] for id in set_bits if id in self.fault_ids]
+            self.can_ids[key].update({'sticky_faults': sticky_faults_mask})
+            self.can_ids[key].update({'set_bits': set_bits})
+            self.can_ids[key].update({'fault_codes': fault_codes})
+
+            status_string = f"{self.can_ids[key]['name']:13} sticky_faults: {sticky_faults_mask} {set_bits} {fault_codes}"
+            print(f"CANID {key:02d}: {status_string}")
+            # self.can_status_pubs[key].set(status_string)
 
     def isFinished(self) -> bool:
         return True

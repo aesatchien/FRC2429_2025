@@ -35,22 +35,30 @@ class PhysicsEngine:
         self.sim_hub_rot_pub = self.inst.getDoubleTopic(f"{sim_prefix}/hub_rot").publish()
 
         self.camera_dict = {}
-        self.cam_list = list(constants.k_cameras.values())
+        self.cam_list = list(constants.k_cameras.keys())
 
         # vision stuff - using 2024 stuff for now (CJH).  This could easily be extended to make fake tags as well
         # then you could use more of the tag stuff in vision, and the tag faking could be here instead of there
         
-        for ix, (key, cam) in enumerate(constants.k_cameras.items()):
-            nt_key = 'orange' if key == 'orange' else 'tags'
-            base = f'/Cameras/{cam}'
-            self.camera_dict[cam] = {
+        for ix, (key, config) in enumerate(constants.k_cameras.items()):
+            cam_topic = config['topic_name']
+            cam_type = config['type']
+            base = f'/Cameras/{cam_topic}/{cam_type}'
+            
+            self.camera_dict[key] = {
                 'offset': ix,
-                'targets_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/targets").publish(),
-                'distance_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/distance").publish(),
-                'strafe_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/strafe").publish(),
-                'rotation_pub': self.inst.getDoubleTopic(f"{base}/{nt_key}/rotation").publish(),
-                'timestamp_pub': self.inst.getDoubleTopic(f"{base}/_timestamp").publish()
+                'timestamp_pub': self.inst.getDoubleTopic(f"/Cameras/{cam_topic}/_timestamp").publish(),
+                'targets_pub': self.inst.getDoubleTopic(f"{base}/targets").publish(),
+                'distance_pub': self.inst.getDoubleTopic(f"{base}/distance").publish(),
+                'strafe_pub': self.inst.getDoubleTopic(f"{base}/strafe").publish(),
+                'rotation_pub': self.inst.getDoubleTopic(f"{base}/rotation").publish()
             }
+
+        if constants.SimConstants.k_print_config:
+            print('\n*** PHYSICS.PY CAMERA DICT ***')
+            for key, item in self.camera_dict.items():
+                print(f'{key}: {item}')
+            print()
 
         # ground truth Publisher for Simulating Sensors
         self.ground_truth_pub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).publish()
@@ -83,14 +91,16 @@ class PhysicsEngine:
         self.sim_hub_dist_pub.set(round(ring_dist, 2))
         self.sim_hub_rot_pub.set(round(ring_rot, 2))
         
-        for cam in self.cam_list:
-            offset = self.camera_dict[cam]['offset']
-            self.camera_dict[cam]['targets_pub'].set(1 + offset)
-            self.camera_dict[cam]['distance_pub'].set(ring_dist + offset)
-            self.camera_dict[cam]['strafe_pub'].set(0)
-            self.camera_dict[cam]['rotation_pub'].set(self.theta - ring_rot)
+        for key in self.cam_list:
+            cam_data = self.camera_dict[key]
+            offset = cam_data['offset']
             ts = wpilib.Timer.getFPGATimestamp() if wpilib.Timer.getFPGATimestamp() % 30 < (30/5)*(1+offset) else wpilib.Timer.getFPGATimestamp() -1  # simulate cameras dropping out
-            self.camera_dict[cam]['timestamp_pub'].set(ts)  # pretend the camera is live
+            cam_data['timestamp_pub'].set(ts)  # pretend the camera is live
+
+            cam_data['targets_pub'].set(1 + offset)
+            cam_data['distance_pub'].set(ring_dist + offset)
+            cam_data['strafe_pub'].set(0)
+            cam_data['rotation_pub'].set(self.theta - ring_rot)
 
 
     def update_swerve(self, tm_diff):

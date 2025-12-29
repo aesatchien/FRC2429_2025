@@ -48,7 +48,9 @@ class Questnav(SubsystemBase):
         connected_before = self.questnav.is_connected()
         frames = self.questnav.get_all_unread_pose_frames()  # this causes a networked to quest to ACK
         connected_after = self.questnav.is_connected()
-        print(f'*** {Timer.getFPGATimestamp():04.1f}s: Questnav connection status {connected_before} before ping and {connected_after} after  ***')
+        if connected_after != connected_before:
+            # let us know if the situation changes
+            print(f'*** {Timer.getFPGATimestamp():04.1f}s: Questnav connection status {connected_before} before ping and {connected_after} after  ***')
 
     def _init_networktables(self):
         self.inst = NetworkTableInstance.getDefault()

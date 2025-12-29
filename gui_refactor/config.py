@@ -114,11 +114,13 @@ WIDGET_CONFIG = {
     'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': f'{quest_prefix}/questnav_in_use', 'command_topic': f'{command_prefix}/QuestEnableToggle/running', 'update_style': 'indicator'},
 
     # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE  -  THESE HAVE NO NT TOPICS BECAUSE WE DO IT IN _update_camera_indicators
+    # HEARTBEATS
     'qlabel_arducam_high_indicator': {'widget_name': 'qlabel_arducam_high_indicator', 'update_style': 'camera_indicator'},
     'qlabel_logitech_reef_indicator': {'widget_name': 'qlabel_logitech_reef_indicator', 'update_style': 'camera_indicator'},
     'qlabel_genius_low_indicator': {'widget_name': 'qlabel_genius_low_indicator', 'update_style': 'camera_indicator'},
     'qlabel_arducam_back_indicator': {'widget_name': 'qlabel_arducam_back_indicator', 'update_style': 'camera_indicator'},
 
+    # TARGETS AVAILABLE
     'qlabel_arducam_high_target_indicator': {'widget_name': 'qlabel_arducam_high_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_high_targets_exist', 'update_style': 'indicator'},
     'qlabel_arducam_back_target_indicator': {'widget_name': 'qlabel_arducam_back_target_indicator', 'nt_topic': f'{vision_prefix}/arducam_back_targets_exist', 'update_style': 'indicator'},
     'qlabel_logitech_reef_target_indicator': {'widget_name': 'qlabel_logitech_reef_target_indicator', 'nt_topic': f'{vision_prefix}/logitech_reef_targets_exist', 'update_style': 'indicator'},
