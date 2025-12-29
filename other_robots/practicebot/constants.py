@@ -4,7 +4,7 @@ import robotpy_apriltag
 import wpilib
  
 from rev import ClosedLoopSlot, SparkClosedLoopController, SparkFlexConfig, SparkMax, SparkMaxConfig
-from wpimath.geometry import Pose2d, Rotation2d, Translation2d
+from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Transform2d
 from wpimath.units import inchesToMeters, lbsToKilograms
 from wpimath.system.plant import DCMotor
 from wpilib.simulation import SingleJointedArmSim
@@ -126,6 +126,7 @@ class VisionConstants:
 
 class QuestConstants:
     k_counter_offset = 3
+    quest_to_robot = Transform2d(inchesToMeters(-4.5), inchesToMeters(-9.5), Rotation2d().fromDegrees(0))
 
 
 class LedConstants:

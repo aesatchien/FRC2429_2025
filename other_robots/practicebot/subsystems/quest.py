@@ -22,7 +22,7 @@ class Questnav(SubsystemBase):
 
         self.quest_pose_accepted = False  # validate our location on a field
 
-        self.quest_to_robot = Transform2d(inchesToMeters(-8.35), inchesToMeters(-10.50), Rotation2d().fromDegrees(270)) #10.50 -8.35
+        self.quest_to_robot = constants.QuestConstants.quest_to_robot  # 10.50 -8.35
         # This is quest-centric coordinate. X is robot center position -8.35 inch as seen rom Quest. y is robot center -10.50 inches as seen from Quest
         # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
         self.quest_field = Field2d()
@@ -128,6 +128,7 @@ class Questnav(SubsystemBase):
             self.sim_error = Pose2d(0, 0, 0) # reset the quest's sim error
 
         self.quest_synched_pub.set(self.quest_has_synched)
+        print(f'  synched quest to {self.quest_pose}\nusing               {self.drive_pose2d_sub.get()}')
 
     def quest_unsync_odometry(self) -> None:
         self.quest_has_synched = False  # let the robot know we have been synched so we don't automatically do it again
