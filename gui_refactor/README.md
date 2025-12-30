@@ -9,9 +9,9 @@ The application is now broken into several specialized Python modules:
 -   `main.py`: The application entry point. It initializes the QApplication and the main `Ui` window.
 -   `dashboard_2025.py`: Defines the main window class `Ui`. It orchestrates the other manager modules.
 -   `config.py`: **Central configuration file.** Contains the static `WIDGET_CONFIG` and `CAMERA_CONFIG` dictionaries that define all widget properties, NetworkTables topics, and camera streams.
--   `nt_manager.py`: Handles all NetworkTables (NT) client logic, including connection, subscription, and data retrieval.
+-   `nt_manager.py`: Handles NetworkTables (NT) connection logic, server switching, and connection reporting.
 -   `camera_manager.py`: Manages the camera stream, including the worker thread for fetching and decoding video frames.
--   `ui_updater.py`: Contains the core logic for updating all GUI elements based on data from NetworkTables.
+-   `ui_updater.py`: Contains the core logic for updating all GUI elements. It uses NT4 Subscribers to poll data and implements optimization logic to only repaint widgets when values change.
 -   `nt_tree.py`: Manages the UI and logic for the interactive NetworkTables tree viewer.
 -   `widgets/`: A directory containing custom PyQt widget classes like `ClickableQLabel` and `WarningLabel`.
 -   `layout_2025.ui`: The Qt Designer UI file that defines the visual layout of the dashboard.
@@ -33,6 +33,7 @@ The workflow for adding a new widget (e.g., an indicator tile or a numeric displ
 ### 2. Update the Configuration
 
 -   Open `config.py`.
+-   **Shortcut for Commands:** If you are adding a standard command indicator, simply add the command name to the `COMMAND_LIST` list in `config.py`. The configuration will be auto-generated.
 -   Add a new entry to the `WIDGET_CONFIG` dictionary. The key should be a descriptive name, and the value is a dictionary defining its properties.
 
 **Example: Adding a new command indicator tile:**
@@ -71,13 +72,14 @@ This file decouples the widget and camera definitions from the application logic
 
 -   Manages the `NetworkTableInstance`.
 -   Handles connecting to the robot, server switching (sim vs. robot), and reconnecting.
--   Provides a simple interface for getting NT entries (`getEntry()`).
+-   *Note: Direct data access is now handled via `ntcore` Subscribers in `dashboard_2025.py` and `ui_updater.py`.*
 
 ### UI Updater (`ui_updater.py`)
 
 -   The `update_widgets()` method is called by a `QTimer` on the main thread.
 -   It iterates through the `widget_dict` and updates each widget's appearance (color, text, value) based on the latest data received from NetworkTables.
 -   This module contains all the styling logic (e.g., `style_on`, `style_off`, flashing) that was previously in the main class.
+-   **Optimization:** This class implements a "dirty bit" check (`last_value`). It compares the current NT value with the previous update's value and only triggers expensive Qt repaints (`setStyleSheet`, `setText`) if the data has actually changed.
 
 ### Camera Manager (`camera_manager.py`)
 
@@ -90,6 +92,11 @@ This file decouples the widget and camera definitions from the application logic
 ## Step 3: NetworkTables and Robot-Side Code
 
 The interaction with NetworkTables remains the same from the robot's perspective. The dashboard client expects the robot server to publish topics for telemetry and commands.
+
+### NT4 Architecture (Publisher/Subscriber)
+The dashboard uses the modern NT4 **Publisher/Subscriber** model provided by the `ntcore` library:
+-   **Subscribers:** Used for reading data (Telemetry, Pose, Status). They are read-only and efficient.
+-   **Publishers:** Used for sending data (Commands, Chooser selections).
 
 ### Topic Categories
 

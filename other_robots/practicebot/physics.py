@@ -31,10 +31,21 @@ class PhysicsEngine:
         
         # Simulation flags
         self.do_blink_test = False  # Set to True to test dashboard connection handling
+        self.draw_camera_fovs = True # Set to True to draw camera FOV triangles
         
         # Create a Field2d for visualization
         self.field = wpilib.Field2d()
         wpilib.SmartDashboard.putData("Field", self.field)  # this should just keep the default one
+        self.target_object = self.field.getObject("Target")
+
+        # Ghost Robot linger state
+        self.last_ghost_update_time = 0
+        self.ghost_linger_duration = 2.0 # seconds
+
+        # Pre-fetch Field2d objects for FOV visualization
+        self.fov_objects = {}
+        for idx, key in enumerate(self.cam_list):
+            self.fov_objects[key] = self.field.getObject(f"FOV_{idx}")
 
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
@@ -81,6 +92,16 @@ class PhysicsEngine:
         # Swerve Target Subscribers
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
         self.swerve_target_subs = [self.inst.getDoubleArrayTopic(f"/SmartDashboard/{v}").subscribe([0, 0]) for v in dash_values]
+        
+        # Ghost Robot Subscribers - used for tracking goals in auto
+        self.auto_active_sub = self.inst.getBooleanTopic(f"{sim_prefix}/robot_in_auto").subscribe(False)
+        self.goal_pose_sub = self.inst.getStructTopic(f"{sim_prefix}/goal_pose", Pose2d).subscribe(Pose2d())
+
+        # FOV Show/Hide Subscribers
+        self.show_fov_subs = {
+            key: self.inst.getBooleanTopic(f"{sim_prefix}/{key}_show_fov").subscribe(False)
+            for key in self.cam_list
+        }
 
     def update_sim(self, now, tm_diff):
 
@@ -100,7 +121,54 @@ class PhysicsEngine:
         active_poses = [Pose2d(gp['pos'], Rotation2d()) for gp in self.gamepieces if gp['active']]
         self.field.getObject("Gamepieces").setPoses(active_poses)
 
+        # Also draw the camera FOVs for debugging
+        self._update_fov_visualization(now)
+
+        # Update Ghost Robot
+        if self.auto_active_sub.get():
+            self.target_object.setPose(self.goal_pose_sub.get())
+            self.last_ghost_update_time = now
+        else:
+            # make it disappear after the ghost timeout
+            if now - self.last_ghost_update_time > self.ghost_linger_duration:
+                self.target_object.setPoses([])
+
     # ------------------ SUBSYSTEM UPDATES --------------------
+    def _update_fov_visualization(self, now: float):
+        # Global override to turn off all FOVs
+        if not self.draw_camera_fovs:
+            for fov_object in self.fov_objects.values():
+                fov_object.setPoses([])
+            return
+
+        robot_pose = self.physics_controller.get_pose()
+        robot_pos = robot_pose.translation()
+        robot_rot_rad = robot_pose.rotation().radians()
+        fov_dist = constants.cam_distance_limit  # 4 meters view distance
+
+        for key, config in constants.k_cameras.items():
+            # Check if this specific FOV should be shown
+            if self.show_fov_subs[key].get():
+                cam_rot_rad = math.radians(config.get('rotation', 0))
+                cam_fov_rad = math.radians(config.get('fov', 90))
+
+                # Calculate the angles for the left and right edges of the FOV
+                left_edge_angle = robot_rot_rad + cam_rot_rad - (cam_fov_rad / 2)
+                right_edge_angle = robot_rot_rad + cam_rot_rad + (cam_fov_rad / 2)
+
+                # Calculate the vertices of the triangle
+                p1 = robot_pos  # Apex of the triangle is the robot's center
+                p2 = robot_pos + Translation2d(fov_dist * math.cos(left_edge_angle), fov_dist * math.sin(left_edge_angle))
+                p3 = robot_pos + Translation2d(fov_dist * math.cos(right_edge_angle), fov_dist * math.sin(right_edge_angle))
+
+                # Create Pose2d objects for each vertex (rotation doesn't matter for drawing lines)
+                fov_poses = [Pose2d(p1, Rotation2d()), Pose2d(p2, Rotation2d()), Pose2d(p3, Rotation2d())]
+
+                # Publish the poses to the FieldObject
+                self.fov_objects[key].setPoses(fov_poses)
+            else:
+                # Clear the FOV if it's not supposed to be shown
+                self.fov_objects[key].setPoses([])
 
     def reset_gamepieces(self):
         for gp in self.gamepieces:
@@ -174,9 +242,10 @@ class PhysicsEngine:
                 # Normalize again
                 angle_cam_relative = (angle_cam_relative + 180) % 360 - 180
 
-                # Check FOV
-                if abs(angle_cam_relative) < (cam_fov / 2.0):
-                    d = vec_to_gp.norm()
+                # Check FOV and distance from camera - both need to be in allowed limits
+                d = vec_to_gp.norm()
+                if abs(angle_cam_relative) < (cam_fov / 2.0) and d < constants.cam_distance_limit:
+
                     # Camera-relative strafe (lateral offset in camera view)
                     s = d * math.sin(math.radians(angle_cam_relative))
                     visible_gps.append({'dist': d, 'rot': angle_cam_relative, 'strafe': s})

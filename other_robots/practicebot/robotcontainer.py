@@ -27,14 +27,14 @@ from subsystems.vision import Vision
 
 # 2429 commands
 from commands.auto_to_pose import AutoToPose
-from commands.auto_strafe_to_tag import AutoStrafeToTag
+from commands.auto_to_pose_clean import AutoToPoseClean
 from commands.can_status import CANStatus
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
-from commands.pid_to_point import PIDToPoint
 from commands.reset_field_centric import ResetFieldCentric
 from commands.rumble_command import RumbleCommand
 from commands.set_leds import SetLEDs
+from commands.sim_show_fov import SimShowFOV
 from commands.swerve_test import SwerveTest
 
 
@@ -191,7 +191,9 @@ class RobotContainer:
         # test a setting of the swerve modules straight before running the auto to tag
         # self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
         # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
-        self.triggerA.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, use_vision=True, control_type='not_pathplanner'))
+        self.triggerA.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, control_type='not_pathplanner'))
+        self.triggerRB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, use_vision=True, control_type='not_pathplanner'))
+        self.triggerLB.whileTrue(SimShowFOV(self))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right
         self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
@@ -199,8 +201,8 @@ class RobotContainer:
 
         #self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=False, location='right'))
         #self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=True, location='left'))
-        self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
-        self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False, control_type='not_pathplanner'))
+        self.triggerB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
+        self.triggerX.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False, control_type='not_pathplanner'))
 
 
 
@@ -211,8 +213,8 @@ class RobotContainer:
         self.triggerLeft.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, dpad_output, 0), timeout=10))
         self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
 
-        self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
-        self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
+        #self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
+        #self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
 
     def bind_codriver_buttons(self):
         print("Binding codriver buttons")

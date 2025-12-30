@@ -33,7 +33,8 @@ quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an extern
 # If one physical camera does both, we treat it as two cameras but with the same topic
 # ordering is nice to align with the IP and order they are on the pis, but not required
 # rotation angle is CCW positive from the front of the robot
-fov = 30 #  sim testing fov
+fov = 45 #  sim testing fov
+cam_distance_limit = 4  # sim testing how far targets can be
 k_cameras = {
     'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags', 'rotation':-90, 'fov': fov},
     'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags', 'rotation':180, 'fov': fov},
@@ -121,6 +122,7 @@ class SimConstants:
     k_counter_offset = 1
 
     k_print_config = True  # use for debugging the camera config
+
 
 class VisionConstants:
 
