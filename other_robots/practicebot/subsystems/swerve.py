@@ -19,9 +19,10 @@ import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 from helpers.utilities import compare_motors
+from subsystems.quest import Questnav
 
 class Swerve (Subsystem):
-    def __init__(self, questnav) -> None:
+    def __init__(self, questnav:Questnav) -> None:
         super().__init__()
         self.counter = constants.DrivetrainConstants.k_counter_offset
         self.questnav = questnav  #  pass in the questnav subsystem so we can query it in periodic
@@ -296,15 +297,15 @@ class Swerve (Subsystem):
             self._update_dashboard(current_pose, ts)
 
     def _update_vision_measurements(self, current_pose, ts):
-        """
-        # QuestNav Logic
+
+        # QuestNav Logic - since swerve was instantiated with the questnav, it should use it just fine
         if self.questnav.use_quest and self.questnav.quest_has_synched and self.counter % 5 == 0:
             quest_accepted = self.questnav.is_pose_accepted()
             quest_pose = self.questnav.quest_pose # Quest subsystem now exposes the robot-relative pose directly
             delta_pos = current_pose.translation().distance(quest_pose.translation())
             if delta_pos < 5 and quest_accepted:  # if the quest is way off, we don't want to update from it
                 self.pose_estimator.addVisionMeasurement(quest_pose, ts, constants.DrivetrainConstants.k_pose_stdevs_disabled)
-        """
+
         
         # AprilTag Logic
         if self.use_CJH_apriltags:

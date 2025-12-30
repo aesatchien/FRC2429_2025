@@ -32,12 +32,14 @@ quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an extern
 # Each camera has a purpose, which can be 'tags' (apriltags) or 'orange' (hsv-filtered objects)
 # If one physical camera does both, we treat it as two cameras but with the same topic
 # ordering is nice to align with the IP and order they are on the pis, but not required
+# rotation angle is CCW positive from the front of the robot
+fov = 20 #  sim testing fov
 k_cameras = {
-    'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags'},
-    'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags'},
-    'logitech_reef': {'topic_name': 'LogitechReef', 'type': 'tags'},
-    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'orange'},
-    'arducam_high': {'topic_name': 'ArducamHigh', 'type': 'tags'},
+    'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags', 'rotation':-90, 'fov': fov},
+    'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags', 'rotation':180, 'fov': fov},
+    'logitech_reef': {'topic_name': 'LogitechReef', 'type': 'tags', 'rotation':0, 'fov': fov},
+    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'orange', 'rotation':0, 'fov': fov},
+    'arducam_high': {'topic_name': 'ArducamHigh', 'type': 'tags', 'rotation':90, 'fov': fov},
 }
 
 # systems inside/from the robot

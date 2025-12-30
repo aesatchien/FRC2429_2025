@@ -5,13 +5,15 @@ from pathplannerlib.trajectory import PathPlannerTrajectoryState
 from pathplannerlib.util import DriveFeedforwards
 import wpilib
 from wpimath.controller import PIDController, ProfiledPIDController
-from wpimath.geometry import Pose2d, Translation2d, Rotation2d
+from wpimath.geometry import Pose2d, Translation2d, Rotation2d, Transform2d
 from wpimath.trajectory import TrapezoidProfile
 from wpimath.filter import SlewRateLimiter
 
+import constants
 from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
 from subsystems.led import Led
+from subsystems.vision import Vision
 from helpers.log_command import log_command
 from helpers.utilities import get_nearest_tag
 
@@ -19,7 +21,7 @@ from helpers.utilities import get_nearest_tag
 @log_command(console=True, nt=False, print_init=True, print_end=True)
 class AutoToPose(commands2.Command):  #
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, nearest=False, from_robot_state=False, control_type='not_pathplanner', trapezoid=False, indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, use_vision=False, nearest=False, from_robot_state=False, control_type='not_pathplanner', trapezoid=False, indent=0) -> None:
         """
         if nearest, it overrides target_pose
         """
@@ -33,6 +35,7 @@ class AutoToPose(commands2.Command):  #
         self.tolerance_counter = 0
         self.from_robot_state = from_robot_state
         self.nearest = nearest  # only use nearest tags as the target
+        self.use_vision = use_vision  # use the cameras to tell us where to go
         self.print_debug = True
 
         # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot if it servos to full speed
@@ -42,6 +45,9 @@ class AutoToPose(commands2.Command):  #
         self.rot_limiter = SlewRateLimiter(max_units_per_second)
 
         self.target_pose = target_pose
+        if target_pose is None:
+            self.target_pose = Pose2d(0, 0, 0)
+        self.original_target_pose = self.target_pose
         self.trapezoid = trapezoid
 
         # check for overshoot
@@ -53,7 +59,7 @@ class AutoToPose(commands2.Command):  #
         self.last_diff_radians = 1
 
         self.addRequirements(self.swerve)
-        self.reset_controllers()
+        self.reset_controllers()  # i know it looks like you don't need this, but 1st use fails w/o it  TODO - fix this
 
     def reset_controllers(self):
 
@@ -65,8 +71,16 @@ class AutoToPose(commands2.Command):  #
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
         elif self.from_robot_state:
             self.target_pose = self.container.robot_state.get_reef_goal_pose()
+        elif self.use_vision:
+            # use the vision subsystem to take us to our goal
+            current_pose = self.container.swerve.get_pose()
+            relative_pose = self.container.vision.nearest_to_cam('logitech_reef_hsv')
+            if relative_pose is not None:
+                rel_tf = Transform2d(relative_pose.translation(), relative_pose.rotation())
+                self.target_pose = current_pose.transformBy(rel_tf)
+
         else:
-            pass  # already set in __init__
+            self.target_pose = self.original_target_pose
 
         if wpilib.DriverStation.getAlliance()  == wpilib.DriverStation.Alliance.kRed:
             self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2), rot=Rotation2d(math.pi))
@@ -238,5 +252,3 @@ class AutoToPose(commands2.Command):  #
         else:
             commands2.CommandScheduler.getInstance().schedule(
                 self.container.led.set_indicator_with_timeout(Led.Indicator.kSUCCESSFLASH, 2))
-
-

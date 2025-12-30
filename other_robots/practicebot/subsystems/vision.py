@@ -2,7 +2,7 @@ import wpilib
 from commands2 import SubsystemBase
 from wpilib import SmartDashboard, DriverStation
 from ntcore import NetworkTableInstance
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Rotation2d
 import math
 
 import constants
@@ -98,6 +98,60 @@ class Vision(SubsystemBase):
         if self.target_available(camera_key):
             return self.camera_dict[camera_key]['rotation_entry'].get()
         return 0
+
+    def nearest_to_cam(self, camera_key: str, max_dist: float = 5.0) -> Pose2d | None:
+        """
+        Returns the robot-relative Pose2d of the nearest target seen by the specified camera.
+        The rotation of the returned Pose2d is the angle to the target.
+        """
+        if not self.target_available(camera_key):
+            return None
+        
+        dist = self.get_distance(camera_key)
+        if dist > max_dist or dist <= 0:
+            return None
+            
+        # Get camera rotation from constants
+        cam_config = constants.k_cameras.get(camera_key)
+        if not cam_config:
+            return None
+            
+        cam_rot_deg = cam_config.get('rotation', 0)
+        
+        # Rotation from NT is relative to camera mount
+        nt_rot = self.get_rotation(camera_key)
+        
+        # Angle relative to robot heading
+        angle_robot_relative_deg = nt_rot + cam_rot_deg
+        angle_robot_relative_rad = math.radians(angle_robot_relative_deg)
+        
+        # Calculate X and Y in robot frame (X is forward, Y is left)
+        x = dist * math.cos(angle_robot_relative_rad)
+        y = dist * math.sin(angle_robot_relative_rad)
+
+        pose = Pose2d(x, y, Rotation2d.fromDegrees(angle_robot_relative_deg))
+
+        print(f"Vision's nearest_to_cam returned {pose}")
+
+        return pose
+
+    def nearest_to_robot(self, camera_list: list[str] = None, max_dist: float = 5.0) -> Pose2d | None:
+        """
+        Returns the robot-relative Pose2d of the nearest target seen by the specified cameras.
+        If camera_list is None, checks all cameras.
+        """
+        if camera_list is None:
+            camera_list = list(self.camera_dict.keys())
+
+        # Get all valid poses from specified cameras
+        poses = [self.nearest_to_cam(key, max_dist) for key in camera_list if key in self.camera_dict]
+        valid_poses = [p for p in poses if p is not None]
+        
+        if not valid_poses:
+            return None
+            
+        # Return the one with the minimum distance (norm of translation)
+        return min(valid_poses, key=lambda p: p.translation().norm())
 
     def periodic(self) -> None:
         self.counter += 1

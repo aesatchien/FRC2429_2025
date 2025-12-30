@@ -177,7 +177,8 @@ class RobotContainer:
 
         # test a setting of the swerve modules straight before running the auto to tag
         # self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
-        self.triggerA.whileTrue(SwerveTest(self, self.swerve))
+        # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
+        self.triggerA.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, use_vision=True, control_type='not_pathplanner'))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right
         self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
@@ -185,8 +186,10 @@ class RobotContainer:
 
         #self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=False, location='right'))
         #self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=True, location='left'))
-        self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True,control_type='not_pathplanner'))
-        self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=True, control_type='not_pathplanner'))
+        self.triggerB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
+        self.triggerX.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False, control_type='not_pathplanner'))
+
+
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125

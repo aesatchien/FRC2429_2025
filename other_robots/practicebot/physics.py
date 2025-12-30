@@ -2,7 +2,7 @@ import math
 from rev import SparkFlex, SparkFlexSim, SparkMaxSim
 import wpilib
 import wpilib.simulation as simlib  # 2021 name for the simulation library
-from  wpimath.geometry import Pose2d, Rotation2d, Transform2d
+from  wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 from wpimath.kinematics._kinematics import SwerveDrive4Kinematics, SwerveModuleState, SwerveModulePosition
 from pyfrc.physics.core import PhysicsInterface
 import ntcore
@@ -20,10 +20,18 @@ class PhysicsEngine:
 
         # if we want to add an armsim see test_robots/sparksim_test/
 
+        # gamepiece locations, using the notes from 2024 as an example.  may want to move to an init field function
+        self.gamepiece_locations = [(2.94, 7.00), (2.94, 5.57), (2.94, 4.10),
+                          (8.33, 7.46), (8.33, 5.76), (8.33, 4.10 ), (8.33, 2.42), (8.33, 0.76),
+                          (13.73, 7.00), (13.73, 5.57), (13.73, 4.10)]
+        self.gamepiece_translations = [Translation2d(gl) for gl in self.gamepiece_locations]
 
         self.initialize_swerve()
 
         self._init_networktables()
+        
+        # Simulation flags
+        self.do_blink_test = False  # Set to True to test dashboard connection handling
 
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
@@ -88,32 +96,86 @@ class PhysicsEngine:
 
     def update_vision(self):
         # update the vision - using 2024 stuff for now (CJH)
-        ring_dist, ring_rot = 2.22, 3.22 #self.distance_to_ring()
-        self.sim_hub_dist_pub.set(round(ring_dist, 2))
-        self.sim_hub_rot_pub.set(round(ring_rot, 2))
+        # Calculate closest gamepiece to the robot for general debugging
+        dist, rot, strafe, target_pose = self.get_closest_gamepiece()
         
-        self.update_simulated_cameras(ring_dist, ring_rot)
+        self.sim_hub_dist_pub.set(round(dist, 2))
+        self.sim_hub_rot_pub.set(round(rot, 2))
+        
+        self.update_simulated_cameras()
 
-    def update_simulated_cameras(self, ring_dist, ring_rot):
+    def update_simulated_cameras(self):
         now = wpilib.Timer.getFPGATimestamp()
+        robot_pose = self.physics_controller.get_pose()
         
-        # Rotate which physical camera is disconnected (15s per camera)
-        topic_off = self.physical_cameras[int(now / 15.0) % len(self.physical_cameras)]
-        
-        # Rotate which logical camera sees targets (2s per camera) - ONE ON AT A TIME
-        key_target_on = self.cam_list[int(now / 2.0) % len(self.cam_list)]
+        # Determine blink test state
+        topic_off = None
+        key_target_on = None
+        if self.do_blink_test:
+            # Rotate which physical camera is disconnected (15s per camera)
+            topic_off = self.physical_cameras[int(now / 15.0) % len(self.physical_cameras)]
+            # Rotate which logical camera sees targets (2s per camera) - ONE ON AT A TIME
+            key_target_on = self.cam_list[int(now / 2.0) % len(self.cam_list)]
 
         for key, cam_data in self.camera_dict.items():
-            topic = constants.k_cameras[key]['topic_name']
-            is_connected = (topic != topic_off)
+            config = constants.k_cameras[key]
+            topic = config['topic_name']
+            cam_rot = config.get('rotation', 0)
+            cam_fov = config.get('fov', 90)
+
+            # 1. Calculate Real Visibility & Data
+            # Find closest gamepiece visible to THIS camera
+            targets = 0
+            dist = 0
+            rot = 0
+            strafe = 0
+
+            # Check all gamepieces
+            visible_gps = []
+            for gp in self.gamepiece_translations:
+                # Vector from robot center to gamepiece
+                vec_to_gp = gp - robot_pose.translation()
+                
+                # Angle to gamepiece relative to robot heading
+                angle_robot_relative = (vec_to_gp.angle() - robot_pose.rotation()).degrees()
+                # Normalize to -180 to 180
+                angle_robot_relative = (angle_robot_relative + 180) % 360 - 180
+
+                # Angle relative to camera mount
+                angle_cam_relative = angle_robot_relative - cam_rot
+                # Normalize again
+                angle_cam_relative = (angle_cam_relative + 180) % 360 - 180
+
+                # Check FOV
+                if abs(angle_cam_relative) < (cam_fov / 2.0):
+                    d = vec_to_gp.norm()
+                    # Camera-relative strafe (lateral offset in camera view)
+                    s = d * math.sin(math.radians(angle_cam_relative))
+                    visible_gps.append({'dist': d, 'rot': angle_cam_relative, 'strafe': s})
+
+            if visible_gps:
+                # Pick the closest one
+                closest = min(visible_gps, key=lambda x: x['dist'])
+                targets = len(visible_gps)  # TODO - reduce this to targets < x m, say ~5
+                dist = closest['dist']
+                rot = closest['rot']
+                strafe = closest['strafe']
+
+            # 2. Apply Blink Test Overrides (if enabled)
+            is_connected = True
+            if self.do_blink_test:
+                is_connected = (topic != topic_off)
+                # If connected, only show targets if it's this camera's turn
+                if is_connected and key != key_target_on:
+                    targets = 0
             
             # Publish timestamp (stale if disconnected) and targets (0 if disconnected or not the active target)
             cam_data['timestamp_pub'].set(now if is_connected else now - 5)
-            cam_data['targets_pub'].set((1 + cam_data['offset']) if is_connected and key == key_target_on else 0)
+            cam_data['targets_pub'].set(targets if is_connected else 0)
             
-            cam_data['distance_pub'].set(ring_dist + cam_data['offset'])
-            cam_data['strafe_pub'].set(0)
-            cam_data['rotation_pub'].set(self.theta - ring_rot)
+            cam_data['distance_pub'].set(dist)
+            cam_data['strafe_pub'].set(strafe)
+            cam_data['rotation_pub'].set(rot)
 
 
     def update_swerve(self, tm_diff):
@@ -195,3 +257,85 @@ class PhysicsEngine:
         self.theta = 0
         initial_pose = Pose2d(0, 0, Rotation2d())
         self.physics_controller.move_robot(Transform2d(self.x, self.y, 0))
+
+
+    # ------------------ HELPER FUNCTIONS FOR STUDENTS --------------------
+
+    def get_distance(self, pos1: Translation2d, pos2: Translation2d) -> float:
+        """
+        Calculate the Euclidean distance between two positions.
+        Useful for determining how far the robot is from a target.
+
+        :param pos1: The first Translation2d
+        :param pos2: The second Translation2d
+        :return: Distance in meters
+        """
+        return pos1.distance(pos2)
+
+    def distance_to_gamepiece(self, gamepiece_position: Translation2d) -> tuple[float, float]:
+        """
+        Calculate the distance and rotation from the robot's current simulated position to a gamepiece.
+
+        :param gamepiece_position: The Translation2d of the gamepiece (e.g. a Note or Coral)
+        :return: Tuple (distance_in_meters, rotation_needed_in_degrees)
+        """
+        robot_pose = self.physics_controller.get_pose()
+        distance = self.get_distance(robot_pose.translation(), gamepiece_position)
+
+        to_target = gamepiece_position - robot_pose.translation()
+        rotation_needed = to_target.angle() - robot_pose.rotation()
+
+        return distance, rotation_needed.degrees()
+
+    def is_on_gamepiece(self, gamepiece_position: Translation2d, threshold: float = 0.5) -> bool:
+        """
+        Check if the robot is "on" (close enough to interact with) a gamepiece.
+
+        :param gamepiece_position: The Translation2d of the gamepiece
+        :param threshold: The distance threshold in meters (default 0.5m)
+        :return: True if within threshold, False otherwise
+        """
+        dist, _ = self.distance_to_gamepiece(gamepiece_position)
+        return dist < threshold
+
+    def get_closest_gamepiece(self, gamepieces: list[Translation2d] = None) -> tuple[float, float, float, Pose2d]:
+        """
+        Find the closest gamepiece from a list of gamepieces.
+
+        This is useful for autonomous modes where the robot needs to decide
+        which gamepiece to go for next.
+
+        :param gamepieces: A list of Translation2d objects representing gamepieces on the field. 
+                           If None, uses the default field gamepieces.
+        :return: A tuple containing (distance, rotation, strafe, target_pose).
+                 distance: Euclidean distance in meters
+                 rotation: Angle in degrees relative to robot front (CCW positive)
+                 strafe:   Lateral offset in meters relative to robot (Left positive)
+                 target_pose: Pose2d of the gamepiece, rotated to face the robot
+                 Returns (inf, 0, 0, Pose2d()) if list is empty.
+        """
+        if not gamepieces:
+            gamepieces = self.gamepiece_translations
+
+        robot_pose = self.physics_controller.get_pose()
+        robot_translation = robot_pose.translation()
+        
+        # Find the gamepiece with the minimum distance to the robot
+        closest = min(gamepieces, key=lambda gp: self.get_distance(robot_translation, gp))
+        
+        # Calculate properties
+        dist, rot = self.distance_to_gamepiece(closest) # rot is degrees relative to robot
+        
+        # Calculate strafe (Y component in robot frame)
+        # Vector to target, rotated by -robot_heading, gives vector in robot frame
+        vec_robot_frame = (closest - robot_translation).rotateBy(-robot_pose.rotation())
+        strafe = vec_robot_frame.Y()
+        
+        # Target Pose: Location of gamepiece, facing the robot (angle from robot to GP)
+        # If we drive to this pose, we will be at the gamepiece facing the direction we came from?
+        # User requested: "rotation of that Pose2D will be the rotation what will have the front of our robot facing the gamepiece when we get to it."
+        # This implies the rotation of the vector FROM robot TO gamepiece.
+        target_rotation = (closest - robot_translation).angle()
+        target_pose = Pose2d(closest, target_rotation)
+
+        return dist, rot, strafe, target_pose
