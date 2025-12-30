@@ -12,18 +12,6 @@ class NTManager:
         self.server_index = 0
         self.ntinst.setServerTeam(2429)
 
-    def isConnected(self):
-        return self.ntinst.isConnected()
-
-    def getEntry(self, key):
-        return self.ntinst.getEntry(key)
-
-    def getEntries(self, prefix, types):
-        return self.ntinst.getEntries(prefix, types)
-
-    def flush(self):
-        self.ntinst.flush()
-
     def reconnect(self):
         sleep_time = 0.1
         self.ntinst.stopClient()
@@ -45,7 +33,7 @@ class NTManager:
         self.ui.qt_text_status.appendPlainText(f'{datetime.today().strftime("%H:%M:%S")}: Changed server from {current_server} to {next_server} ... wait 5s')
 
     def report_nt_status(self):
-        if self.isConnected():
+        if self.ntinst.isConnected():
             try:
                 connection = self.ntinst.getConnections()[0]
                 id, ip = connection.remote_id, connection.remote_ip

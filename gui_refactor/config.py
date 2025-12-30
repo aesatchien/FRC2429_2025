@@ -47,6 +47,7 @@ Each widget property dictionary can contain the following keys:
 
 """
 # This file should not import any runtime modules like PyQt or ntcore.
+import re
 
 # NT PREFIXES WE MAY NEED
 camera_prefix = r'/Cameras'  # from the pis
@@ -58,6 +59,15 @@ swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
 sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
 command_prefix = r'/SmartDashboard/Command'  # DIFFERENT FROM ROBOT CODE: the robot SmartDashboard.putData auto prepends /SmartDashboard to the key
 base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
+
+# A list of command names used to generate widget configurations for simple, clickable indicators.
+# Commands with special properties (e.g., custom topics, flash behavior) are defined separately.
+COMMAND_LIST = [
+    'MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePivotUp', 'MovePivotDown',
+    'MoveWristUp', 'MoveWristDown', 'IntakeOn', 'IntakeOff', 'IntakeReverse',
+    'Move climber down', 'Move climber up', 'GoToStow', 'GoToL1', 'GoToL2', 'GoToL3', 'GoToL4',
+    'CanStatus', 'ResetFlex', 'CalElevatorUp', 'CalElevatorDown', 'RecalWrist', 'CalWristUp', 'CalWristDown', 'GyroReset'
+]
 
 # this config will be used to bind the NT topics to entries we can use later
 # todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
@@ -90,7 +100,7 @@ CAMERA_BASE_CONFIG = {
 }
 
 # Add timestamp topics, connection topics, and set indicators if not provided above
-# This is so i don't have to redo the frigging camera indicators all the time below
+# This is so i don't have to redo the camera indicators all the time below - just change the camera names and go home
 CAMERA_CONFIG = {}
 for key, value in CAMERA_BASE_CONFIG.items():
     # print(f"{key}  {value.get('TIMESTAMP_TOPIC')}  {value.get('INDICATOR_NAME')}  {value.get('INDICATOR_INDEX')}")
@@ -136,37 +146,11 @@ WIDGET_CONFIG = {
     'qlabel_questnav_reset_indicator': {'widget_name': 'qlabel_questnav_reset_indicator', 'nt_topic': f'{quest_prefix}/QuestResetOdometry/running', 'command_topic': f'{command_prefix}/QuestResetOdometry/running', 'update_style': 'indicator'},
     'qlabel_questnav_enabled_toggle_indicator': {'widget_name': 'qlabel_questnav_enabled_toggle_indicator', 'nt_topic': f'{quest_prefix}/questnav_in_use', 'command_topic': f'{command_prefix}/QuestEnableToggle/running', 'update_style': 'indicator'},
 
-    # COMMANDS  - MOST LIKELY WILL CHANGE EVERY YEAR BUT GOOD TO GROUP IN ONE PLACE
-    'qlabel_elevator_top_indicator': {'widget_name': 'qlabel_elevator_top_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorTop/running', 'command_topic': f'{command_prefix}/MoveElevatorTop/running', 'update_style': 'indicator'},
-    'qlabel_elevator_up_indicator': {'widget_name': 'qlabel_elevator_up_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorUp/running', 'command_topic': f'{command_prefix}/MoveElevatorUp/running', 'update_style': 'indicator'},
-    'qlabel_elevator_down_indicator': {'widget_name': 'qlabel_elevator_down_indicator', 'nt_topic': f'{command_prefix}/MoveElevatorDown/running', 'command_topic': f'{command_prefix}/MoveElevatorDown/running', 'update_style': 'indicator'},
-    'qlabel_pivot_up_indicator': {'widget_name': 'qlabel_pivot_up_indicator', 'nt_topic': f'{command_prefix}/MovePivotUp/running', 'command_topic': f'{command_prefix}/MovePivotUp/running', 'update_style': 'indicator'},
-    'qlabel_pivot_down_indicator': {'widget_name': 'qlabel_pivot_down_indicator', 'nt_topic': f'{command_prefix}/MovePivotDown/running', 'command_topic': f'{command_prefix}/MovePivotDown/running', 'update_style': 'indicator'},
-    'qlabel_wrist_up_indicator': {'widget_name': 'qlabel_wrist_up_indicator', 'nt_topic': f'{command_prefix}/MoveWristUp/running', 'command_topic': f'{command_prefix}/MoveWristUp/running', 'update_style': 'indicator'},
-    'qlabel_wrist_down_indicator': {'widget_name': 'qlabel_wrist_down_indicator', 'nt_topic': f'{command_prefix}/MoveWristDown/running', 'command_topic': f'{command_prefix}/MoveWristDown/running', 'update_style': 'indicator'},
-    'qlabel_intake_on_indicator': {'widget_name': 'qlabel_intake_on_indicator', 'nt_topic': f'{command_prefix}/IntakeOn/running', 'command_topic': f'{command_prefix}/IntakeOn/running', 'update_style': 'indicator'},
-    'qlabel_intake_off_indicator': {'widget_name': 'qlabel_intake_off_indicator', 'nt_topic': f'{command_prefix}/IntakeOff/running','command_topic': f'{command_prefix}/IntakeOff/running', 'update_style': 'indicator'},
-    'qlabel_intake_reverse_indicator': {'widget_name': 'qlabel_intake_reverse_indicator', 'nt_topic': f'{command_prefix}/IntakeReverse/running','command_topic': f'{command_prefix}/IntakeReverse/running', 'update_style': 'indicator'},
-    'qlabel_climber_down_indicator': {'widget_name': 'qlabel_climber_down_indicator', 'nt_topic': f'{command_prefix}/Move climber down/running', 'command_topic': f'{command_prefix}/Move climber down/running', 'update_style': 'indicator'},
-    'qlabel_climber_up_indicator': {'widget_name': 'qlabel_climber_up_indicator', 'nt_topic': f'{command_prefix}/Move climber up/running', 'command_topic': f'{command_prefix}/Move climber up/running', 'update_style': 'indicator'},
-    'qlabel_stow_indicator': {'widget_name': 'qlabel_stow_indicator', 'nt_topic': f'{command_prefix}/GoToStow/running', 'command_topic': f'{command_prefix}/GoToStow/running', 'update_style': 'indicator'},
+    # COMMANDS - Special cases defined explicitly - the rest of the vanilla ones just respect the naming conventions in the UI designer and bob's your uncle
     'qlabel_score_indicator': {'widget_name': 'qlabel_score_indicator', 'nt_topic': f'{command_prefix}/Score/running', 'command_topic': f'{command_prefix}/Score/running', 'flash':True, 'update_style': 'indicator'},
-    'qlabel_l1_indicator': {'widget_name': 'qlabel_l1_indicator', 'nt_topic': f'{command_prefix}/GoToL1/running', 'command_topic': f'{command_prefix}/GoToL1/running', 'update_style': 'indicator'},
-    'qlabel_l2_indicator': {'widget_name': 'qlabel_l2_indicator', 'nt_topic': f'{command_prefix}/GoToL2/running', 'command_topic': f'{command_prefix}/GoToL2/running', 'update_style': 'indicator'},
-    'qlabel_l3_indicator': {'widget_name': 'qlabel_l3_indicator', 'nt_topic': f'{command_prefix}/GoToL3/running', 'command_topic': f'{command_prefix}/GoToL3/running', 'update_style': 'indicator'},
-    'qlabel_l4_indicator': {'widget_name': 'qlabel_l4_indicator', 'nt_topic': f'{command_prefix}/GoToL4/running', 'command_topic': f'{command_prefix}/GoToL4/running', 'update_style': 'indicator'},
-    'qlabel_can_report_indicator': {'widget_name': 'qlabel_can_report_indicator', 'nt_topic': f'{command_prefix}/CANStatus/running', 'command_topic': f'{command_prefix}/CANStatus/running', 'update_style': 'indicator'},
-    'qlabel_reset_flex_indicator': {'widget_name': 'qlabel_reset_flex_indicator', 'nt_topic': f'{command_prefix}/ResetFlex/running', 'command_topic': f'{command_prefix}/ResetFlex/running', 'update_style': 'indicator'},
-    'qlabel_elevator_shift_up_indicator': {'widget_name': 'qlabel_elevator_shift_up_indicator', 'nt_topic': f'{command_prefix}/CalElevatorUp/running', 'command_topic': f'{command_prefix}/CalElevatorUp/running', 'update_style': 'indicator'},
-    'qlabel_elevator_shift_down_indicator': {'widget_name': 'qlabel_elevator_shift_down_indicator', 'nt_topic': f'{command_prefix}/CalElevatorDown/running', 'command_topic': f'{command_prefix}/CalElevatorDown/running', 'update_style': 'indicator'},
-    'qlabel_cal_wrist_indicator': {'widget_name': 'qlabel_cal_wrist_indicator', 'nt_topic': f'{command_prefix}/RecalWrist/running', 'command_topic': f'{command_prefix}/RecalWrist/running', 'update_style': 'indicator'},
-    'qlabel_cal_wrist_up_indicator': {'widget_name': 'qlabel_cal_wrist_up_indicator', 'nt_topic': f'{command_prefix}/CalWristUp/running', 'command_topic': f'{command_prefix}/CalWristUp/running', 'update_style': 'indicator'},
-    'qlabel_cal_wrist_down_indicator': {'widget_name': 'qlabel_cal_wrist_down_indicator', 'nt_topic': f'{command_prefix}/CalWristDown/running', 'command_topic': f'{command_prefix}/CalWristDown/running', 'update_style': 'indicator'},
-
     'qlabel_game_piece_indicator': {'widget_name': 'qlabel_game_piece_indicator', 'nt_topic': f'{command_prefix}/gamepiece_present', 'command_topic': f'{command_prefix}/LedToggle/running', 'update_style': 'indicator',
                                         'style_on': "border: 7px; border-radius: 7px; background-color:rgb(0, 220, 220); color:rgb(250, 250, 250);",
                                         'style_off': "border: 7px; border-radius: 7px; background-color:rgb(127, 127, 127); color:rgb(0, 0, 0);"},
-    'qlabel_navx_reset_indicator': {'widget_name': 'qlabel_navx_reset_indicator', 'nt_topic': f'{command_prefix}/GyroReset/running', 'command_topic': f'{command_prefix}/GyroReset/running', 'update_style': 'indicator'},
 
     # orphaned test camera
     'qlabel_photoncam_target_indicator': {'widget_name': 'qlabel_photoncam_target_indicator', 'nt_topic': f'{vision_prefix}/photoncam_targets_exist', 'update_style': 'indicator'},
@@ -187,7 +171,21 @@ WIDGET_CONFIG = {
     'hub_distance': {'widget_name': None, 'nt_topic': '/arducam_high//orange/distance', 'update_style': 'hub'},
 }
 
-# ------------  THIS SHOULD BE GENERATED AUTOMATICALLY NOW  IF CAMERA_BASE
+# ---------------    Auto-generate vanilla command indicator widgets from the COMMAND_LIST to reduce repetition
+for command in COMMAND_LIST:
+    # Sanitize command name for use in widget object names (replace spaces)
+    # Turn capital letters after the first into lowercase with a leading underscore to make it pythonic
+    widget_key_name = re.sub(r'(?<!^)(?=[A-Z])', '_', command).replace(' ', '_').lower()
+
+    topic = f'{command_prefix}/{command}/running'
+    WIDGET_CONFIG[f'qlabel_{widget_key_name}_indicator'] = {
+        'widget_name': f'qlabel_{widget_key_name}_indicator',
+        'nt_topic': topic,
+        'command_topic': topic,
+        'update_style': 'indicator'
+    }
+
+# ------------  THIS SHOULD BE GENERATED AUTOMATICALLY NOW FROM CAMERA_BASE and CAMERA_CONFIG
 # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE - THESE HAVE NO NT TOPICS BECAUSE WE DO IT IN _update_camera_indicators
 # TODO - give the heartbeats NT topics
 # HEARTBEATS
@@ -215,3 +213,8 @@ if __name__ == "__main__":
     print(f"WIDGET CONFIG ({len(WIDGET_CONFIG)} items)")
     print("="*80)
     pprint.pprint(WIDGET_CONFIG, width=120, sort_dicts=False)
+
+    print("\n" + "="*80)
+    print(f"WIDGET NAMES ({len(WIDGET_CONFIG)} items)")
+    print("="*80)
+    pprint.pprint(list(WIDGET_CONFIG.keys()), width=120, sort_dicts=False)

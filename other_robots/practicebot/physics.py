@@ -21,9 +21,8 @@ class PhysicsEngine:
         # if we want to add an armsim see test_robots/sparksim_test/
 
         # gamepiece locations, using the notes from 2024 as an example.  may want to move to an init field function
-        self.gamepiece_locations = [(2.94, 7.00), (2.94, 5.57), (2.94, 4.10),
-                          (8.33, 7.46), (8.33, 5.76), (8.33, 4.10 ), (8.33, 2.42), (8.33, 0.76),
-                          (13.73, 7.00), (13.73, 5.57), (13.73, 4.10)]
+        self.gamepiece_locations = [(2.89, 7.0), (2.89, 5.57), (2.89, 4.1), (8.28, 7.46), (8.28, 5.76), (8.28, 4.1),
+                                    (8.28, 2.42), (8.28, 0.76), (13.68, 7.0), (13.68, 5.57), (13.68, 4.1)]
         self.gamepieces = [{'pos': Translation2d(gl), 'active': True} for gl in self.gamepiece_locations]
 
         self.initialize_swerve()

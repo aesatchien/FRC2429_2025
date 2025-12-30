@@ -19,6 +19,7 @@ class UIUpdater:
     def __init__(self, ui):
         self.ui = ui
         self.drive_pose = [0, 0, 0]  # Store pose for other calculations
+        self.flash_on = False
 
         # Map update styles from config to specific update functions
         self.updaters = {
@@ -34,6 +35,9 @@ class UIUpdater:
     def update_widgets(self):
         """Main update loop. Orchestrates calls to specialized update functions."""
         self._update_connection_status()  # check if NT is connected
+        
+        # Calculate flash state once per cycle
+        self.flash_on = self.ui.counter % 30 < 15
 
         # Functions with dependencies are called in a specific order
         self._update_pose_and_field()  # Must be called first to get latest pose
@@ -65,36 +69,20 @@ class UIUpdater:
         """Updates the robot and quest pose on the field graphic."""
         drive_pose_sub = self.ui.widget_dict['drive_pose'].get('subscriber')
         if not drive_pose_sub:
-            return
-
+            return # Can't do anything without the robot pose
+        
         self.drive_pose = drive_pose_sub.get()
-        width, height = self.ui.qgroupbox_field.width(), self.ui.qgroupbox_field.height()
-
-        # Update Robot Pose Text and Graphic
-        x_pad = 1 if self.drive_pose[0] < 10 else 0
-        theta_pad = sum([1 for t in [0, 100, 10] if abs(self.drive_pose[2]) < t])
-        pose_msg = f'POSE\n{" " * x_pad}{self.drive_pose[0]:>5.2f}m {self.drive_pose[1]:>4.2f}m {" " * theta_pad}{self.drive_pose[2]:>4.0f}°'
-        self.ui.qlabel_pose_indicator.setText(pose_msg)
-
-        pixmap_rotated = self.ui.robot_pixmap.transformed(QtGui.QTransform().rotate(90 - self.drive_pose[2]), QtCore.Qt.TransformationMode.SmoothTransformation)
-        new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * self.drive_pose[2] * np.pi / 180.0))))
-        self.ui.qlabel_robot.resize(new_size, new_size)
-        self.ui.qlabel_robot.setPixmap(pixmap_rotated)
-        self.ui.qlabel_robot.move(int(-new_size / 2 + width * self.drive_pose[0] / 17.6), int(-new_size / 2 + height * (1 - self.drive_pose[1] / 8.2)))
-
-        # Update Quest Pose Text and Graphic
         quest_pose_sub = self.ui.widget_dict['quest_pose'].get('subscriber')
         self.quest_pose = quest_pose_sub.get()
-        quest_x, quest_y, quest_rot = self.quest_pose
-        
-        quest_pose_msg = f'QUEST POSE\n{" " * x_pad}{self.quest_pose[0]:>5.2f}m {self.quest_pose[1]:>4.2f}m {" " * theta_pad}{self.quest_pose[2]:>4.0f}°'
-        self.ui.qlabel_quest_pose_indicator.setText(quest_pose_msg)
+        field_dims = (self.ui.qgroupbox_field.width(), self.ui.qgroupbox_field.height())
 
-        quest_pixmap_rotated = self.ui.quest_pixmap.transformed(QtGui.QTransform().rotate(90 - quest_rot), QtCore.Qt.TransformationMode.SmoothTransformation)
-        quest_new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * quest_rot * np.pi / 180.0))))
-        self.ui.qlabel_quest.resize(quest_new_size, quest_new_size)
-        self.ui.qlabel_quest.setPixmap(quest_pixmap_rotated)
-        self.ui.qlabel_quest.move(int(-quest_new_size/2 + width * quest_x / 17.6), int(-quest_new_size/2 + height * (1 - quest_y / 8.2)))
+        # Update text indicators
+        self.ui.qlabel_pose_indicator.setText(self._format_pose_string("POSE", self.drive_pose))
+        self.ui.qlabel_quest_pose_indicator.setText(self._format_pose_string("QUEST POSE", self.quest_pose))
+
+        # Update graphical indicators on the field
+        self._update_pose_widget(self.ui.qlabel_robot, self.ui.robot_pixmap, self.drive_pose, field_dims)
+        self._update_pose_widget(self.ui.qlabel_quest, self.ui.quest_pixmap, self.quest_pose, field_dims)
 
     def _update_camera_indicators(self):
         """Updates the status indicators for all cameras.
@@ -157,6 +145,32 @@ class UIUpdater:
         self.ui.qlabel_shot_distance.setText(f'SHOT DIST\n{shot_distance:.1f}m  {int(angle_to_speaker):>+3d}°')
         self.ui.qlabel_shot_distance.setStyleSheet(shot_style)
 
+    def _format_pose_string(self, label, pose):
+        """Formats a pose array into a display string with appropriate padding."""
+        x, y, rot = pose
+        x_pad = 1 if x < 10 else 0
+        # This logic determines padding based on the number of digits in the angle
+        theta_pad = sum([1 for t in [0, 100, 10] if abs(rot) < t])
+        return f'{label}\n{" " * x_pad}{x:>5.2f}m {y:>4.2f}m {" " * theta_pad}{rot:>4.0f}°'
+
+    def _update_pose_widget(self, widget, pixmap, pose, field_dims):
+        """Updates a QLabel on the field graphic with a rotated pixmap and new position."""
+        x, y, rot = pose
+        width, height = field_dims
+
+        pixmap_rotated = pixmap.transformed(QtGui.QTransform().rotate(90 - rot), QtCore.Qt.TransformationMode.SmoothTransformation)
+        # This formula creates a pulsating effect as the robot rotates
+        new_size = int(41 * (1 + 0.41 * np.abs(np.sin(2 * rot * np.pi / 180.0))))
+
+        widget.resize(new_size, new_size)
+        widget.setPixmap(pixmap_rotated)
+
+        # Convert pose (meters) to widget coordinates (pixels)
+        # Field dimensions in meters: 17.6 x 8.2
+        widget_x = int(-new_size / 2 + width * x / 17.6)
+        widget_y = int(-new_size / 2 + height * (1 - y / 8.2))
+        widget.move(widget_x, widget_y)
+
     def _update_command_list(self):
         """Updates the background color of the command list widget in the NT tree - which is currently broken"""
         green, white = QtGui.QColor(227, 255, 227), QtGui.QColor(255, 255, 255)
@@ -190,12 +204,11 @@ class UIUpdater:
             return
 
         is_on = sub.get()
-        style_flash = self.STYLE_FLASH_ON if self.ui.counter % 30 < 15 else self.STYLE_FLASH_OFF
 
         if 'style_on' in props:  # allow a custom style for each indicator
             style = props['style_on'] if is_on else props['style_off']
         elif 'flash' in props and is_on:
-            style = style_flash  #  use the flashing style
+            style = self.STYLE_FLASH_ON if self.flash_on else self.STYLE_FLASH_OFF
         else:
             style = self.STYLE_ON if is_on else self.STYLE_OFF  # go with the default
         widget.setStyleSheet(style)
@@ -247,10 +260,9 @@ class UIUpdater:
             return
 
         match_time = sub.get()
-        style_flash = self.STYLE_FLASH_ON if self.ui.counter % 30 < 15 else self.STYLE_FLASH_OFF
         if match_time < 30:
             widget.setText(f'* {int(match_time)} *')
-            widget.setStyleSheet(style_flash)
+            widget.setStyleSheet(self.STYLE_FLASH_ON if self.flash_on else self.STYLE_FLASH_OFF)
         else:
             widget.setText(str(int(match_time)))
             widget.setStyleSheet(self.STYLE_HIGH)
