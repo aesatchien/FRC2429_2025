@@ -8,7 +8,7 @@ import rev
 import pickle as pkl
 import random
 
-from helpers.log_command import log_command
+from helpers.decorators import log_command
 from subsystems.swerve_constants import DriveConstants as dc
 
 @log_command(console=True, nt=False, print_init=True, print_end=False)

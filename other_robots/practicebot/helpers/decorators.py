@@ -1,4 +1,5 @@
 import functools
+import warnings
 import time
 import ntcore
 
@@ -9,6 +10,40 @@ inst = ntcore.NetworkTableInstance.getDefault()
 status_prefix = constants.status_prefix
 alert_pub = inst.getStringTopic(f"{status_prefix}/alert").publish()
 
+
+def deprecated(reason):
+    """
+    A decorator to mark a class or function as deprecated.
+    Emits a warning when the class is instantiated or function is called.
+    """
+    def decorator(cls_or_func):
+        if isinstance(cls_or_func, type):
+            # It's a class
+            orig_init = cls_or_func.__init__
+
+            @functools.wraps(orig_init)
+            def new_init(self, *args, **kwargs):
+                warnings.warn(
+                    f"{cls_or_func.__name__} is deprecated: {reason}",
+                    DeprecationWarning,
+                    stacklevel=2
+                )
+                orig_init(self, *args, **kwargs)
+
+            cls_or_func.__init__ = new_init
+            return cls_or_func
+        else:
+            # It's a function
+            @functools.wraps(cls_or_func)
+            def wrapper(*args, **kwargs):
+                warnings.warn(
+                    f"{cls_or_func.__name__} is deprecated: {reason}",
+                    DeprecationWarning,
+                    stacklevel=2
+                )
+                return cls_or_func(*args, **kwargs)
+            return wrapper
+    return decorator
 
 def log_command(cls=None, *, console=True, nt=False, print_init=True, print_end=True):
     """

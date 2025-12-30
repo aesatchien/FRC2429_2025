@@ -10,7 +10,7 @@ from commands2.button import CommandXboxController
 from wpimath.geometry import Translation2d
 from wpimath.filter import Debouncer, SlewRateLimiter
 from subsystems.swerve_constants import DriveConstants as dc
-from helpers.log_command import log_command
+from helpers.decorators import log_command
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=False)

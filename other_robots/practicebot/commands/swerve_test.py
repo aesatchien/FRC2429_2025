@@ -1,5 +1,5 @@
 import commands2
-from helpers.log_command import log_command  # outsource explicit logging clutter to a single line
+from helpers.decorators import log_command  # outsource explicit logging clutter to a single line
 from subsystems.swerve import Swerve
 from subsystems.swervemodule_2429 import SwerveModuleState
 from wpimath.geometry import Rotation2d

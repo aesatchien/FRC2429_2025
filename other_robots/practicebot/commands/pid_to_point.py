@@ -8,7 +8,7 @@ from wpimath.geometry import Pose2d
 from subsystems.swerve_constants import AutoConstants as ac
 from subsystems.swerve import Swerve
 from subsystems.led import Led
-from helpers.log_command import log_command
+from helpers.decorators import log_command
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=True)

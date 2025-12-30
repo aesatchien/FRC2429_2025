@@ -1,5 +1,5 @@
 import commands2
-from helpers.log_command import log_command  # outsource explicit logging clutter to a single line
+from helpers.decorators import log_command  # outsource explicit logging clutter to a single line
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=True)  # will print start and end messages

@@ -2,7 +2,7 @@ import commands2
 import typing
 
 from subsystems.led import Led
-from helpers.log_command import log_command
+from helpers.decorators import log_command
 
 
 @log_command(console=True, nt=False, print_init=True, print_end=False)
