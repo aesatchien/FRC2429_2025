@@ -24,7 +24,7 @@ class PhysicsEngine:
         self.gamepiece_locations = [(2.94, 7.00), (2.94, 5.57), (2.94, 4.10),
                           (8.33, 7.46), (8.33, 5.76), (8.33, 4.10 ), (8.33, 2.42), (8.33, 0.76),
                           (13.73, 7.00), (13.73, 5.57), (13.73, 4.10)]
-        self.gamepiece_translations = [Translation2d(gl) for gl in self.gamepiece_locations]
+        self.gamepieces = [{'pos': Translation2d(gl), 'active': True} for gl in self.gamepiece_locations]
 
         self.initialize_swerve()
 
@@ -32,6 +32,10 @@ class PhysicsEngine:
         
         # Simulation flags
         self.do_blink_test = False  # Set to True to test dashboard connection handling
+        
+        # Create a Field2d for visualization
+        self.field = wpilib.Field2d()
+        wpilib.SmartDashboard.putData("Field", self.field)  # this should just keep the default one
 
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
@@ -85,13 +89,36 @@ class PhysicsEngine:
         amps = []
 
         self.update_swerve(tm_diff)
+        self.consume_gamepieces()
 
         simlib.RoboRioSim.setVInVoltage(
                 simlib.BatterySim.calculate(amps)
         )
         self.update_vision()
+        
+        # Update Field2d
+        self.field.setRobotPose(self.physics_controller.get_pose())
+        active_poses = [Pose2d(gp['pos'], Rotation2d()) for gp in self.gamepieces if gp['active']]
+        self.field.getObject("Gamepieces").setPoses(active_poses)
 
     # ------------------ SUBSYSTEM UPDATES --------------------
+
+    def reset_gamepieces(self):
+        for gp in self.gamepieces:
+            gp['active'] = True
+        print(f"Simulation reset all game pieces")
+
+    def consume_gamepieces(self):
+        # Check if we are on any gamepiece
+        # Optimization: only check active ones
+        for gp in self.gamepieces:
+            if gp['active']:
+                # is_on_gamepiece uses distance < threshold (0.5m default)
+                if self.is_on_gamepiece(gp['pos']):
+                    gp['active'] = False
+                    print(f"Simulation consumed gamepiece at {gp['pos']}")
+        if len([gp for gp in self.gamepieces if gp['active']]) == 0:
+            self.reset_gamepieces()
 
 
     def update_vision(self):
@@ -132,7 +159,9 @@ class PhysicsEngine:
 
             # Check all gamepieces
             visible_gps = []
-            for gp in self.gamepiece_translations:
+            for gp_data in self.gamepieces:
+                if not gp_data['active']: continue
+                gp = gp_data['pos']
                 # Vector from robot center to gamepiece
                 vec_to_gp = gp - robot_pose.translation()
                 
@@ -314,8 +343,11 @@ class PhysicsEngine:
                  target_pose: Pose2d of the gamepiece, rotated to face the robot
                  Returns (inf, 0, 0, Pose2d()) if list is empty.
         """
+        if gamepieces is None:
+            gamepieces = [gp['pos'] for gp in self.gamepieces if gp['active']]
+
         if not gamepieces:
-            gamepieces = self.gamepiece_translations
+            return float('inf'), 0, 0, Pose2d()
 
         robot_pose = self.physics_controller.get_pose()
         robot_translation = robot_pose.translation()
