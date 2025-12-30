@@ -9,6 +9,8 @@ import ntcore
 
 from robot import MyRobot
 import constants
+from simulation import sim_utils
+from simulation.vision_sim import VisionSim
 from subsystems.swerve_constants import DriveConstants as dc
 
 class PhysicsEngine:
@@ -29,59 +31,21 @@ class PhysicsEngine:
 
         self._init_networktables()
         
-        # Simulation flags
-        self.do_blink_test = False  # Set to True to test dashboard connection handling
-        self.draw_camera_fovs = True # Set to True to draw camera FOV triangles
-        
         # Create a Field2d for visualization
         self.field = wpilib.Field2d()
         wpilib.SmartDashboard.putData("Field", self.field)  # this should just keep the default one
         self.target_object = self.field.getObject("Target")
 
+        # Initialize Vision Simulation
+        self.vision_sim = VisionSim(self.field)
+
         # Ghost Robot linger state
         self.last_ghost_update_time = 0
         self.ghost_linger_duration = 2.0 # seconds
 
-        # Pre-fetch Field2d objects for FOV visualization
-        self.fov_objects = {}
-        for idx, key in enumerate(self.cam_list):
-            self.fov_objects[key] = self.field.getObject(f"FOV_{idx}")
-
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         sim_prefix = constants.sim_prefix
-        camera_prefix = constants.camera_prefix
-        
-        # Vision Sim Publishers
-        self.sim_hub_dist_pub = self.inst.getDoubleTopic(f"{sim_prefix}/hub_dist").publish()
-        self.sim_hub_rot_pub = self.inst.getDoubleTopic(f"{sim_prefix}/hub_rot").publish()
-
-        self.camera_dict = {}
-        self.cam_list = list(constants.k_cameras.keys())
-        self.physical_cameras = sorted(list(set(c['topic_name'] for c in constants.k_cameras.values())))
-
-        # vision stuff - using 2024 stuff for now (CJH).  This could easily be extended to make fake tags as well
-        # then you could use more of the tag stuff in vision, and the tag faking could be here instead of there
-        # this mimics what the pis would send if they were live  TODO - allow live pis for testing
-        for ix, (key, config) in enumerate(constants.k_cameras.items()):
-            cam_topic = config['topic_name']
-            cam_type = config['type']
-            base = f'/Cameras/{cam_topic}/{cam_type}'
-            
-            self.camera_dict[key] = {
-                'offset': ix,
-                'timestamp_pub': self.inst.getDoubleTopic(f"/Cameras/{cam_topic}/_timestamp").publish(),
-                'targets_pub': self.inst.getDoubleTopic(f"{base}/targets").publish(),
-                'distance_pub': self.inst.getDoubleTopic(f"{base}/distance").publish(),
-                'strafe_pub': self.inst.getDoubleTopic(f"{base}/strafe").publish(),
-                'rotation_pub': self.inst.getDoubleTopic(f"{base}/rotation").publish()
-            }
-
-        if constants.SimConstants.k_print_config:
-            print('\n*** PHYSICS.PY CAMERA DICT ***')
-            for key, item in self.camera_dict.items():
-                print(f'{key}: {item}')
-            print()
 
         # ground truth Publisher for Simulating Sensors
         self.ground_truth_pub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).publish()
@@ -97,12 +61,6 @@ class PhysicsEngine:
         self.auto_active_sub = self.inst.getBooleanTopic(f"{sim_prefix}/robot_in_auto").subscribe(False)
         self.goal_pose_sub = self.inst.getStructTopic(f"{sim_prefix}/goal_pose", Pose2d).subscribe(Pose2d())
 
-        # FOV Show/Hide Subscribers
-        self.show_fov_subs = {
-            key: self.inst.getBooleanTopic(f"{sim_prefix}/{key}_show_fov").subscribe(False)
-            for key in self.cam_list
-        }
-
     def update_sim(self, now, tm_diff):
 
         # simlib.DriverStationSim.setAllianceStationId(hal.AllianceStationID.kBlue2)
@@ -114,15 +72,12 @@ class PhysicsEngine:
         simlib.RoboRioSim.setVInVoltage(
                 simlib.BatterySim.calculate(amps)
         )
-        self.update_vision()
+        self.vision_sim.update(self.physics_controller.get_pose(), self.gamepieces)
         
         # Update Field2d
         self.field.setRobotPose(self.physics_controller.get_pose())
         active_poses = [Pose2d(gp['pos'], Rotation2d()) for gp in self.gamepieces if gp['active']]
         self.field.getObject("Gamepieces").setPoses(active_poses)
-
-        # Also draw the camera FOVs for debugging
-        self._update_fov_visualization(now)
 
         # Update Ghost Robot
         if self.auto_active_sub.get():
@@ -132,43 +87,6 @@ class PhysicsEngine:
             # make it disappear after the ghost timeout
             if now - self.last_ghost_update_time > self.ghost_linger_duration:
                 self.target_object.setPoses([])
-
-    # ------------------ SUBSYSTEM UPDATES --------------------
-    def _update_fov_visualization(self, now: float):
-        # Global override to turn off all FOVs
-        if not self.draw_camera_fovs:
-            for fov_object in self.fov_objects.values():
-                fov_object.setPoses([])
-            return
-
-        robot_pose = self.physics_controller.get_pose()
-        robot_pos = robot_pose.translation()
-        robot_rot_rad = robot_pose.rotation().radians()
-        fov_dist = constants.cam_distance_limit  # 4 meters view distance
-
-        for key, config in constants.k_cameras.items():
-            # Check if this specific FOV should be shown
-            if self.show_fov_subs[key].get():
-                cam_rot_rad = math.radians(config.get('rotation', 0))
-                cam_fov_rad = math.radians(config.get('fov', 90))
-
-                # Calculate the angles for the left and right edges of the FOV
-                left_edge_angle = robot_rot_rad + cam_rot_rad - (cam_fov_rad / 2)
-                right_edge_angle = robot_rot_rad + cam_rot_rad + (cam_fov_rad / 2)
-
-                # Calculate the vertices of the triangle
-                p1 = robot_pos  # Apex of the triangle is the robot's center
-                p2 = robot_pos + Translation2d(fov_dist * math.cos(left_edge_angle), fov_dist * math.sin(left_edge_angle))
-                p3 = robot_pos + Translation2d(fov_dist * math.cos(right_edge_angle), fov_dist * math.sin(right_edge_angle))
-
-                # Create Pose2d objects for each vertex (rotation doesn't matter for drawing lines)
-                fov_poses = [Pose2d(p1, Rotation2d()), Pose2d(p2, Rotation2d()), Pose2d(p3, Rotation2d())]
-
-                # Publish the poses to the FieldObject
-                self.fov_objects[key].setPoses(fov_poses)
-            else:
-                # Clear the FOV if it's not supposed to be shown
-                self.fov_objects[key].setPoses([])
 
     def reset_gamepieces(self):
         for gp in self.gamepieces:
@@ -181,99 +99,11 @@ class PhysicsEngine:
         for gp in self.gamepieces:
             if gp['active']:
                 # is_on_gamepiece uses distance < threshold (0.5m default)
-                if self.is_on_gamepiece(gp['pos']):
+                if sim_utils.is_on_gamepiece(self.physics_controller.get_pose(), gp['pos']):
                     gp['active'] = False
                     print(f"Simulation consumed gamepiece at {gp['pos']}")
         if len([gp for gp in self.gamepieces if gp['active']]) == 0:
             self.reset_gamepieces()
-
-
-    def update_vision(self):
-        # update the vision - using 2024 stuff for now (CJH)
-        # Calculate closest gamepiece to the robot for general debugging
-        dist, rot, strafe, target_pose = self.get_closest_gamepiece()
-        
-        self.sim_hub_dist_pub.set(round(dist, 2))
-        self.sim_hub_rot_pub.set(round(rot, 2))
-        
-        self.update_simulated_cameras()
-
-    def update_simulated_cameras(self):
-        now = wpilib.Timer.getFPGATimestamp()
-        robot_pose = self.physics_controller.get_pose()
-        
-        # Determine blink test state
-        topic_off = None
-        key_target_on = None
-        if self.do_blink_test:
-            # Rotate which physical camera is disconnected (15s per camera)
-            topic_off = self.physical_cameras[int(now / 15.0) % len(self.physical_cameras)]
-            # Rotate which logical camera sees targets (2s per camera) - ONE ON AT A TIME
-            key_target_on = self.cam_list[int(now / 2.0) % len(self.cam_list)]
-
-        for key, cam_data in self.camera_dict.items():
-            config = constants.k_cameras[key]
-            topic = config['topic_name']
-            cam_rot = config.get('rotation', 0)
-            cam_fov = config.get('fov', 90)
-
-            # 1. Calculate Real Visibility & Data
-            # Find closest gamepiece visible to THIS camera
-            targets = 0
-            dist = 0
-            rot = 0
-            strafe = 0
-
-            # Check all gamepieces
-            visible_gps = []
-            for gp_data in self.gamepieces:
-                if not gp_data['active']: continue
-                gp = gp_data['pos']
-                # Vector from robot center to gamepiece
-                vec_to_gp = gp - robot_pose.translation()
-                
-                # Angle to gamepiece relative to robot heading
-                angle_robot_relative = (vec_to_gp.angle() - robot_pose.rotation()).degrees()
-                # Normalize to -180 to 180
-                angle_robot_relative = (angle_robot_relative + 180) % 360 - 180
-
-                # Angle relative to camera mount
-                angle_cam_relative = angle_robot_relative - cam_rot
-                # Normalize again
-                angle_cam_relative = (angle_cam_relative + 180) % 360 - 180
-
-                # Check FOV and distance from camera - both need to be in allowed limits
-                d = vec_to_gp.norm()
-                if abs(angle_cam_relative) < (cam_fov / 2.0) and d < constants.cam_distance_limit:
-
-                    # Camera-relative strafe (lateral offset in camera view)
-                    s = d * math.sin(math.radians(angle_cam_relative))
-                    visible_gps.append({'dist': d, 'rot': angle_cam_relative, 'strafe': s})
-
-            if visible_gps:
-                # Pick the closest one
-                closest = min(visible_gps, key=lambda x: x['dist'])
-                targets = len(visible_gps)  # TODO - reduce this to targets < x m, say ~5
-                dist = closest['dist']
-                rot = closest['rot']
-                strafe = closest['strafe']
-
-            # 2. Apply Blink Test Overrides (if enabled)
-            is_connected = True
-            if self.do_blink_test:
-                is_connected = (topic != topic_off)
-                # If connected, only show targets if it's this camera's turn
-                if is_connected and key != key_target_on:
-                    targets = 0
-            
-            # Publish timestamp (stale if disconnected) and targets (0 if disconnected or not the active target)
-            cam_data['timestamp_pub'].set(now if is_connected else now - 5)
-            cam_data['targets_pub'].set(targets if is_connected else 0)
-            
-            cam_data['distance_pub'].set(dist)
-            cam_data['strafe_pub'].set(strafe)
-            cam_data['rotation_pub'].set(rot)
-
 
     def update_swerve(self, tm_diff):
 
@@ -354,88 +184,3 @@ class PhysicsEngine:
         self.theta = 0
         initial_pose = Pose2d(0, 0, Rotation2d())
         self.physics_controller.move_robot(Transform2d(self.x, self.y, 0))
-
-
-    # ------------------ HELPER FUNCTIONS FOR STUDENTS --------------------
-
-    def get_distance(self, pos1: Translation2d, pos2: Translation2d) -> float:
-        """
-        Calculate the Euclidean distance between two positions.
-        Useful for determining how far the robot is from a target.
-
-        :param pos1: The first Translation2d
-        :param pos2: The second Translation2d
-        :return: Distance in meters
-        """
-        return pos1.distance(pos2)
-
-    def distance_to_gamepiece(self, gamepiece_position: Translation2d) -> tuple[float, float]:
-        """
-        Calculate the distance and rotation from the robot's current simulated position to a gamepiece.
-
-        :param gamepiece_position: The Translation2d of the gamepiece (e.g. a Note or Coral)
-        :return: Tuple (distance_in_meters, rotation_needed_in_degrees)
-        """
-        robot_pose = self.physics_controller.get_pose()
-        distance = self.get_distance(robot_pose.translation(), gamepiece_position)
-
-        to_target = gamepiece_position - robot_pose.translation()
-        rotation_needed = to_target.angle() - robot_pose.rotation()
-
-        return distance, rotation_needed.degrees()
-
-    def is_on_gamepiece(self, gamepiece_position: Translation2d, threshold: float = 0.5) -> bool:
-        """
-        Check if the robot is "on" (close enough to interact with) a gamepiece.
-
-        :param gamepiece_position: The Translation2d of the gamepiece
-        :param threshold: The distance threshold in meters (default 0.5m)
-        :return: True if within threshold, False otherwise
-        """
-        dist, _ = self.distance_to_gamepiece(gamepiece_position)
-        return dist < threshold
-
-    def get_closest_gamepiece(self, gamepieces: list[Translation2d] = None) -> tuple[float, float, float, Pose2d]:
-        """
-        Find the closest gamepiece from a list of gamepieces.
-
-        This is useful for autonomous modes where the robot needs to decide
-        which gamepiece to go for next.
-
-        :param gamepieces: A list of Translation2d objects representing gamepieces on the field. 
-                           If None, uses the default field gamepieces.
-        :return: A tuple containing (distance, rotation, strafe, target_pose).
-                 distance: Euclidean distance in meters
-                 rotation: Angle in degrees relative to robot front (CCW positive)
-                 strafe:   Lateral offset in meters relative to robot (Left positive)
-                 target_pose: Pose2d of the gamepiece, rotated to face the robot
-                 Returns (inf, 0, 0, Pose2d()) if list is empty.
-        """
-        if gamepieces is None:
-            gamepieces = [gp['pos'] for gp in self.gamepieces if gp['active']]
-
-        if not gamepieces:
-            return float('inf'), 0, 0, Pose2d()
-
-        robot_pose = self.physics_controller.get_pose()
-        robot_translation = robot_pose.translation()
-        
-        # Find the gamepiece with the minimum distance to the robot
-        closest = min(gamepieces, key=lambda gp: self.get_distance(robot_translation, gp))
-        
-        # Calculate properties
-        dist, rot = self.distance_to_gamepiece(closest) # rot is degrees relative to robot
-        
-        # Calculate strafe (Y component in robot frame)
-        # Vector to target, rotated by -robot_heading, gives vector in robot frame
-        vec_robot_frame = (closest - robot_translation).rotateBy(-robot_pose.rotation())
-        strafe = vec_robot_frame.Y()
-        
-        # Target Pose: Location of gamepiece, facing the robot (angle from robot to GP)
-        # If we drive to this pose, we will be at the gamepiece facing the direction we came from?
-        # User requested: "rotation of that Pose2D will be the rotation what will have the front of our robot facing the gamepiece when we get to it."
-        # This implies the rotation of the vector FROM robot TO gamepiece.
-        target_rotation = (closest - robot_translation).angle()
-        target_pose = Pose2d(closest, target_rotation)
-
-        return dist, rot, strafe, target_pose

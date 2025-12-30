@@ -22,7 +22,7 @@ class SimShowFOV(commands2.Command):  # change the name for your command
         self.inst = ntcore.NetworkTableInstance.getDefault()
         sim_prefix = constants.sim_prefix
         self.fov_pubs = {
-            key: self.inst.getBooleanTopic(f"{sim_prefix}/{key}_show_fov").publish()
+            key: self.inst.getBooleanTopic(f"{sim_prefix}/FOV/{key}_show_fov").publish()
             for key in self.cameras
         }
 

@@ -85,20 +85,20 @@ class AutoToPoseClean(commands2.Command):  #
 
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        sim_prefix = constants.sim_prefix
+        prefix = constants.sim_prefix + '/AUTO/'
         
-        self.x_setpoint_pub = self.inst.getDoubleTopic(f"{sim_prefix}/x_setpoint").publish()
-        self.y_setpoint_pub = self.inst.getDoubleTopic(f"{sim_prefix}/y_setpoint").publish()
-        self.rot_setpoint_pub = self.inst.getDoubleTopic(f"{sim_prefix}/rot_setpoint").publish()
-        self.x_measured_pub = self.inst.getDoubleTopic(f"{sim_prefix}/x_measured").publish()
-        self.y_measured_pub = self.inst.getDoubleTopic(f"{sim_prefix}/y_measured").publish()
-        self.rot_measured_pub = self.inst.getDoubleTopic(f"{sim_prefix}/rot_measured").publish()
-        self.x_commanded_pub = self.inst.getDoubleTopic(f"{sim_prefix}/x_commanded").publish()
-        self.y_commanded_pub = self.inst.getDoubleTopic(f"{sim_prefix}/y_commanded").publish()
-        self.rot_commanded_pub = self.inst.getDoubleTopic(f"{sim_prefix}/rot_commanded").publish()
+        self.x_setpoint_pub = self.inst.getDoubleTopic(f"{prefix}/x_setpoint").publish()
+        self.y_setpoint_pub = self.inst.getDoubleTopic(f"{prefix}/y_setpoint").publish()
+        self.rot_setpoint_pub = self.inst.getDoubleTopic(f"{prefix}/rot_setpoint").publish()
+        self.x_measured_pub = self.inst.getDoubleTopic(f"{prefix}/x_measured").publish()
+        self.y_measured_pub = self.inst.getDoubleTopic(f"{prefix}/y_measured").publish()
+        self.rot_measured_pub = self.inst.getDoubleTopic(f"{prefix}/rot_measured").publish()
+        self.x_commanded_pub = self.inst.getDoubleTopic(f"{prefix}/x_commanded").publish()
+        self.y_commanded_pub = self.inst.getDoubleTopic(f"{prefix}/y_commanded").publish()
+        self.rot_commanded_pub = self.inst.getDoubleTopic(f"{prefix}/rot_commanded").publish()
         
-        self.auto_active_pub = self.inst.getBooleanTopic(f"{sim_prefix}/robot_in_auto").publish()
-        self.goal_pose_pub = self.inst.getStructTopic(f"{sim_prefix}/goal_pose", Pose2d).publish()
+        self.auto_active_pub = self.inst.getBooleanTopic(f"{prefix}/robot_in_auto").publish()
+        self.goal_pose_pub = self.inst.getStructTopic(f"{prefix}/goal_pose", Pose2d).publish()
         self.auto_active_pub.set(False)
 
     def reset_controllers(self):
