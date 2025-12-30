@@ -6,7 +6,7 @@ class CommandTemplate(commands2.Command):  # change the name for your command
 
     def __init__(self, container, indent=0) -> None:
         super().__init__()
-        self.setName('Sample Name')  # change this to something appropriate for this command
+        self.setName('Sample Name')  # change this to whatever you named it above
         self.indent = indent
         self.container = container
         # self.addRequirements(self.container.)  # commandsv2 version of requirements

@@ -16,7 +16,7 @@ class CANStatus(commands2.Command):  # change the name for your command
 
     def __init__(self, container, ) -> None:
         super().__init__()
-        self.setName('CANStatusCheck')
+        self.setName('CANStatus')  #
         self.container = container
         #self.addRequirements()  # commandsv2 version of requirements
 

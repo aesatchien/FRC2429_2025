@@ -91,8 +91,8 @@ class Ui(QtWidgets.QMainWindow):
         self.qt_text_entry_filter.installEventFilter(self)
         self.qt_text_new_value.installEventFilter(self)
 
-        self.robot_pixmap = QtGui.QPixmap(f"{self.png_dir}\\blockhead.png")
-        self.quest_pixmap = QtGui.QPixmap(f"{self.png_dir}\\quest.png")
+        self.robot_pixmap = QtGui.QPixmap(str(self.png_dir / 'blockhead.png'))
+        self.quest_pixmap = QtGui.QPixmap(str(self.png_dir / 'quest.png'))
         opacity_effect = QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0.5)
         self.qlabel_quest.setGraphicsEffect(opacity_effect)
@@ -125,6 +125,7 @@ class Ui(QtWidgets.QMainWindow):
             if widget_name:
                 new_entry['widget'] = getattr(self, widget_name, None)
             
+            new_entry['last_value'] = None
             # Determine Topic Type based on update_style
             style = config.get('update_style')
             nt_topic = config.get('nt_topic')
@@ -149,6 +150,7 @@ class Ui(QtWidgets.QMainWindow):
             selected_topic = config.get('selected_topic')
             if selected_topic:
                 new_entry['selected_subscriber'] = self.ntinst.getStringTopic(selected_topic).subscribe("")
+                new_entry['last_selected_value'] = None
                 new_entry['selected_publisher'] = self.ntinst.getStringTopic(selected_topic).publish()
                 # print(f'{key} has selected topic: {selected_topic} with value {new_entry[selected_subscriber].get()'}
             widget_dict[key] = new_entry
@@ -179,6 +181,8 @@ class Ui(QtWidgets.QMainWindow):
             if timestamp_topic:
                 new_entry['IS_ALIVE'] = False
                 new_entry['RECONNECTION_COUNT'] = 0
+                new_entry['last_is_alive'] = None
+                new_entry['last_connections'] = None
                 new_entry['TIMESTAMP_SUB'] = self.ntinst.getDoubleTopic(timestamp_topic).subscribe(-1)
 
             connections_topic = config.get('CONNECTIONS_TOPIC')
@@ -226,7 +230,8 @@ class Ui(QtWidgets.QMainWindow):
             self.qcombobox_cameras.addItem(key)
 
     def keyPressEvent(self, event):
-        self.keys_currently_pressed.append(event.key())
+        if event.key() not in self.keys_currently_pressed:
+            self.keys_currently_pressed.append(event.key())
         self.keys_pressed_pub.set(self.keys_currently_pressed)
         self.key_pressed_pub.set(event.key())
 

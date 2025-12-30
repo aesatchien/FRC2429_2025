@@ -3,7 +3,7 @@ import commands2
 class CommandGroupTemplate(commands2.SequentialCommandGroup):
     def __init__(self, container, indent=0) -> None:
         super().__init__()
-        self.setName(f'Command Group Template- change me!')
+        self.setName(f'Command Group Template- change me!')  # change this to whatever you named it above
         self.container = container
         self.addCommands(commands2.PrintCommand(f"{'    ' * indent}** Started {self.getName()} **"))
 

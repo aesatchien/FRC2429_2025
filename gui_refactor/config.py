@@ -62,12 +62,12 @@ base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
 
 # A list of command names used to generate widget configurations for simple, clickable indicators.
 # Commands with special properties (e.g., custom topics, flash behavior) are defined separately.
-COMMAND_LIST = [
-    'MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePivotUp', 'MovePivotDown',
-    'MoveWristUp', 'MoveWristDown', 'IntakeOn', 'IntakeOff', 'IntakeReverse',
-    'Move climber down', 'Move climber up', 'GoToStow', 'GoToL1', 'GoToL2', 'GoToL3', 'GoToL4',
-    'CanStatus', 'ResetFlex', 'CalElevatorUp', 'CalElevatorDown', 'RecalWrist', 'CalWristUp', 'CalWristDown', 'GyroReset'
-]
+# You can and should use the exact same list of commands in the robotcontainer.py to putdata to NT
+COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePivotUp', 'MovePivotDown',
+                'MoveWristUp', 'MoveWristDown', 'IntakeOn', 'IntakeOff', 'IntakeReverse',
+                'MoveClimberDown', 'MoveClimberUp', 'GoToStow', 'GoToL1', 'GoToL2', 'GoToL3', 'GoToL4',
+                'CanStatus', 'ResetFlex', 'CalElevatorUp', 'CalElevatorDown', 'RecalWrist', 'CalWristUp',
+                'CalWristDown','GyroReset']
 
 # this config will be used to bind the NT topics to entries we can use later
 # todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know

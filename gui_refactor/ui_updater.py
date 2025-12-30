@@ -4,6 +4,7 @@ import time
 import math
 import numpy as np
 import wpimath.geometry as geo
+import ntcore
 from PyQt6 import QtGui, QtCore, QtWidgets
 
 class UIUpdater:
@@ -67,22 +68,28 @@ class UIUpdater:
 
     def _update_pose_and_field(self):
         """Updates the robot and quest pose on the field graphic."""
-        drive_pose_sub = self.ui.widget_dict['drive_pose'].get('subscriber')
+        drive_props = self.ui.widget_dict['drive_pose']
+        drive_pose_sub = drive_props.get('subscriber')
         if not drive_pose_sub:
             return # Can't do anything without the robot pose
         
         self.drive_pose = drive_pose_sub.get()
-        quest_pose_sub = self.ui.widget_dict['quest_pose'].get('subscriber')
+        quest_props = self.ui.widget_dict['quest_pose']
+        quest_pose_sub = quest_props.get('subscriber')
         self.quest_pose = quest_pose_sub.get()
         field_dims = (self.ui.qgroupbox_field.width(), self.ui.qgroupbox_field.height())
 
-        # Update text indicators
-        self.ui.qlabel_pose_indicator.setText(self._format_pose_string("POSE", self.drive_pose))
-        self.ui.qlabel_quest_pose_indicator.setText(self._format_pose_string("QUEST POSE", self.quest_pose))
+        # Update Robot Pose if changed
+        if self.drive_pose != drive_props.get('last_value'):
+            drive_props['last_value'] = self.drive_pose
+            self.ui.qlabel_pose_indicator.setText(self._format_pose_string("POSE", self.drive_pose))
+            self._update_pose_widget(self.ui.qlabel_robot, self.ui.robot_pixmap, self.drive_pose, field_dims)
 
-        # Update graphical indicators on the field
-        self._update_pose_widget(self.ui.qlabel_robot, self.ui.robot_pixmap, self.drive_pose, field_dims)
-        self._update_pose_widget(self.ui.qlabel_quest, self.ui.quest_pixmap, self.quest_pose, field_dims)
+        # Update Quest Pose if changed
+        if self.quest_pose != quest_props.get('last_value'):
+            quest_props['last_value'] = self.quest_pose
+            self.ui.qlabel_quest_pose_indicator.setText(self._format_pose_string("QUEST POSE", self.quest_pose))
+            self._update_pose_widget(self.ui.qlabel_quest, self.ui.quest_pixmap, self.quest_pose, field_dims)
 
     def _update_camera_indicators(self):
         """Updates the status indicators for all cameras.
@@ -106,6 +113,12 @@ class UIUpdater:
                     atomic_conn = cam_props['CONNECTIONS_SUB'].getAtomic()
                     if atomic_conn.time != 0:
                         connections = int(atomic_conn.value)
+
+                # Only update widget if visual state changed
+                if is_alive == cam_props.get('last_is_alive') and connections == cam_props.get('last_connections'):
+                    continue
+                cam_props['last_is_alive'] = is_alive
+                cam_props['last_connections'] = connections
 
                 style = self.STYLE_ON if is_alive else self.STYLE_OFF
                 indicator = cam_props.get('INDICATOR')  # switch to safe access since we can have cameras w/o heartbeat indicators
@@ -187,7 +200,14 @@ class UIUpdater:
             time_delta = current_time - self.ui.previous_time
             if time_delta > 0:
                 frames = self.ui.camera_manager.worker.frames if self.ui.camera_manager.worker else 0
-                msg = f'Gui Updates/s: {80/time_delta:.1f}, Cam Updates/s: {(frames - self.ui.previous_frames)/time_delta:.1f}'
+                
+                # Calculate NT Latency (Data Age)
+                # This measures time in ms since the last timestamp update was received
+                atomic_ts = self.ui.robot_timestamp_sub.getAtomic()
+                # ntcore._now() and atomic_ts.time are both in microseconds
+                latency = (ntcore._now() - atomic_ts.time) / 1000.0
+                
+                msg = f'GUI: {80/time_delta:.1f}Hz | CAM: {(frames - self.ui.previous_frames)/time_delta:.1f}Hz | LATENCY: {latency:.1f}ms'
                 self.ui.statusBar().showMessage(msg)
             self.ui.previous_time = current_time
             self.ui.previous_frames = frames
@@ -204,6 +224,12 @@ class UIUpdater:
             return
 
         is_on = sub.get()
+        
+        # Optimization: If value hasn't changed, skip update.
+        # EXCEPTION: If the widget is ON and has 'flash' enabled, we must update because self.flash_on toggles.
+        if is_on == props.get('last_value') and not (props.get('flash') and is_on):
+            return
+        props['last_value'] = is_on
 
         if 'style_on' in props:  # allow a custom style for each indicator
             style = props['style_on'] if is_on else props['style_off']
@@ -218,7 +244,10 @@ class UIUpdater:
         # TODO - replace these with a better custom LCD-font widget
         sub, widget = props.get('subscriber'), props.get('widget')
         if sub and widget:
-            value = int(sub.get())
+            value = int(sub.get()) # Convert to int for display and comparison
+            if value == props.get('last_value'):
+                return
+            props['last_value'] = value
             widget.display(str(value))
 
     def _update_monitor(self, props):
@@ -226,6 +255,9 @@ class UIUpdater:
         sub, widget = props.get('subscriber'), props.get('widget')
         if sub and widget:
             value = sub.get()
+            if value == props.get('last_value'):
+                return
+            props['last_value'] = value
             widget.set_value(value)
 
     def _update_combo(self, props):
@@ -238,7 +270,8 @@ class UIUpdater:
             return
 
         new_list = sub.get()
-        if new_list != self.ui.autonomous_list:
+        if new_list != props.get('last_value'):
+            props['last_value'] = new_list
             widget.blockSignals(True)
             widget.clear()
             widget.addItems(new_list)
@@ -248,7 +281,8 @@ class UIUpdater:
         selected_sub = props.get('selected_subscriber')
         if selected_sub:
             selected_routine = selected_sub.get()
-            if selected_routine != widget.currentText():
+            if selected_routine != props.get('last_selected_value'):
+                props['last_selected_value'] = selected_routine
                 widget.blockSignals(True)
                 widget.setCurrentText(selected_routine)
                 widget.blockSignals(False)
@@ -260,6 +294,12 @@ class UIUpdater:
             return
 
         match_time = sub.get()
+        # If time is low, we flash, so we must update. If time is high, we only update if the integer second changes.
+        val_int = int(match_time)
+        if match_time >= 30 and val_int == props.get('last_value'):
+            return
+        props['last_value'] = val_int
+
         if match_time < 30:
             widget.setText(f'* {int(match_time)} *')
             widget.setStyleSheet(self.STYLE_FLASH_ON if self.flash_on else self.STYLE_FLASH_OFF)
@@ -274,6 +314,9 @@ class UIUpdater:
             return
 
         config = sub.get()
+        if config == props.get('last_value'):
+            return
+        props['last_value'] = config
         # This logic seems to always result in STYLE_ON, may need review
         position_style = self.STYLE_ON if config.upper() not in ['LOW_SHOOT', 'INTAKE'] else self.STYLE_ON
         widget.setText(f'POS: {config.upper()}')

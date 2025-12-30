@@ -150,7 +150,20 @@ class RobotContainer:
         wpilib.SmartDashboard.putData(f'{command_prefix}/SetSuccess', SetLEDs(container=self, led=self.led, indicator=Led.Indicator.kSUCCESS))
 
         # commands for pyqt dashboard - please do not remove
-        wpilib.SmartDashboard.putData(f'{command_prefix}/CANStatus', CANStatus(container=self))
+        COMMAND_LIST = [CANStatus(container=self), ]
+        for cmd in COMMAND_LIST:
+            wpilib.SmartDashboard.putData(f'{command_prefix}/{cmd.getName()}', cmd)
+        #wpilib.SmartDashboard.putData(f'{command_prefix}/CANStatus', CANStatus(container=self))
+
+        # You can and should use the exact same list of commands in the gui to watch for
+        # These are left in to demonstrate a complete UI - the real one will be full of Commands (python classes), not strings
+        FAKE_COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePivotUp', 'MovePivotDown',
+            'MoveWristUp', 'MoveWristDown', 'IntakeOn', 'IntakeOff', 'IntakeReverse', 'MoveClimberDown',
+            'MoveClimberUp', 'GoToStow', 'GoToL1', 'GoToL2', 'GoToL3', 'GoToL4', 'CanStatus', 'ResetFlex',
+            'CalElevatorUp', 'CalElevatorDown', 'RecalWrist', 'CalWristUp', 'CalWristDown','GyroReset']
+        for cmd in FAKE_COMMAND_LIST:  # note the use of the 'default argument hack' - by the time you press a button, the loop had finished
+            wpilib.SmartDashboard.putData(f'{command_prefix}/{cmd}', commands2.InstantCommand(lambda cmd=cmd: print(f'Called {cmd} at {self.timer.get():.1f}'))
+                                          .alongWith(commands2.WaitCommand(2)).ignoringDisable(True))
 
         # end pyqt dashboard section
 
@@ -213,6 +226,3 @@ class RobotContainer:
     def get_autonomous_command(self):
         # return DriveByVelocitySwerve(self, self.swerve, Pose2d(0.1, 0, 0), 2)
         return self.auto_chooser.getSelected()
-
-
-
