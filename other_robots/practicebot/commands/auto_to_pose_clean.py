@@ -85,7 +85,7 @@ class AutoToPoseClean(commands2.Command):  #
 
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
-        prefix = constants.sim_prefix + '/AUTO'
+        prefix = constants.auto_prefix
         
         self.x_setpoint_pub = self.inst.getDoubleTopic(f"{prefix}/x_setpoint").publish()
         self.y_setpoint_pub = self.inst.getDoubleTopic(f"{prefix}/y_setpoint").publish()
@@ -99,6 +99,7 @@ class AutoToPoseClean(commands2.Command):  #
         
         self.auto_active_pub = self.inst.getBooleanTopic(f"{prefix}/robot_in_auto").publish()
         self.goal_pose_pub = self.inst.getStructTopic(f"{prefix}/goal_pose", Pose2d).publish()
+        self.ghost_pose_pub = self.inst.getDoubleArrayTopic(f"{prefix}/ghost_pose").publish()  # legacy GUI dashboard
         self.auto_active_pub.set(False)
 
     def reset_controllers(self):
@@ -172,13 +173,14 @@ class AutoToPoseClean(commands2.Command):  #
             self.y_pid.reset()
             self.rot_pid.reset()
 
-            if wpilib.RobotBase.isSimulation():
-                self.x_commanded_pub.set(self.target_pose.X())
-                self.y_commanded_pub.set(self.target_pose.Y())
-                self.rot_commanded_pub.set(self.target_pose.rotation().degrees())
-                
-                # Update the goal pose for the ghost robot
-                self.goal_pose_pub.set(self.target_pose)
+
+            self.x_commanded_pub.set(self.target_pose.X())
+            self.y_commanded_pub.set(self.target_pose.Y())
+            self.rot_commanded_pub.set(self.target_pose.rotation().degrees())
+
+            # Update the goal pose for the ghost robot
+            self.goal_pose_pub.set(self.target_pose)
+            self.ghost_pose_pub.set([self.target_pose.X(), self.target_pose.Y(), self.target_pose.rotation().degrees()])  # legacy version
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""

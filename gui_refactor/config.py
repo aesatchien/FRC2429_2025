@@ -58,6 +58,7 @@ vision_prefix = r'/SmartDashboard/Vision'  # from the robot
 swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
 sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
 command_prefix = r'/SmartDashboard/Command'  # DIFFERENT FROM ROBOT CODE: the robot SmartDashboard.putData auto prepends /SmartDashboard to the key
+auto_prefix = r'/SmartDashboard/Auto'
 base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
 
 # A list of command names used to generate widget configurations for simple, clickable indicators.
@@ -124,6 +125,7 @@ for key, value in CAMERA_BASE_CONFIG.items():
 WIDGET_CONFIG = {
     # GUI UPDATES - NEED THIS PART FOR EVERY YEAR  - AT THE MOMENT I AM LEAVING A FEW OF THEM AS THE BASE PREFIX
     'drive_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': f'{swerve_prefix}/drive_pose', 'update_style': 'pose'},
+    'ghost_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': f'{auto_prefix}/ghost_pose', 'update_style': 'pose', 'visible_topic':f'{auto_prefix}/robot_in_auto'},
     'qcombobox_autonomous_routines': {'widget_name': 'qcombobox_autonomous_routines', 'nt_topic': rf'{base_prefix}/autonomous routines/options',
                                       'selected_topic': rf'{base_prefix}/autonomous routines/selected', 'update_style': 'combo'},
     'qlabel_nt_connected': {'widget_name': 'qlabel_nt_connected', 'update_style': 'connection'},

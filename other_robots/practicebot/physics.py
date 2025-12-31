@@ -41,7 +41,7 @@ class PhysicsEngine:
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         sim_prefix = constants.sim_prefix
-        auto_sim_prefix = sim_prefix + '/AUTO'
+        auto_sim_prefix = constants.auto_prefix
 
         # ground truth Publisher for Simulating Sensors
         self.ground_truth_pub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).publish()

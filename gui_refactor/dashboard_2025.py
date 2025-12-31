@@ -93,9 +93,15 @@ class Ui(QtWidgets.QMainWindow):
 
         self.robot_pixmap = QtGui.QPixmap(str(self.png_dir / 'blockhead.png'))
         self.quest_pixmap = QtGui.QPixmap(str(self.png_dir / 'quest.png'))
+        self.ghost_pixmap = QtGui.QPixmap(str(self.png_dir / 'ghost.png'))
+
         opacity_effect = QGraphicsOpacityEffect()
         opacity_effect.setOpacity(0.5)
         self.qlabel_quest.setGraphicsEffect(opacity_effect)
+
+        ghost_effect = QGraphicsOpacityEffect()
+        ghost_effect.setOpacity(0.25)
+        self.qlabel_ghost.setGraphicsEffect(ghost_effect)
         self.qlabel_robot.raise_()
 
         self.qt_button_swap_sim.clicked.connect(self.nt_manager.increment_server)
@@ -153,6 +159,12 @@ class Ui(QtWidgets.QMainWindow):
                 new_entry['last_selected_value'] = None
                 new_entry['selected_publisher'] = self.ntinst.getStringTopic(selected_topic).publish()
                 # print(f'{key} has selected topic: {selected_topic} with value {new_entry[selected_subscriber].get()'}
+
+            visible_topic = config.get('visible_topic')  # sometimes we want to hide things
+            if visible_topic:
+                new_entry['visible_subscriber'] = self.ntinst.getBooleanTopic(visible_topic).subscribe(False)
+                new_entry['last_visible_value'] = None
+
             widget_dict[key] = new_entry
         # print(widget_dict)
         return widget_dict

@@ -91,6 +91,25 @@ class UIUpdater:
             self.ui.qlabel_quest_pose_indicator.setText(self._format_pose_string("QUEST POSE", self.quest_pose))
             self._update_pose_widget(self.ui.qlabel_quest, self.ui.quest_pixmap, self.quest_pose, field_dims)
 
+        # Update Ghost Pose
+        ghost_props = self.ui.widget_dict['ghost_pose']
+        ghost_sub = ghost_props.get('subscriber')
+        visible_sub = ghost_props.get('visible_subscriber')
+
+        is_visible = visible_sub.get() if visible_sub else False
+
+        if is_visible and ghost_sub:
+            ghost_pose = ghost_sub.get()
+            if ghost_pose != ghost_props.get('last_value') or is_visible != ghost_props.get('last_visible_value'):
+                ghost_props['last_value'] = ghost_pose
+                self.ui.qlabel_ghost.show()
+                self._update_pose_widget(self.ui.qlabel_ghost, self.ui.ghost_pixmap, ghost_pose, field_dims)
+        else:
+            if self.ui.qlabel_ghost.isVisible():
+                self.ui.qlabel_ghost.hide()
+        
+        ghost_props['last_visible_value'] = is_visible
+
     def _update_camera_indicators(self):
         """Updates the status indicators for all cameras.
         We check the timestamp from the robot vs the timestamp coming back from the cameras"""
