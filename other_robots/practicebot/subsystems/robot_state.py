@@ -120,6 +120,9 @@ class RobotState(commands2.Subsystem):
         for callback in self._callbacks:
             callback(self.target, self.side)
 
+    # The @property decorator lets us use `robot_state.reef_goal` as if it were a
+    # simple variable, while still running this function to get the value.
+    # It's a "getter" that looks like a variable.
     @property
     def reef_goal(self):
         return self._reef_goal
@@ -127,6 +130,8 @@ class RobotState(commands2.Subsystem):
     @reef_goal.setter
     def reef_goal(self, new_goal: ReefGoal):
         self._reef_goal = new_goal
+        # This setter allows us to run extra logic (like printing and publishing to NT)
+        # whenever `robot_state.reef_goal = ...` is assigned.
         print(f'ReefGoal set to {self._reef_goal.value["name"]} at {Timer.getFPGATimestamp():.1f}s')
         self.reef_goal_pub.set(self._reef_goal.value['name'])
 
@@ -143,9 +148,12 @@ class RobotState(commands2.Subsystem):
     @property
     def target(self):
         return self._target
-
+    
     @target.setter
     def target(self, new_target: Target):
+        # getattr() is a safe way to get an attribute. If `self._target` doesn't exist
+        # on the first run, it will use `self.Target.NONE` as a default value
+        # instead of crashing.
         self.prev_target = getattr(self, '_target', self.Target.NONE)
         self._target = new_target
         self._notify_callbacks()  # Call all registered callbacks

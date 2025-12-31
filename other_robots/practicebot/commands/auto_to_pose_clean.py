@@ -105,10 +105,19 @@ class AutoToPoseClean(commands2.Command):  #
 
         # if we want to run this on the fly, we need to pass it a pose
         if self.nearest:
+            # this is currently too convoluted.  figures out where we are, then asks for the nearest tag to that goal
+            # then it figures out what the robot's goal position is for that tag, but only for blue
+            # then it flips the pose if we're red.  this definitely needs to be simplified into a single get_goal pose
+            # basically because good stuff was intended in robotstate and then not used
             current_pose = self.container.swerve.get_pose()
-            nearest_tag = get_nearest_tag(current_pose=current_pose, destination='reef')
-            self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
+            nearest_tag = get_nearest_tag(current_pose=current_pose, destination='reef')  # tage pose returned
+            self.container.robot_state.set_reef_goal_by_tag(nearest_tag)  # blue reef location returned
+
             self.target_pose = self.container.robot_state.reef_goal_pose
+
+            if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+                self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2),rot=Rotation2d(math.pi))
+
         elif self.from_robot_state:
             self.target_pose = self.container.robot_state.reef_goal_pose
         elif self.use_vision:
@@ -125,9 +134,6 @@ class AutoToPoseClean(commands2.Command):  #
 
         else:
             self.target_pose = self.original_target_pose
-
-        if wpilib.DriverStation.getAlliance()  == wpilib.DriverStation.Alliance.kRed and not self.use_vision:
-            self.target_pose = self.target_pose.rotateAround(point=Translation2d(17.548 / 2, 8.062 / 2), rot=Rotation2d(math.pi))
 
         if self.control_type == 'pathplanner':
             self.target_state.pose = self.target_pose  # set the pose of the target state

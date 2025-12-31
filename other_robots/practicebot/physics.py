@@ -6,6 +6,7 @@ import ntcore
 
 from robot import MyRobot
 import constants
+from simulation import sim_utils
 from simulation.swerve_sim import SwerveSim
 from simulation.gamepiece_sim import GamepieceSim
 from simulation.vision_sim import VisionSim
@@ -66,7 +67,8 @@ class PhysicsEngine:
         self.gamepiece_sim.update(robot_pose)
         
         # Update Vision
-        self.vision_sim.update(robot_pose, self.gamepiece_sim.get_active_gamepieces())
+        active_gamepieces = self.gamepiece_sim.get_active_gamepieces()
+        self.vision_sim.update(robot_pose, active_gamepieces)
         
         # Update Field2d
         self.field.setRobotPose(robot_pose)

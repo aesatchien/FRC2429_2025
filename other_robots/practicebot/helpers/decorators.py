@@ -16,13 +16,18 @@ def deprecated(reason):
     A decorator to mark a class or function as deprecated.
     Emits a warning when the class is instantiated or function is called.
     """
+    # This is the outer function that takes the reason string.
     def decorator(cls_or_func):
+        # This is the actual decorator that wraps the class or function.
         if isinstance(cls_or_func, type):
             # It's a class
             orig_init = cls_or_func.__init__
 
+            # @functools.wraps preserves the original function's name and docstring.
             @functools.wraps(orig_init)
             def new_init(self, *args, **kwargs):
+                # stacklevel=2 makes the warning point to the code that *called*
+                # the deprecated class, not to this line in the decorator.
                 warnings.warn(
                     f"{cls_or_func.__name__} is deprecated: {reason}",
                     DeprecationWarning,
@@ -34,6 +39,7 @@ def deprecated(reason):
             return cls_or_func
         else:
             # It's a function
+            # @functools.wraps preserves the original function's name and docstring.
             @functools.wraps(cls_or_func)
             def wrapper(*args, **kwargs):
                 warnings.warn(
@@ -73,6 +79,7 @@ def log_command(cls=None, *, console=True, nt=False, print_init=True, print_end=
     """
 
     def _process_class(cls_inner):
+        # This is the core function that modifies the class.
         # Capture original methods
         orig_init = getattr(cls_inner, "initialize", lambda self: None)
         orig_end = getattr(cls_inner, "end", lambda self, interrupted: None)
@@ -142,12 +149,13 @@ def log_command(cls=None, *, console=True, nt=False, print_init=True, print_end=
     # Handle usage
     if cls is None:
         # Case: @log_command(console=...)
-        # 'cls' is None because we were called as a function.
+        # 'cls' is None because the decorator was called with parentheses.
         # Return the wrapper function; Python will pass the class to it next.
         return _process_class
     elif isinstance(cls, type):
         # Case: @log_command (no parentheses)
-        # 'cls' is the actual class. Process it immediately and return the modified class.
+        # 'cls' is the actual class because the decorator was used without parentheses.
+        # Process it immediately and return the modified class.
         return _process_class(cls)
     else:
         # Case: @log_command(True) - User passed a positional arg which got assigned to cls

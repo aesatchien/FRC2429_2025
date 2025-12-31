@@ -160,8 +160,14 @@ class RobotContainer:
         FAKE_COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePivotUp', 'MovePivotDown',
             'MoveWristUp', 'MoveWristDown', 'IntakeOn', 'IntakeOff', 'IntakeReverse', 'MoveClimberDown',
             'MoveClimberUp', 'GoToStow', 'GoToL1', 'GoToL2', 'GoToL3', 'GoToL4', 'CanStatus', 'ResetFlex',
-            'CalElevatorUp', 'CalElevatorDown', 'RecalWrist', 'CalWristUp', 'CalWristDown','GyroReset']
-        for cmd in FAKE_COMMAND_LIST:  # note the use of the 'default argument hack' - by the time you press a button, the loop had finished
+            'CalElevatorUp', 'CalElevatorDown', 'RecalWrist', 'CalWristUp', 'CalWristDown', 'GyroReset']
+        for cmd in FAKE_COMMAND_LIST:
+            # The `lambda cmd=cmd:` is a common Python technique called the "default argument hack".
+            # Lambdas in loops have "late binding," meaning they capture the variable `cmd`, not its value.
+            # Without `cmd=cmd`, EVERY button would print the LAST value of `cmd` ('GyroReset')
+            # because that's what `cmd` is when the loop finishes.
+            # By setting `cmd=cmd` as a default argument, we force the lambda to capture
+            # the *current* value of `cmd` during each iteration of the loop.
             wpilib.SmartDashboard.putData(f'{command_prefix}/{cmd}', commands2.InstantCommand(lambda cmd=cmd: print(f'Called {cmd} at {self.timer.get():.1f}'))
                                           .alongWith(commands2.WaitCommand(2)).ignoringDisable(True))
 
@@ -171,6 +177,8 @@ class RobotContainer:
         self.score_test_chooser = wpilib.SendableChooser()
         [self.score_test_chooser.addOption(key, value) for key, value in self.robot_state.targets_dict.items()]  # add all the indicators
         self.score_test_chooser.onChange(
+            # `setattr` is the programmatic way to set an attribute. It's equivalent to
+            # `self.robot_state.target = selected_value`, but can be used inside a lambda.
             listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
                 commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'target', selected_value))))
         wpilib.SmartDashboard.putData(f'{command_prefix}/RobotScoringMode', self.score_test_chooser)

@@ -325,6 +325,9 @@ class Swerve (Subsystem):
                     use_tag = False if self.gyro.getRate() > 90 else use_tag  # no more than n degrees per second turning if using a tag
 
                     if use_tag:
+                        # Standard deviations tell the pose estimator how much to "trust" this measurement.
+                        # Smaller numbers = more trust. We trust vision more when disabled and stationary.
+                        # Units are (x_meters, y_meters, rotation_radians).
                         sdevs = constants.DrivetrainConstants.k_pose_stdevs_large if DriverStation.isEnabled() else constants.DrivetrainConstants.k_pose_stdevs_disabled
                         self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], sdevs)
 
