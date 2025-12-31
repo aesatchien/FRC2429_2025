@@ -33,10 +33,11 @@ quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an extern
 fov = 45 #  sim testing fov, no effect on real robot yet
 
 k_practicebot_cameras = {
-    'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags', 'rotation':-90, 'fov': fov},
-    'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags', 'rotation':180, 'fov': fov},
-    'logitech_reef': {'topic_name': 'LogitechReef', 'type': 'tags', 'rotation':0, 'fov': fov},
-    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'hsv', 'label': 'orange', 'rotation':0, 'fov': fov},}
+    'logi_left': {'topic_name': 'LogiTechLeft', 'type': 'tags', 'rotation':-90, 'fov': fov},
+    'logi_left_hsv': {'topic_name': 'LogiTechLeft', 'type': 'hsv', 'rotation':-90, 'fov': fov},
+    'logi_front': {'topic_name': 'LogiTechFront', 'type': 'tags', 'rotation': 0, 'fov': fov},
+    'logi_front_hsv': {'topic_name': 'LogiTechFront', 'type': 'hsv', 'rotation': 0, 'fov': fov},
+}
 
 k_sim_cameras = {
     'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags', 'rotation':-90, 'fov': fov},
@@ -45,7 +46,7 @@ k_sim_cameras = {
     'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'hsv', 'label': 'orange', 'rotation':0, 'fov': fov},
     'arducam_high': {'topic_name': 'ArducamHigh', 'type': 'tags', 'rotation':90, 'fov': fov},}
 
-k_cameras = k_sim_cameras
+k_cameras = k_practicebot_cameras
 
 # systems inside/from the robot
 status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status message

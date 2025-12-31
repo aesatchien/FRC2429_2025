@@ -73,32 +73,58 @@ COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePi
 # this config will be used to bind the NT topics to entries we can use later
 # todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
 CAMERA_BASE_CONFIG = {
-    'genius_low': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
-                   'BASE_TOPIC': 'GeniusLow',
-                  'NICKNAME': 'GENIUS LO',
+    'logitech_left': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+                   'BASE_TOPIC': 'LogitechLeft',
+                  'NICKNAME': 'LEFT TAGS',
                   'INDICATOR_INDEX': 0},
-    'arducam_back': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
-                    'BASE_TOPIC': 'ArducamBack',
-                    'NICKNAME': 'ARDU BACK',
+    'logitech_left_hsv': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+                    'BASE_TOPIC': 'LogitechLeft',
+                    'NICKNAME': 'LEFT HSV',
                   'INDICATOR_INDEX': 1},
-    'logitech_reef': {'URL': 'http://10.24.29.13:1186/stream.mjpg',
-                   'BASE_TOPIC': 'LogitechReef',
-                     'NICKNAME': 'LOGI REEF',
+    'logitech_front': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
+                   'BASE_TOPIC': 'LogitechFront',
+                     'NICKNAME': 'FRONT TAGS',
                       'INDICATOR_INDEX': 2},
-    'logitech_reef_hsv': {'URL': 'http://10.24.29.13:1186/stream.mjpg',  # has no index, so no duplicate heartbeat
-                   'BASE_TOPIC': 'LogitechReef',
-                     'NICKNAME': 'LOGI HSV',
-                      'TARGET_INDICATOR_NAME': 'qlabel_hsv_target_indicator'},  # has custom target indicator
-    'arducam_high': {'URL': 'http://10.24.29.13:1187/stream.mjpg',
-                   'BASE_TOPIC': 'ArducamHigh',
-                    'NICKNAME': 'ARDU HI',
+    'logitech_front_hsv': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
+                   'BASE_TOPIC': 'LogitechFront',
+                    'NICKNAME': 'FRONT HSV',
                     'INDICATOR_INDEX': 3},
-    'Raw genius_low': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
-    'Raw arducam_back': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
-    'Raw logitech_reef': {'URL': 'http://10.24.29.13:1181/stream.mjpg', 'skip':True},
-    'Raw arducam_high': {'URL': 'http://10.24.29.13:1182/stream.mjpg', 'skip':True},
+    'test_hsv': {'URL': 'http://10.24.29.13:1186/stream.mjpg',  # has no index, so no duplicate heartbeat
+                           'BASE_TOPIC': 'LogitechReef',
+                           'NICKNAME': 'TBD HSV',
+                           'TARGET_INDICATOR_NAME': 'qlabel_hsv_target_indicator'},  # has custom target indicator
+    'Raw logitech_left': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
+    'Raw logitech_front': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
+
     'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg', 'skip':True},
 }
+# CAMERA_BASE_CONFIG = {
+#     'genius_low': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+#                    'BASE_TOPIC': 'GeniusLow',
+#                   'NICKNAME': 'GENIUS LO',
+#                   'INDICATOR_INDEX': 0},
+#     'arducam_back': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
+#                     'BASE_TOPIC': 'ArducamBack',
+#                     'NICKNAME': 'ARDU BACK',
+#                   'INDICATOR_INDEX': 1},
+#     'logitech_reef': {'URL': 'http://10.24.29.13:1186/stream.mjpg',
+#                    'BASE_TOPIC': 'LogitechReef',
+#                      'NICKNAME': 'LOGI REEF',
+#                       'INDICATOR_INDEX': 2},
+#     'logitech_reef_hsv': {'URL': 'http://10.24.29.13:1186/stream.mjpg',  # has no index, so no duplicate heartbeat
+#                    'BASE_TOPIC': 'LogitechReef',
+#                      'NICKNAME': 'LOGI HSV',
+#                       'TARGET_INDICATOR_NAME': 'qlabel_hsv_target_indicator'},  # has custom target indicator
+#     'arducam_high': {'URL': 'http://10.24.29.13:1187/stream.mjpg',
+#                    'BASE_TOPIC': 'ArducamHigh',
+#                     'NICKNAME': 'ARDU HI',
+#                     'INDICATOR_INDEX': 3},
+#     'Raw genius_low': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
+#     'Raw arducam_back': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
+#     'Raw logitech_reef': {'URL': 'http://10.24.29.13:1181/stream.mjpg', 'skip':True},
+#     'Raw arducam_high': {'URL': 'http://10.24.29.13:1182/stream.mjpg', 'skip':True},
+#     'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg', 'skip':True},
+# }
 
 # Add timestamp topics, connection topics, and set indicators if not provided above
 # This is so i don't have to redo the camera indicators all the time below - just change the camera names and go home

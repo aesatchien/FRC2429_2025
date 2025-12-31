@@ -199,8 +199,8 @@ class RobotContainer:
         # test a setting of the swerve modules straight before running the auto to tag
         # self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
         # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
-        self.triggerA.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, control_type='not_pathplanner'))
-        self.triggerRB.debounce(0.1).whileTrue(AutoToPose(self, self.swerve, target_pose=None, use_vision=True, control_type='not_pathplanner'))
+        self.triggerA.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_front_hsv'], control_type='not_pathplanner'))
+        self.triggerRB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_front_hsv','logi_left_hsv'], control_type='not_pathplanner'))
         self.triggerLB.whileTrue(SimShowFOV(self))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right

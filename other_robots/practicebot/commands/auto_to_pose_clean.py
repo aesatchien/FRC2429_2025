@@ -21,8 +21,8 @@ from helpers.utilities import get_nearest_tag
 @log_command(console=True, nt=False, print_init=True, print_end=True)
 class AutoToPoseClean(commands2.Command):  #
 
-    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, use_vision=False, nearest=False, 
-                 from_robot_state=False, control_type='not_pathplanner', indent=0) -> None:
+    def __init__(self, container, swerve: Swerve, target_pose: Pose2d, use_vision=False, cameras=None,
+                 nearest=False, from_robot_state=False, control_type='not_pathplanner', indent=0) -> None:
         """
         if nearest, it overrides target_pose
         """
@@ -37,6 +37,7 @@ class AutoToPoseClean(commands2.Command):  #
         self.from_robot_state = from_robot_state  # I don't know why this is here
         self.nearest = nearest  # only use nearest tags as the target
         self.use_vision = use_vision  # use the cameras to tell us where to go
+        self.cameras = cameras  # which cameras to use
         self.print_debug = True
 
         # CJH added a slew rate limiter 20250323 - it jolts and browns out the robot if it servos to full speed
@@ -124,7 +125,8 @@ class AutoToPoseClean(commands2.Command):  #
         elif self.use_vision:
             # use the vision subsystem to take us to our goal
             current_pose = self.container.swerve.get_pose()
-            relative_pose = self.container.vision.nearest_to_cam('logitech_reef_hsv')
+            relative_pose = self.container.vision.nearest_to_robot(self.cameras)
+
             if relative_pose is not None:
                 rel_tf = Transform2d(relative_pose.translation(), relative_pose.rotation())
                 self.target_pose = current_pose.transformBy(rel_tf)
