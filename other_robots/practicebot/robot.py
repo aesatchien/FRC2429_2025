@@ -58,7 +58,7 @@ class MyRobot(commands2.TimedCommandRobot):
             # TODO: make this robust
             if ( wpilib.Timer.getFPGATimestamp() > 10 and
                     not self.container.questnav.quest_has_synched and
-                    (self.container.swerve.count_subscribers[3]).get() > 0):
+                    (self.container.swerve.count_subscribers[1]).get() > 0):
                 self.container.swerve.questnav.quest_sync_odometry()  # this will mark that we have synched
             if wpilib.RobotBase.isReal() or wpilib.RobotBase.isSimulation():  # redundant to show we covered both cases
                 pass

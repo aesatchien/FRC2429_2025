@@ -33,10 +33,10 @@ quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an extern
 fov = 45 #  sim testing fov, no effect on real robot yet
 
 k_practicebot_cameras = {
-    'logi_left': {'topic_name': 'LogiTechLeft', 'type': 'tags', 'rotation':-90, 'fov': fov},
-    'logi_left_hsv': {'topic_name': 'LogiTechLeft', 'type': 'hsv', 'rotation':-90, 'fov': fov},
-    'logi_front': {'topic_name': 'LogiTechFront', 'type': 'tags', 'rotation': 0, 'fov': fov},
-    'logi_front_hsv': {'topic_name': 'LogiTechFront', 'type': 'hsv', 'rotation': 0, 'fov': fov},
+    'logi_left': {'topic_name': 'LogitechLeft', 'type': 'tags', 'rotation': 90, 'fov': fov},
+    'logi_left_hsv': {'topic_name': 'LogitechLeft', 'type': 'hsv', 'label': 'yellow', 'rotation': 90, 'fov': fov},
+    'logi_front': {'topic_name': 'LogitechFront', 'type': 'tags', 'rotation': 0, 'fov': fov},
+    'logi_front_hsv': {'topic_name': 'LogitechFront', 'type': 'hsv', 'label': 'yellow','rotation': 0, 'fov': fov},
 }
 
 k_sim_cameras = {
