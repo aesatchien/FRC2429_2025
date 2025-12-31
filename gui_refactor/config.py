@@ -73,19 +73,19 @@ COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePi
 # this config will be used to bind the NT topics to entries we can use later
 # todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
 CAMERA_BASE_CONFIG = {
-    'logitech_left': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+    'logi_left': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
                    'BASE_TOPIC': 'LogitechLeft',
                   'NICKNAME': 'LEFT TAGS',
                   'INDICATOR_INDEX': 0},
-    'logitech_left_hsv': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+    'logi_left_hsv': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
                     'BASE_TOPIC': 'LogitechLeft',
                     'NICKNAME': 'LEFT HSV',
                   'INDICATOR_INDEX': 1},
-    'logitech_front': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
+    'logi_front': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
                    'BASE_TOPIC': 'LogitechFront',
                      'NICKNAME': 'FRONT TAGS',
                       'INDICATOR_INDEX': 2},
-    'logitech_front_hsv': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
+    'logi_front_hsv': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
                    'BASE_TOPIC': 'LogitechFront',
                     'NICKNAME': 'FRONT HSV',
                     'INDICATOR_INDEX': 3},

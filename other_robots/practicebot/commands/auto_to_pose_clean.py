@@ -193,8 +193,7 @@ class AutoToPoseClean(commands2.Command):  #
         # let the robot know what we're up to
         self.container.led.set_indicator(Led.Indicator.kPOLKA)
 
-        if wpilib.RobotBase.isSimulation():
-            self.auto_active_pub.set(True)
+        self.auto_active_pub.set(True)
 
         self.extra_log_info = f'target {self.target_pose}'
 

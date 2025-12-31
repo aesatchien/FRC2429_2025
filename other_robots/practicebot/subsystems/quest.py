@@ -232,6 +232,7 @@ class Questnav(SubsystemBase):
             # poses used in gui and advantagescope
             self.quest_pose_pub.set(self.quest_pose)
             self.pose_pub.set([self.quest_pose.X(), self.quest_pose.Y(), self.quest_pose.rotation().degrees()])  # legacy GUI version
+            #self.pose_pub.set([1,2,3])  # legacy GUI version
 
             self.quest_accepted_pub.set(self.quest_pose_accepted)  # GUI uses as VALID
             self.quest_connected_pub.set(self.questnav.is_connected())  # GUI uses as heartbeat
