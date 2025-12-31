@@ -172,7 +172,7 @@ class RobotContainer:
         [self.score_test_chooser.addOption(key, value) for key, value in self.robot_state.targets_dict.items()]  # add all the indicators
         self.score_test_chooser.onChange(
             listener=lambda selected_value: commands2.CommandScheduler.getInstance().schedule(
-                commands2.cmd.runOnce(lambda: self.robot_state.set_target(target=selected_value))))
+                commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'target', selected_value))))
         wpilib.SmartDashboard.putData(f'{command_prefix}/RobotScoringMode', self.score_test_chooser)
 
         # self.auto_chooser = AutoBuilder.buildAutoChooser('')  # this loops through the path planner deploy directory
@@ -196,8 +196,8 @@ class RobotContainer:
         self.triggerLB.whileTrue(SimShowFOV(self))
 
         # giving AJ buttons to hold for driving to a goal on the left and on the right
-        self.triggerB.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)))
-        self.triggerX.onTrue(commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.LEFT)))
+        self.triggerB.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.RIGHT)))
+        self.triggerX.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.LEFT)))
 
         #self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=False, location='right'))
         #self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=True, location='left'))
@@ -222,7 +222,7 @@ class RobotContainer:
 
     def register_commands(self):
         # this is for PathPlanner, so it can call our commands
-        NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: self.robot_state.set_side(side=RobotState.Side.RIGHT)).ignoringDisable(True))
+        NamedCommands.registerCommand('robot state left', commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.RIGHT)).ignoringDisable(True))
 
 
     def get_autonomous_command(self):

@@ -48,7 +48,7 @@ class Vision(SubsystemBase):
         # Explicit mapping of camera keys to NetworkTable paths
         for key, config in constants.k_cameras.items():
             cam_name = config['topic_name']
-            cam_type = config['type']
+            cam_type = config.get('label', config['type'])
             table_path = f"{constants.camera_prefix}/{cam_name}"
             base_topic = f"{table_path}/{cam_type}"
 

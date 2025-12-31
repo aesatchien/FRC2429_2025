@@ -1,20 +1,17 @@
+# constants for the 2024 robot
 import math
-import rev
-import robotpy_apriltag
 import wpilib
- 
+import rev
 from rev import ClosedLoopSlot, SparkClosedLoopController, SparkFlexConfig, SparkMax, SparkMaxConfig
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d, Transform2d
 from wpimath.units import inchesToMeters, lbsToKilograms
-from wpimath.system.plant import DCMotor
-from wpilib.simulation import SingleJointedArmSim
-from subsystems.swerve_constants import DriveConstants
+
 
 # TODO - organize this better
 k_enable_logging = False  # allow logging from Advantagescope (in swerve.py), but really we may as well start it here
 
-# starting position for odometry
-k_start_x, k_start_y  = 0, 0
+# starting position for odometry (real and in sim)
+k_start_x, k_start_y  = 2, 2
 
 # ------------  joysticks and other input ------------
 k_driver_controller_port = 0
@@ -33,15 +30,22 @@ quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an extern
 # If one physical camera does both, we treat it as two cameras but with the same topic
 # ordering is nice to align with the IP and order they are on the pis, but not required
 # rotation angle is CCW positive from the front of the robot
-fov = 45 #  sim testing fov
-cam_distance_limit = 4  # sim testing how far targets can be
-k_cameras = {
+fov = 45 #  sim testing fov, no effect on real robot yet
+
+k_practicebot_cameras = {
     'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags', 'rotation':-90, 'fov': fov},
     'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags', 'rotation':180, 'fov': fov},
     'logitech_reef': {'topic_name': 'LogitechReef', 'type': 'tags', 'rotation':0, 'fov': fov},
-    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'orange', 'rotation':0, 'fov': fov},
-    'arducam_high': {'topic_name': 'ArducamHigh', 'type': 'tags', 'rotation':90, 'fov': fov},
-}
+    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'hsv', 'label': 'orange', 'rotation':0, 'fov': fov},}
+
+k_sim_cameras = {
+    'genius_low': {'topic_name': 'GeniusLow', 'type': 'tags', 'rotation':-90, 'fov': fov},
+    'arducam_back': {'topic_name': 'ArducamBack', 'type': 'tags', 'rotation':180, 'fov': fov},
+    'logitech_reef': {'topic_name': 'LogitechReef', 'type': 'tags', 'rotation':0, 'fov': fov},
+    'logitech_reef_hsv': {'topic_name': 'LogitechReef', 'type': 'hsv', 'label': 'orange', 'rotation':0, 'fov': fov},
+    'arducam_high': {'topic_name': 'ArducamHigh', 'type': 'tags', 'rotation':90, 'fov': fov},}
+
+k_cameras = k_sim_cameras
 
 # systems inside/from the robot
 status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status message
@@ -61,67 +65,14 @@ k_swerve_rate_limited = True
 k_field_oriented = True  # is there any reason for this at all?
 
 
-
-# TODO - this whole apriltag section belongs somewhere else - maybe in helpers/utilities.py
-# ----------   APRILTAG HELPERS  -----------
-# Load the AprilTag field layout
-layout = robotpy_apriltag.AprilTagFieldLayout.loadField(robotpy_apriltag.AprilTagField.k2025ReefscapeWelded)
-
-# Dictionary to store robot poses
-k_useful_robot_poses_blue = {}
-# Tag-to-branch name mapping
-branch_names = ["cd", "ab", "kl", "ij", "gh", "ef"]
-
-# Store tag positions for plotting
-tag_positions = {}
-
-# Compute useful robot poses
-for tag_id in range(17, 23):
-    branch_name_idx = tag_id - 17
-
-    this_face_tag_pose = layout.getTagPose(tag_id)
-
-    if this_face_tag_pose:
-        # Get the tag's position and rotation
-        tag_translation = this_face_tag_pose.translation().toTranslation2d()
-        tag_yaw = Rotation2d(this_face_tag_pose.rotation().Z())
-
-        # Store the tag position for plotting
-        tag_positions[tag_id] = (tag_translation.X(), tag_translation.Y())
-
-        # Compute robot rotation and offsets
-        robot_rotation = tag_yaw + Rotation2d(math.radians(-90))  # CJH changed this to get new orientation right
-        # imagine the tag is at the origin facing in +x. this is your reference frame for these offsets.
-        # see ../resources/plots/useful_robot_locations.ipynb
-        coral_center_offset = 0.0  # the center of the arm is not the center of the robot - this is in y because we rotated 90
-        x_offset = 0.47 # how far back from the tag the center of the robot should be - DEFINITELY POSITIVE
-        right_y_offset = 0.15  # POSITIVE  - because of tag yaw we have to add the right  was 0.19 on 20251006 - CJH changed to 0.15
-        left_y_offset = 0.17  # POSITIVE  - because of tag yaw we have to subtract the left below
-        robot_offset_left = Translation2d(x_offset, -left_y_offset - coral_center_offset).rotateBy(tag_yaw)
-        robot_offset_right = Translation2d(x_offset - coral_center_offset, +right_y_offset - coral_center_offset).rotateBy(tag_yaw)
-
-        # Compute robot positions
-        left_branch_position = tag_translation + robot_offset_left
-        right_branch_position = tag_translation + robot_offset_right
-
-        # Get branch names
-        left_branch_name = branch_names[branch_name_idx][0]
-        right_branch_name = branch_names[branch_name_idx][1]
-
-        # Store poses
-        k_useful_robot_poses_blue[left_branch_name] = Pose2d(left_branch_position, robot_rotation)
-        k_useful_robot_poses_blue[right_branch_name] = Pose2d(right_branch_position, robot_rotation)
-
-        # print(f'tag:{tag_id}: Trans: {tag_translation}  Theta: {tag_yaw}')  # CJH trying to debug this stuff - this is correct
-        # print(f'tag:{tag_id}:  rot: {robot_rotation.degrees():.1f} R: {k_useful_robot_poses_blue[right_branch_name]}  L: {k_useful_robot_poses_blue[left_branch_name] }')
-
-# ----------   END APRILTAG HELPERS  -----------
-
-
 class SimConstants:
     k_counter_offset = 1
+    k_cam_distance_limit = 4  # sim testing how far targets can be
 
     k_print_config = True  # use for debugging the camera config
+    k_draw_camera_fovs = True  # Set to True to draw camera FOV triangles - should always want this
+    k_disable_vision = False  # Set to True to disable vision simulation (e.g. when using real coprocessors)
+    k_do_blink_test = False  # Set to True to test dashboard connection handling (dropping camera connections)
 
 
 class VisionConstants:
@@ -133,6 +84,7 @@ class VisionConstants:
     k_valid_tags = list(range(1, 23))
 
     k_print_config = True  # use for debugging the camera config
+
 
 class QuestConstants:
     k_counter_offset = 3

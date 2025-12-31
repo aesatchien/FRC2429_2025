@@ -210,7 +210,7 @@ class Led(commands2.Subsystem):
 
             else:  # Handle mode-only LEDs - they do not toggle
                 # thinking of using the target state to light the robot
-                lit_leds = self.robot_state.get_target().value['lit_leds']
+                lit_leds = self.robot_state.target.value['lit_leds']
                 if lit_leds == constants.LedConstants.k_led_count:
                     self.set_leds(self.mode.value["on_color"])
                 else:  # target dependent LED states:

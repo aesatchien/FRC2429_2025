@@ -40,13 +40,14 @@ class PhysicsEngine:
     def _init_networktables(self):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         sim_prefix = constants.sim_prefix
+        auto_sim_prefix = sim_prefix + '/AUTO'
 
         # ground truth Publisher for Simulating Sensors
         self.ground_truth_pub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).publish()
 
         # Ghost Robot Subscribers - used for tracking goals in auto
-        self.auto_active_sub = self.inst.getBooleanTopic(f"{sim_prefix}/robot_in_auto").subscribe(False)
-        self.goal_pose_sub = self.inst.getStructTopic(f"{sim_prefix}/goal_pose", Pose2d).subscribe(Pose2d())
+        self.auto_active_sub = self.inst.getBooleanTopic(f"{auto_sim_prefix}/robot_in_auto").subscribe(False)
+        self.goal_pose_sub = self.inst.getStructTopic(f"{auto_sim_prefix}/goal_pose", Pose2d).subscribe(Pose2d())
 
     def update_sim(self, now, tm_diff):
 

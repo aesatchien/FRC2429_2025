@@ -69,9 +69,9 @@ class AutoToPose(commands2.Command):  #
             current_pose = self.container.swerve.get_pose()
             nearest_tag = get_nearest_tag(current_pose=current_pose, destination='reef')
             self.container.robot_state.set_reef_goal_by_tag(nearest_tag)
-            self.target_pose = self.container.robot_state.get_reef_goal_pose()
+            self.target_pose = self.container.robot_state.reef_goal_pose
         elif self.from_robot_state:
-            self.target_pose = self.container.robot_state.get_reef_goal_pose()
+            self.target_pose = self.container.robot_state.reef_goal_pose
         elif self.use_vision:
             # use the vision subsystem to take us to our goal
             current_pose = self.container.swerve.get_pose()
