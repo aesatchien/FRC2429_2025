@@ -151,7 +151,9 @@ for key, value in CAMERA_BASE_CONFIG.items():
 WIDGET_CONFIG = {
     # GUI UPDATES - NEED THIS PART FOR EVERY YEAR  - AT THE MOMENT I AM LEAVING A FEW OF THEM AS THE BASE PREFIX
     'drive_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': f'{swerve_prefix}/drive_pose', 'update_style': 'pose'},
-    'ghost_pose': {'widget_name': 'qlabel_pose_indicator', 'nt_topic': f'{auto_prefix}/goal_pose', 'update_style': 'pose', 'visible_topic':f'{auto_prefix}/robot_in_auto'},
+    'ghost_pose': {'widget_name': 'qlabel_ghost', 'nt_topic': f'{auto_prefix}/goal_pose', 'update_style': 'pose', 'visible_topic': f'{auto_prefix}/robot_in_auto'},
+    'target_pose': {'widget_name': 'qlabel_target', 'nt_topic': f'{auto_prefix}/vision_target_poses', 'update_style': 'pose_array', 'visible_topic': f'{auto_prefix}/show_vision_targets'},
+
     'qcombobox_autonomous_routines': {'widget_name': 'qcombobox_autonomous_routines', 'nt_topic': rf'{base_prefix}/autonomous routines/options',
                                       'selected_topic': rf'{base_prefix}/autonomous routines/selected', 'update_style': 'combo'},
     'qlabel_nt_connected': {'widget_name': 'qlabel_nt_connected', 'update_style': 'connection'},

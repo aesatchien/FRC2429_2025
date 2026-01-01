@@ -200,19 +200,13 @@ class RobotContainer:
         # self.triggerA.whileTrue(commands2.cmd.run(lambda: self.swerve.set_straight(), self.swerve))
         # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
         self.triggerA.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_front_hsv'], control_type='not_pathplanner'))
-        self.triggerRB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_front_hsv','logi_left_hsv'], control_type='not_pathplanner'))
+        self.triggerX.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_left_hsv'], control_type='not_pathplanner'))
         self.triggerLB.whileTrue(SimShowFOV(self))
 
-        # giving AJ buttons to hold for driving to a goal on the left and on the right
-        self.triggerB.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.RIGHT)))
-        self.triggerX.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.LEFT)))
-
-        #self.triggerB.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=False, location='right'))
-        #self.triggerX.debounce(0.1).whileTrue(AutoStrafeToTag(container=self, swerve=self.swerve, hug_reef=True, location='left'))
-        self.triggerB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
-        self.triggerX.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False, control_type='not_pathplanner'))
-
-
+        if wpilib.RobotBase.isSimulation():
+            # reefscape stuff
+            self.triggerB.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.RIGHT)))
+            self.triggerB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125
@@ -221,8 +215,8 @@ class RobotContainer:
         self.triggerLeft.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, dpad_output, 0), timeout=10))
         self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
 
-        #self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
-        #self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
+        self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
+        self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
 
     def bind_codriver_buttons(self):
         print("Binding codriver buttons")

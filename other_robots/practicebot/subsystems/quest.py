@@ -25,7 +25,7 @@ class Questnav(SubsystemBase):
         self.quest_to_robot = constants.QuestConstants.quest_to_robot  # 10.50 -8.35
         # This is quest-centric coordinate. X is robot center position -8.35 inch as seen rom Quest. y is robot center -10.50 inches as seen from Quest
         # self.quest_to_robot = Transform2d(inchesToMeters(4), 0, Rotation2d().fromDegrees(0))
-        self.quest_field = Field2d()
+        # self.quest_field = Field2d()
 
         # ping the quest - it seems to respond to is_connected only after you get frames ~ 2s after we connect
         # and although the headset says it is connected to the sim, is_connected() stays False unless you get frames
@@ -37,7 +37,7 @@ class Questnav(SubsystemBase):
 
         # Simulation variables
         # Start with a large error to verify syncing works (e.g., Quest thinks world origin off by x=2, y=2)
-        self.sim_error = Pose2d(Translation2d(2, 2), Rotation2d.fromDegrees(30))
+        self.sim_offset_from_truth = Transform2d(Translation2d(2, 2), Rotation2d.fromDegrees(30))
         # random walk - using uniform distribution, so sigma step ~ a/sqrt(3) and in n steps magnitude is sqrt n * sigma step
         self.walk_xy = 0.005  # meters per loop, 0.005 per step at 50x/second should be 0.02 m/sec
         self.walk_deg = 0.1  # degrees per loop
@@ -95,16 +95,22 @@ class Questnav(SubsystemBase):
         
         # Put Field2d once (*** it updates itself internally ***)
         # TODO - this needs to be broadcast based on the prefixes in constants
-        SmartDashboard.putData("Quest/Field", self.quest_field)
+        # SmartDashboard.putData("Quest/Field", self.quest_field)
 
     def set_quest_pose(self, pose: Pose2d) -> None:
         # set the pose of the Questnav, transforming from robot center top questnav coordinate
         self.questnav.set_pose(Pose3d(pose.transformBy(self.quest_to_robot.inverse())))
         
         if wpilib.RobotBase.isSimulation() and not self.questnav.is_connected():
-            # In Sim, "setting the pose" means we are now synced to the ground truth
-            # Only force this if we aren't talking to a real Quest - which can happen in the sim
-            self.sim_error = Pose2d(Translation2d(0, 0), Rotation2d.fromDegrees(0))
+            # In Sim, calculate the error needed so that (Truth + Error) = TargetPose
+            # This allows us to "reset" the quest to a specific field location even if the robot isn't there
+            ground_truth = self.ground_truth_sub.get()
+            self.sim_offset_from_truth = Transform2d(
+                pose.X() - ground_truth.X(),
+                pose.Y() - ground_truth.Y(),
+                pose.rotation() - ground_truth.rotation()
+            )
+            print(f"Sim Quest Reset: Error reset to {self.sim_offset_from_truth.X():.2f}, {self.sim_offset_from_truth.Y():.2f}")
 
     def reset_pose_with_quest(self, pose: Pose2d) -> None:
         # this came over from swerve, maybe we don't need it anymore
@@ -113,34 +119,31 @@ class Questnav(SubsystemBase):
 
     def quest_reset_odometry(self) -> None:
         """Reset robot odometry at the Subwoofer."""
-        red_pose = Pose2d(14.337, 4.020, Rotation2d.fromDegrees(0))
-        blue_pose = Pose2d(3.273, 4.020, Rotation2d.fromDegrees(180))
+        red_pose = Pose2d(14.0, 4.00, Rotation2d.fromDegrees(0))
+        blue_pose = Pose2d(3., 4.00, Rotation2d.fromDegrees(180))
 
         if DriverStation.getAlliance() == DriverStation.Alliance.kRed:
             new_pose = red_pose
         else:
             new_pose = blue_pose
 
-        if wpilib.RobotBase.isReal() or self.questnav.is_connected():
-                self.set_quest_pose(new_pose)
-        else:
-            # put us back at the red/blue locations: find the pose error
-            self.sim_error = new_pose.relativeTo(self.ground_truth_sub.get())
-
-
+        self.set_quest_pose(new_pose)
         print(f"Reset questnav at {Timer.getFPGATimestamp():.1f}s")
         self.quest_unsync_odometry()
 
     def quest_sync_odometry(self) -> None:
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
         
-        # Efficiently get the pose from the subscriber (returns a Pose2d object)
-        self.set_quest_pose(self.drive_pose_sub.get())
         if wpilib.RobotBase.isSimulation() and not self.questnav.is_connected():
-            self.sim_error = Pose2d(0, 0, 0) # reset the quest's sim error
+            # In Sim, "Sync" means agree with Ground Truth (remove all drift/error)
+            self.set_quest_pose(self.ground_truth_sub.get())
+        else:
+            # In Real life, "Sync" means agree with the Robot's Odometry
+            # Although, really, the swerve sim is basically serving that same sim ground truth
+            self.set_quest_pose(self.drive_pose_sub.get())
 
         self.quest_synched_pub.set(self.quest_has_synched)
-        print(f'  synched quest to {self.quest_pose}\nusing               {self.drive_pose2d_sub.get()}')
+        print(f'  synched quest to {self.quest_pose}\nusing               {self.drive_pose_sub.get()}')
 
     def quest_unsync_odometry(self) -> None:
         self.quest_has_synched = False  # let the robot know we have been synched so we don't automatically do it again
@@ -204,24 +207,21 @@ class Questnav(SubsystemBase):
         else:  # simulate a pose read ground truth from sim and apply the current "drift/error" of the Quest
             
             # Add a random walk to the error to simulate drift
-            self.sim_error = Pose2d(
-                self.sim_error.X() + (random.random() - 0.5) * 2 * self.walk_xy,
-                self.sim_error.Y() + (random.random() - 0.5) * 2 * self.walk_xy,
-                Rotation2d.fromDegrees(self.sim_error.rotation().degrees() + (random.random() - 0.5) * 2 * self.walk_deg)
+            self.sim_offset_from_truth = Transform2d(
+                self.sim_offset_from_truth.X() + (random.random() - 0.5) * 2 * self.walk_xy,
+                self.sim_offset_from_truth.Y() + (random.random() - 0.5) * 2 * self.walk_xy,
+                Rotation2d.fromDegrees(self.sim_offset_from_truth.rotation().degrees() + (random.random() - 0.5) * 2 * self.walk_deg)
             )
 
             ground_truth:Pose2d = self.ground_truth_sub.get()
-            # Since we are giving it a field relative transform (not robot relative)
-            self.quest_pose = Pose2d(
-                ground_truth.translation() + self.sim_error.translation(),
-                ground_truth.rotation() + self.sim_error.rotation()
-            )
+            # Apply the offset (Transform) to the ground truth Pose
+            self.quest_pose = ground_truth.transformBy(self.sim_offset_from_truth)
 
         # does this belong here?  not sure what it's for - CJH
         # self.quest_pose = self.get_pose().transformBy(self.quest_to_robot)
 
         # why do we need more than one field?  does this get read by the quest itself
-        self.quest_field.setRobotPose(self.quest_pose)
+        # self.quest_field.setRobotPose(self.quest_pose)
 
         if self.counter % 10 == 0:
             if 0 < self.quest_pose.x < 17.658 and 0 < self.quest_pose.y < 8.131 and self.questnav.is_connected():
@@ -246,4 +246,3 @@ class Questnav(SubsystemBase):
         # ping the quest every few seconds in sim to check to get a connection to physical hardware
         if wpilib.RobotBase.isSimulation() and self.counter % 200 == 0 and not self.questnav.is_connected():
             self._ping_connection()
-

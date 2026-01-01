@@ -61,6 +61,29 @@ class Ui(QtWidgets.QMainWindow):
         # self.camera_enabled = False
         # self.thread = None
 
+        self.robot_pixmap = QtGui.QPixmap(str(self.png_dir / 'blockhead.png'))
+        self.quest_pixmap = QtGui.QPixmap(str(self.png_dir / 'quest.png'))
+        self.ghost_pixmap = QtGui.QPixmap(str(self.png_dir / 'ghost.png'))
+        self.target_pixmap = QtGui.QPixmap(str(self.png_dir / 'target.png'))
+        
+        # Create a pool of target widgets for the pose array (Original + 4 extras)
+        self.target_widgets = [self.qlabel_target]
+        for _ in range(4):
+            w = QtWidgets.QLabel(self.qgroupbox_field)
+            w.resize(41, 41)
+            w.setScaledContents(True)
+            w.hide()
+            self.target_widgets.append(w)
+
+        opacity_effect = QGraphicsOpacityEffect()
+        opacity_effect.setOpacity(0.5)
+        self.qlabel_quest.setGraphicsEffect(opacity_effect)
+
+        ghost_effect = QGraphicsOpacityEffect()
+        ghost_effect.setOpacity(0.5)
+        self.qlabel_ghost.setGraphicsEffect(ghost_effect)
+        self.qlabel_robot.raise_()
+
         # Build the runtime dictionaries from the static config
         self.widget_dict = self.build_widget_dict()
         self.camera_dict = self.build_camera_dict()
@@ -91,19 +114,6 @@ class Ui(QtWidgets.QMainWindow):
         self.qcombobox_autonomous_routines.currentTextChanged.connect(self.update_routines)
         self.qt_text_entry_filter.installEventFilter(self)
         self.qt_text_new_value.installEventFilter(self)
-
-        self.robot_pixmap = QtGui.QPixmap(str(self.png_dir / 'blockhead.png'))
-        self.quest_pixmap = QtGui.QPixmap(str(self.png_dir / 'quest.png'))
-        self.ghost_pixmap = QtGui.QPixmap(str(self.png_dir / 'ghost.png'))
-
-        opacity_effect = QGraphicsOpacityEffect()
-        opacity_effect.setOpacity(0.5)
-        self.qlabel_quest.setGraphicsEffect(opacity_effect)
-
-        ghost_effect = QGraphicsOpacityEffect()
-        ghost_effect.setOpacity(0.25)
-        self.qlabel_ghost.setGraphicsEffect(ghost_effect)
-        self.qlabel_robot.raise_()
 
         self.qt_button_swap_sim.clicked.connect(self.nt_manager.increment_server)
         self.qt_button_reconnect.clicked.connect(self.nt_manager.reconnect)
@@ -144,6 +154,10 @@ class Ui(QtWidgets.QMainWindow):
                     new_entry['subscriber'] = self.ntinst.getDoubleTopic(nt_topic).subscribe(0.0)
                 elif style == 'pose':
                     new_entry['subscriber'] = self.ntinst.getStructTopic(nt_topic, geo.Pose2d).subscribe(geo.Pose2d())
+                elif style == 'pose_array':
+                    new_entry['subscriber'] = self.ntinst.getStructArrayTopic(nt_topic, geo.Pose2d).subscribe([])
+                    if key == 'target_pose':
+                        new_entry['widgets'] = self.target_widgets
                 elif style == 'combo':
                     new_entry['subscriber'] = self.ntinst.getStringArrayTopic(nt_topic).subscribe([])
                 elif style == 'position':

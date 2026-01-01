@@ -218,20 +218,21 @@ class AutoToPoseClean(commands2.Command):  #
             # TODO optimize the last mile and have it gracefully not oscillate
             rot_max, rot_min = 0.5, 0.1
             trans_max, trans_min = 0.3, 0.1  # it browns out when you start if this is too high
-            diff_pose = robot_pose.relativeTo(self.target_pose)  # this is pretty much useless for x and y, only rotation
-            # this rotateby is important - otherwise you have x and y mixed up when pointed 90 degrees and using robot centric
-            diff_xy = diff_pose.rotateBy(-self.target_pose.rotation())  # now dX and dY should be correct if you use .X and .Y
-            diff_rot = diff_pose
-            # enforce minimum values , but try to stop oscillations  i.e. try to get us to overshoot but very gently
-            diff_x = self.target_pose.X() - robot_pose.X()  # x error
+            
+            # WPILib Way: Vector Math for Field-Centric Error
+            error_vector = self.target_pose.translation() - robot_pose.translation()
+            diff_x = error_vector.X()
+            diff_y = error_vector.Y()
+            
+            # Rotation Error (Handles wrapping automatically, e.g. 179 to -179 is 2 deg)
+            diff_radians = (self.target_pose.rotation() - robot_pose.rotation()).radians()
+
             if abs(diff_x) > abs(self.last_diff_x) and self.counter > 0:
                 self.x_overshot = True
             self.last_diff_x = diff_x
-            diff_y = self.target_pose.Y() - robot_pose.Y()  # y error
             if abs(diff_y) > abs(self.last_diff_y) and self.counter > 0:
                 self.y_overshot = True
             self.last_diff_y = diff_y
-            diff_radians = diff_rot.rotation().radians()  # rot error - could also use self.target_pose.rotation().radians() - robot_pose.rotation().radians()
             if abs(diff_radians) > abs(self.last_diff_radians) and self.counter > 0:
                 self.rot_overshot = True
             self.last_diff_radians = diff_radians
@@ -240,7 +241,7 @@ class AutoToPoseClean(commands2.Command):  #
                 x_output = math.copysign(trans_min, x_output)
             if abs(y_output) < trans_min and not self.y_overshot and abs(diff_y) > ac.k_translation_tolerance_meters:
                 y_output = math.copysign(trans_min, y_output)
-            if abs(rot_output) < rot_min and not self.rot_overshot and abs(diff_rot.rotation().degrees()) > ac.k_rotation_tolerance.degrees():
+            if abs(rot_output) < rot_min and not self.rot_overshot and abs(math.degrees(diff_radians)) > ac.k_rotation_tolerance.degrees():
                 rot_output = math.copysign(rot_min, rot_output)
             # enforce maximum values
             x_output = x_output if math.fabs(x_output) < trans_max else math.copysign(trans_max, x_output)
@@ -255,8 +256,8 @@ class AutoToPoseClean(commands2.Command):  #
             self.swerve.drive(x_output, y_output, rot_output, fieldRelative=True, rate_limited=False, keep_angle=False)
 
             # keep track of how long we've been good - allow to recover if we overshoot
-            rotation_achieved = abs(diff_pose.rotation().degrees()) < ac.k_rotation_tolerance.degrees()   # really push it - less than a degree
-            translation_achieved = diff_pose.translation().norm() < ac.k_translation_tolerance_meters   # get to within an inch total
+            rotation_achieved = abs(math.degrees(diff_radians)) < ac.k_rotation_tolerance.degrees()
+            translation_achieved = error_vector.norm() < ac.k_translation_tolerance_meters
             if rotation_achieved and translation_achieved:
                 self.tolerance_counter += 1
             else:
@@ -264,7 +265,7 @@ class AutoToPoseClean(commands2.Command):  #
 
             if self.counter % 10 == 0 and (wpilib.RobotBase.isSimulation() or self.print_debug):
                 msg = f'{self.counter:3d}  {diff_x:+.2f} {str(self.x_overshot):>5} {x_output:+.2f} | {diff_y:+.2f}  {str(self.y_overshot):>5} {y_output:+.2f} '
-                msg += f'| {diff_rot.rotation().degrees():>+6.1f}° {str(self.rot_overshot):>5} {rot_output:+.2f} | {self.tolerance_counter} '  # {diff_pose} {diff_xy}'
+                msg += f'| {math.degrees(diff_radians):>+6.1f}° {str(self.rot_overshot):>5} {rot_output:+.2f} | {self.tolerance_counter} '
                 print(msg)
                 
                 if wpilib.RobotBase.isSimulation():

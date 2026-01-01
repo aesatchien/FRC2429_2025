@@ -110,6 +110,32 @@ class UIUpdater:
         
         ghost_props['last_visible_value'] = is_visible
 
+        # Update Target Pose (Array)
+        target_props = self.ui.widget_dict['target_pose']
+        target_sub = target_props.get('subscriber')
+        visible_sub = target_props.get('visible_subscriber')
+        target_widgets = target_props.get('widgets', [self.ui.qlabel_target])
+
+        is_visible = visible_sub.get() if visible_sub else False
+
+        if is_visible and target_sub:
+            target_poses = target_sub.get() # List of Pose2d
+            if target_poses != target_props.get('last_value') or is_visible != target_props.get('last_visible_value'):
+                target_props['last_value'] = target_poses
+                for i, widget in enumerate(target_widgets):
+                    if i < len(target_poses):
+                        widget.show()
+                        self._update_pose_widget(widget, self.ui.target_pixmap, target_poses[i], field_dims)
+                    else:
+                        widget.hide()
+        else:
+            if target_props.get('last_visible_value') != False:
+                for widget in target_widgets:
+                    if widget.isVisible():
+                        widget.hide()
+
+        target_props['last_visible_value'] = is_visible
+
     def _update_camera_indicators(self):
         """Updates the status indicators for all cameras.
         We check the timestamp from the robot vs the timestamp coming back from the cameras"""

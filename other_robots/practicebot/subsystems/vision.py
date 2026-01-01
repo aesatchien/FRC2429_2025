@@ -2,7 +2,7 @@ import wpilib
 from commands2 import SubsystemBase
 from wpilib import SmartDashboard, DriverStation
 from ntcore import NetworkTableInstance
-from wpimath.geometry import Pose2d, Rotation2d
+from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 import math
 
 import constants
@@ -121,17 +121,20 @@ class Vision(SubsystemBase):
         # Rotation from NT is relative to camera mount
         nt_rot = self.get_rotation(camera_key)
         
-        # Angle relative to robot heading
-        angle_robot_relative_deg = nt_rot + cam_rot_deg
-        angle_robot_relative_rad = math.radians(angle_robot_relative_deg)
-        
-        # Calculate X and Y in robot frame (X is forward, Y is left)
-        x = dist * math.cos(angle_robot_relative_rad)
-        y = dist * math.sin(angle_robot_relative_rad)
+        # 1. Define where the camera is relative to the robot center
+        # TODO: Add x/y offsets to k_cameras so this is accurate!
+        camera_to_robot = Transform2d(Translation2d(0, 0), Rotation2d.fromDegrees(cam_rot_deg))
 
-        pose = Pose2d(x, y, Rotation2d.fromDegrees(angle_robot_relative_deg))
+        # 2. Define where the target is relative to the camera
+        # We assume the camera sees the target at 'dist' distance and 'nt_rot' angle
+        target_translation = Translation2d(dist, 0).rotateBy(Rotation2d.fromDegrees(nt_rot))
+        target_to_camera = Transform2d(target_translation, Rotation2d.fromDegrees(nt_rot))
 
-        print(f"Vision's nearest_to_cam returned {pose}")
+        # 3. Combine them: Robot -> Camera -> Target
+        # This creates a Pose2d representing the target in the Robot's coordinate frame
+        pose = Pose2d().transformBy(camera_to_robot).transformBy(target_to_camera)
+
+        # print(f"Vision's nearest_to_cam returned {pose}")
 
         return pose
 
