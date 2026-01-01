@@ -14,7 +14,7 @@ class SwerveSim:
         self.inst = ntcore.NetworkTableInstance.getDefault()
         
         # Swerve Debugging
-        self.target_angles_pub = self.inst.getDoubleArrayTopic(f"{constants.sim_prefix}/target_angles").publish()
+        self.target_angles_pub = self.inst.getDoubleArrayTopic(f"{constants.sim_prefix}/swerve_target_angles").publish()
         
         # Swerve Target Subscribers
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']

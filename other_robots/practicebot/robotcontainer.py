@@ -215,8 +215,8 @@ class RobotContainer:
         self.triggerLeft.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, dpad_output, 0), timeout=10))
         self.triggerRight.whileTrue(DriveByVelocitySwerve(self, self.swerve, Pose2d(0, -dpad_output, 0), timeout=10))
 
-        self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
-        self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
+        #self.triggerLB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=True, right_rumble=False, rumble_time=0.5))
+        #self.triggerRB.onTrue(RumbleCommand(container=self, rumble_amount=0.95, left_rumble=False, right_rumble=True, rumble_time=0.5))
 
     def bind_codriver_buttons(self):
         print("Binding codriver buttons")

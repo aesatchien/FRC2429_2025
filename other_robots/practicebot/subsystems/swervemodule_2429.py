@@ -64,7 +64,7 @@ class SwerveModule:
         reset_mode = SparkFlex.ResetMode.kResetSafeParameters  # always use a clean slate
         persist_mode = SparkFlex.PersistMode.kPersistParameters if constants.k_burn_flash else SparkFlex.PersistMode.kNoPersistParameters
         error = spark.configure(config=config, resetMode=reset_mode, persistMode=persist_mode)
-        print(f"Reconfigured sparkmax {can_id}. Controller status: {error}")
+        print(f"Reconfigured sparkmax {can_id} ({self.label}). Controller status: {error}")
 
     def get_turn_encoder(self):
         # how we invert the absolute encoder if necessary (which it probably isn't in the standard mk4i config)

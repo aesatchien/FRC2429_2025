@@ -30,8 +30,8 @@ class SimShowFOV(commands2.Command):  # change the name for your command
         }
         
         # Publishers for vision targets
-        self.targets_pub = self.inst.getStructArrayTopic(f"{auto_prefix}/vision_target_poses", Pose2d).publish()
-        self.show_targets_pub = self.inst.getBooleanTopic(f"{auto_prefix}/show_vision_targets").publish()
+        self.targets_pub = self.inst.getStructArrayTopic(f"{auto_prefix}/_vision_target_poses", Pose2d).publish()
+        self.show_targets_pub = self.inst.getBooleanTopic(f"{auto_prefix}/_show_vision_targets").publish()
         self.show_targets_pub.set(False)
 
     def runsWhenDisabled(self) -> bool:

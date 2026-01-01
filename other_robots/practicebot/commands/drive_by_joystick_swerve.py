@@ -56,11 +56,11 @@ class DriveByJoystickSwerve(commands2.Command):
         self.inst = ntcore.NetworkTableInstance.getDefault()
         status_prefix = constants.status_prefix
         # Simulation Debugging Publishers
-        self.js_dv1_x_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv1_x").publish()
-        self.js_dv1_y_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv1_y").publish()
-        self.js_dv_norm_x_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv_norm_x").publish()
-        self.js_dv_norm_y_pub = self.inst.getDoubleTopic(f"{status_prefix}/_js_dv_norm_y").publish()
-        self.commanded_values_pub = self.inst.getDoubleArrayTopic(f"{status_prefix}/commanded values").publish()
+        self.js_dv1_x_pub = self.inst.getDoubleTopic(f"{status_prefix}/_joystick_dv1_x").publish()
+        self.js_dv1_y_pub = self.inst.getDoubleTopic(f"{status_prefix}/_joystick_dv1_y").publish()
+        self.js_dv_norm_x_pub = self.inst.getDoubleTopic(f"{status_prefix}/_joystick_dv_norm_x").publish()
+        self.js_dv_norm_y_pub = self.inst.getDoubleTopic(f"{status_prefix}/_joystick_dv_norm_y").publish()
+        self.commanded_values_pub = self.inst.getDoubleArrayTopic(f"{status_prefix}/_joystick_commanded_values").publish()
 
     def initialize(self) -> None:
         """Called just before this Command runs the first time."""

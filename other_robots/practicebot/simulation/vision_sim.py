@@ -3,6 +3,7 @@ import wpilib
 import ntcore
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 import constants
+from helpers import apriltag_utils
 
 class VisionSim:
     def __init__(self, field: wpilib.Field2d):
@@ -16,6 +17,7 @@ class VisionSim:
         self.camera_dict = {}
         self._init_networktables()
         self._init_field_objects()
+        self._init_apriltags()
 
     def _init_networktables(self):
         sim_prefix = constants.sim_prefix
@@ -50,6 +52,20 @@ class VisionSim:
         for idx, key in enumerate(self.cam_list):
             self.fov_objects[key] = self.field.getObject(f"FOV_{idx}")
 
+    def _init_apriltags(self):
+        self.tag_translations = []
+        tag_poses = []
+        
+        # Load tags from the layout utility
+        for tag in apriltag_utils.layout.getTags():
+            pose3d = apriltag_utils.layout.getTagPose(tag.ID)
+            if pose3d is not None:
+                pose2d = pose3d.toPose2d()
+                tag_poses.append(pose2d)
+                self.tag_translations.append(pose2d.translation())
+        
+        self.field.getObject("AprilTags").setPoses(tag_poses)
+
     def update(self, robot_pose: Pose2d, gamepieces: list[dict]):
         now = wpilib.Timer.getFPGATimestamp()
         
@@ -77,27 +93,33 @@ class VisionSim:
                 rot = 0
                 strafe = 0
 
-                visible_gps = []
-                if config['type'] == 'hsv':  # Only simulate gamepieces for HSV cameras
-                    for gp_data in gamepieces:
-                        if not gp_data['active']: continue
-                        gp = gp_data['pos']
-                        vec_to_gp = gp - robot_pose.translation()
-                        
-                        angle_robot_relative = (vec_to_gp.angle() - robot_pose.rotation()).degrees()
-                        angle_robot_relative = (angle_robot_relative + 180) % 360 - 180
+                visible_targets = []
+                
+                # Determine candidates based on camera type
+                candidates = []
+                if config['type'] == 'hsv':
+                    candidates = [gp['pos'] for gp in gamepieces if gp['active']]
+                elif config['type'] == 'tags':
+                    candidates = self.tag_translations
 
-                        angle_cam_relative = angle_robot_relative - cam_rot
-                        angle_cam_relative = (angle_cam_relative + 180) % 360 - 180
+                # Unified detection logic
+                for target_pos in candidates:
+                    vec_to_target = target_pos - robot_pose.translation()
+                    
+                    angle_robot_relative = (vec_to_target.angle() - robot_pose.rotation()).degrees()
+                    angle_robot_relative = (angle_robot_relative + 180) % 360 - 180
 
-                        d = vec_to_gp.norm()
-                        if abs(angle_cam_relative) < (cam_fov / 2.0) and d < constants.SimConstants.k_cam_distance_limit:
-                            s = d * math.sin(math.radians(angle_cam_relative))
-                            visible_gps.append({'dist': d, 'rot': angle_cam_relative, 'strafe': s})
+                    angle_cam_relative = angle_robot_relative - cam_rot
+                    angle_cam_relative = (angle_cam_relative + 180) % 360 - 180
 
-                if visible_gps:
-                    closest = min(visible_gps, key=lambda x: x['dist'])
-                    targets = len(visible_gps)
+                    d = vec_to_target.norm()
+                    if abs(angle_cam_relative) < (cam_fov / 2.0) and d < constants.SimConstants.k_cam_distance_limit:
+                        s = d * math.sin(math.radians(angle_cam_relative))
+                        visible_targets.append({'dist': d, 'rot': angle_cam_relative, 'strafe': s})
+
+                if visible_targets:
+                    closest = min(visible_targets, key=lambda x: x['dist'])
+                    targets = len(visible_targets)
                     dist = closest['dist']
                     rot = closest['rot']
                     strafe = closest['strafe']
