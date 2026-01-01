@@ -215,7 +215,12 @@ class Questnav(SubsystemBase):
 
             ground_truth:Pose2d = self.ground_truth_sub.get()
             # Apply the offset (Transform) to the ground truth Pose
-            self.quest_pose = ground_truth.transformBy(self.sim_offset_from_truth)
+            # FIX: Apply offset field-relatively (simple addition) instead of robot-relatively (transformBy)
+            self.quest_pose = Pose2d(
+                ground_truth.X() + self.sim_offset_from_truth.X(),
+                ground_truth.Y() + self.sim_offset_from_truth.Y(),
+                ground_truth.rotation() + self.sim_offset_from_truth.rotation()
+            )
 
         # does this belong here?  not sure what it's for - CJH
         # self.quest_pose = self.get_pose().transformBy(self.quest_to_robot)
