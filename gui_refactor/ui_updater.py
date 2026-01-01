@@ -19,7 +19,7 @@ class UIUpdater:
 
     def __init__(self, ui):
         self.ui = ui
-        self.drive_pose = [0, 0, 0]  # Store pose for other calculations
+        self.drive_pose = geo.Pose2d()  # Store pose for other calculations
         self.flash_on = False
 
         # Map update styles from config to specific update functions
@@ -156,11 +156,11 @@ class UIUpdater:
         speaker_coords = (16.54, 5.56) if is_red_alliance else (0, 5.56)
 
         translation_origin_to_speaker = geo.Translation2d(k_speaker[0], k_speaker[1])
-        translation_origin_to_robot = geo.Translation2d(self.drive_pose[0], self.drive_pose[1])
+        translation_origin_to_robot = self.drive_pose.translation()
         translation_robot_to_speaker = translation_origin_to_speaker - translation_origin_to_robot
         desired_angle = translation_robot_to_speaker.angle().rotateBy(geo.Rotation2d(np.radians(180)))
-        angle_to_speaker = self.drive_pose[2] - desired_angle.degrees()
-        shot_distance = np.sqrt((speaker_coords[0] - self.drive_pose[0])**2 + (speaker_coords[1] - self.drive_pose[1])**2)
+        angle_to_speaker = self.drive_pose.rotation().degrees() - desired_angle.degrees()
+        shot_distance = np.sqrt((speaker_coords[0] - self.drive_pose.X())**2 + (speaker_coords[1] - self.drive_pose.Y())**2)
 
         best_distance, dist_tolerance, angle_tolerance = 1.7, 0.4, 10
         shot_style = self.STYLE_OFF
@@ -179,7 +179,7 @@ class UIUpdater:
 
     def _format_pose_string(self, label, pose):
         """Formats a pose array into a display string with appropriate padding."""
-        x, y, rot = pose
+        x, y, rot = pose.X(), pose.Y(), pose.rotation().degrees()
         x_pad = 1 if x < 10 else 0
         # This logic determines padding based on the number of digits in the angle
         theta_pad = sum([1 for t in [0, 100, 10] if abs(rot) < t])
@@ -187,7 +187,7 @@ class UIUpdater:
 
     def _update_pose_widget(self, widget, pixmap, pose, field_dims):
         """Updates a QLabel on the field graphic with a rotated pixmap and new position."""
-        x, y, rot = pose
+        x, y, rot = pose.X(), pose.Y(), pose.rotation().degrees()
         width, height = field_dims
 
         pixmap_rotated = pixmap.transformed(QtGui.QTransform().rotate(90 - rot), QtCore.Qt.TransformationMode.SmoothTransformation)

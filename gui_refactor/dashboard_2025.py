@@ -12,6 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from PyQt6.QtCore import Qt, QTimer, QEvent
 from PyQt6.QtWidgets import QGraphicsOpacityEffect
 import ntcore
+import wpimath.geometry as geo
 
 # logical chunking of the gui's functional components
 from config import WIDGET_CONFIG, CAMERA_CONFIG
@@ -142,7 +143,7 @@ class Ui(QtWidgets.QMainWindow):
                 elif style in ['lcd', 'monitor', 'time', 'hub']:
                     new_entry['subscriber'] = self.ntinst.getDoubleTopic(nt_topic).subscribe(0.0)
                 elif style == 'pose':
-                    new_entry['subscriber'] = self.ntinst.getDoubleArrayTopic(nt_topic).subscribe([0, 0, 0])
+                    new_entry['subscriber'] = self.ntinst.getStructTopic(nt_topic, geo.Pose2d).subscribe(geo.Pose2d())
                 elif style == 'combo':
                     new_entry['subscriber'] = self.ntinst.getStringArrayTopic(nt_topic).subscribe([])
                 elif style == 'position':

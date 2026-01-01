@@ -62,22 +62,22 @@ class Questnav(SubsystemBase):
         self.quest_synched_pub = self.inst.getBooleanTopic(f"{quest_prefix}/questnav_synched").publish()
         self.quest_in_use_pub = self.inst.getBooleanTopic(f"{quest_prefix}/questnav_in_use").publish()
         
-        self.quest_accepted_pub = self.inst.getBooleanTopic(f"{quest_prefix}/QUEST_POSE_ACCEPTED").publish()
-        self.quest_connected_pub = self.inst.getBooleanTopic(f"{quest_prefix}/QUEST_CONNECTED").publish()
-        self.quest_tracking_pub = self.inst.getBooleanTopic(f"{quest_prefix}/QUEST_TRACKING").publish()
+        self.quest_accepted_pub = self.inst.getBooleanTopic(f"{quest_prefix}/quest_pose_accepted").publish()
+        self.quest_connected_pub = self.inst.getBooleanTopic(f"{quest_prefix}/quest_connected").publish()
+        self.quest_tracking_pub = self.inst.getBooleanTopic(f"{quest_prefix}/quest_tracking").publish()
         
         # Use StructPublisher for Pose2d - matches Swerve implementation and works with AdvantageScope
-        self.quest_pose_pub = self.inst.getStructTopic(f"{quest_prefix}/Quest_Pose2D_AdvScope", Pose2d).publish()
-        self.pose_pub = self.inst.getDoubleArrayTopic(f"{quest_prefix}/QUEST_POSE").publish()  # legacy GUI dashboard
+        self.quest_pose_pub = self.inst.getStructTopic(f"{quest_prefix}/quest_pose", Pose2d).publish()
+        # self.pose_pub = self.inst.getDoubleArrayTopic(f"{quest_prefix}/QUEST_POSE").publish()  # legacy GUI dashboard
         
-        self.quest_battery_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Battery_%").publish()
-        self.quest_latency_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Latency").publish()
-        self.quest_lost_count_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_Tracking_lost_count").publish()
-        self.quest_frame_count_pub = self.inst.getDoubleTopic(f"{quest_prefix}/Quest_frame_count").publish()
+        self.quest_battery_pub = self.inst.getDoubleTopic(f"{quest_prefix}/quest_Battery_pct").publish()
+        self.quest_latency_pub = self.inst.getDoubleTopic(f"{quest_prefix}/quest_Latency").publish()
+        self.quest_lost_count_pub = self.inst.getDoubleTopic(f"{quest_prefix}/quest_tracking_lost_count").publish()
+        self.quest_frame_count_pub = self.inst.getDoubleTopic(f"{quest_prefix}/quest_frame_count").publish()
 
         # ------------- Subscribers -------------
         # Subscribe to the drive_pose published by Swerve (now a Struct)
-        self.drive_pose2d_sub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose2d", Pose2d).subscribe(Pose2d())
+        self.drive_pose_sub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose", Pose2d).subscribe(Pose2d())
 
         # Subscribe to ground truth from Physics (for Sim) - doesn't really matter if it doesn't exist when real
         self.ground_truth_sub = self.inst.getStructTopic(f"{sim_prefix}/ground_truth", Pose2d).subscribe(Pose2d())
@@ -135,7 +135,7 @@ class Questnav(SubsystemBase):
         self.quest_has_synched = True  # let the robot know we have been synched so we don't automatically do it again
         
         # Efficiently get the pose from the subscriber (returns a Pose2d object)
-        self.set_quest_pose(self.drive_pose2d_sub.get())
+        self.set_quest_pose(self.drive_pose_sub.get())
         if wpilib.RobotBase.isSimulation() and not self.questnav.is_connected():
             self.sim_error = Pose2d(0, 0, 0) # reset the quest's sim error
 
@@ -231,8 +231,8 @@ class Questnav(SubsystemBase):
             
             # poses used in gui and advantagescope
             self.quest_pose_pub.set(self.quest_pose)
-            self.pose_pub.set([self.quest_pose.X(), self.quest_pose.Y(), self.quest_pose.rotation().degrees()])  # legacy GUI version
-            #self.pose_pub.set([1,2,3])  # legacy GUI version
+            #self.pose_pub.set([self.quest_pose.X(), self.quest_pose.Y(), self.quest_pose.rotation().degrees()])  # legacy GUI version
+
 
             self.quest_accepted_pub.set(self.quest_pose_accepted)  # GUI uses as VALID
             self.quest_connected_pub.set(self.questnav.is_connected())  # GUI uses as heartbeat

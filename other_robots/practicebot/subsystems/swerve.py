@@ -344,8 +344,8 @@ class Swerve (Subsystem):
         self.timestamp_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_timestamp").publish()
 
         # Use StructPublisher for Pose2d - extremely efficient and works natively with AdvantageScope
-        self.pose2d_pub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose2d", Pose2d).publish()
-        self.pose_pub = self.inst.getDoubleArrayTopic(f"{swerve_prefix}/drive_pose").publish()  # legacy GUI dashboard
+        self.pose_pub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose", Pose2d).publish()
+        # self.pose_pub = self.inst.getDoubleArrayTopic(f"{swerve_prefix}/drive_pose").publish()  # legacy GUI dashboard
 
         self.drive_x_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/drive_x").publish()
         self.drive_y_pub = self.inst.getDoubleTopic(f"{swerve_prefix}/drive_y").publish()
@@ -370,8 +370,8 @@ class Swerve (Subsystem):
         self.timestamp_pub.set(ts)
         
         # Send the struct (replaces the arrays). AdvantageScope detects this automatically.
-        self.pose2d_pub.set(pose)
-        self.pose_pub.set([pose.X(), pose.Y(), pose.rotation().degrees()])  # legacy version
+        self.pose_pub.set(pose)
+        # self.pose_pub.set([pose.X(), pose.Y(), pose.rotation().degrees()])  # legacy version
         
         # Scalars (if you still need them for a specific dashboard layout)
         self.drive_x_pub.set(pose.X())
