@@ -5,6 +5,7 @@ from datetime import datetime
 import cv2
 from PyQt6.QtCore import QObject, pyqtSignal, QThread, Qt
 from PyQt6.QtGui import QImage, QPixmap
+from config import DEFAULT_CAMERA
 
 class CameraWorker(QObject):
     finished = pyqtSignal()
@@ -33,7 +34,12 @@ class CameraWorker(QObject):
                     # you can change the logic here - e.g. when elevator is low or shooter is on, choose another camera
                     # shooter_on = self.qtgui.widget_dict['qlabel_shooter_indicator']['entry'].getBoolean(False)
                     # elevator_low = self.qtgui.widget_dict['qlcd_elevator_height']['entry'].getDouble(100) < 100
-                    url = self.qtgui.camera_dict['LogitechReef']['URL'] if True else self.qtgui.camera_dict['ArducamHigh']['URL']
+                    
+                    if DEFAULT_CAMERA in self.qtgui.camera_dict:
+                        url = self.qtgui.camera_dict[DEFAULT_CAMERA]['URL']
+                    else:
+                        time.sleep(0.1)
+                        continue
                 else:
                     current_cam = self.qtgui.qcombobox_cameras.currentText()
                     if current_cam in self.qtgui.camera_dict:

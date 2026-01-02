@@ -46,21 +46,21 @@ Each widget property dictionary can contain the following keys:
   flash when its state is ON.
 
 """
-# This file should not import any runtime modules like PyQt or ntcore.
+# --------  This file should not import any runtime modules like PyQt or ntcore.
 import re
 import robotpy_apriltag
 
-# NT PREFIXES WE MAY NEED
-camera_prefix = r'/Cameras'  # from the pis
-quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an external system
+# --------- NT PREFIXES WE MAY NEED - MAKE SURE THESE AGREE WITH WHAT THE ROBOT PUBLISHES
+camera_prefix  = r'/Cameras'  # from the pis
+quest_prefix   = r'/QuestNav'  # putting this on par with the cameras as an external system
 # systems inside/from the robot
-status_prefix = r'/SmartDashboard/RobotStatus'  # the default for any status message
-vision_prefix = r'/SmartDashboard/Vision'  # from the robot
-swerve_prefix = r'/SmartDashboard/Swerve'  # from the robot
-sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
+status_prefix  = r'/SmartDashboard/RobotStatus'  # the default for any status message
+vision_prefix  = r'/SmartDashboard/Vision'  # from the robot
+swerve_prefix  = r'/SmartDashboard/Swerve'  # from the robot
+sim_prefix     = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
 command_prefix = r'/SmartDashboard/Command'  # DIFFERENT FROM ROBOT CODE: the robot SmartDashboard.putData auto prepends /SmartDashboard to the key
-auto_prefix = r'/SmartDashboard/Auto'
-base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
+auto_prefix    = r'/SmartDashboard/Auto'
+base_prefix    = r'/SmartDashboard'  #  TODO - eventually nothing should be in here
 
 # FIELD CONFIGURATION
 SHOW_APRILTAGS = True
@@ -69,6 +69,7 @@ TAG_LAYOUT = robotpy_apriltag.AprilTagField.k2025ReefscapeWelded
 # A list of command names used to generate widget configurations for simple, clickable indicators.
 # Commands with special properties (e.g., custom topics, flash behavior) are defined separately.
 # You can and should use the exact same list of commands in the robotcontainer.py to putdata to NT
+# There needs to be correctly text-wrapped labels in the UI (e.g. qlabel_gyro_reset_indicator)
 COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePivotUp', 'MovePivotDown',
                 'MoveWristUp', 'MoveWristDown', 'IntakeOn', 'IntakeOff', 'IntakeReverse',
                 'MoveClimberDown', 'MoveClimberUp', 'GoToStow', 'GoToL1', 'GoToL2', 'GoToL3', 'GoToL4',
@@ -77,81 +78,33 @@ COMMAND_LIST = ['MoveElevatorTop', 'MoveElevatorUp', 'MoveElevatorDown', 'MovePi
 
 # this config will be used to bind the NT topics to entries we can use later
 # todo - somehow make the camera names all update from a config file, but that means ui and robot code need to know
+DEFAULT_CAMERA = 'logi_front'  # used in camera worker as the one to go to first - can do switching logic there
 CAMERA_BASE_CONFIG = {
-    'logi_left': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
-                   'BASE_TOPIC': 'LogitechLeft',
-                  'NICKNAME': 'LEFT TAGS',
-                  'INDICATOR_INDEX': 0},
-    'logi_left_hsv': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
-                    'BASE_TOPIC': 'LogitechLeft',
-                    'NICKNAME': 'LEFT HSV',
-                  'INDICATOR_INDEX': 1},
     'logi_front': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
                    'BASE_TOPIC': 'LogitechFront',
                      'NICKNAME': 'FRONT TAGS',
-                      'INDICATOR_INDEX': 2},
+                      'INDICATOR_INDEX': 0},
     'logi_front_hsv': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
                    'BASE_TOPIC': 'LogitechFront',
                     'NICKNAME': 'FRONT HSV',
-                    'INDICATOR_INDEX': 3},
+                    'INDICATOR_INDEX': 1},
+    'logi_left': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+                  'BASE_TOPIC': 'LogitechLeft',
+                  'NICKNAME': 'LEFT TAGS',
+                  'INDICATOR_INDEX': 2},
+    'logi_left_hsv': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
+                      'BASE_TOPIC': 'LogitechLeft',
+                      'NICKNAME': 'LEFT HSV',
+                      'INDICATOR_INDEX': 3},
     'test_hsv': {'URL': 'http://10.24.29.13:1186/stream.mjpg',  # has no index, so no duplicate heartbeat
                            'BASE_TOPIC': 'LogitechReef',
                            'NICKNAME': 'TBD HSV',
                            'TARGET_INDICATOR_NAME': 'qlabel_hsv_target_indicator'},  # has custom target indicator
-    'Raw logitech_left': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
-    'Raw logitech_front': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
+    'Raw logi left': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
+    'Raw logi front': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
 
     'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg', 'skip':True},
 }
-# CAMERA_BASE_CONFIG = {
-#     'genius_low': {'URL': 'http://10.24.29.12:1186/stream.mjpg',
-#                    'BASE_TOPIC': 'GeniusLow',
-#                   'NICKNAME': 'GENIUS LO',
-#                   'INDICATOR_INDEX': 0},
-#     'arducam_back': {'URL': 'http://10.24.29.12:1187/stream.mjpg',
-#                     'BASE_TOPIC': 'ArducamBack',
-#                     'NICKNAME': 'ARDU BACK',
-#                   'INDICATOR_INDEX': 1},
-#     'logitech_reef': {'URL': 'http://10.24.29.13:1186/stream.mjpg',
-#                    'BASE_TOPIC': 'LogitechReef',
-#                      'NICKNAME': 'LOGI REEF',
-#                       'INDICATOR_INDEX': 2},
-#     'logitech_reef_hsv': {'URL': 'http://10.24.29.13:1186/stream.mjpg',  # has no index, so no duplicate heartbeat
-#                    'BASE_TOPIC': 'LogitechReef',
-#                      'NICKNAME': 'LOGI HSV',
-#                       'TARGET_INDICATOR_NAME': 'qlabel_hsv_target_indicator'},  # has custom target indicator
-#     'arducam_high': {'URL': 'http://10.24.29.13:1187/stream.mjpg',
-#                    'BASE_TOPIC': 'ArducamHigh',
-#                     'NICKNAME': 'ARDU HI',
-#                     'INDICATOR_INDEX': 3},
-#     'Raw genius_low': {'URL': 'http://10.24.29.12:1181/stream.mjpg', 'skip':True},
-#     'Raw arducam_back': {'URL': 'http://10.24.29.12:1182/stream.mjpg', 'skip':True},
-#     'Raw logitech_reef': {'URL': 'http://10.24.29.13:1181/stream.mjpg', 'skip':True},
-#     'Raw arducam_high': {'URL': 'http://10.24.29.13:1182/stream.mjpg', 'skip':True},
-#     'Debug': {'URL': 'http://127.0.0.1:1186/stream.mjpg', 'skip':True},
-# }
-
-# Add timestamp topics, connection topics, and set indicators if not provided above
-# This is so i don't have to redo the camera indicators all the time below - just change the camera names and go home
-CAMERA_CONFIG = {}
-for key, value in CAMERA_BASE_CONFIG.items():
-    # print(f"{key}  {value.get('TIMESTAMP_TOPIC')}  {value.get('INDICATOR_NAME')}  {value.get('INDICATOR_INDEX')}")
-    d = {key:value.copy()}  # don't forget the copy
-    base_topic = d[key].get('BASE_TOPIC')
-    if not d[key].get('TIMESTAMP_TOPIC') and not 'skip' in d[key]:
-        d[key]['TIMESTAMP_TOPIC'] = fr'{camera_prefix}/{base_topic}/_timestamp'
-        # print(f' *  updating timestamp topic for {key}')
-    if not d[key].get('CONNECTIONS_TOPIC') and not 'skip' in d[key]:
-        d[key]['CONNECTIONS_TOPIC'] = fr'{camera_prefix}/{base_topic}/_connections'
-        # print(f' *  updating connections topic for {key}')
-    if not d[key].get('HEARTBEAT_INDICATOR_NAME') and 'INDICATOR_INDEX' in d[key]:
-        index = d[key]['INDICATOR_INDEX']
-        d[key]['HEARTBEAT_INDICATOR_NAME'] = f'qlabel_cam{index}_indicator'
-    if not d[key].get('TARGET_INDICATOR_NAME') and 'INDICATOR_INDEX' in d[key]:
-        index = d[key]['INDICATOR_INDEX']
-        d[key]['TARGET_INDICATOR_NAME'] = f'qlabel_cam{index}_target_indicator'
-        # print(f' ** updating indicator index topic for {key}')
-    CAMERA_CONFIG.update(d)
 
 WIDGET_CONFIG = {
     # GUI UPDATES - NEED THIS PART FOR EVERY YEAR  - AT THE MOMENT I AM LEAVING A FEW OF THEM AS THE BASE PREFIX
@@ -220,7 +173,29 @@ for command in COMMAND_LIST:
         'update_style': 'indicator'
     }
 
-# ------------  THIS SHOULD BE GENERATED AUTOMATICALLY NOW FROM CAMERA_BASE and CAMERA_CONFIG
+# ------------  THIS SHOULD BE GENERATED AUTOMATICALLY NOW FROM CAMERA_BASE_CONFIG
+# Add timestamp topics, connection topics, and set indicators if not provided in CAMERA_BASE_CONFIG
+# This is so i don't have to redo the camera indicators all the time below - just change the camera names and go home
+CAMERA_CONFIG = {}
+for key, value in CAMERA_BASE_CONFIG.items():
+    # print(f"{key}  {value.get('TIMESTAMP_TOPIC')}  {value.get('INDICATOR_NAME')}  {value.get('INDICATOR_INDEX')}")
+    d = {key:value.copy()}  # don't forget the copy
+    base_topic = d[key].get('BASE_TOPIC')
+    if not d[key].get('TIMESTAMP_TOPIC') and not 'skip' in d[key]:
+        d[key]['TIMESTAMP_TOPIC'] = fr'{camera_prefix}/{base_topic}/_timestamp'
+        # print(f' *  updating timestamp topic for {key}')
+    if not d[key].get('CONNECTIONS_TOPIC') and not 'skip' in d[key]:
+        d[key]['CONNECTIONS_TOPIC'] = fr'{camera_prefix}/{base_topic}/_connections'
+        # print(f' *  updating connections topic for {key}')
+    if not d[key].get('HEARTBEAT_INDICATOR_NAME') and 'INDICATOR_INDEX' in d[key]:
+        index = d[key]['INDICATOR_INDEX']
+        d[key]['HEARTBEAT_INDICATOR_NAME'] = f'qlabel_cam{index}_indicator'
+    if not d[key].get('TARGET_INDICATOR_NAME') and 'INDICATOR_INDEX' in d[key]:
+        index = d[key]['INDICATOR_INDEX']
+        d[key]['TARGET_INDICATOR_NAME'] = f'qlabel_cam{index}_target_indicator'
+        # print(f' ** updating indicator index topic for {key}')
+    CAMERA_CONFIG.update(d)
+
 # CAMERA INDICATORS - HEARTBEAT AND TARGETS AVAILABLE - THESE HAVE NO NT TOPICS BECAUSE WE DO IT IN _update_camera_indicators
 # TODO - give the heartbeats NT topics
 # HEARTBEATS
