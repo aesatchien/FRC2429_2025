@@ -4,6 +4,7 @@
 # print(f'Loading Modules ...', flush=True)
 import os
 import cv2
+import numpy as np
 import time
 from datetime import datetime
 from pathlib import Path
@@ -13,9 +14,10 @@ from PyQt6.QtCore import Qt, QTimer, QEvent
 from PyQt6.QtWidgets import QGraphicsOpacityEffect
 import ntcore
 import wpimath.geometry as geo
+import robotpy_apriltag
 
 # logical chunking of the gui's functional components
-from config import WIDGET_CONFIG, CAMERA_CONFIG
+from config import WIDGET_CONFIG, CAMERA_CONFIG, SHOW_APRILTAGS, TAG_LAYOUT
 from nt_manager import NTManager
 from camera_manager import CameraManager
 from ui_updater import UIUpdater
@@ -65,6 +67,7 @@ class Ui(QtWidgets.QMainWindow):
         self.quest_pixmap = QtGui.QPixmap(str(self.png_dir / 'quest.png'))
         self.ghost_pixmap = QtGui.QPixmap(str(self.png_dir / 'ghost.png'))
         self.target_pixmap = QtGui.QPixmap(str(self.png_dir / 'target.png'))
+        self.apriltag_pixmap = QtGui.QPixmap(str(self.png_dir / 'apriltag.png'))
         
         # Create a pool of target widgets for the pose array (Original + 4 extras)
         self.target_widgets = [self.qlabel_target]
@@ -100,6 +103,7 @@ class Ui(QtWidgets.QMainWindow):
         self.key_pressed_pub = self.ntinst.getIntegerTopic("/SmartDashboard/key_pressed").publish()
 
         self.initialize_widgets()
+        self.initialize_apriltags()
 
         # Connections for the NT Tree are now managed by the NTTreeManager
         self.qaction_show_hide.triggered.connect(self.nt_tree_manager.toggle_network_tables)
@@ -255,6 +259,44 @@ class Ui(QtWidgets.QMainWindow):
         # Populate camera combobox
         for key in self.camera_dict.keys():
             self.qcombobox_cameras.addItem(key)
+
+    def initialize_apriltags(self):
+        """Loads the AprilTag layout and places static tag widgets on the field."""
+        if not SHOW_APRILTAGS:
+            return
+
+        try:
+            layout = robotpy_apriltag.AprilTagFieldLayout.loadField(TAG_LAYOUT)
+        except Exception as e:
+            print(f"Error loading AprilTag layout: {e}")
+            return
+
+        field_width = self.qgroupbox_field.width()
+        field_height = self.qgroupbox_field.height()
+        
+        # Iterate through all tags in the layout
+        for tag in layout.getTags():
+            pose = tag.pose.toPose2d()
+            x, y, rot = pose.X(), pose.Y(), pose.rotation().degrees()
+
+            # Create a new label for the tag
+            label = QtWidgets.QLabel(self.qgroupbox_field)
+            label.setScaledContents(True)
+            label.setToolTip(f"ID: {tag.ID}")
+            label.show()
+
+            # Rotate and scale the pixmap (using target.png as the tag icon)
+            base_size = 20 
+            pixmap_rotated = self.apriltag_pixmap.transformed(QtGui.QTransform().rotate(90 - rot), QtCore.Qt.TransformationMode.SmoothTransformation)
+            new_size = int(base_size * (1 + 0.41 * np.abs(np.sin(2 * rot * np.pi / 180.0))))
+            label.resize(new_size, new_size)
+            label.setPixmap(pixmap_rotated)
+
+            # Convert field coordinates (meters) to widget coordinates (pixels)
+            # Using fixed field dimensions 17.6m x 8.2m to match ui_updater logic
+            widget_x = int(-new_size / 2 + field_width * x / 17.6)
+            widget_y = int(-new_size / 2 + field_height * (1 - y / 8.2))
+            label.move(widget_x, widget_y)
 
     def keyPressEvent(self, event):
         if event.key() not in self.keys_currently_pressed:

@@ -48,6 +48,7 @@ Each widget property dictionary can contain the following keys:
 """
 # This file should not import any runtime modules like PyQt or ntcore.
 import re
+import robotpy_apriltag
 
 # NT PREFIXES WE MAY NEED
 camera_prefix = r'/Cameras'  # from the pis
@@ -60,6 +61,10 @@ sim_prefix = r'/SmartDashboard/Sim'  # from the sim (still from the robot)
 command_prefix = r'/SmartDashboard/Command'  # DIFFERENT FROM ROBOT CODE: the robot SmartDashboard.putData auto prepends /SmartDashboard to the key
 auto_prefix = r'/SmartDashboard/Auto'
 base_prefix = '/SmartDashboard'  #  TODO - eventually nothing should be in here
+
+# FIELD CONFIGURATION
+SHOW_APRILTAGS = True
+TAG_LAYOUT = robotpy_apriltag.AprilTagField.k2025ReefscapeWelded
 
 # A list of command names used to generate widget configurations for simple, clickable indicators.
 # Commands with special properties (e.g., custom topics, flash behavior) are defined separately.

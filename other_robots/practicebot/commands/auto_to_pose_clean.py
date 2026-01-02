@@ -129,6 +129,7 @@ class AutoToPoseClean(commands2.Command):  #
             if relative_pose is not None:
                 rel_tf = Transform2d(relative_pose.translation(), relative_pose.rotation())
                 self.target_pose = current_pose.transformBy(rel_tf)
+                print(f"AutoToPose Vision: Robot Rel Move -> X: {relative_pose.X():.2f}m, Y: {relative_pose.Y():.2f}m, Rot: {relative_pose.rotation().degrees():.1f}°")
             else:
                 self.target_pose = current_pose
                 self.abort = True

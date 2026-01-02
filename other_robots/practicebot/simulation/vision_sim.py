@@ -28,10 +28,15 @@ class VisionSim:
             for key in self.cam_list
         }
 
+        # get a subscriber to grab the unique debug key from the cameras in case they connect to the sim
+        # if sub.getAtomic().time > 0 then it has connected
+        self.real_camera_sub = self.inst.getBooleanTopic(f"{constants.camera_prefix}/_debug").subscribe(False)
+
         # skip the rest of the publishers if we want real hardware to connect to the sim
         if constants.SimConstants.k_disable_vision:
             return
 
+        # note this will be skipped if we told it to disable vision - so update will loop through nothing
         for ix, (key, config) in enumerate(constants.k_cameras.items()):
             cam_topic = config['topic_name']
             cam_type = config.get('label', config['type'])
@@ -54,19 +59,22 @@ class VisionSim:
 
     def _init_apriltags(self):
         self.tag_translations = []
-        tag_poses = []
+        self.tag_poses = []
         
         # Load tags from the layout utility
         for tag in apriltag_utils.layout.getTags():
             pose3d = apriltag_utils.layout.getTagPose(tag.ID)
             if pose3d is not None:
                 pose2d = pose3d.toPose2d()
-                tag_poses.append(pose2d)
+                self.tag_poses.append(pose2d)
                 self.tag_translations.append(pose2d.translation())
         
-        self.field.getObject("AprilTags").setPoses(tag_poses)
+        self.field.getObject("AprilTags").setPoses(self.tag_poses)
 
     def update(self, robot_pose: Pose2d, gamepieces: list[dict]):
+        # Check if the topic has ever been written to (timestamp > 0)
+        real_camera_connected = self.real_camera_sub.getAtomic().time > 0
+
         now = wpilib.Timer.getFPGATimestamp()
         
         # Determine blink test state
@@ -81,7 +89,7 @@ class VisionSim:
         for key in self.cam_list:
             config = constants.k_cameras[key]
 
-            if key in self.camera_dict:
+            if not real_camera_connected and key in self.camera_dict:
                 cam_data = self.camera_dict[key]
                 topic = config['topic_name']
                 cam_rot = config.get('rotation', 0)
@@ -98,12 +106,28 @@ class VisionSim:
                 # Determine candidates based on camera type
                 candidates = []
                 if config['type'] == 'hsv':
-                    candidates = [gp['pos'] for gp in gamepieces if gp['active']]
+                    candidates = [{'pos': gp['pos'], 'facing': None} for gp in gamepieces if gp['active']]
                 elif config['type'] == 'tags':
-                    candidates = self.tag_translations
+                    candidates = [{'pos': p.translation(), 'facing': p.rotation()} for p in self.tag_poses]
 
                 # Unified detection logic
-                for target_pos in candidates:
+                for candidate in candidates:
+                    target_pos = candidate['pos']
+                    target_facing = candidate['facing']
+
+                    # Check tag visibility angle if applicable
+                    if target_facing is not None:
+                        # Vector from tag to robot
+                        vec_tag_to_robot = robot_pose.translation() - target_pos
+                        angle_to_robot = vec_tag_to_robot.angle()
+                        
+                        # Angle difference between tag normal and vector to robot
+                        angle_diff = (angle_to_robot - target_facing).degrees()
+                        angle_diff = (angle_diff + 180) % 360 - 180
+                        
+                        if abs(angle_diff) > constants.SimConstants.k_tag_visibility_angle:
+                            continue
+
                     vec_to_target = target_pos - robot_pose.translation()
                     
                     angle_robot_relative = (vec_to_target.angle() - robot_pose.rotation()).degrees()

@@ -70,6 +70,7 @@ k_field_oriented = True  # is there any reason for this at all?
 class SimConstants:
     k_counter_offset = 1
     k_cam_distance_limit = 4  # sim testing how far targets can be
+    k_tag_visibility_angle = 60  # degrees, the angle from normal that the tag can be seen (90 means +/- 90 deg)
 
     k_print_config = True  # use for debugging the camera config
     k_draw_camera_fovs = True  # Set to True to draw camera FOV triangles - should always want this
