@@ -1,5 +1,6 @@
 import math
 import wpilib.simulation as simlib
+from wpimath.geometry import Pose2d, Pose3d, Rotation3d, Transform2d, Translation3d
 from wpimath.kinematics import SwerveModulePosition
 import ntcore
 import constants
@@ -19,6 +20,11 @@ class SwerveSim:
         # Swerve Target Subscribers
         dash_values = ['lf_target_vel_angle', 'rf_target_vel_angle', 'lb_target_vel_angle', 'rb_target_vel_angle']
         self.swerve_target_subs = [self.inst.getDoubleArrayTopic(f"/SmartDashboard/{v}").subscribe([0, 0]) for v in dash_values]
+
+        # Live Tag Subscribers (for snapping sim to reality)
+        self.camera_names = [config['topic_name'] for config in constants.k_cameras.values() if config['type'] == 'tags']
+        self.pose_subscribers = [self.inst.getDoubleArrayTopic(f"/Cameras/{cam}/poses/tag1").subscribe([0] * 7) for cam in self.camera_names]
+        self.count_subscribers = [self.inst.getDoubleTopic(f"/Cameras/{cam}/tags/targets").subscribe(0) for cam in self.camera_names]
 
         self._initialize_sim_devices()
 
@@ -67,3 +73,37 @@ class SwerveSim:
 
         # Update NavX
         self.navx_yaw.set(self.navx_yaw.get() - math.degrees(speeds.omega * tm_diff))
+
+        # --- Live Tag Snapping ---
+        if constants.SimConstants.k_use_live_tags_in_sim:
+            self._snap_to_live_tags()
+
+    def _snap_to_live_tags(self):
+        """
+        If a live camera sees a tag, move the simulated robot to that location.
+        This allows testing vision-based localization in the simulator using real hardware.
+        """
+        for count_sub, pose_sub in zip(self.count_subscribers, self.pose_subscribers):
+            if count_sub.get() > 0:
+                atomic_data = pose_sub.getAtomic()
+                tag_data = atomic_data.value
+                timestamp_us = atomic_data.time
+
+                # Check for freshness (e.g., < 0.1s old to avoid jitter from stale data)
+                # NOTE: This also prevents the simulation from snapping to its own simulated tags.
+                # vision_sim.py updates 'targets' but NOT the 'poses' topic.
+                # Therefore, simulated tags will have stale timestamps here and be ignored.
+                if ntcore._now() - timestamp_us < 100000: 
+                    tx, ty, tz = tag_data[1], tag_data[2], tag_data[3]
+                    rx, ry, rz = tag_data[4], tag_data[5], tag_data[6]
+                    
+                    # Calculate the robot's field pose from the tag data
+                    vision_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
+                    
+                    # Move the physics controller to this pose
+                    current_sim_pose = self.physics_controller.get_pose()
+                    transform = Transform2d(current_sim_pose, vision_pose)
+                    self.physics_controller.move_robot(transform)
+                    
+                    # Only use the first valid tag we find to avoid fighting
+                    return

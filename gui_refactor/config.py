@@ -182,7 +182,7 @@ for key, value in CAMERA_BASE_CONFIG.items():
     d = {key:value.copy()}  # don't forget the copy
     base_topic = d[key].get('BASE_TOPIC')
     if not d[key].get('TIMESTAMP_TOPIC') and not 'skip' in d[key]:
-        d[key]['TIMESTAMP_TOPIC'] = fr'{camera_prefix}/{base_topic}/_timestamp'
+        d[key]['TIMESTAMP_TOPIC'] = fr'{camera_prefix}/{base_topic}/_frames'
         # print(f' *  updating timestamp topic for {key}')
     if not d[key].get('CONNECTIONS_TOPIC') and not 'skip' in d[key]:
         d[key]['CONNECTIONS_TOPIC'] = fr'{camera_prefix}/{base_topic}/_connections'

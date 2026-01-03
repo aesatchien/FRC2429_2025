@@ -76,6 +76,7 @@ class SimConstants:
     k_draw_camera_fovs = True  # Set to True to draw camera FOV triangles - should always want this
     k_disable_vision = False  # Set to True to disable vision simulation (e.g. when using real coprocessors)
     k_do_blink_test = False  # Set to True to test dashboard connection handling (dropping camera connections)
+    k_use_live_tags_in_sim = True  # Set to True to snap the sim robot to live AprilTag data
 
 
 class VisionConstants:

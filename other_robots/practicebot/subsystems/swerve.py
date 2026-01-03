@@ -90,7 +90,7 @@ class Swerve (Subsystem):
         self.use_CJH_apriltags = constants.k_use_CJH_tags  # down below we decide which one to use in the periodic method
         
         self.camera_names = [config['topic_name'] for config in constants.k_cameras.values() if config['type'] == 'tags']
-        self.pose_subscribers = [self.inst.getDoubleArrayTopic(f"/Cameras/{cam}/poses/tag1").subscribe([0] * 8) for cam in self.camera_names]
+        self.pose_subscribers = [self.inst.getDoubleArrayTopic(f"/Cameras/{cam}/poses/tag1").subscribe([0] * 7) for cam in self.camera_names]
         self.count_subscribers = [self.inst.getDoubleTopic(f"/Cameras/{cam}/tags/targets").subscribe(0) for cam in self.camera_names]
 
         # -------------  Pathplanner section --------------
@@ -311,14 +311,17 @@ class Swerve (Subsystem):
         if self.use_CJH_apriltags:
             for count_subscriber, pose_subscriber in zip(self.count_subscribers, self.pose_subscribers):
                 if count_subscriber.get() > 0:  # use this camera's tag
-                    tag_data = pose_subscriber.get()  # 8 items - timestamp, id, tx ty tx rx ry rz
+                    atomic_data = pose_subscriber.getAtomic()
+                    tag_data = atomic_data.value  # 7 items - id, tx, ty, tz, rx, ry, rz
+                    timestamp_us = atomic_data.time
                     
-                    # Check for stale tags (e.g. > 0.5s latency)  # TODO - switch this all to NT's truth number
-                    if ts - tag_data[0] > 0.5:
+                    # Check for stale tags (e.g. > 0.5s latency) using NT timestamp
+                    # 500,000 microseconds = 0.5 seconds
+                    if ntcore._now() - timestamp_us > 500000:
                         continue
 
-                    tx, ty, tz = tag_data[2], tag_data[3], tag_data[4]
-                    rx, ry, rz = tag_data[5], tag_data[6], tag_data[7]
+                    tx, ty, tz = tag_data[1], tag_data[2], tag_data[3]
+                    rx, ry, rz = tag_data[4], tag_data[5], tag_data[6]
                     tag_pose = Pose3d(Translation3d(tx, ty, tz), Rotation3d(rx, ry, rz)).toPose2d()
 
                     use_tag = constants.k_use_CJH_tags  # can disable this in constants
@@ -329,7 +332,7 @@ class Swerve (Subsystem):
                         # Smaller numbers = more trust. We trust vision more when disabled and stationary.
                         # Units are (x_meters, y_meters, rotation_radians).
                         sdevs = constants.DrivetrainConstants.k_pose_stdevs_large if DriverStation.isEnabled() else constants.DrivetrainConstants.k_pose_stdevs_disabled
-                        self.pose_estimator.addVisionMeasurement(tag_pose, tag_data[0], sdevs)
+                        self.pose_estimator.addVisionMeasurement(tag_pose, timestamp_us / 1e6, sdevs)
 
     def _update_odometry(self, ts):
         if RobotBase.isReal():
@@ -341,7 +344,6 @@ class Swerve (Subsystem):
 
         # ------------- NetworkTables Publishers (Efficiency) -------------
         # Pre-allocate publishers to avoid hash lookups and string creation in periodic loops
-        self.timestamp_pub = self.inst.getDoubleTopic(f"/SmartDashboard/_timestamp").publish()
 
         # Use StructPublisher for Pose2d - extremely efficient and works natively with AdvantageScope
         self.pose_pub = self.inst.getStructTopic(f"{swerve_prefix}/drive_pose", Pose2d).publish()
@@ -366,8 +368,6 @@ class Swerve (Subsystem):
         self.pdh_current_pub = self.inst.getDoubleTopic(f"{status_prefix}/_pdh_current").publish()
 
     def _update_dashboard(self, pose, ts):
-        # TODO - this should not be the source of truth for the pi - start using the timer kept by nt
-        self.timestamp_pub.set(ts)
         
         # Send the struct (replaces the arrays). AdvantageScope detects this automatically.
         self.pose_pub.set(pose)

@@ -28,9 +28,10 @@ class VisionSim:
             for key in self.cam_list
         }
 
-        # get a subscriber to grab the unique debug key from the cameras in case they connect to the sim
-        # if sub.getAtomic().time > 0 then it has connected
-        self.real_camera_sub = self.inst.getBooleanTopic(f"{constants.camera_prefix}/_debug").subscribe(False)
+        # Subscribe to the frame counter for each camera to detect active connections
+        self.frame_subs = {}
+        for key, config in constants.k_cameras.items():
+            self.frame_subs[key] = self.inst.getIntegerTopic(f"/Cameras/{config['topic_name']}/_frames").subscribe(0)
 
         # skip the rest of the publishers if we want real hardware to connect to the sim
         if constants.SimConstants.k_disable_vision:
@@ -44,7 +45,6 @@ class VisionSim:
             
             self.camera_dict[key] = {
                 'offset': ix,
-                'timestamp_pub': self.inst.getDoubleTopic(f"/Cameras/{cam_topic}/_timestamp").publish(),
                 'targets_pub': self.inst.getDoubleTopic(f"{base}/targets").publish(),
                 'distance_pub': self.inst.getDoubleTopic(f"{base}/distance").publish(),
                 'strafe_pub': self.inst.getDoubleTopic(f"{base}/strafe").publish(),
@@ -72,8 +72,14 @@ class VisionSim:
         self.field.getObject("AprilTags").setPoses(self.tag_poses)
 
     def update(self, robot_pose: Pose2d, gamepieces: list[dict]):
-        # Check if the topic has ever been written to (timestamp > 0)
-        real_camera_connected = self.real_camera_sub.getAtomic().time > 0
+        # Check if any real camera is actively publishing frames (heartbeat check)
+        real_camera_connected = False
+        current_time_us = ntcore._now()
+        for sub in self.frame_subs.values():
+            # If we've received a frame update in the last 2 seconds (2,000,000 us), assume connected
+            if current_time_us - sub.getAtomic().time < 2000000:
+                real_camera_connected = True
+                break
 
         now = wpilib.Timer.getFPGATimestamp()
         
@@ -155,11 +161,13 @@ class VisionSim:
                     if is_connected and key != key_target_on:
                         targets = 0
                 
-                cam_data['timestamp_pub'].set(now if is_connected else now - 5)
                 cam_data['targets_pub'].set(targets if is_connected else 0)
                 cam_data['distance_pub'].set(dist)
                 cam_data['strafe_pub'].set(strafe)
                 cam_data['rotation_pub'].set(rot)
+                # NOTE: We do NOT publish to the 'poses' topic here with the other data.
+                # This ensures that swerve_sim.py (which listens for live tags) doesn't
+                # get confused and try to snap the robot to these simulated targets.
 
             # 3. Update FOV Visualization
             self._update_fov_visualization(key, robot_pose, config, self.show_fov_subs[key].get())

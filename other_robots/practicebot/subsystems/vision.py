@@ -1,6 +1,7 @@
 import wpilib
 from commands2 import SubsystemBase
 from wpilib import SmartDashboard, DriverStation
+import ntcore
 from ntcore import NetworkTableInstance
 from wpimath.geometry import Pose2d, Rotation2d, Transform2d, Translation2d
 import math
@@ -52,9 +53,8 @@ class Vision(SubsystemBase):
             table_path = f"{constants.camera_prefix}/{cam_name}"
             base_topic = f"{table_path}/{cam_type}"
 
-            # Timestamp is the camera heartbeat returned by the pi, located at the camera root
+            # Timestamp is the camera heartbeat returned by the pi, located at the camera root (deprecated, now using NT only)
             # other topics fall under a /tags or /orange subfolder.
-            self.camera_dict[key]['timestamp_entry'] = self.inst.getDoubleTopic(f"{table_path}/_timestamp").subscribe(0)
             self.camera_dict[key]['id_entry'] = self.inst.getDoubleTopic(f"{base_topic}/id").subscribe(0)
             self.camera_dict[key]['targets_entry'] = self.inst.getDoubleTopic(f"{base_topic}/targets").subscribe(0)
             self.camera_dict[key]['distance_entry'] = self.inst.getDoubleTopic(f"{base_topic}/distance").subscribe(0)
@@ -68,9 +68,18 @@ class Vision(SubsystemBase):
             print()
 
     def target_available(self, camera_key='arducam_high'):
-        target_available = self.camera_dict[camera_key]['targets_entry'].get() > 0
-        time_stamp_good = wpilib.Timer.getFPGATimestamp() - self.camera_dict[camera_key]['timestamp_entry'].get() < 1
-        return target_available and time_stamp_good
+        # Use getAtomic to get the value and the timestamp of the last update
+        atomic_targets = self.camera_dict[camera_key]['targets_entry'].getAtomic()
+        target_exists = atomic_targets.value > 0
+
+        # Check latency (in microseconds). 1,000,000 us = 1 second.
+        latency_us = ntcore._now() - atomic_targets.time
+        time_stamp_good = latency_us < 1000000
+
+        if target_exists and not time_stamp_good:
+            print(f"Vision Warning: Stale target on '{camera_key}'. Latency: {latency_us / 1000:.1f} ms")
+
+        return target_exists and time_stamp_good
 
     def get_strafe(self, camera_key: str) -> float:
         if wpilib.RobotBase.isSimulation() and constants.k_cameras[camera_key]['type'] == 'tags':  # trick the sim into thinking we are on tag 18
