@@ -140,7 +140,7 @@ class UIUpdater:
         """Updates the status indicators for all cameras.
         We check the NT timestamp from the camera framecount from the camera"""
         # 1.5 seconds allowed delay (500,000 microseconds) - we update the framecount once per second
-        allowed_delay_us = 1500000
+        allowed_delay_us = 2500000
         now = ntcore._now()
 
         for cam_props in self.ui.camera_dict.values():

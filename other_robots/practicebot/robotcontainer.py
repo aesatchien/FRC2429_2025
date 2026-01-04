@@ -35,6 +35,7 @@ from commands.reset_field_centric import ResetFieldCentric
 from commands.rumble_command import RumbleCommand
 from commands.set_leds import SetLEDs
 from commands.sim_show_fov import SimShowFOV
+from commands.move_training_box import MoveTrainingBox
 from commands.swerve_test import SwerveTest
 
 
@@ -202,6 +203,7 @@ class RobotContainer:
         self.triggerA.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_front_hsv'], control_type='not_pathplanner'))
         self.triggerX.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_left_hsv'], control_type='not_pathplanner'))
         self.triggerLB.whileTrue(SimShowFOV(self))
+        self.triggerRB.onTrue(MoveTrainingBox(self))
 
         if wpilib.RobotBase.isSimulation():
             # reefscape stuff

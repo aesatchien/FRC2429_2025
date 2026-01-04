@@ -77,7 +77,7 @@ class SimConstants:
     k_disable_vision_sim = False  # Hard disable.  Set to stop all vision simulation (e.g. ONLY using real coprocessors)
     k_draw_camera_fovs = True  # Set to draw camera FOV triangles - should always want this
     k_use_external_cameras = False  # override the vision sim to only take targets from real cams - squashes blink_test
-    k_do_blink_test = True  # Set to test dashboard connection handling (e.g. dropping camera connections)
+    k_do_blink_test = False  # Set to test dashboard connection handling (e.g. dropping camera connections)
     k_use_live_tags_in_sim = True  # Set to True to snap the robot's swerve sim to live AprilTag data
 
 

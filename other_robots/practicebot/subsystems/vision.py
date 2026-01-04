@@ -35,7 +35,7 @@ class Vision(SubsystemBase):
         self.match_time_pub = self.inst.getDoubleTopic(f"/SmartDashboard/match_time").publish()
 
         # Training Box Entry - allows read/write from dashboard and robot
-        self.training_box_entry = self.inst.getDoubleArrayTopic(f"{constants.camera_prefix}/_training_box").getEntry([0]*6)
+        self.training_box_entry = self.inst.getDoubleArrayTopic(f"{constants.camera_prefix}/_training_box").getEntry([0]*2)
 
         # Status Publishers - Map internal keys to dashboard names for all the allowed cameras
         self.status_pubs = {}

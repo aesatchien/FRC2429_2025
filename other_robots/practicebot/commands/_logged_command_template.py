@@ -7,7 +7,7 @@ class LoggedCommandTemplate(commands2.Command):  # change the name for your comm
 
     def __init__(self, container, indent=0) -> None:
         super().__init__()
-        self.setName('Sample Name')  # change this to whatever you named it above
+        self.setName('LoggedCommandTemplate')  # change this to whatever you named it above
         self.indent = indent
         self.container = container
         self.extra_log_info = None
