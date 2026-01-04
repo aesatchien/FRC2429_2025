@@ -1,6 +1,7 @@
 import math
 import wpilib
 import ntcore
+from ntcore import PubSubOptions
 from wpimath.geometry import Pose2d, Rotation2d, Translation2d
 import constants
 from helpers import apriltag_utils
@@ -28,13 +29,8 @@ class VisionSim:
             for key in self.cam_list
         }
 
-        # Subscribe to the frame counter for each camera to detect active connections
-        self.frame_subs = {}
-        for key, config in constants.k_cameras.items():
-            self.frame_subs[key] = self.inst.getIntegerTopic(f"/Cameras/{config['topic_name']}/_frames").subscribe(0)
-
         # skip the rest of the publishers if we want real hardware to connect to the sim
-        if constants.SimConstants.k_disable_vision:
+        if constants.SimConstants.k_disable_vision_sim:
             return
 
         # note this will be skipped if we told it to disable vision - so update will loop through nothing
@@ -45,7 +41,9 @@ class VisionSim:
             
             self.camera_dict[key] = {
                 'offset': ix,
-                'targets_pub': self.inst.getDoubleTopic(f"{base}/targets").publish(),
+                'frames': 0,
+                'frames_pub': self.inst.getIntegerTopic(f"/Cameras/{cam_topic}/_frames").publish(),
+                'targets_pub': self.inst.getDoubleTopic(f"{base}/targets").publish(PubSubOptions(keepDuplicates=True)),  # otherwise targets get stale
                 'distance_pub': self.inst.getDoubleTopic(f"{base}/distance").publish(),
                 'strafe_pub': self.inst.getDoubleTopic(f"{base}/strafe").publish(),
                 'rotation_pub': self.inst.getDoubleTopic(f"{base}/rotation").publish()
@@ -71,31 +69,27 @@ class VisionSim:
         
         self.field.getObject("AprilTags").setPoses(self.tag_poses)
 
+
     def update(self, robot_pose: Pose2d, gamepieces: list[dict]):
-        # Check if any real camera is actively publishing frames (heartbeat check)
-        real_camera_connected = False
-        current_time_us = ntcore._now()
-        for sub in self.frame_subs.values():
-            # If we've received a frame update in the last 2 seconds (2,000,000 us), assume connected
-            if current_time_us - sub.getAtomic().time < 2000000:
-                real_camera_connected = True
-                break
-
         now = wpilib.Timer.getFPGATimestamp()
-        
-        # Determine blink test state
-        topic_off = None
-        key_target_on = None
-        if constants.SimConstants.k_do_blink_test:
-            # Rotate which physical camera is disconnected (15s per camera)
-            topic_off = self.physical_cameras[int(now / 15.0) % len(self.physical_cameras)]
-            # Rotate which logical camera sees targets (2s per camera) - ONE ON AT A TIME
-            key_target_on = self.cam_list[int(now / 2.0) % len(self.cam_list)]
 
+        # 1. Manual Override: Use External Cameras
+        # If True: Do not simulate targets, do not blink test. Just draw FOV.
+        if constants.SimConstants.k_use_external_cameras:
+            for key in self.cam_list:
+                self._update_fov_visualization(key, robot_pose, constants.k_cameras[key], self.show_fov_subs[key].get())
+            return
+
+        # 2. Blink Test
+        if constants.SimConstants.k_do_blink_test:
+            self._run_blink_test(now)
+            return
+
+        # 3. Normal Simulation
         for key in self.cam_list:
             config = constants.k_cameras[key]
 
-            if not real_camera_connected and key in self.camera_dict:
+            if key in self.camera_dict:
                 cam_data = self.camera_dict[key]
                 topic = config['topic_name']
                 cam_rot = config.get('rotation', 0)
@@ -154,17 +148,13 @@ class VisionSim:
                     rot = closest['rot']
                     strafe = closest['strafe']
 
-                # 2. Apply Blink Test Overrides
-                is_connected = True
-                if constants.SimConstants.k_do_blink_test:
-                    is_connected = (topic != topic_off)
-                    if is_connected and key != key_target_on:
-                        targets = 0
-                
-                cam_data['targets_pub'].set(targets if is_connected else 0)
+                cam_data['frames'] += 1
+                cam_data['frames_pub'].set(cam_data['frames'])
+                cam_data['targets_pub'].set(targets)
                 cam_data['distance_pub'].set(dist)
                 cam_data['strafe_pub'].set(strafe)
                 cam_data['rotation_pub'].set(rot)
+
                 # NOTE: We do NOT publish to the 'poses' topic here with the other data.
                 # This ensures that swerve_sim.py (which listens for live tags) doesn't
                 # get confused and try to snap the robot to these simulated targets.
@@ -192,3 +182,49 @@ class VisionSim:
         p3 = robot_pos + Translation2d(fov_dist * math.cos(right_edge_angle), fov_dist * math.sin(right_edge_angle))
 
         self.fov_objects[key].setPoses([Pose2d(p1, Rotation2d()), Pose2d(p2, Rotation2d()), Pose2d(p3, Rotation2d())])
+
+    def _run_blink_test(self, now):
+        # 60s cycle for camera disconnection
+        num_physical = len(self.physical_cameras)
+        if num_physical > 0:
+            time_per_cam = 60.0 / num_physical
+            off_index = int(now / time_per_cam) % num_physical
+            topic_off = self.physical_cameras[off_index]
+        else:
+            topic_off = None
+
+        # Cycle through logical cameras one at a time (2s per camera)
+        if len(self.cam_list) > 0:
+            key_target_on = self.cam_list[int(now / 2.0) % len(self.cam_list)]
+        else:
+            key_target_on = None
+
+        for key in self.cam_list:
+            if key not in self.camera_dict:
+                continue
+
+            cam_data = self.camera_dict[key]
+            config = constants.k_cameras[key]
+            topic = config['topic_name']
+
+            is_connected = (topic != topic_off)
+
+
+            pub_list = [cam_data['targets_pub'], cam_data['distance_pub'],
+                        cam_data['strafe_pub'], cam_data['rotation_pub']]
+
+            if is_connected:
+                cam_data['frames'] += 1
+                cam_data['frames_pub'].set(cam_data['frames'])
+
+                if key == key_target_on:  # set all the target data to the position in the list
+                    data = cam_data['offset'] + 1
+                    for pub in pub_list:
+                        pub.set(data)
+                else:
+                    for pub in pub_list:  # set all the target data to 0
+                        pub.set(0)
+            else:
+                # Disconnected: freeze frames, clear targets
+                for pub in pub_list:  # set all the target data to 0
+                    pub.set(0)

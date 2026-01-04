@@ -92,8 +92,6 @@ class Ui(QtWidgets.QMainWindow):
         self.camera_dict = self.build_camera_dict()
         # print(self.widget_dict)
 
-        self.robot_timestamp_sub = self.ntinst.getDoubleTopic('/SmartDashboard/_timestamp').subscribe(0)
-
         # set the colors for the warning labels
         self.qlabel_pdh_voltage_monitor.update_settings(min_val=8, max_val=12, red_high=False, display_float=True)
         self.qlabel_pdh_current_monitor.update_settings(min_val=60, max_val=160, red_high=True, display_float=False)
@@ -208,13 +206,13 @@ class Ui(QtWidgets.QMainWindow):
                         nickname = nickname.replace(' ', '\n')
                     target_widget.setText(nickname)
 
-            timestamp_topic = config.get('TIMESTAMP_TOPIC')
-            if timestamp_topic:
+            framecount_topic = config.get('FRAMECOUNT_TOPIC')
+            if framecount_topic:
                 new_entry['IS_ALIVE'] = False
                 new_entry['RECONNECTION_COUNT'] = 0
                 new_entry['last_is_alive'] = None
                 new_entry['last_connections'] = None
-                new_entry['TIMESTAMP_SUB'] = self.ntinst.getDoubleTopic(timestamp_topic).subscribe(-1)
+                new_entry['FRAMECOUNT_SUB'] = self.ntinst.getDoubleTopic(framecount_topic).subscribe(-1)
 
             connections_topic = config.get('CONNECTIONS_TOPIC')
             if connections_topic:
@@ -257,8 +255,12 @@ class Ui(QtWidgets.QMainWindow):
                 widget_props['widget'].clicked.connect(lambda label=key: self.label_click(label))
         
         # Populate camera combobox
-        for key in self.camera_dict.keys():
-            self.qcombobox_cameras.addItem(key)
+        seen_urls = set()
+        for key, props in self.camera_dict.items():
+            url = props.get('URL')
+            if url and url not in seen_urls:
+                self.qcombobox_cameras.addItem(key)
+                seen_urls.add(url)
 
     def initialize_apriltags(self):
         """Loads the AprilTag layout and places static tag widgets on the field."""

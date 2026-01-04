@@ -34,6 +34,9 @@ class Vision(SubsystemBase):
         # ------------- Publishers (Efficiency) -------------
         self.match_time_pub = self.inst.getDoubleTopic(f"/SmartDashboard/match_time").publish()
 
+        # Training Box Entry - allows read/write from dashboard and robot
+        self.training_box_entry = self.inst.getDoubleArrayTopic(f"{constants.camera_prefix}/_training_box").getEntry([0]*6)
+
         # Status Publishers - Map internal keys to dashboard names for all the allowed cameras
         self.status_pubs = {}
         for ix, key in enumerate(constants.k_cameras.keys()):
@@ -115,21 +118,21 @@ class Vision(SubsystemBase):
         """
         if not self.target_available(camera_key):
             return None
-        
+
         dist = self.get_distance(camera_key)
         if dist > max_dist or dist <= 0:
             return None
-            
+
         # Get camera rotation from constants
         cam_config = constants.k_cameras.get(camera_key)
         if not cam_config:
             return None
-            
+
         cam_rot_deg = cam_config.get('rotation', 0)
-        
+
         # Rotation from NT is relative to camera mount
         nt_rot = self.get_rotation(camera_key)
-        
+
         # 1. Define where the camera is relative to the robot center
         # TODO: Add x/y offsets to k_cameras so this is accurate!
         camera_to_robot = Transform2d(Translation2d(0, 0), Rotation2d.fromDegrees(cam_rot_deg))
@@ -158,12 +161,16 @@ class Vision(SubsystemBase):
         # Get all valid poses from specified cameras
         poses = [self.nearest_to_cam(key, max_dist) for key in camera_list if key in self.camera_dict]
         valid_poses = [p for p in poses if p is not None]
-        
+
         if not valid_poses:
             return None
-            
+
         # Return the one with the minimum distance (norm of translation)
         return min(valid_poses, key=lambda p: p.translation().norm())
+
+    def set_training_box(self, data: list[float]) -> None:
+        """Update the training box parameters on the coprocessor."""
+        self.training_box_entry.set(data)
 
     def periodic(self) -> None:
         self.counter += 1

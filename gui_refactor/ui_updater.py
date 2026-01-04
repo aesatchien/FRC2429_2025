@@ -138,13 +138,15 @@ class UIUpdater:
 
     def _update_camera_indicators(self):
         """Updates the status indicators for all cameras.
-        We check the timestamp from the robot vs the timestamp coming back from the cameras"""
-        allowed_delay = 0.5
-        timestamp = self.ui.robot_timestamp_sub.get()
+        We check the NT timestamp from the camera framecount from the camera"""
+        # 1.5 seconds allowed delay (500,000 microseconds) - we update the framecount once per second
+        allowed_delay_us = 1500000
+        now = ntcore._now()
 
         for cam_props in self.ui.camera_dict.values():
-            if 'TIMESTAMP_SUB' in cam_props:
-                is_alive = (timestamp - cam_props['TIMESTAMP_SUB'].get()) < allowed_delay
+            if 'FRAMECOUNT_SUB' in cam_props:
+                # Check how long ago the camera updated its _frames topic
+                is_alive = (now - cam_props['FRAMECOUNT_SUB'].getAtomic().time) < allowed_delay_us
                 
                 # Check for rising edge (False -> True) to count reconnections
                 if is_alive and not cam_props['IS_ALIVE']:
@@ -248,9 +250,14 @@ class UIUpdater:
                 
                 # Calculate NT Latency (Data Age)
                 # This measures time in ms since the last timestamp update was received
-                atomic_ts = self.ui.robot_timestamp_sub.getAtomic()
-                # ntcore._now() and atomic_ts.time are both in microseconds
-                latency = (ntcore._now() - atomic_ts.time) / 1000.0
+                # Use match_time as the heartbeat since _timestamp is gone
+                match_time_sub = self.ui.widget_dict['qlabel_matchtime'].get('subscriber')
+                latency = -1.0
+                if match_time_sub:
+                    atomic_ts = match_time_sub.getAtomic()
+                    if atomic_ts.time != 0:
+                        # ntcore._now() and atomic_ts.time are both in microseconds. Divide by 1000 for ms.
+                        latency = (ntcore._now() - atomic_ts.time) / 1000.0
                 
                 msg = f'GUI: {80/time_delta:.1f}Hz | CAM: {(frames - self.ui.previous_frames)/time_delta:.1f}Hz | LATENCY: {latency:.1f}ms'
                 self.ui.statusBar().showMessage(msg)

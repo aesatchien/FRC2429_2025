@@ -178,11 +178,11 @@ for command in COMMAND_LIST:
 # This is so i don't have to redo the camera indicators all the time below - just change the camera names and go home
 CAMERA_CONFIG = {}
 for key, value in CAMERA_BASE_CONFIG.items():
-    # print(f"{key}  {value.get('TIMESTAMP_TOPIC')}  {value.get('INDICATOR_NAME')}  {value.get('INDICATOR_INDEX')}")
+    # print(f"{key}  {value.get('FRAMECOUNT_TOPIC')}  {value.get('INDICATOR_NAME')}  {value.get('INDICATOR_INDEX')}")
     d = {key:value.copy()}  # don't forget the copy
     base_topic = d[key].get('BASE_TOPIC')
-    if not d[key].get('TIMESTAMP_TOPIC') and not 'skip' in d[key]:
-        d[key]['TIMESTAMP_TOPIC'] = fr'{camera_prefix}/{base_topic}/_frames'
+    if not d[key].get('FRAMECOUNT_TOPIC') and not 'skip' in d[key]:
+        d[key]['FRAMECOUNT_TOPIC'] = fr'{camera_prefix}/{base_topic}/_frames'
         # print(f' *  updating timestamp topic for {key}')
     if not d[key].get('CONNECTIONS_TOPIC') and not 'skip' in d[key]:
         d[key]['CONNECTIONS_TOPIC'] = fr'{camera_prefix}/{base_topic}/_connections'

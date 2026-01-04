@@ -58,9 +58,7 @@ class PhysicsEngine:
         # Update Physics Models
         self.swerve_sim.update(tm_diff)
 
-        simlib.RoboRioSim.setVInVoltage(
-                simlib.BatterySim.calculate(amps)
-        )
+        simlib.RoboRioSim.setVInVoltage(simlib.BatterySim.calculate(amps))
         
         # Update Game State
         robot_pose = self.physics_controller.get_pose()

@@ -33,10 +33,10 @@ quest_prefix = r'/QuestNav'  # putting this on par with the cameras as an extern
 fov = 45 #  sim testing fov, no effect on real robot yet
 
 k_practicebot_cameras = {
+    'logi_front': {'topic_name': 'LogitechFront', 'type': 'tags', 'rotation': 0, 'fov': fov},
+    'logi_front_hsv': {'topic_name': 'LogitechFront', 'type': 'hsv', 'label': 'yellow', 'rotation': 0, 'fov': fov},
     'logi_left': {'topic_name': 'LogitechLeft', 'type': 'tags', 'rotation': 90, 'fov': fov},
     'logi_left_hsv': {'topic_name': 'LogitechLeft', 'type': 'hsv', 'label': 'yellow', 'rotation': 90, 'fov': fov},
-    'logi_front': {'topic_name': 'LogitechFront', 'type': 'tags', 'rotation': 0, 'fov': fov},
-    'logi_front_hsv': {'topic_name': 'LogitechFront', 'type': 'hsv', 'label': 'yellow','rotation': 0, 'fov': fov},
 }
 
 k_sim_cameras = {
@@ -69,14 +69,16 @@ k_field_oriented = True  # is there any reason for this at all?
 
 class SimConstants:
     k_counter_offset = 1
-    k_cam_distance_limit = 4  # sim testing how far targets can be
+    k_cam_distance_limit = 4  # sim testing how far targets can be - usually 3 to 3.5m on the real cameras
     k_tag_visibility_angle = 60  # degrees, the angle from normal that the tag can be seen (90 means +/- 90 deg)
 
     k_print_config = True  # use for debugging the camera config
-    k_draw_camera_fovs = True  # Set to True to draw camera FOV triangles - should always want this
-    k_disable_vision = False  # Set to True to disable vision simulation (e.g. when using real coprocessors)
-    k_do_blink_test = False  # Set to True to test dashboard connection handling (dropping camera connections)
-    k_use_live_tags_in_sim = True  # Set to True to snap the sim robot to live AprilTag data
+
+    k_disable_vision_sim = False  # Hard disable.  Set to stop all vision simulation (e.g. ONLY using real coprocessors)
+    k_draw_camera_fovs = True  # Set to draw camera FOV triangles - should always want this
+    k_use_external_cameras = False  # override the vision sim to only take targets from real cams - squashes blink_test
+    k_do_blink_test = True  # Set to test dashboard connection handling (e.g. dropping camera connections)
+    k_use_live_tags_in_sim = True  # Set to True to snap the robot's swerve sim to live AprilTag data
 
 
 class VisionConstants:
