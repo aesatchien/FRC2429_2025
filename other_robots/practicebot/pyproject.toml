@@ -26,7 +26,8 @@ robotpy_extras = [
     # "romi",
     # "sim",
     # "xrp",
+    # "urcl",
 ]
 
 # Other pip packages to install
-requires = ['photonlibpy', 'robotpy-playingwithfusion','protobuf==6.33.2']
+requires = ['photonlibpy', 'robotpy-playingwithfusion','protobuf==6.33.2', 'robotpy-urcl']
