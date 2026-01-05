@@ -28,6 +28,7 @@ from subsystems.vision import Vision
 # 2429 commands
 from commands.auto_to_pose import AutoToPose
 from commands.auto_to_pose_clean import AutoToPoseClean
+from commands.auto_track_vision_target import AutoTrackVisionTarget
 from commands.can_status import CANStatus
 from commands.drive_by_distance_swerve import DriveByVelocitySwerve
 from commands.drive_by_joystick_swerve import DriveByJoystickSwerve
@@ -202,13 +203,17 @@ class RobotContainer:
         # self.triggerA.whileTrue(SwerveTest(self, self.swerve))
         self.triggerA.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_front_hsv'], control_type='not_pathplanner'))
         self.triggerX.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, use_vision=True, cameras=['logi_left_hsv'], control_type='not_pathplanner'))
+        self.triggerB.debounce(0.1).whileTrue(AutoTrackVisionTarget(self, camera_key='logi_front_hsv', target_distance=0.40))
+
         self.triggerLB.whileTrue(SimShowFOV(self))
         self.triggerRB.onTrue(MoveTrainingBox(self))
 
+
         if wpilib.RobotBase.isSimulation():
             # reefscape stuff
-            self.triggerB.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.RIGHT)))
-            self.triggerB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
+            pass
+            #self.triggerB.onTrue(commands2.cmd.runOnce(lambda: setattr(self.robot_state, 'side', RobotState.Side.RIGHT)))
+            #self.triggerB.debounce(0.1).whileTrue(AutoToPoseClean(self, self.swerve, target_pose=None, nearest=True, from_robot_state=False,control_type='not_pathplanner'))
 
         # set up dpad to allow slow, smooth robot-centric alignment
         dpad_output = 0.125

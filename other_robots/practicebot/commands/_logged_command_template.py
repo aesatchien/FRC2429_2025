@@ -8,7 +8,7 @@ class LoggedCommandTemplate(commands2.Command):  # change the name for your comm
     def __init__(self, container, indent=0) -> None:
         super().__init__()
         self.setName('LoggedCommandTemplate')  # change this to whatever you named it above
-        self.indent = indent
+        self.indent = indent  # this is read by log_command to indent the console message
         self.container = container
         self.extra_log_info = None
         # self.counter = 0  # add a counter if you need to track iterations, remember to initialize in below
