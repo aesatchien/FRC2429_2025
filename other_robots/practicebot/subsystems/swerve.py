@@ -20,6 +20,7 @@ from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 from helpers.utilities import compare_motors
 from subsystems.quest import Questnav
+import urcl # unofficial rev compatible logger for advantagescope
 
 class Swerve (Subsystem):
     def __init__(self, questnav:Questnav) -> None:
@@ -112,6 +113,8 @@ class Swerve (Subsystem):
         # ------------- Advantagescope section -------------
         if constants.k_enable_logging:
             DataLogManager.start()  # start wpilib datalog for AdvantageScope
+            DriverStation.startDataLog(DataLogManager.getLog())  # Record both DS control and joystick data
+            urcl.URCL.start()  # start the unofficial rev urcl logger for AdvantageScope
 
         # pre-allocate all the keys for speed
         self._init_networktables()
