@@ -19,6 +19,7 @@ import constants
 from .swervemodule_2429 import SwerveModule
 from .swerve_constants import DriveConstants as dc, AutoConstants as ac, ModuleConstants as mc
 from helpers.utilities import compare_motors
+import helpers.apriltag_utils
 from subsystems.quest import Questnav
 import urcl # unofficial rev compatible logger for advantagescope
 
@@ -321,6 +322,10 @@ class Swerve (Subsystem):
                     # Check for stale tags (e.g. > 0.5s latency) using NT timestamp
                     # 500,000 microseconds = 0.5 seconds
                     if ntcore._now() - timestamp_us > 500000:
+                        continue
+
+                    # make sure it's not a training tag not intended for odometry (returns None if not in layout)
+                    if helpers.apriltag_utils.layout.getTagPose(tag_data[0]) is None:
                         continue
 
                     tx, ty, tz = tag_data[1], tag_data[2], tag_data[3]
