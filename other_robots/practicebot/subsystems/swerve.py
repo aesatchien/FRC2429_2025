@@ -325,7 +325,7 @@ class Swerve (Subsystem):
                         continue
 
                     # make sure it's not a training tag not intended for odometry (returns None if not in layout)
-                    if helpers.apriltag_utils.layout.getTagPose(tag_data[0]) is None:
+                    if helpers.apriltag_utils.layout.getTagPose(int(tag_data[0])) is None:
                         continue
 
                     tx, ty, tz = tag_data[1], tag_data[2], tag_data[3]
