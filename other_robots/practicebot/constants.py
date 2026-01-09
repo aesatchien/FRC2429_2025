@@ -62,6 +62,8 @@ k_swerve_debugging_messages = True
 k_use_quest_odometry = True
 k_use_photontags = False  # take tags from photonvision camera
 k_use_CJH_tags = True  # take tags from the pis
+k_allow_tag_averaging = True
+
 k_swerve_only = False
 k_swerve_rate_limited = True
 k_field_oriented = True  # is there any reason for this at all?
