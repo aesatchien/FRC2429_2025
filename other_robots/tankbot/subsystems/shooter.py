@@ -14,7 +14,7 @@ class Shooter(Subsystem):
         super().__init__()
         self.setName('Shooter')
         self.counter = sc.k_flywheel_counter_offset  # note this should be an offset in constants
-        self.default_rpm = 3000
+        self.default_rpm = sc.k_test_speed
 
         # --------------- add motors and shooter rpm ----------------
         

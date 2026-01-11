@@ -6,6 +6,7 @@ import commands2
 from commands2 import PrintCommand, RunCommand, InstantCommand, ConditionalCommand
 
 import constants
+from constants import ShooterConstants as sc
 
 from commands.drive_by_joystick import DriveByJoystick
 from commands.shooting_log_command import ShootingCommandLogging
@@ -135,11 +136,11 @@ class RobotContainer:
         #self.triggerRB.onFalse(commands2.RunCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
         # this is the right way - question for students: why am i using a lambda instead of a PrintCommand?
         self.triggerB.onTrue(InstantCommand(lambda: print(f'Shooter RB: at {self.timer.get():.1f} s ...', end='')).
-                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(4000),self.shooter,)))
+                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(sc.k_fastest_speed),self.shooter,)))
         self.triggerB.onFalse(InstantCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
 
         self.triggerRB.onTrue(InstantCommand(lambda: print(f'Shooter RB: at {self.timer.get():.1f} s ...', end='')).
-                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(2000),self.shooter,)))
+                              andThen(InstantCommand(lambda: self.shooter.set_shooter_rpm(sc.k_test_speed),self.shooter,)))
         self.triggerRB.onFalse(InstantCommand(lambda: self.shooter.set_shooter_rpm(0.0),self.shooter,))
 
     # ------------ TODO SECTION  --------------
