@@ -88,7 +88,7 @@ class ShooterConstants:
     # k_flywheel_right_follower.inverted(False)  # this is not necessary - it will get ignored
 
     # set up the followers
-    k_flywheel_right_follower_config.follow(k_CANID_flywheel_left_leader, invert=True)  # always true if follower on other side
+    k_flywheel_right_follower_config.follow(k_CANID_flywheel_left_leader, invert=False)  # always true if follower on other side
 
     #setting brake, voltage compensation, and current limit for the flywheel motors
     set_config_defaults(k_flywheel_configs)
